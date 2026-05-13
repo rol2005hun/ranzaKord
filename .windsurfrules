@@ -21,6 +21,8 @@ Pages are thin wrappers. Global stuff goes in `app/components/shared/`, `app/sto
 - No `any` — ever. Define an explicit type.
 - All params and return types must be typed.
 - `interface` for objects, `type` for unions.
+- Feature types: `features/<name>/types/<name>.types.ts`; global: `app/types/<domain>.types.ts`
+- Never define inline types in stores, composables, or components.
 
 **No Comments**
 
@@ -45,13 +47,14 @@ Pages are thin wrappers. Global stuff goes in `app/components/shared/`, `app/sto
 - Models in `features/<name>/models/`
 - Decorators: `@Num(0)`, `@Str('')`, `@Bool(false)`
 
-**Components**
+**SCSS & Theme System**
 
-- `<script setup lang="ts">`
-- Props: `interface Props` + `defineProps<Props>()`
-- `<style lang="scss" scoped>` always
-- BEM: `.block__element--modifier`
-- CSS vars only: `var(--color-primary)`, `var(--space-4)`, etc.
+- Themes → `app/assets/scss/themes/` (one file each: `_default`, `_dark`, `_ocean`)
+- Theme selector: `[data-theme='<name>']` with HSL primary (`--color-primary-h/s/l`)
+- `_variables.scss` = spacing, typography, radii only — never colors
+- User custom color: `useThemeStore.setCustomColor(hex)` → overrides H/S/L on `<html>`
+- `app/plugins/theme.client.ts` restores saved theme from localStorage
+- Components: `<style lang="scss" scoped>`, BEM naming, CSS vars only
 
 **Auto-Imports — do not import manually**
 

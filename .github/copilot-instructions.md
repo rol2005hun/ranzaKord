@@ -125,7 +125,65 @@ export class User extends Model {
 - Shared components get the `App` prefix (e.g. `AppButton`, `AppIcon`) automatically via Nuxt config
 - Feature components have no prefix (e.g. `HomeHero`, `AuthLoginForm`)
 
+## TypeScript – Types Location
+
+- Feature-specific types → `features/<name>/types/<name>.types.ts`
+- Global shared types → `app/types/index.ts`
+- Domain-specific global types → `app/types/<domain>.types.ts` (e.g. `app/types/i18n.types.ts`)
+- **Never define inline types in composables, stores, or components** — always import from the types file
+- `interface` for object shapes, `type` for unions/string literals
+
 ## SCSS & Styling
+
+### Theme System
+
+Themes live in `app/assets/scss/themes/`, one file per theme:
+
+```
+app/assets/scss/
+├── main.scss           ← imports reset + variables + all themes
+├── _reset.scss
+├── _variables.scss     ← non-color tokens only (spacing, typography, radii)
+└── themes/
+    ├── _default.scss   ← light theme (indigo)
+    ├── _dark.scss      ← dark theme
+    └── _ocean.scss     ← ocean teal theme
+```
+
+Each theme defines its colors via `[data-theme="<name>"]` selector using HSL components:
+
+```scss
+[data-theme='dark'] {
+  color-scheme: dark;
+  --color-primary-h: 239;
+  --color-primary-s: 84%;
+  --color-primary-l: 67%;
+  --color-primary: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l));
+  --color-bg: #0f172a;
+}
+```
+
+**User custom color:** The three HSL components (`--color-primary-h/s/l`) can be overridden at runtime via JS to apply a user-chosen primary color — the rest of the theme stays intact.
+
+**Adding a new theme:**
+1. Create `app/assets/scss/themes/_<name>.scss` with `[data-theme='<name>']` block
+2. Add the `ThemeId` type union in `app/features/theme/types/theme.types.ts`
+3. Add the option to `THEME_OPTIONS` in `useTheme.ts`
+4. Import the file in `main.scss`
+
+### Theme Store & Composable
+
+- `features/theme/stores/useThemeStore.ts` — sets `data-theme` on `<html>`, stores in localStorage
+- `features/theme/composables/useTheme.ts` — exposes `setTheme`, `setCustomColor`, `resetCustomColor`
+- `app/plugins/theme.client.ts` — calls `initialize()` on page load to restore saved theme
+
+### Styling Rules
+
+- BEM naming: `.block__element--modifier`
+- Always `<style lang="scss" scoped>` in components
+- Use CSS custom properties only — never hardcode colors, spacing, or radii
+- `_variables.scss` = spacing + typography + radii (NO colors)
+- Colors always live in theme files
 
 - Use CSS custom properties (design tokens) from `_variables.scss` – never hardcode colors or spacing
 - Use BEM-like class naming: `.block__element--modifier`

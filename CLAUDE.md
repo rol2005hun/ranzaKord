@@ -34,7 +34,8 @@ app/features/<name>/
 - Every function parameter and return value must be typed
 - Use `interface` for object shapes, `type` for unions
 - Feature-specific types: `features/<name>/types/<name>.types.ts`
-- Global types: `app/types/index.ts`
+- Global types: `app/types/index.ts`, domain types: `app/types/<domain>.types.ts`
+- **Never define inline types** in composables, stores, or components — import from the types file
 
 ### No Comments
 - No inline comments, no JSDoc
@@ -79,11 +80,14 @@ const props = withDefaults(defineProps<Props>(), { disabled: false })
 </style>
 ```
 
-### SCSS
-- BEM naming: `.block__element--modifier`
-- Always `scoped` in components
-- Use CSS custom properties: `var(--color-primary)`, `var(--space-4)`, `var(--radius-md)`
-- Never hardcode colors, spacing, or border-radius values
+### SCSS & Theme System
+- Themes → `app/assets/scss/themes/`, one file per theme
+- Each theme: `[data-theme='<name>']` with HSL primary color components (`--color-primary-h/s/l`)
+- `_variables.scss` = **only** spacing, typography, radii (never colors)
+- User custom color → override H/S/L via `useThemeStore.setCustomColor(hex)` (hex→HSL in `app/utils/color.ts`)
+- Adding a theme: SCSS file → `ThemeId` union → `THEME_OPTIONS` → `main.scss` import
+- `app/plugins/theme.client.ts` initializes theme from localStorage
+- Components: `<style lang="scss" scoped>`, BEM naming, CSS vars only
 
 ## Nuxt Auto-Imports
 

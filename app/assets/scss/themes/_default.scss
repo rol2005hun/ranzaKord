@@ -1,0 +1,21 @@
+:root,
+[data-theme='default'] {
+  color-scheme: light;
+
+  --color-primary-h: 239;
+  --color-primary-s: 84%;
+  --color-primary-l: 67%;
+
+  --color-primary: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l));
+  --color-primary-hover: hsl(
+    var(--color-primary-h) var(--color-primary-s) calc(var(--color-primary-l) - 12%)
+  );
+  --color-primary-foreground: #ffffff;
+
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-hover: #f1f5f9;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #64748b;
+  --color-border: #e2e8f0;
+}

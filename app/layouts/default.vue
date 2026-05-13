@@ -1,13 +1,10 @@
 <script setup lang="ts">
-const appStore = useAppStore()
+const { themeId, themes, setTheme } = useTheme()
 const { isAuthenticated, currentUser, logout } = useAuth()
 </script>
 
 <template>
-  <div
-    class="layout"
-    :class="{ 'layout--dark': appStore.isDark }"
-  >
+  <div class="layout">
     <header class="layout__header">
       <nav class="layout__nav">
         <NuxtLink to="/" class="layout__logo">
@@ -15,9 +12,15 @@ const { isAuthenticated, currentUser, logout } = useAuth()
         </NuxtLink>
 
         <div class="layout__nav-actions">
-          <AppButton variant="ghost" @click="appStore.toggleTheme">
-            <AppIcon :name="appStore.isDark ? 'ph:sun' : 'ph:moon'" />
-          </AppButton>
+          <select
+            :value="themeId"
+            class="layout__theme-select"
+            @change="setTheme(($event.target as HTMLSelectElement).value as (typeof themes)[number]['id'])"
+          >
+            <option v-for="theme in themes" :key="theme.id" :value="theme.id">
+              {{ theme.label }}
+            </option>
+          </select>
 
           <template v-if="isAuthenticated">
             <span class="layout__user">{{ currentUser?.name }}</span>
@@ -53,14 +56,6 @@ const { isAuthenticated, currentUser, logout } = useAuth()
     background-color 0.3s ease,
     color 0.3s ease;
 
-  &--dark {
-    --color-bg: var(--color-bg-dark);
-    --color-text-primary: var(--color-text-dark-primary);
-    --color-text-secondary: var(--color-text-dark-secondary);
-    --color-surface: var(--color-surface-dark);
-    --color-border: var(--color-border-dark);
-  }
-
   &__header {
     position: sticky;
     top: 0;
@@ -89,6 +84,16 @@ const { isAuthenticated, currentUser, logout } = useAuth()
     display: flex;
     align-items: center;
     gap: var(--space-3);
+  }
+
+  &__theme-select {
+    padding: var(--space-1) var(--space-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
+    cursor: pointer;
   }
 
   &__user {

@@ -1,0 +1,20 @@
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-primary-h: 239;
+  --color-primary-s: 84%;
+  --color-primary-l: 67%;
+
+  --color-primary: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l));
+  --color-primary-hover: hsl(
+    var(--color-primary-h) var(--color-primary-s) calc(var(--color-primary-l) + 8%)
+  );
+  --color-primary-foreground: #ffffff;
+
+  --color-bg: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-hover: #334155;
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-border: #334155;
+}

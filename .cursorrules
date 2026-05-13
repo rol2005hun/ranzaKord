@@ -23,7 +23,8 @@ app/features/<name>/
 - **No `any`** — define an explicit type or interface instead
 - All function parameters and return values must be typed
 - Feature types → `features/<name>/types/<name>.types.ts`
-- Global types → `app/types/index.ts`
+- Global types → `app/types/index.ts`, domain types → `app/types/<domain>.types.ts`
+- **Never define inline types in stores, composables, or components** — import from types file
 
 ## No Code Comments
 
@@ -51,13 +52,14 @@ Exception: `// TODO:` for intentional stubs only.
 - Use typed decorators: `@Num(0)`, `@Str('')`, `@Bool(false)`
 - Access via `useRepo(ModelName)` in stores or composables
 
-## Components
+## SCSS & Theme System
 
-- `<script setup lang="ts">` always
-- Props via `interface Props` + `defineProps<Props>()`
-- `<style lang="scss" scoped>` always
-- BEM naming: `.block__element--modifier`
-- Use CSS custom properties from `_variables.scss` — never hardcode values
+- Themes → `app/assets/scss/themes/`, one file per theme (`_default.scss`, `_dark.scss`, `_ocean.scss`)
+- Each theme uses `[data-theme='<name>']` with HSL primary color tokens (`--color-primary-h/s/l`)
+- `_variables.scss` contains **only** non-color tokens (spacing, typography, radii)
+- User custom color → override `--color-primary-h/s/l` at runtime via `useThemeStore.setCustomColor(hex)`
+- Adding a theme: create SCSS file → add `ThemeId` union → add to `THEME_OPTIONS` → import in `main.scss`
+- Components: `<style lang="scss" scoped>`, BEM naming, CSS vars only — no hardcoded values
 
 ## Nuxt Auto-Imports (do not import manually)
 

@@ -1,0 +1,20 @@
+[data-theme='ocean'] {
+  color-scheme: light;
+
+  --color-primary-h: 189;
+  --color-primary-s: 94%;
+  --color-primary-l: 43%;
+
+  --color-primary: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l));
+  --color-primary-hover: hsl(
+    var(--color-primary-h) var(--color-primary-s) calc(var(--color-primary-l) - 8%)
+  );
+  --color-primary-foreground: #ffffff;
+
+  --color-bg: #f0f9ff;
+  --color-surface: #ffffff;
+  --color-surface-hover: #e0f2fe;
+  --color-text-primary: #0c4a6e;
+  --color-text-secondary: #0369a1;
+  --color-border: #bae6fd;
+}

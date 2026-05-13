@@ -6,11 +6,9 @@
  *   - app/shared/locales/en.json              → accessible as $t('someKey') globally
  */
 
-type MessageSchema = {
-  [key: string]: string | MessageSchema;
-};
+import type { MessageSchema } from '~/types/i18n.types'
 
-const messages: Record<string, MessageSchema> = {};
+const messages: Record<string, MessageSchema> = {}
 
 const localeFiles = import.meta.glob('./**/locales/*.json', {
   eager: true,
