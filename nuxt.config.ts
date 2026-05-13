@@ -2,6 +2,8 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
+  srcDir: 'app/',
+  serverDir: 'server/',
 
   modules: [
     '@nuxt/eslint',
@@ -17,8 +19,26 @@ export default defineNuxtConfig({
     '@pinia/colada-nuxt',
     '@pinia-orm/nuxt'
   ],
+
+  css: ['@/assets/scss/main.scss'],
+
+  components: [
+    { path: '~/components/shared', prefix: 'App' },
+    { path: '~/features', pattern: '**/components/**/*.vue', pathPrefix: false }
+  ],
+
+  imports: {
+    dirs: ['composables', 'stores', 'features/*/composables', 'features/*/stores']
+  },
+
   i18n: {
     defaultLocale: 'en',
-    locales: ['en']
+    locales: [{ code: 'en', name: 'English' }],
+    strategy: 'no_prefix',
+    vueI18n: './app/i18n.config.ts'
+  },
+
+  typescript: {
+    strict: true
   }
-})
+});

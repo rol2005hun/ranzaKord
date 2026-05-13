@@ -1,0 +1,77 @@
+---
+description: Core project conventions – always apply
+globs: ["**/*.ts", "**/*.vue", "**/*.scss"]
+alwaysApply: true
+---
+
+# Nuxt Boilerplate – Project Rules
+
+## Feature-Based Architecture
+
+New features go in `app/features/<name>/` with this structure:
+- `components/` – feature-local Vue components
+- `composables/` – `useFeature.ts` bridges store ↔ components
+- `stores/` – `useFeatureStore.ts` (Pinia setup store)
+- `models/` – Pinia ORM entity models
+- `types/` – `feature.types.ts`
+- `locales/` – `en.json`
+
+Pages are thin wrappers — they delegate to feature components.
+
+## TypeScript
+
+- No `any` — ever
+- All params and return types must be explicit
+- `interface` for object shapes, `type` for unions/aliases
+
+## No Comments
+
+Write self-documenting code. No inline comments, no JSDoc.
+Only `// TODO:` is allowed for intentional stubs.
+
+## i18n
+
+- All UI text via `$t()` — never hardcode strings
+- `features/<name>/locales/en.json` → accessible as `$t('<name>.key')`
+- `app/shared/locales/en.json` → accessible as `$t('key')` globally
+- English only
+
+## Pinia
+
+- Setup store style: `defineStore('id', () => { ... })`
+- State typed explicitly: `ref<MyType | null>(null)`
+
+## Pinia ORM
+
+- Models in `features/<name>/models/ModelName.ts`
+- Use `@Num(0)`, `@Str('')`, `@Bool(false)` decorators
+- Access via `useRepo(ModelName)`
+
+## Styling
+
+- `<style lang="scss" scoped>` in every component
+- BEM class naming: `.block__element--modifier`
+- CSS custom properties from `_variables.scss` — no hardcoded values
+
+## Auto-Imports (never import manually)
+
+Vue reactivity, Nuxt composables, `defineStore`, all composables and stores
+from `app/composables/`, `app/stores/`, `app/features/*/composables/`, `app/features/*/stores/`
+
+## Git Commits – Conventional Commits
+
+Format: `type(scope): short description`
+
+Types: `feat` | `fix` | `refactor` | `style` | `docs` | `test` | `chore` | `build` | `ci` | `perf` | `revert`
+
+Scope = affected feature or area: `auth`, `home`, `i18n`, `deps`, `layout`
+
+```
+feat(auth): add login page and auth store
+fix(home): correct hero subtitle alignment
+chore(deps): update nuxt to 4.4.5
+refactor(auth): extract login logic into useAuth composable
+```
+
+- Subject: max 72 chars, lowercase, no trailing period
+- Breaking change: `feat(auth)!: remove legacy session`

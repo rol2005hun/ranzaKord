@@ -1,0 +1,10 @@
+// Global shared locale strings
+// Accessible as $t('someKey') anywhere in the app
+{
+  "appName": "Nuxt Boilerplate",
+  "loading": "Loading...",
+  "error": {
+    "generic": "Something went wrong.",
+    "notFound": "Page not found."
+  }
+}

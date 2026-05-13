@@ -1,0 +1,94 @@
+# Nuxt Boilerplate – Coding Rules
+
+## Architecture: Feature-Based
+
+```
+app/features/<name>/
+  components/   feature-local Vue components
+  composables/  useFeature.ts  (logic bridge)
+  stores/       useFeatureStore.ts (Pinia setup store)
+  models/       Pinia ORM entity models
+  types/        feature.types.ts
+  locales/      en.json
+```
+
+Pages are thin wrappers. Global stuff goes in `app/components/shared/`, `app/stores/`, `app/composables/`.
+
+## Rules
+
+**TypeScript**
+
+- No `any` — ever. Define an explicit type.
+- All params and return types must be typed.
+- `interface` for objects, `type` for unions.
+
+**No Comments**
+
+- No inline comments, no JSDoc.
+- Name things clearly instead.
+- Only `// TODO:` for intentional stubs.
+
+**i18n**
+
+- All UI strings via `$t()` — never hardcode text.
+- `features/<name>/locales/en.json` → `$t('<name>.key')`
+- `app/shared/locales/en.json` → `$t('key')` globally
+- English only.
+
+**Pinia**
+
+- Setup store style always: `defineStore('id', () => { ... })`
+- Explicit generics on state: `ref<Type>(default)`
+
+**Pinia ORM**
+
+- Models in `features/<name>/models/`
+- Decorators: `@Num(0)`, `@Str('')`, `@Bool(false)`
+
+**Components**
+
+- `<script setup lang="ts">`
+- Props: `interface Props` + `defineProps<Props>()`
+- `<style lang="scss" scoped>` always
+- BEM: `.block__element--modifier`
+- CSS vars only: `var(--color-primary)`, `var(--space-4)`, etc.
+
+**Auto-Imports — do not import manually**
+
+- Vue: `ref`, `computed`, `reactive`, `watch`, `readonly`, etc.
+- Nuxt: `definePageMeta`, `navigateTo`, `useRouter`, `createError`, etc.
+- Pinia: `defineStore`
+- All from `app/composables/`, `app/stores/`, `app/features/*/composables/`, `app/features/*/stores/`
+
+## Git Commits – Conventional Commits
+
+Format: `type(scope): short description`
+
+| Type | When to use |
+|---|---|
+| `feat` | New feature or page |
+| `fix` | Bug fix |
+| `refactor` | Code change with no behavior change |
+| `style` | Formatting only (no logic change) |
+| `docs` | Documentation, README, agent rules |
+| `test` | Adding or updating tests |
+| `chore` | Tooling, config, dependencies |
+| `build` | Build system changes (nuxt.config, vite) |
+| `ci` | CI/CD pipeline changes |
+| `perf` | Performance improvement |
+| `revert` | Revert a previous commit |
+
+**Scope** = affected feature or area (`auth`, `home`, `i18n`, `deps`, `layout`)
+
+```
+feat(auth): add login page and auth store
+fix(home): correct hero subtitle alignment
+chore(deps): update nuxt to 4.4.5
+refactor(auth): extract login logic into useAuth composable
+test(home): add HomeHero component integration test
+build(nuxt): enable pinia-orm module
+```
+
+- Subject: max 72 chars, lowercase, no trailing period
+- Body (optional): explain *why*, not *what*
+- Breaking change: `feat(auth)!: remove legacy session`

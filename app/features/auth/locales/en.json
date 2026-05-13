@@ -1,0 +1,14 @@
+{
+  "login": {
+    "title": "Sign in",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "submit": "Sign in",
+    "submitting": "Signing in...",
+    "noAccount": "Don't have an account?"
+  },
+  "loginError": "Invalid email or password. Please try again.",
+  "logoutSuccess": "You have been signed out."
+}
