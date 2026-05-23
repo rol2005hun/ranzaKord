@@ -22,7 +22,8 @@ export default defineConfig({
               rootDir: fileURLToPath(new URL('.', import.meta.url)),
               domEnvironment: 'happy-dom'
             }
-          }
+          },
+          setupFiles: ['./test/setup.ts']
         }
       })
     ],

@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import type { LoginCredentials } from '~/features/auth/types/auth.types'
+import type { LoginCredentials } from '~/features/auth/types/auth.types';
 
-definePageMeta({ layout: 'auth' })
+definePageMeta({ layout: 'auth' });
 
-const { t } = useI18n()
-const { login, isLoading, error } = useAuth()
+const { t } = useI18n();
+const { login, isLoading, error } = useAuth();
 
 const form = reactive<LoginCredentials>({
   email: '',
-  password: '',
-})
+  password: ''
+});
 
 async function handleSubmit() {
-  await login(form)
+  await login(form);
 }
 </script>
 
@@ -33,8 +33,7 @@ async function handleSubmit() {
             :placeholder="t('auth.login.emailPlaceholder')"
             class="login__input"
             required
-            autocomplete="email"
-          />
+            autocomplete="email" />
         </div>
 
         <div class="login__field">
@@ -48,18 +47,12 @@ async function handleSubmit() {
             :placeholder="t('auth.login.passwordPlaceholder')"
             class="login__input"
             required
-            autocomplete="current-password"
-          />
+            autocomplete="current-password" />
         </div>
 
         <p v-if="error" class="login__error" role="alert">{{ error }}</p>
 
-        <AppButton
-          type="submit"
-          variant="primary"
-          :disabled="isLoading"
-          class="login__submit"
-        >
+        <AppButton type="submit" variant="primary" :disabled="isLoading" class="login__submit">
           {{ isLoading ? t('auth.login.submitting') : t('auth.login.submit') }}
         </AppButton>
       </form>

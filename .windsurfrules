@@ -18,6 +18,7 @@ Pages are thin wrappers. Global stuff goes in `app/components/shared/`, `app/sto
 
 **TypeScript**
 
+- Use TypeScript only, fully strict types
 - No `any` — ever. Define an explicit type.
 - All params and return types must be typed.
 - `interface` for objects, `type` for unions.
@@ -54,7 +55,7 @@ Pages are thin wrappers. Global stuff goes in `app/components/shared/`, `app/sto
 - `_variables.scss` = spacing, typography, radii only — never colors
 - User custom color: `useThemeStore.setCustomColor(hex)` → overrides H/S/L on `<html>`
 - `app/plugins/theme.client.ts` restores saved theme from localStorage
-- Components: `<style lang="scss" scoped>`, BEM naming, CSS vars only
+- Components: `<style scoped lang="scss">` in this exact order, BEM naming, CSS vars only
 
 **Auto-Imports — do not import manually**
 

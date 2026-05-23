@@ -1,6 +1,6 @@
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import type { HomeHeroData } from '../types/home.types'
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import type { HomeHeroData } from '../types/home.types';
 
 /**
  * Home feature store.
@@ -12,16 +12,16 @@ export const useHomeStore = defineStore('home', () => {
     title: '',
     subtitle: '',
     ctaLabel: '',
-    ctaHref: '/',
-  })
+    ctaHref: '/'
+  });
 
-  const isInitialized = ref(false)
+  const isInitialized = ref(false);
 
   // --- Actions ---
   function initialize(data: Partial<HomeHeroData>) {
-    hero.value = { ...hero.value, ...data }
-    isInitialized.value = true
+    hero.value = { ...hero.value, ...data };
+    isInitialized.value = true;
   }
 
-  return { hero, isInitialized, initialize }
-})
+  return { hero, isInitialized, initialize };
+});

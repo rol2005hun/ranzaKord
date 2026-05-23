@@ -14,7 +14,28 @@
   --color-bg: #0f172a;
   --color-surface: #1e293b;
   --color-surface-hover: #334155;
+  --color-surface-raised: #1e293b;
   --color-text-primary: #f1f5f9;
   --color-text-secondary: #94a3b8;
+  --color-text-disabled: #475569;
   --color-border: #334155;
+  --color-border-focus: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l));
+
+  --color-danger: #f87171;
+  --color-danger-hover: #ef4444;
+  --color-danger-foreground: #ffffff;
+  --color-danger-light: rgb(239 68 68 / 0.15);
+
+  --color-success: #4ade80;
+  --color-success-hover: #22c55e;
+  --color-success-foreground: #ffffff;
+  --color-success-light: rgb(34 197 94 / 0.15);
+
+  --color-warning: #fbbf24;
+  --color-warning-hover: #f59e0b;
+  --color-warning-foreground: #000000;
+  --color-warning-light: rgb(245 158 11 / 0.15);
+
+  --color-ring: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.4);
+  --color-overlay: rgb(0 0 0 / 0.7);
 }

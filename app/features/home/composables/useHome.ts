@@ -4,8 +4,8 @@
  * Bridges the store and the components.
  */
 export function useHome() {
-  const store = useHomeStore()
-  const { t } = useI18n()
+  const store = useHomeStore();
+  const { t } = useI18n();
 
   // Initialize hero data from i18n translations
   function setup() {
@@ -14,13 +14,13 @@ export function useHome() {
         title: t('home.title'),
         subtitle: t('home.subtitle'),
         ctaLabel: t('home.cta'),
-        ctaHref: '/',
-      })
+        ctaHref: '/'
+      });
     }
   }
 
   return {
     hero: computed(() => store.hero),
-    setup,
-  }
+    setup
+  };
 }

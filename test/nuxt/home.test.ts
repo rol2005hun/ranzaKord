@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { mountSuspended } from '@nuxt/test-utils/runtime';
+import { mountSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime';
 import HomeHero from '~/features/home/components/HomeHero.vue';
+
+mockNuxtImport('useI18n', () => {
+  return () => ({
+    t: (key: string) => key
+  });
+});
 
 describe('HomeHero', () => {
   it('renders without crashing', async () => {

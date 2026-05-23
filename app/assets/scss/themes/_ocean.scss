@@ -14,7 +14,28 @@
   --color-bg: #f0f9ff;
   --color-surface: #ffffff;
   --color-surface-hover: #e0f2fe;
+  --color-surface-raised: #ffffff;
   --color-text-primary: #0c4a6e;
   --color-text-secondary: #0369a1;
+  --color-text-disabled: #7dd3fc;
   --color-border: #bae6fd;
+  --color-border-focus: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l));
+
+  --color-danger: #ef4444;
+  --color-danger-hover: #dc2626;
+  --color-danger-foreground: #ffffff;
+  --color-danger-light: #fef2f2;
+
+  --color-success: #22c55e;
+  --color-success-hover: #16a34a;
+  --color-success-foreground: #ffffff;
+  --color-success-light: #f0fdf4;
+
+  --color-warning: #f59e0b;
+  --color-warning-hover: #d97706;
+  --color-warning-foreground: #ffffff;
+  --color-warning-light: #fffbeb;
+
+  --color-ring: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.35);
+  --color-overlay: rgb(0 0 0 / 0.5);
 }

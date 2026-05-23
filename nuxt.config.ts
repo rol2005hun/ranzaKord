@@ -17,8 +17,31 @@ export default defineNuxtConfig({
     '@nuxtjs/i18n',
     '@pinia/nuxt',
     '@pinia/colada-nuxt',
-    '@pinia-orm/nuxt'
+    '@pinia-orm/nuxt',
+    '@vueuse/nuxt',
+    '@nuxtjs/color-mode',
+    '@nuxtjs/seo'
   ],
+
+  site: {
+    url: 'https://example.com',
+    name: 'Nuxt Boilerplate',
+    description: 'A scalable Nuxt boilerplate.'
+  },
+
+  colorMode: {
+    preference: 'system',
+    fallback: 'light',
+    classSuffix: ''
+  },
+
+  sitemap: {
+    zeroRuntime: true
+  },
+
+  ogImage: {
+    enabled: false
+  },
 
   css: ['@/assets/scss/main.scss'],
 
@@ -34,8 +57,7 @@ export default defineNuxtConfig({
   i18n: {
     defaultLocale: 'en',
     locales: [{ code: 'en', name: 'English' }],
-    strategy: 'no_prefix',
-    vueI18n: './app/i18n.config.ts'
+    strategy: 'no_prefix'
   },
 
   typescript: {

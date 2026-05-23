@@ -19,6 +19,7 @@ app/features/<name>/
 
 ## TypeScript
 
+- Use TypeScript only, fully strict types
 - `strict: true` — never disable
 - **No `any`** — define an explicit type or interface instead
 - All function parameters and return values must be typed
@@ -59,7 +60,7 @@ Exception: `// TODO:` for intentional stubs only.
 - `_variables.scss` contains **only** non-color tokens (spacing, typography, radii)
 - User custom color → override `--color-primary-h/s/l` at runtime via `useThemeStore.setCustomColor(hex)`
 - Adding a theme: create SCSS file → add `ThemeId` union → add to `THEME_OPTIONS` → import in `main.scss`
-- Components: `<style lang="scss" scoped>`, BEM naming, CSS vars only — no hardcoded values
+- Components: `<style scoped lang="scss">` in this exact order, BEM naming, CSS vars only — no hardcoded values
 
 ## Nuxt Auto-Imports (do not import manually)
 

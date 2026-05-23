@@ -13,7 +13,7 @@ const props = withDefaults(defineProps<Props>(), {
   <Icon :name="props.name" :size="String(props.size)" class="app-icon" />
 </template>
 
-<style lang="scss" scoped>
+<style scoped lang="scss">
 .app-icon {
   display: inline-flex;
   flex-shrink: 0;

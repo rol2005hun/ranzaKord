@@ -30,6 +30,7 @@ app/features/<name>/
 ## Non-Negotiable Rules
 
 ### TypeScript
+- Use TypeScript only, fully strict types
 - No `any` — define explicit types or interfaces
 - Every function parameter and return value must be typed
 - Use `interface` for object shapes, `type` for unions
@@ -75,7 +76,7 @@ interface Props { label: string; disabled?: boolean }
 const props = withDefaults(defineProps<Props>(), { disabled: false })
 </script>
 <template>...</template>
-<style lang="scss" scoped>
+<style scoped lang="scss">
 .component { color: var(--color-text-primary); }
 </style>
 ```
@@ -87,7 +88,7 @@ const props = withDefaults(defineProps<Props>(), { disabled: false })
 - User custom color → override H/S/L via `useThemeStore.setCustomColor(hex)` (hex→HSL in `app/utils/color.ts`)
 - Adding a theme: SCSS file → `ThemeId` union → `THEME_OPTIONS` → `main.scss` import
 - `app/plugins/theme.client.ts` initializes theme from localStorage
-- Components: `<style lang="scss" scoped>`, BEM naming, CSS vars only
+- Components: `<style scoped lang="scss">` in this exact order, BEM naming, CSS vars only
 
 ## Nuxt Auto-Imports
 

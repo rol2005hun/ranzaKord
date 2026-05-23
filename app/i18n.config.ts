@@ -6,9 +6,9 @@
  *   - app/shared/locales/en.json              → accessible as $t('someKey') globally
  */
 
-import type { MessageSchema } from '~/types/i18n.types'
+import type { MessageSchema } from '~/types/i18n.types';
 
-const messages: Record<string, MessageSchema> = {}
+const messages: Record<string, MessageSchema> = {};
 
 const localeFiles = import.meta.glob('./**/locales/*.json', {
   eager: true,
@@ -46,5 +46,5 @@ export default defineI18nConfig(() => ({
   legacy: false,
   locale: 'en',
   fallbackLocale: 'en',
-  messages: messages as { en: MessageSchema },
+  messages: messages as { en: MessageSchema }
 }));

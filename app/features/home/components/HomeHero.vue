@@ -1,7 +1,7 @@
 <script setup lang="ts">
-const { hero, setup } = useHome()
+const { hero, setup } = useHome();
 
-setup()
+setup();
 </script>
 
 <template>
