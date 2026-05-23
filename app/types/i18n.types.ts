@@ -1,3 +1,3 @@
 export type MessageSchema = {
-  [key: string]: string | MessageSchema
-}
+  [key: string]: string | MessageSchema;
+};
