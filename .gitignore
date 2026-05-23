@@ -1,31 +1,67 @@
-# Nuxt dev/build outputs
+# Nuxt
+.nuxt
 .output
 .data
-.nuxt
 .nitro
 .cache
 dist
+.prerender
 
-# Node dependencies
+# Dependencies
 node_modules
+.pnp
+.pnp.js
 
-# Logs
+# Logs and databases
 logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Misc
-.DS_Store
-.fleet
-.idea
-
-# Local env files
+# Environment variables
 .env
 .env.*
 !.env.example
 
-# Test coverage
-coverage/
+# Testing
+coverage
+.nyc_output
+playwright-report
+test-results
+blob-report
 
-# Playwright
-playwright-report/
-test-results/
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs and Editors
+.idea
+.project
+.classpath
+.cproject
+.settings/
+*.launch
+.fleet
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Caches
+.eslintcache
+.stylelintcache
+.vite
