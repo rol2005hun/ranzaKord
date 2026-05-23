@@ -2,8 +2,6 @@ import { describe, it, expect } from 'vitest';
 
 describe('useApi', () => {
   it('should be a function', () => {
-    // Pure unit tests don't need Nuxt context
-    // Test utility functions, type guards, etc. here
     expect(typeof (() => {})).toBe('function');
   });
 

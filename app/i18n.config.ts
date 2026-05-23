@@ -6,7 +6,7 @@
  *   - app/shared/locales/en.json              → accessible as $t('someKey') globally
  */
 
-import type { MessageSchema } from '~/types/i18n.types';
+import type { MessageSchema } from '@/types/i18n.types';
 
 const messages: Record<string, MessageSchema> = {};
 

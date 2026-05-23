@@ -1,5 +1,3 @@
-// Global shared locale strings
-// Accessible as $t('someKey') anywhere in the app
 {
   "appName": "Nuxt Boilerplate",
   "loading": "Loading...",

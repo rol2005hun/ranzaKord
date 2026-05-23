@@ -1,4 +1,3 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -20,7 +19,8 @@ export default defineNuxtConfig({
     '@pinia-orm/nuxt',
     '@vueuse/nuxt',
     '@nuxtjs/color-mode',
-    '@nuxtjs/seo'
+    '@nuxtjs/seo',
+    'pinia-plugin-persistedstate/nuxt'
   ],
 
   site: {

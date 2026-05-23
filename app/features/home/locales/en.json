@@ -1,5 +1,3 @@
-// app/features/home locale – English
-// Accessible as $t('home.someKey')
 {
   "title": "Welcome to Nuxt Boilerplate",
   "subtitle": "A scalable, feature-based starting point for your Nuxt application.",

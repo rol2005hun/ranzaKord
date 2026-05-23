@@ -38,10 +38,19 @@ app/features/<name>/
 - Global types: `app/types/index.ts`, domain types: `app/types/<domain>.types.ts`
 - **Never define inline types** in composables, stores, or components — import from the types file
 
+### Imports
+- Imports must be grouped into separate blocks separated by a blank line.
+- The required block order is:
+  1. Node module dependencies
+  2. Own custom dependencies
+  3. Types
+  4. Vue components
+- Use `@/` for path aliases instead of `~/`.
+
 ### No Comments
 - No inline comments, no JSDoc
 - Code must be self-documenting through naming
-- Only `// TODO:` allowed for intentional stubs
+- Absolutely no comments are allowed in the code, not even `// TODO:` comments. No exceptions.
 
 ### i18n
 - Every user-facing string uses `$t()` or `t()` from `useI18n()`

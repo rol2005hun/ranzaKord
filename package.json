@@ -12,7 +12,7 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{vue,scss,css,js,ts,json}\"",
     "format:check": "prettier --check \"**/*.{vue,scss,css,js,ts,json}\"",
-    "typecheck": "vue-tsc --noEmit",
+    "typecheck": "nuxt typecheck",
     "check": "pnpm run typecheck && pnpm run lint && pnpm run format:check",
     "test": "vitest",
     "test:watch": "vitest --watch",
@@ -28,6 +28,8 @@
     "@unhead/vue": "^3.1.0",
     "nuxt": "^4.4.6",
     "pinia": "^3.0.4",
+    "pinia-orm": "^1.10.2",
+    "pinia-plugin-persistedstate": "^4.7.1",
     "vue": "^3.5.34",
     "vue-i18n": "^11.4.4",
     "vue-router": "^5.0.7"
@@ -82,6 +84,13 @@
         "pinia": "*",
         "@pinia/nuxt": "*"
       }
-    }
+    },
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "esbuild",
+      "sharp",
+      "unrs-resolver",
+      "vue-demi"
+    ]
   }
 }

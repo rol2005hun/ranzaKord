@@ -1,4 +1,4 @@
-import type { ToastItem, ToastOptions } from '~/types/toast.types';
+import type { ToastItem, ToastOptions } from '@/types/toast.types';
 
 const toasts = ref<ToastItem[]>([]);
 

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { mountSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime';
-import HomeHero from '~/features/home/components/HomeHero.vue';
+
+import HomeHero from '@/features/home/components/HomeHero.vue';
 
 mockNuxtImport('useI18n', () => {
   return () => ({

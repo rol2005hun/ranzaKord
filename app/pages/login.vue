@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { LoginCredentials } from '~/features/auth/types/auth.types';
+import type { LoginCredentials } from '@/features/auth/types/auth.types';
 
 definePageMeta({ layout: 'auth' });
 

@@ -25,11 +25,21 @@ Pages are thin wrappers. Global stuff goes in `app/components/shared/`, `app/sto
 - Feature types: `features/<name>/types/<name>.types.ts`; global: `app/types/<domain>.types.ts`
 - Never define inline types in stores, composables, or components.
 
+**Imports**
+
+- Imports must be grouped into separate blocks separated by a blank line.
+- The required block order is:
+  1. Node module dependencies
+  2. Own custom dependencies
+  3. Types
+  4. Vue components
+- Use `@/` for path aliases instead of `~/`.
+
 **No Comments**
 
 - No inline comments, no JSDoc.
 - Name things clearly instead.
-- Only `// TODO:` for intentional stubs.
+- Absolutely no comments are allowed in the code, not even `// TODO:` comments. No exceptions.
 
 **i18n**
 
