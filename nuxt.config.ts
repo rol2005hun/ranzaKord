@@ -62,14 +62,28 @@ export default defineNuxtConfig({
 
   typescript: {
     strict: true,
+    typeCheck: true,
     tsConfig: {
       compilerOptions: {
-        experimentalDecorators: true
+        experimentalDecorators: true,
+        noUnusedLocals: true,
+        noUnusedParameters: true,
+        noImplicitReturns: true,
+        noFallthroughCasesInSwitch: true,
+        noUncheckedIndexedAccess: true,
+        noImplicitOverride: true,
+        allowUnreachableCode: false
       }
     }
   },
 
   vite: {
+    optimizeDeps: {
+      include: [
+        'pinia-orm',
+        'pinia-orm/decorators'
+      ]
+    },
     esbuild: {
       tsconfigRaw: {
         compilerOptions: {

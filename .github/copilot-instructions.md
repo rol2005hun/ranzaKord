@@ -51,9 +51,9 @@ function formatDate(date: any) { ... }
 
 ## No Code Comments
 
-- Do not write inline comments or JSDoc blocks in implementation code
-- Code should be self-documenting through clear naming
-- The only exception: `// TODO:` markers for intentionally incomplete stubs
+- Absolutely no comments are allowed in the code.
+- No inline comments, no JSDoc blocks, and no `// TODO:` markers. No exceptions.
+- Code should be self-documenting through clear naming.
 
 ```ts
 // ❌ wrong
@@ -62,6 +62,28 @@ const isAuth = computed(() => !!session.value)
 
 // ✅ correct
 const isAuthenticated = computed(() => !!session.value)
+```
+
+## Import Ordering
+
+Group imports in blocks separated by a blank line in the following order:
+1. Node modules dependencies
+2. Own custom dependencies
+3. Types
+4. Vue components
+
+Always use the `@/` alias for all internal imports instead of `~/` (e.g., `@/types`, `@/features/...`).
+
+```ts
+// ✅ correct
+import { describe, it, expect } from 'vitest';
+import { mountSuspended } from '@nuxt/test-utils/runtime';
+
+import { useToast } from '@/composables/useToast';
+
+import type { ApiResponse } from '@/types';
+
+import HomeHero from '@/features/home/components/HomeHero.vue';
 ```
 
 ## i18n
