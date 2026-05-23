@@ -79,10 +79,7 @@ export default defineNuxtConfig({
 
   vite: {
     optimizeDeps: {
-      include: [
-        'pinia-orm',
-        'pinia-orm/decorators'
-      ]
+      include: ['pinia-orm', 'pinia-orm/decorators']
     },
     esbuild: {
       tsconfigRaw: {

@@ -51,15 +51,17 @@ describe('Shared Components', () => {
   });
 
   it('renders AppModal', async () => {
-    const wrapper = await mountSuspended(AppModal, { props: { modelValue: true, title: 'Modal Title' } });
+    const wrapper = await mountSuspended(AppModal, {
+      props: { modelValue: true, title: 'Modal Title' }
+    });
     expect(wrapper.exists()).toBe(true);
   });
 
   it('renders AppSelect', async () => {
-    const wrapper = await mountSuspended(AppSelect, { 
-      props: { 
-        options: [{ label: 'Option 1', value: '1' }] 
-      } 
+    const wrapper = await mountSuspended(AppSelect, {
+      props: {
+        options: [{ label: 'Option 1', value: '1' }]
+      }
     });
     expect(wrapper.exists()).toBe(true);
     expect(wrapper.text()).toContain('Option 1');

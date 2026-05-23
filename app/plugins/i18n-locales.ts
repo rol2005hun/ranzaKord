@@ -41,7 +41,9 @@ export default defineNuxtPlugin({
     for (const locale in messages) {
       const localeMessages = messages[locale];
       if (localeMessages) {
-        (nuxtApp.$i18n as { mergeLocaleMessage: (locale: string, messages: MessageSchema) => void }).mergeLocaleMessage(locale, localeMessages);
+        (
+          nuxtApp.$i18n as { mergeLocaleMessage: (locale: string, messages: MessageSchema) => void }
+        ).mergeLocaleMessage(locale, localeMessages);
       }
     }
   }
