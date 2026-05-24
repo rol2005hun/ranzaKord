@@ -7,10 +7,10 @@
       fill="none"
       aria-hidden="true"
       class="app-brand__logo">
-      <path d="M14 2L26 8.5V19.5L14 26L2 19.5V8.5L14 2Z" fill="url(#brand-dlg)" />
+      <path d="M14 2L26 8.5V19.5L14 26L2 19.5V8.5L14 2Z" fill="url(#brand-gradient)" />
       <path d="M14 8L20 11.5V18.5L14 22L8 18.5V11.5L14 8Z" fill="rgba(255,255,255,0.2)" />
       <defs>
-        <linearGradient id="brand-dlg" x1="2" y1="2" x2="26" y2="26" gradientUnits="userSpaceOnUse">
+        <linearGradient id="brand-gradient" x1="2" y1="2" x2="26" y2="26" gradientUnits="userSpaceOnUse">
           <stop
             stop-color="hsl(var(--color-primary-h) var(--color-primary-s) calc(var(--color-primary-l) + 15%))" />
           <stop
@@ -28,7 +28,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  filter: drop-shadow(0 0 6px var(--color-primary-glow));
+  filter: drop-shadow(0 0 6px var(--color-ring));
 
   &__logo {
     flex-shrink: 0;
