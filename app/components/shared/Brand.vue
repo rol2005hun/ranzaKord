@@ -1,7 +1,3 @@
-<script setup lang="ts">
-// Reusable Brand component for the application logo and name
-</script>
-
 <template>
   <div class="app-brand">
     <svg
@@ -23,7 +19,7 @@
         </linearGradient>
       </defs>
     </svg>
-    <span class="app-brand__name">BrandName</span>
+    <span class="app-brand__name">{{ $t('brandName') }}</span>
   </div>
 </template>
 

@@ -1,6 +1,7 @@
 {
   "appName": "Nuxt Boilerplate",
   "loading": "Loading...",
+  "brandName": "BrandName",
   "error": {
     "generic": "Something went wrong.",
     "notFound": "Page not found."
