@@ -274,3 +274,7 @@ docs(rules): add conventional commits convention
 - Subject line: max 72 characters, lowercase, no trailing period
 - Body (optional): explain *why*, not *what*
 - Breaking changes: add `!` after scope → `feat(auth)!: remove legacy session`
+
+## Dependencies
+
+- **Dependencyt nem torlunk le:** Csak akkor törlünk függőséget vagy modult, ha azt a felhasználó kifejezetten kérte, vagy közösen megbeszéltük, hogy nincs rá szükség. Bármilyen hiba esetén inkább megkerüljük vagy konfiguráljuk a hibás modult, de nem töröljük le kérdés nélkül.
