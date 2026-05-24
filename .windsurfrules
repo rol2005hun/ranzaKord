@@ -106,3 +106,7 @@ build(nuxt): enable pinia-orm module
 - Subject: max 72 chars, lowercase, no trailing period
 - Body (optional): explain *why*, not *what*
 - Breaking change: `feat(auth)!: remove legacy session`
+
+## Dependencies
+
+- **Do not delete dependencies:** Only delete a dependency or module if the user explicitly requested it, or if we mutually agreed that it is no longer needed. In case of any errors, it is better to work around or configure the faulty module rather than deleting it without asking.
