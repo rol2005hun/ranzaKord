@@ -78,4 +78,4 @@ refactor(auth): extract login logic into useAuth composable
 
 ## Dependencies
 
-- **Dependencyt nem torlunk le:** Csak akkor törlünk függőséget vagy modult, ha azt a felhasználó kifejezetten kérte, vagy közösen megbeszéltük, hogy nincs rá szükség. Bármilyen hiba esetén inkább megkerüljük vagy konfiguráljuk a hibás modult, de nem töröljük le kérdés nélkül.
+- **Do not delete dependencies:** Only delete a dependency or module if the user explicitly requested it, or if we mutually agreed that it is no longer needed. In case of any errors, it is better to work around or configure the faulty module rather than deleting it without asking.
