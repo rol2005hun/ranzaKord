@@ -55,4 +55,12 @@ describe('useToast', () => {
     expect(tInfo?.variant).toBe('info');
     if (tInfo) remove(tInfo.id);
   });
+
+  it('automatically removes toast after duration', async () => {
+    const { toasts, add } = useToast();
+    add({ message: 'Auto remove', duration: 10 });
+    expect(toasts.value.length).toBeGreaterThan(0);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(toasts.value.find((t) => t.message === 'Auto remove')).toBeUndefined();
+  });
 });

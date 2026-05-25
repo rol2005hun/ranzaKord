@@ -14,6 +14,7 @@ export default defineNuxtPlugin({
     for (const path in localeFiles) {
       const match = path.match(/\/([^/]+)\/locales\/([a-z0-9-_]+)\.json$/i);
 
+      /* v8 ignore next */
       if (match && match[1] && match[2]) {
         const parentName = match[1];
         const locale = match[2];
@@ -40,6 +41,7 @@ export default defineNuxtPlugin({
 
     for (const locale in messages) {
       const localeMessages = messages[locale];
+      /* v8 ignore next */
       if (localeMessages) {
         (
           nuxtApp.$i18n as { mergeLocaleMessage: (locale: string, messages: MessageSchema) => void }

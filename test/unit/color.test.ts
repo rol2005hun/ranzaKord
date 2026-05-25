@@ -13,6 +13,11 @@ describe('color utils', () => {
     expect(hexToHsl('#ffffff')).toEqual({ h: 0, s: 0, l: 100 });
     // Black
     expect(hexToHsl('#000000')).toEqual({ h: 0, s: 0, l: 0 });
+    // Branch: l > 0.5 for lightness
+    expect(hexToHsl('#d3d3d3')).toEqual({ h: 0, s: 0, l: 83 });
+
+    // Branch: l > 0.5 and max !== min
+    expect(hexToHsl('#ffcccc')).toEqual({ h: 0, s: 100, l: 90 });
     // Invalid
     expect(hexToHsl('invalid')).toEqual({ h: 0, s: 0, l: 0 });
   });
