@@ -25,46 +25,48 @@ const exec = (cmd: string, ignoreError = false) => {
 };
 
 const run = () => {
-  console.log('🔄 Szinkronizálás indítása Git Merge segítségével...\n');
+  console.log('Starting synchronization using Git Merge...\n');
 
   const status = exec('git status --porcelain');
   if (status !== '') {
-    console.error('❌ Hiba: A munkakönyvtár nem tiszta!');
-    console.error('Kérlek, commitálj vagy stash-elj minden változtatást a szinkronizálás előtt.');
+    console.error('Error: Working directory is not clean!');
+    console.error('Please commit or stash all changes before synchronizing.');
     process.exit(1);
   }
 
   const remotes = exec('git remote');
   if (!remotes.split('\n').includes('boilerplate')) {
-    console.log('🔗 Boilerplate remote hozzáadása...');
+    console.log('Adding boilerplate remote...');
     exec('git remote add boilerplate https://github.com/rol2005hun/nuxt-boilerplate.git');
   }
 
-  console.log('⬇️ Frissítések letöltése a boilerplate-ből...');
+  console.log('Fetching updates from boilerplate...');
   exec('git fetch boilerplate master', true);
 
-  console.log('🔀 Változások összefésülése (Merge)...');
+  console.log('Merging changes...');
   try {
-    execSync('git merge boilerplate/master --no-commit --no-ff --allow-unrelated-histories', { stdio: 'inherit' });
-  } catch (err) {
-    console.log('\n⚠️ Konfliktusok léptek fel a merge során (vagy sikeres merge no-commit módban).');
+    execSync('git merge boilerplate/master --no-commit --no-ff --allow-unrelated-histories', {
+      stdio: 'inherit'
+    });
+  } catch {
+    console.log('\nMerge conflicts occurred (or successful merge in no-commit mode).');
   }
 
-  console.log('🛡️ Védett fájlok (PRESERVE_PATHS) visszaállítása...');
+  console.log('Restoring preserved paths (PRESERVE_PATHS)...');
   for (const path of PRESERVE_PATHS) {
     try {
       exec(`git reset HEAD "${path}"`, true);
       exec(`git checkout HEAD -- "${path}"`, true);
       exec(`git clean -fd "${path}"`, true);
-    } catch (e) {
+    } catch {
       // ignore
     }
   }
 
-  console.log('\n✅ Kész! A fájlok sikeresen össze lettek fésülve (Staged állapotban).');
-  console.log('👀 Nézd meg a változásokat (Source Control fül a VSCode-ban)!');
-  console.log('🛠️ Ha van konfliktus (piros fájlok), oldd fel őket!');
-  console.log('🚀 Ha minden jónak tűnik, commitáld a változásokat: git commit -m "chore: sync boilerplate"');
+  console.log('\nDone! Files have been successfully merged (Staged state).');
+  console.log('Check the changes in the Source Control tab in VSCode.');
+  console.log('If there are conflicts, resolve them.');
+  console.log('If everything looks good, commit the changes: git commit -m "chore: sync boilerplate"');
 };
 
 try {
