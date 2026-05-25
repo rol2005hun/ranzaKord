@@ -1,8 +1,13 @@
-
-
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
 
+  app: {
+    head: {
+      titleTemplate: '%s | Nuxt Boilerplate',
+      charset: 'utf-8',
+      viewport: 'width=device-width, initial-scale=1'
+    }
+  },
 
   devtools: { enabled: true },
   srcDir: 'app/',
