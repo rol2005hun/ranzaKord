@@ -24,6 +24,17 @@ const OWNER = process.env.BOILERPLATE_OWNER ?? 'rol2005hun';
 const REPO = process.env.BOILERPLATE_REPO ?? 'nuxt-boilerplate';
 const REF = process.env.BOILERPLATE_REF ?? 'master';
 const SELF_PATH = 'sync-boilerplate.ts';
+
+const PRESERVE_PATHS = [
+  'README.md',
+  'app/app.vue',
+  'app/pages',
+  'app/layouts',
+  'public',
+  'server',
+  'nuxt.config.ts',
+  'pnpm-workspace.yaml'
+];
 const TARGETS = [
   '.cursor',
   '.cursorrules',
@@ -112,24 +123,34 @@ const getRemoteFileBuffer = async (path: string) => {
   return fetchBuffer(content.download_url);
 };
 
+const isPreserved = (path: string) => {
+  return PRESERVE_PATHS.some((p) => path === p || path.startsWith(`${p}/`));
+};
+
 const writeRemoteFile = async (content: GithubContent) => {
   if (!content.download_url) {
     throw new Error(`Missing download URL for ${content.path}`);
   }
   const localPath = resolveSafePath(content.path);
+  if (isPreserved(content.path) && existsSync(localPath)) {
+    return; // Do not overwrite preserved files
+  }
   mkdirSync(dirname(localPath), { recursive: true });
   const data = await fetchBuffer(content.download_url);
   writeFileSync(localPath, data);
 };
 
 const syncPath = async (path: string): Promise<void> => {
+  const localDir = resolveSafePath(path);
+  if (isPreserved(path) && existsSync(localDir)) {
+    return; // Skip entire preserved directories if they exist
+  }
+
   const content = await fetchJson<GithubContent | GithubContent[]>(buildContentsUrl(path));
   if (Array.isArray(content)) {
-    const localDir = resolveSafePath(path);
-    if (existsSync(localDir)) {
-      rmSync(localDir, { recursive: true, force: true });
+    if (!existsSync(localDir)) {
+      mkdirSync(localDir, { recursive: true });
     }
-    mkdirSync(localDir, { recursive: true });
     for (const item of content) {
       await syncPath(item.path);
     }
