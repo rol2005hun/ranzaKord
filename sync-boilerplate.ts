@@ -21,7 +21,7 @@ interface PackageJson {
 
 const OWNER = process.env.BOILERPLATE_OWNER ?? 'rol2005hun';
 const REPO = process.env.BOILERPLATE_REPO ?? 'nuxt-boilerplate';
-const REF = process.env.BOILERPLATE_REF ?? 'main';
+const REF = process.env.BOILERPLATE_REF ?? 'master';
 const SELF_PATH = 'sync-boilerplate.ts';
 const TARGETS = [
   '.cursor',
@@ -178,11 +178,15 @@ const selfUpdate = async () => {
     return false;
   }
   writeFileSync(localPath, remoteData);
-  const child = spawn('tsx', [SELF_PATH, '--skip-self-update'], {
-    stdio: 'inherit',
-    detached: true,
-    env: process.env
-  });
+  const child = spawn(
+    process.platform === 'win32' ? 'npx.cmd' : 'npx',
+    ['tsx', SELF_PATH, '--skip-self-update'],
+    {
+      stdio: 'inherit',
+      detached: true,
+      env: process.env
+    }
+  );
   child.unref();
   return true;
 };
