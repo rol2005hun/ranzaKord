@@ -1,15 +1,29 @@
 import { execSync } from 'node:child_process';
 
-const PRESERVE_PATHS = [
-  'README.md',
-  'app/app.vue',
-  'app/pages',
-  'app/layouts',
-  'public',
-  'server',
+const TARGETS = [
+  '.agent',
+  '.cursor',
+  '.github',
+  '.husky',
+  '.vscode',
+  '.cursorrules',
+  '.editorconfig',
+  '.gitattributes',
+  '.gitignore',
+  '.nuxtrc',
+  '.prettierrc',
+  '.windsurfrules',
+  'CLAUDE.md',
+  'commitlint.config.ts',
+  'eslint.config.mjs',
   'nuxt.config.ts',
+  'package.json',
+  'playwright.config.ts',
   'pnpm-workspace.yaml',
-  'sync-boilerplate.ts'
+  'stylelint.config.mjs',
+  'sync-boilerplate.ts',
+  'tsconfig.json',
+  'vitest.config.ts'
 ];
 
 const exec = (cmd: string, ignoreError = false) => {
@@ -52,21 +66,28 @@ const run = () => {
     console.log('\nMerge conflicts occurred (or successful merge in no-commit mode).');
   }
 
-  console.log('Restoring preserved paths (PRESERVE_PATHS)...');
-  for (const path of PRESERVE_PATHS) {
-    try {
-      exec(`git reset HEAD "${path}"`, true);
-      exec(`git checkout HEAD -- "${path}"`, true);
-      exec(`git clean -fd "${path}"`, true);
-    } catch {
-      // ignore
+  console.log('Discarding changes for files not in TARGETS...');
+  const changedFiles = exec('git diff --name-only HEAD').split('\n').filter(Boolean);
+
+  for (const file of changedFiles) {
+    const isTarget = TARGETS.some((t) => file === t || file.startsWith(`${t}/`));
+    if (!isTarget) {
+      try {
+        exec(`git reset HEAD "${file}"`, true);
+        exec(`git checkout HEAD -- "${file}"`, true);
+        exec(`git clean -fd "${file}"`, true);
+      } catch {
+        // ignore
+      }
     }
   }
 
   console.log('\nDone! Files have been successfully merged (Staged state).');
   console.log('Check the changes in the Source Control tab in VSCode.');
   console.log('If there are conflicts, resolve them.');
-  console.log('If everything looks good, commit the changes: git commit -m "chore: sync boilerplate"');
+  console.log(
+    'If everything looks good, commit the changes: git commit -m "chore: sync boilerplate"'
+  );
 };
 
 try {
