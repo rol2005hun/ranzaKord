@@ -179,8 +179,8 @@ const selfUpdate = async () => {
   }
   writeFileSync(localPath, remoteData);
   const child = spawn(
-    process.platform === 'win32' ? 'npx.cmd' : 'npx',
-    ['tsx', SELF_PATH, '--skip-self-update'],
+    process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm',
+    ['exec', 'tsx', SELF_PATH, '--skip-self-update'],
     {
       stdio: 'inherit',
       detached: true,
