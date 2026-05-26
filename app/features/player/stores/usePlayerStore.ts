@@ -11,14 +11,16 @@ export const usePlayerStore = defineStore('player', () => {
   const error = ref<string | null>(null);
 
   const hasNext = computed(() => {
-    if (!currentTrack.value) return false;
-    const idx = queue.value.findIndex((t) => t.videoId === currentTrack.value!.videoId);
+    const track = currentTrack.value;
+    if (!track) return false;
+    const idx = queue.value.findIndex((t) => t.videoId === track.videoId);
     return idx >= 0 && idx < queue.value.length - 1;
   });
 
   const hasPrev = computed(() => {
-    if (!currentTrack.value) return false;
-    const idx = queue.value.findIndex((t) => t.videoId === currentTrack.value!.videoId);
+    const track = currentTrack.value;
+    if (!track) return false;
+    const idx = queue.value.findIndex((t) => t.videoId === track.videoId);
     return idx > 0;
   });
 
@@ -40,8 +42,9 @@ export const usePlayerStore = defineStore('player', () => {
   }
 
   function nextTrack(): Track | null {
-    if (!currentTrack.value) return null;
-    const idx = queue.value.findIndex((t) => t.videoId === currentTrack.value!.videoId);
+    const track = currentTrack.value;
+    if (!track) return null;
+    const idx = queue.value.findIndex((t) => t.videoId === track.videoId);
     if (idx >= 0 && idx < queue.value.length - 1) {
       return queue.value[idx + 1] ?? null;
     }
@@ -49,8 +52,9 @@ export const usePlayerStore = defineStore('player', () => {
   }
 
   function prevTrack(): Track | null {
-    if (!currentTrack.value) return null;
-    const idx = queue.value.findIndex((t) => t.videoId === currentTrack.value!.videoId);
+    const track = currentTrack.value;
+    if (!track) return null;
+    const idx = queue.value.findIndex((t) => t.videoId === track.videoId);
     if (idx > 0) {
       return queue.value[idx - 1] ?? null;
     }
