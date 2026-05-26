@@ -25,7 +25,12 @@ export default defineEventHandler(async (event): Promise<StreamResponse> => {
   const innertube = await createInnertube(true);
   const info = await innertube.getInfo(videoId.trim());
 
-  const format = info.chooseFormat({ type: 'audio', quality: 'best' });
+  const formats = [
+    ...(info.streaming_data?.formats || []),
+    ...(info.streaming_data?.adaptive_formats || [])
+  ];
+
+  const format = formats.find((f) => f.has_audio && (f.url || f.signature_cipher));
 
   if (!format) {
     throw createError({ statusCode: 404, statusMessage: 'No audio format available' });
