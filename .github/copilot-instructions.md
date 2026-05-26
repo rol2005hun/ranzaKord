@@ -1,6 +1,7 @@
 # Project Instructions for GitHub Copilot
 
 ## Project Overview
+
 This is a **Nuxt 4** application using TypeScript strict mode, feature-based architecture, Pinia for state management, Pinia ORM for entity models, and `@nuxtjs/i18n` for internationalization.
 
 ## Architecture: Feature-Based Design
@@ -27,6 +28,7 @@ app/
 ```
 
 **Rules:**
+
 - Pages are thin – they only import feature components and set page meta
 - New features always go into `app/features/<name>/`
 - Cross-feature shared components go into `app/components/shared/`
@@ -58,15 +60,16 @@ function formatDate(date: any) { ... }
 ```ts
 // ❌ wrong
 // Checks if user is authenticated
-const isAuth = computed(() => !!session.value)
+const isAuth = computed(() => !!session.value);
 
 // ✅ correct
-const isAuthenticated = computed(() => !!session.value)
+const isAuthenticated = computed(() => !!session.value);
 ```
 
 ## Import Ordering
 
 Group imports in blocks separated by a blank line in the following order:
+
 1. Node modules dependencies
 2. Own custom dependencies
 3. Types
@@ -91,8 +94,11 @@ import HomeHero from '@/features/home/components/HomeHero.vue';
 - All user-facing strings must use `$t()` or `useI18n()`
 - Never hardcode UI strings in templates or composables
 - Place locale files at: `app/features/<name>/locales/en.json`
-- Global strings: `app/shared/locales/en.json`
-- Keys are auto-namespaced by parent folder: feature `auth` → `$t('auth.login.title')`
+- Locale files are auto-loaded by `app/plugins/i18n-locales.ts` from `app/features/**/locales/**/*.json`
+- Keys are namespaced by feature folder: feature `auth` → `$t('auth.login.title')`
+- Nested locale folders are supported: `app/features/auth/locales/forms/en.json` → `$t('auth.forms.<key>')`
+- Global UI strings must live in `app/features/core/locales/en.json` → e.g. `$t('core.appName')`
+- Do not use `app/shared/locales` for application messages
 - Only English (`en`) locale is supported
 
 ```vue
@@ -114,10 +120,10 @@ import HomeHero from '@/features/home/components/HomeHero.vue';
 ```ts
 // ✅ correct
 export const useAuthStore = defineStore('auth', () => {
-  const session = ref<AuthSession | null>(null)
-  const isAuthenticated = computed(() => !!session.value)
-  return { session, isAuthenticated }
-})
+  const session = ref<AuthSession | null>(null);
+  const isAuthenticated = computed(() => !!session.value);
+  return { session, isAuthenticated };
+});
 ```
 
 ## Pinia ORM
@@ -128,13 +134,13 @@ export const useAuthStore = defineStore('auth', () => {
 - Access repositories via `useRepo(ModelName)`
 
 ```ts
-import { Model } from 'pinia-orm'
-import { Num, Str } from 'pinia-orm/decorators'
+import { Model } from 'pinia-orm';
+import { Num, Str } from 'pinia-orm/decorators';
 
 export class User extends Model {
-  static entity = 'users'
-  @Num(0) declare id: number
-  @Str('') declare name: string
+  static entity = 'users';
+  @Num(0) declare id: number;
+  @Str('') declare name: string;
 }
 ```
 
@@ -188,6 +194,7 @@ Each theme defines its colors via `[data-theme="<name>"]` selector using HSL com
 **User custom color:** The three HSL components (`--color-primary-h/s/l`) can be overridden at runtime via JS to apply a user-chosen primary color — the rest of the theme stays intact.
 
 **Adding a new theme:**
+
 1. Create `app/assets/scss/themes/_<name>.scss` with `[data-theme='<name>']` block
 2. Add the `ThemeId` type union in `app/features/theme/types/theme.types.ts`
 3. Add the option to `THEME_OPTIONS` in `useTheme.ts`
@@ -230,6 +237,7 @@ Each theme defines its colors via `[data-theme="<name>"]` selector using HSL com
 ## Nuxt Auto-Imports
 
 The following are auto-imported – **do not manually import them**:
+
 - `ref`, `computed`, `reactive`, `watch`, `onMounted` etc. (Vue)
 - `definePageMeta`, `useHead`, `navigateTo`, `useRoute`, `useRouter` (Nuxt)
 - `defineStore` (Pinia)
@@ -246,19 +254,19 @@ The following are auto-imported – **do not manually import them**:
 
 Format: `type(scope): short description`
 
-| Type | When to use |
-|---|---|
-| `feat` | New feature or page |
-| `fix` | Bug fix |
-| `refactor` | Code change with no behavior change |
-| `style` | Formatting only (no logic change) |
-| `docs` | Documentation, README, agent rules |
-| `test` | Adding or updating tests |
-| `chore` | Tooling, config, dependencies |
-| `build` | Build system changes (vite, nuxt config) |
-| `ci` | CI/CD pipeline changes |
-| `perf` | Performance improvement |
-| `revert` | Revert a previous commit |
+| Type       | When to use                              |
+| ---------- | ---------------------------------------- |
+| `feat`     | New feature or page                      |
+| `fix`      | Bug fix                                  |
+| `refactor` | Code change with no behavior change      |
+| `style`    | Formatting only (no logic change)        |
+| `docs`     | Documentation, README, agent rules       |
+| `test`     | Adding or updating tests                 |
+| `chore`    | Tooling, config, dependencies            |
+| `build`    | Build system changes (vite, nuxt config) |
+| `ci`       | CI/CD pipeline changes                   |
+| `perf`     | Performance improvement                  |
+| `revert`   | Revert a previous commit                 |
 
 **Scope** = the affected feature or area (e.g. `auth`, `home`, `i18n`, `deps`, `layout`)
 
@@ -272,7 +280,7 @@ docs(rules): add conventional commits convention
 ```
 
 - Subject line: max 72 characters, lowercase, no trailing period
-- Body (optional): explain *why*, not *what*
+- Body (optional): explain _why_, not _what_
 - Breaking changes: add `!` after scope → `feat(auth)!: remove legacy session`
 
 ## Dependencies

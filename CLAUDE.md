@@ -30,6 +30,7 @@ app/features/<name>/
 ## Non-Negotiable Rules
 
 ### TypeScript
+
 - Use TypeScript only, fully strict types
 - No `any` — define explicit types or interfaces
 - Every function parameter and return value must be typed
@@ -39,6 +40,7 @@ app/features/<name>/
 - **Never define inline types** in composables, stores, or components — import from the types file
 
 ### Imports
+
 - Imports must be grouped into separate blocks separated by a blank line.
 - The required block order is:
   1. Node module dependencies
@@ -48,49 +50,65 @@ app/features/<name>/
 - Use `@/` for path aliases instead of `~/`.
 
 ### No Comments
+
 - No inline comments, no JSDoc
 - Code must be self-documenting through naming
 - Absolutely no comments are allowed in the code, not even `// TODO:` comments. No exceptions.
 
 ### i18n
+
 - Every user-facing string uses `$t()` or `t()` from `useI18n()`
-- Locale files at `features/<name>/locales/en.json` → namespaced as `$t('<name>.key')`
-- Global strings at `app/shared/locales/en.json` → `$t('key')`
+- Locale files at `app/features/<name>/locales/en.json` → namespaced as `$t('<name>.key')`
+- Locale files are loaded by `app/plugins/i18n-locales.ts` from `app/features/**/locales/**/*.json`
+- Nested locale folders are supported: `app/features/auth/locales/forms/en.json` → `$t('auth.forms.<key>')`
+- Global UI strings belong to `app/features/core/locales/en.json` → e.g. `$t('core.appName')`
+- Do not use `app/shared/locales` for application messages
 - English only — no other locales
 
 ### Pinia Stores
+
 ```ts
 export const useFeatureStore = defineStore('feature', () => {
-  const data = ref<FeatureData | null>(null)
-  const isLoaded = computed(() => data.value !== null)
-  function load(payload: FeatureData) { data.value = payload }
-  return { data, isLoaded, load }
-})
+  const data = ref<FeatureData | null>(null);
+  const isLoaded = computed(() => data.value !== null);
+  function load(payload: FeatureData) {
+    data.value = payload;
+  }
+  return { data, isLoaded, load };
+});
 ```
 
 ### Pinia ORM Models
+
 ```ts
 export class User extends Model {
-  static entity = 'users'
-  @Num(0) declare id: number
-  @Str('') declare name: string
-  @Bool(false) declare isAdmin: boolean
+  static entity = 'users';
+  @Num(0) declare id: number;
+  @Str('') declare name: string;
+  @Bool(false) declare isAdmin: boolean;
 }
 ```
 
 ### Components
+
 ```vue
 <script setup lang="ts">
-interface Props { label: string; disabled?: boolean }
-const props = withDefaults(defineProps<Props>(), { disabled: false })
+interface Props {
+  label: string;
+  disabled?: boolean;
+}
+const props = withDefaults(defineProps<Props>(), { disabled: false });
 </script>
 <template>...</template>
 <style scoped lang="scss">
-.component { color: var(--color-text-primary); }
+.component {
+  color: var(--color-text-primary);
+}
 </style>
 ```
 
 ### SCSS & Theme System
+
 - Themes → `app/assets/scss/themes/`, one file per theme
 - Each theme: `[data-theme='<name>']` with HSL primary color components (`--color-primary-h/s/l`)
 - `_variables.scss` = **only** spacing, typography, radii (never colors)
@@ -102,6 +120,7 @@ const props = withDefaults(defineProps<Props>(), { disabled: false })
 ## Nuxt Auto-Imports
 
 Do NOT add these imports manually — Nuxt handles them:
+
 - `ref`, `computed`, `reactive`, `watch`, `onMounted`, `readonly` (Vue)
 - `definePageMeta`, `useHead`, `navigateTo`, `useRoute`, `useRouter`, `createError`, `$fetch`, `useNuxtApp`, `defineNuxtRouteMiddleware` (Nuxt)
 - `defineStore` (Pinia)
@@ -121,19 +140,19 @@ Do NOT add these imports manually — Nuxt handles them:
 
 Format: `type(scope): short description`
 
-| Type | When to use |
-|---|---|
-| `feat` | New feature or page |
-| `fix` | Bug fix |
-| `refactor` | Code change with no behavior change |
-| `style` | Formatting only (no logic change) |
-| `docs` | Documentation, README, agent rules |
-| `test` | Adding or updating tests |
-| `chore` | Tooling, config, dependencies |
-| `build` | Build system changes (nuxt.config, vite) |
-| `ci` | CI/CD pipeline changes |
-| `perf` | Performance improvement |
-| `revert` | Revert a previous commit |
+| Type       | When to use                              |
+| ---------- | ---------------------------------------- |
+| `feat`     | New feature or page                      |
+| `fix`      | Bug fix                                  |
+| `refactor` | Code change with no behavior change      |
+| `style`    | Formatting only (no logic change)        |
+| `docs`     | Documentation, README, agent rules       |
+| `test`     | Adding or updating tests                 |
+| `chore`    | Tooling, config, dependencies            |
+| `build`    | Build system changes (nuxt.config, vite) |
+| `ci`       | CI/CD pipeline changes                   |
+| `perf`     | Performance improvement                  |
+| `revert`   | Revert a previous commit                 |
 
 **Scope** = affected feature or area (`auth`, `home`, `i18n`, `deps`, `layout`)
 
@@ -148,7 +167,7 @@ build(nuxt): enable pinia-orm module
 ```
 
 - Subject: max 72 chars, lowercase, no trailing period
-- Body (optional): explain *why*, not *what*
+- Body (optional): explain _why_, not _what_
 - Breaking change: `feat(auth)!: remove legacy session`
 
 ## Dependencies

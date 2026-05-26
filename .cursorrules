@@ -44,8 +44,11 @@ Self-documenting names only. No inline comments, no JSDoc blocks, not even `// T
 ## i18n
 
 - All UI strings via `$t()` / `useI18n()` — never hardcode text
-- Locale files: `features/<name>/locales/en.json`
-- Global strings: `app/shared/locales/en.json`
+- Locale files: `app/features/<name>/locales/en.json`
+- Locale files are loaded by `app/plugins/i18n-locales.ts` from `app/features/**/locales/**/*.json`
+- Nested locale folders are supported: `app/features/auth/locales/forms/en.json` → `$t('auth.forms.<key>')`
+- Global UI strings: `app/features/core/locales/en.json`
+- Do not use `app/shared/locales` for app i18n messages
 - Auto-namespaced: `auth` feature → `$t('auth.login.title')`
 - English only (`en`)
 
@@ -68,6 +71,8 @@ Self-documenting names only. No inline comments, no JSDoc blocks, not even `// T
 - Each theme uses `[data-theme='<name>']` with HSL primary color tokens (`--color-primary-h/s/l`)
 - `_variables.scss` contains **only** non-color tokens (spacing, typography, radii)
 - User custom color → override `--color-primary-h/s/l` at runtime via `useThemeStore.setCustomColor(hex)`
+- Theme init plugin: `app/plugins/theme.ts`
+- Theme persistence is cookie-based (`useCookie`) for SSR compatibility
 - Adding a theme: create SCSS file → add `ThemeId` union → add to `THEME_OPTIONS` → import in `main.scss`
 - Components: `<style scoped lang="scss">` in this exact order, BEM naming, CSS vars only — no hardcoded values
 
@@ -88,19 +93,19 @@ Self-documenting names only. No inline comments, no JSDoc blocks, not even `// T
 
 Format: `type(scope): short description`
 
-| Type | When to use |
-|---|---|
-| `feat` | New feature or page |
-| `fix` | Bug fix |
-| `refactor` | Code change with no behavior change |
-| `style` | Formatting only (no logic change) |
-| `docs` | Documentation, README, agent rules |
-| `test` | Adding or updating tests |
-| `chore` | Tooling, config, dependencies |
-| `build` | Build system changes (nuxt.config, vite) |
-| `ci` | CI/CD pipeline changes |
-| `perf` | Performance improvement |
-| `revert` | Revert a previous commit |
+| Type       | When to use                              |
+| ---------- | ---------------------------------------- |
+| `feat`     | New feature or page                      |
+| `fix`      | Bug fix                                  |
+| `refactor` | Code change with no behavior change      |
+| `style`    | Formatting only (no logic change)        |
+| `docs`     | Documentation, README, agent rules       |
+| `test`     | Adding or updating tests                 |
+| `chore`    | Tooling, config, dependencies            |
+| `build`    | Build system changes (nuxt.config, vite) |
+| `ci`       | CI/CD pipeline changes                   |
+| `perf`     | Performance improvement                  |
+| `revert`   | Revert a previous commit                 |
 
 **Scope** = affected feature or area (`auth`, `home`, `i18n`, `deps`, `layout`)
 
@@ -114,7 +119,7 @@ build(nuxt): enable pinia-orm module
 ```
 
 - Subject: max 72 chars, lowercase, no trailing period
-- Body (optional): explain *why*, not *what*
+- Body (optional): explain _why_, not _what_
 - Breaking change: `feat(auth)!: remove legacy session`
 
 ## Dependencies

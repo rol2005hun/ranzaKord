@@ -1,6 +1,6 @@
 ---
 description: Core project conventions – always apply
-globs: ["**/*.ts", "**/*.vue", "**/*.scss"]
+globs: ['**/*.ts', '**/*.vue', '**/*.scss']
 alwaysApply: true
 ---
 
@@ -9,6 +9,7 @@ alwaysApply: true
 ## Feature-Based Architecture
 
 New features go in `app/features/<name>/` with this structure:
+
 - `components/` – feature-local Vue components
 - `composables/` – `useFeature.ts` bridges store ↔ components
 - `stores/` – `useFeatureStore.ts` (Pinia setup store)
@@ -32,8 +33,11 @@ Absolutely no comments are allowed in the code, not even `// TODO:` comments. No
 ## i18n
 
 - All UI text via `$t()` — never hardcode strings
-- `features/<name>/locales/en.json` → accessible as `$t('<name>.key')`
-- `app/shared/locales/en.json` → accessible as `$t('key')` globally
+- Locale files live in `app/features/<name>/locales/en.json` → `$t('<name>.key')`
+- Locale files are loaded by `app/plugins/i18n-locales.ts` from `app/features/**/locales/**/*.json`
+- Nested locale folders are supported: `app/features/auth/locales/forms/en.json` → `$t('auth.forms.<key>')`
+- Global UI strings go into `app/features/core/locales/en.json` (e.g. `$t('core.appName')`)
+- Do not use `app/shared/locales` for app i18n messages
 - English only
 
 ## Pinia
@@ -52,6 +56,8 @@ Absolutely no comments are allowed in the code, not even `// TODO:` comments. No
 - `<style lang="scss" scoped>` in every component
 - BEM class naming: `.block__element--modifier`
 - CSS custom properties from `_variables.scss` — no hardcoded values
+- Theme init plugin: `app/plugins/theme.ts`
+- Theme persistence is cookie-based (`useCookie`) for SSR compatibility
 
 ## Auto-Imports (never import manually)
 

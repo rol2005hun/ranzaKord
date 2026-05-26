@@ -62,8 +62,11 @@ app/features/<name>/
 ### i18n
 
 - Every user-facing string uses `$t()` or `t()` from `useI18n()`
-- Locale files at `features/<name>/locales/en.json` → namespaced as `$t('<name>.key')`
-- Global strings at `app/shared/locales/en.json` → `$t('key')`
+- Locale files at `app/features/<name>/locales/en.json` → namespaced as `$t('<name>.key')`
+- Locale files are loaded by `app/plugins/i18n-locales.ts` from `app/features/**/locales/**/*.json`
+- Nested locale folders are supported: `app/features/auth/locales/forms/en.json` → `$t('auth.forms.<key>')`
+- Global UI strings belong to `app/features/core/locales/en.json` → e.g. `$t('core.appName')`
+- Do not use `app/shared/locales` for application messages
 - English only — no other locales
 
 ### Pinia Stores

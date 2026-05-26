@@ -27,7 +27,7 @@ export default defineNuxtPlugin({
       const featureMessages = (localeMessages[featureName] ??= {} as MessageSchema);
 
       if (!parentName) {
-        Object.assign(featureMessages, fileContent);
+        localeMessages[featureName] = fileContent;
       } else {
         featureMessages[parentName] = fileContent;
       }
