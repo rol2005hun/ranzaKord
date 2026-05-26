@@ -1,0 +1,9 @@
+{
+  "play": "Play",
+  "pause": "Pause",
+  "next": "Next track",
+  "prev": "Previous track",
+  "seek": "Seek",
+  "volume": "Volume",
+  "noTrack": "Nothing playing"
+}

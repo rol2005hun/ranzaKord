@@ -4,7 +4,8 @@ definePageMeta({
   middleware: ['auth']
 });
 
-useHead({ title: 'Home' });
+const { t } = useI18n();
+useHead({ title: t('nav.home') });
 </script>
 
 <template>

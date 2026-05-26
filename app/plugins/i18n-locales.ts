@@ -6,34 +6,44 @@ export default defineNuxtPlugin({
   setup(nuxtApp) {
     const messages: Record<string, MessageSchema> = {};
 
-    const localeFiles = import.meta.glob('../../shared/locales/**/*.json', {
+    const featureLocales = import.meta.glob('../features/*/locales/*.json', {
+      eager: true,
+      import: 'default'
+    });
+    
+    const sharedLocales = import.meta.glob('../shared/locales/*.json', {
       eager: true,
       import: 'default'
     });
 
+    const localeFiles = { ...featureLocales, ...sharedLocales };
+
     for (const path in localeFiles) {
-      // Matches: ../../shared/locales/<feature>/<locale>.json or ../../shared/locales/<locale>.json
-      const match = path.match(/\/shared\/locales\/(?:([^/]+)\/)?([a-z0-9-_]+)\.json$/i);
+      // Matches: ../features/<feature>/locales/<locale>.json
+      const featureMatch = path.match(/\/features\/([^/]+)\/locales\/([a-z0-9-_]+)\.json$/i);
+      // Matches: ../shared/locales/<locale>.json
+      const sharedMatch = path.match(/\/shared\/locales\/([a-z0-9-_]+)\.json$/i);
+
+      const locale = featureMatch ? featureMatch[2] : (sharedMatch ? sharedMatch[1] : null);
 
       /* v8 ignore next */
-      if (match && match[2]) {
-        const parentName = match[1]; // may be undefined for root locales
-        const locale = match[2];
+      if (locale) {
         const fileContent = localeFiles[path] as MessageSchema;
 
         if (!messages[locale]) {
           messages[locale] = {};
         }
 
-        if (!parentName || parentName === 'shared') {
-          messages[locale] = {
-            ...messages[locale],
+        if (featureMatch && featureMatch[1]) {
+          const featureName = featureMatch[1];
+          const existingMessages = (messages[locale][featureName] as MessageSchema) || {};
+          messages[locale][featureName] = {
+            ...existingMessages,
             ...fileContent
           };
         } else {
-          const existingMessages = (messages[locale][parentName] as MessageSchema) || {};
-          messages[locale][parentName] = {
-            ...existingMessages,
+          messages[locale] = {
+            ...messages[locale],
             ...fileContent
           };
         }

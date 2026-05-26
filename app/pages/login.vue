@@ -3,7 +3,8 @@ definePageMeta({
   layout: 'auth'
 });
 
-useHead({ title: 'Sign In' });
+const { t } = useI18n();
+useHead({ title: t('nav.signIn') });
 
 const { loginWithRanzaKonnect, isAuthenticated } = useAuth();
 
@@ -17,17 +18,13 @@ if (isAuthenticated.value) {
     <div class="login-page__card">
       <div class="login-page__logo">
         <AppIcon name="ph:music-note-fill" class="login-page__logo-icon" />
-        <span class="login-page__logo-text">ranzaKord</span>
+        <span class="login-page__logo-text">{{ $t('appName') }}</span>
       </div>
 
       <h1 class="login-page__title">{{ $t('auth.login.title') }}</h1>
       <p class="login-page__subtitle">{{ $t('auth.login.subtitle') }}</p>
 
-      <button
-        id="login-with-ranzakonnect"
-        class="login-page__btn"
-        @click="loginWithRanzaKonnect"
-      >
+      <button id="login-with-ranzakonnect" class="login-page__btn" @click="loginWithRanzaKonnect">
         <AppIcon name="ph:key-fill" />
         {{ $t('auth.login.button') }}
       </button>
