@@ -62,6 +62,8 @@ if (isAuthenticated.value) {
     border: 1px solid var(--color-border);
     border-radius: var(--radius-xl);
     backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    transform: translateZ(0);
     max-width: 420px;
     width: 100%;
     text-align: center;
@@ -147,28 +149,28 @@ if (isAuthenticated.value) {
   &__orb {
     position: absolute;
     border-radius: var(--radius-full);
-    filter: blur(80px);
+    transform: translateZ(0);
 
     &--1 {
-      width: 400px;
-      height: 400px;
-      background: hsl(265 75% 40% / 0.2);
-      top: -100px;
-      left: -100px;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, hsl(265 75% 40% / 0.15) 0%, transparent 60%);
+      top: -150px;
+      left: -150px;
     }
 
     &--2 {
-      width: 300px;
-      height: 300px;
-      background: hsl(195 80% 40% / 0.15);
-      bottom: -80px;
-      right: -80px;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, hsl(195 80% 40% / 0.12) 0%, transparent 60%);
+      bottom: -100px;
+      right: -100px;
     }
 
     &--3 {
-      width: 200px;
-      height: 200px;
-      background: hsl(265 75% 50% / 0.1);
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, hsl(265 75% 50% / 0.08) 0%, transparent 60%);
       bottom: 20%;
       left: 30%;
     }
