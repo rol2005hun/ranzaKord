@@ -35,19 +35,21 @@ const { data: featuredTracks, pending } = useLazyFetch<SearchResult[]>('/api/sea
     <section class="home-dashboard__section">
       <h2 class="home-dashboard__section-title">{{ $t('home.featured') }}</h2>
 
-      <div v-if="pending" class="home-dashboard__grid">
-        <div v-for="i in 8" :key="i" class="home-dashboard__skeleton">
-          <div class="skeleton skeleton--thumb" />
-          <div class="home-dashboard__skeleton-info">
-            <div class="skeleton skeleton--title" />
-            <div class="skeleton skeleton--artist" />
+      <ClientOnly>
+        <div v-if="pending" class="home-dashboard__grid">
+          <div v-for="i in 8" :key="i" class="home-dashboard__skeleton">
+            <div class="skeleton skeleton--thumb" />
+            <div class="home-dashboard__skeleton-info">
+              <div class="skeleton skeleton--title" />
+              <div class="skeleton skeleton--artist" />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div v-else class="home-dashboard__grid">
-        <TrackCard v-for="track in featuredTracks" :key="track.videoId" :track="track" />
-      </div>
+        <div v-else class="home-dashboard__grid">
+          <TrackCard v-for="track in featuredTracks" :key="track.videoId" :track="track" />
+        </div>
+      </ClientOnly>
     </section>
   </div>
 </template>
@@ -107,8 +109,8 @@ const { data: featuredTracks, pending } = useLazyFetch<SearchResult[]>('/api/sea
     align-items: center;
     gap: var(--space-2);
     padding: var(--space-3) var(--space-6);
-    background: var(--color-primary);
-    color: var(--color-primary-foreground);
+    background: var(--color-primary-dark, #5b21b6);
+    color: #ffffff;
     border-radius: var(--radius-full);
     text-decoration: none;
     font-weight: var(--font-weight-semibold);

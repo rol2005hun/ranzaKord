@@ -3,8 +3,8 @@ const { currentUser, logout, isAuthenticated } = useAuth();
 const route = useRoute();
 
 const navItems = [
-  { to: '/', icon: 'ph:house-fill', labelKey: 'nav.home' },
-  { to: '/search', icon: 'ph:magnifying-glass-bold', labelKey: 'nav.search' }
+  { to: '/', icon: 'ph:house-fill', labelKey: 'core.nav.home' },
+  { to: '/search', icon: 'ph:magnifying-glass-bold', labelKey: 'core.nav.search' }
 ];
 </script>
 
@@ -198,7 +198,7 @@ const navItems = [
 
   &__user-email {
     font-size: 10px;
-    color: var(--color-text-disabled);
+    color: var(--color-text-secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
