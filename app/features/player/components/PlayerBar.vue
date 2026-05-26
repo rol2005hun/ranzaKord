@@ -8,6 +8,24 @@ onMounted(() => {
   }
 });
 
+const previousVolume = ref(1);
+
+const volumeIcon = computed(() => {
+  if (player.volume.value === 0) return 'ph:speaker-slash-fill';
+  if (player.volume.value < 0.3) return 'ph:speaker-low-fill';
+  if (player.volume.value < 0.7) return 'ph:speaker-high-fill'; // Could be speaker-none, low, high, etc.
+  return 'ph:speaker-high-fill';
+});
+
+function toggleMute() {
+  if (player.volume.value > 0) {
+    previousVolume.value = player.volume.value;
+    player.setVolume(0);
+  } else {
+    player.setVolume(previousVolume.value);
+  }
+}
+
 function formatTime(seconds: number): string {
   if (!seconds || !isFinite(seconds)) return '0:00';
   const m = Math.floor(seconds / 60);
@@ -27,82 +45,90 @@ function onVolumeInput(event: Event) {
 </script>
 
 <template>
-  <div v-if="player.currentTrack.value" class="player-bar">
-    <audio ref="audioEl" preload="metadata" />
-
-    <div class="player-bar__left">
-      <div class="player-bar__artwork">
-        <img
-          v-if="player.currentTrack.value.thumbnailUrl"
-          :src="player.currentTrack.value.thumbnailUrl"
-          :alt="player.currentTrack.value.title"
-          class="player-bar__artwork-img" />
-        <div v-else class="player-bar__artwork-placeholder">
-          <AppIcon name="ph:music-note" />
+  <div>
+    <audio ref="audioEl" preload="metadata" autoplay playsinline />
+    <div v-if="player.currentTrack.value" class="player-bar">
+      <div class="player-bar__left">
+        <div class="player-bar__artwork">
+          <img
+            v-if="player.currentTrack.value.thumbnailUrl"
+            :src="player.currentTrack.value.thumbnailUrl"
+            :alt="player.currentTrack.value.title"
+            class="player-bar__artwork-img" />
+          <div v-else class="player-bar__artwork-placeholder">
+            <AppIcon name="ph:music-note" />
+          </div>
+        </div>
+        <div class="player-bar__info">
+          <span class="player-bar__title">{{ player.currentTrack.value.title }}</span>
+          <span class="player-bar__artist">{{ player.currentTrack.value.artist }}</span>
         </div>
       </div>
-      <div class="player-bar__info">
-        <span class="player-bar__title">{{ player.currentTrack.value.title }}</span>
-        <span class="player-bar__artist">{{ player.currentTrack.value.artist }}</span>
+
+      <div class="player-bar__center">
+        <div class="player-bar__controls">
+          <button
+            class="player-bar__btn"
+            :disabled="!player.hasPrev.value"
+            :aria-label="$t('player.prev')"
+            @click="player.playPrev()">
+            <AppIcon name="ph:skip-back-fill" />
+          </button>
+
+          <button
+            class="player-bar__btn player-bar__btn--play"
+            :aria-label="player.isPlaying.value ? $t('player.pause') : $t('player.play')"
+            @click="player.togglePlay()">
+            <AppSpinner v-if="player.isLoading.value" size="sm" />
+            <AppIcon v-else-if="player.isPlaying.value" name="ph:pause-fill" />
+            <AppIcon v-else name="ph:play-fill" />
+          </button>
+
+          <button
+            class="player-bar__btn"
+            :disabled="!player.hasNext.value"
+            :aria-label="$t('player.next')"
+            @click="player.playNext()">
+            <AppIcon name="ph:skip-forward-fill" />
+          </button>
+        </div>
+
+        <div class="player-bar__progress">
+          <span class="player-bar__time">{{ formatTime(player.currentTimeSeconds.value) }}</span>
+          <input
+            id="player-seek"
+            class="player-bar__slider player-bar__slider--seek"
+            type="range"
+            min="0"
+            :max="player.durationSeconds.value || 1"
+            :value="player.currentTimeSeconds.value"
+            step="1"
+            :aria-label="$t('player.seek')"
+            :style="{
+              '--progress':
+                (player.currentTimeSeconds.value / (player.durationSeconds.value || 1)) * 100 + '%'
+            }"
+            @input="onSeekInput" />
+          <span class="player-bar__time">{{ formatTime(player.durationSeconds.value) }}</span>
+        </div>
       </div>
-    </div>
 
-    <div class="player-bar__center">
-      <div class="player-bar__controls">
-        <button
-          class="player-bar__btn"
-          :disabled="!player.hasPrev.value"
-          :aria-label="$t('player.prev')"
-          @click="player.playPrev()">
-          <AppIcon name="ph:skip-back-fill" />
+      <div class="player-bar__right">
+        <button class="player-bar__btn" style="width: auto; height: auto" @click="toggleMute">
+          <AppIcon :name="volumeIcon" class="player-bar__volume-icon" />
         </button>
-
-        <button
-          class="player-bar__btn player-bar__btn--play"
-          :aria-label="player.isPlaying.value ? $t('player.pause') : $t('player.play')"
-          @click="player.togglePlay()">
-          <AppSpinner v-if="player.isLoading.value" size="sm" />
-          <AppIcon v-else-if="player.isPlaying.value" name="ph:pause-fill" />
-          <AppIcon v-else name="ph:play-fill" />
-        </button>
-
-        <button
-          class="player-bar__btn"
-          :disabled="!player.hasNext.value"
-          :aria-label="$t('player.next')"
-          @click="player.playNext()">
-          <AppIcon name="ph:skip-forward-fill" />
-        </button>
-      </div>
-
-      <div class="player-bar__progress">
-        <span class="player-bar__time">{{ formatTime(player.currentTimeSeconds.value) }}</span>
         <input
-          id="player-seek"
-          class="player-bar__slider player-bar__slider--seek"
+          id="player-volume"
+          class="player-bar__slider player-bar__slider--volume"
           type="range"
           min="0"
-          :max="player.durationSeconds.value || 1"
-          :value="player.currentTimeSeconds.value"
-          step="1"
-          :aria-label="$t('player.seek')"
-          @input="onSeekInput" />
-        <span class="player-bar__time">{{ formatTime(player.durationSeconds.value) }}</span>
+          max="1"
+          :value="player.volume.value"
+          step="0.01"
+          :aria-label="$t('player.volume')"
+          :style="{ '--progress': player.volume.value * 100 + '%' }"
+          @input="onVolumeInput" />
       </div>
-    </div>
-
-    <div class="player-bar__right">
-      <AppIcon name="ph:speaker-high" class="player-bar__volume-icon" />
-      <input
-        id="player-volume"
-        class="player-bar__slider player-bar__slider--volume"
-        type="range"
-        min="0"
-        max="1"
-        :value="player.volume.value"
-        step="0.01"
-        :aria-label="$t('player.volume')"
-        @input="onVolumeInput" />
     </div>
   </div>
 </template>
@@ -287,25 +313,31 @@ function onVolumeInput(event: Event) {
       border-radius: var(--radius-full);
       background: var(--color-text-primary);
       cursor: pointer;
-      opacity: 0;
-      transition:
-        opacity var(--transition-fast),
-        transform var(--transition-fast);
+      margin-top: -4px;
+      transition: transform var(--transition-fast);
     }
 
     &:hover::-webkit-slider-thumb {
-      opacity: 1;
+      transform: scale(1.2);
     }
 
     &::-webkit-slider-runnable-track {
-      background: #535353;
+      background: linear-gradient(
+        to right,
+        var(--color-primary) var(--progress, 0%),
+        #535353 var(--progress, 0%)
+      );
       border-radius: var(--radius-full);
       height: 4px;
     }
 
     &:hover {
       &::-webkit-slider-runnable-track {
-        background: var(--color-primary);
+        background: linear-gradient(
+          to right,
+          var(--color-primary-hover) var(--progress, 0%),
+          #666 var(--progress, 0%)
+        );
       }
     }
   }

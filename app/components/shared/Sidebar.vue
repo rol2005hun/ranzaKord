@@ -28,7 +28,6 @@ const isHovered = ref(false);
     <nav class="app-sidebar__nav">
       <slot name="default" />
     </nav>
-
   </aside>
 </template>
 
@@ -114,10 +113,6 @@ const isHovered = ref(false);
       width: 13.5rem;
     }
 
-    .app-sidebar__brand {
-      transform: scale(1);
-    }
-
     .app-sidebar__mode-badge {
       max-width: 8rem;
 
@@ -129,11 +124,12 @@ const isHovered = ref(false);
 
   &__header {
     width: 15rem;
-    padding: var(--space-4) 0 var(--space-4) 1rem;
+    height: 4.5rem;
+    padding: 0 0 0 1.3rem;
     border-bottom: 1px solid var(--color-border);
     display: flex;
     flex-direction: column;
-    gap: var(--space-5);
+    justify-content: center;
   }
 
   &__header-top {
@@ -170,7 +166,6 @@ const isHovered = ref(false);
     align-items: center;
     text-decoration: none;
     transform-origin: left center;
-    transform: scale(0.7);
     transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   }
 

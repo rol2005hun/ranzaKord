@@ -74,7 +74,7 @@ defineProps<Props>();
     .app-sidebar__text {
       display: none;
     }
-    
+
     .app-sidebar-item__icon {
       font-size: 1.5rem;
     }

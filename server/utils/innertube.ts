@@ -1,12 +1,12 @@
 import { Innertube, UniversalCache, Platform } from 'youtubei.js';
-import { Jinter } from 'jintr';
+import vm from 'vm';
 
 interface EvaluatorData {
   output: string;
 }
 
 Platform.shim.eval = (client: EvaluatorData) => {
-  return new Jinter().evaluate(client.output);
+  return vm.runInNewContext(`(function() { ${client.output} })()`);
 };
 
 let anonymousInstance: Innertube | null = null;

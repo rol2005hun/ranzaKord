@@ -1,10 +1,4 @@
-export interface StreamResponse {
-  url: string;
-  mimeType: string;
-  durationMs: number;
-}
-
-export default defineEventHandler(async (event): Promise<StreamResponse> => {
+export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const videoId = query['v'] as string | undefined;
 
@@ -20,7 +14,11 @@ export default defineEventHandler(async (event): Promise<StreamResponse> => {
     ...(info.streaming_data?.adaptive_formats || [])
   ];
 
-  const format = formats.find((f) => f.has_audio && (f.url || f.signature_cipher));
+  // Prefer audio-only formats
+  let format = formats.find((f) => f.has_audio && !f.has_video && (f.url || f.signature_cipher));
+  if (!format) {
+    format = formats.find((f) => f.has_audio && (f.url || f.signature_cipher));
+  }
 
   if (!format) {
     throw createError({ statusCode: 404, statusMessage: 'No audio format available' });
@@ -40,11 +38,11 @@ export default defineEventHandler(async (event): Promise<StreamResponse> => {
     throw createError({ statusCode: 500, statusMessage: 'Stream URL is empty' });
   }
 
-  const mimeType = format.mime_type ?? 'audio/webm';
-  const durationMs =
-    'approx_duration_ms' in format && typeof format.approx_duration_ms === 'string'
-      ? parseInt(format.approx_duration_ms, 10)
-      : 0;
-
-  return { url: streamUrl, mimeType, durationMs };
+  // Proxy the stream through our server to bypass CORS, IP locks and Cookie requirements
+  return proxyRequest(event, streamUrl, {
+    headers: {
+      // Pass the request's Range header if present
+      ...(event.node.req.headers.range ? { range: event.node.req.headers.range } : {})
+    }
+  });
 });

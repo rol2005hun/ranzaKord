@@ -5,7 +5,8 @@ export default defineNuxtConfig({
     head: {
       titleTemplate: '%s | ranzaKord',
       charset: 'utf-8',
-      viewport: 'width=device-width, initial-scale=1'
+      viewport: 'width=device-width, initial-scale=1',
+      link: [{ rel: 'icon', type: 'image/x-icon', href: '/logo.webp' }]
     }
   },
 
@@ -46,11 +47,26 @@ export default defineNuxtConfig({
     preset: 'netlify',
     experimental: {
       wasm: true
+    },
+    compressPublicAssets: { gzip: true, brotli: true },
+    minify: true,
+    externals: {
+      external: ['mongoose']
     }
   },
 
+  routeRules: {
+    '/_nuxt/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+    '/logo.webp': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } }
+  },
+
+  image: {
+    format: ['webp', 'avif'],
+    quality: 80
+  },
+
   site: {
-    url: 'https://ranzakord.netlify.app',
+    url: 'https://kord.ranzak.dev',
     name: 'ranzaKord',
     description: 'Prémium zenei streaming alkalmazás.'
   },

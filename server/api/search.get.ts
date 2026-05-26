@@ -52,7 +52,9 @@ export default defineEventHandler(async (event): Promise<SearchResultItem[]> => 
 
       const thumbnail =
         'thumbnails' in item && Array.isArray(item.thumbnails) && item.thumbnails.length > 0
-          ? (item.thumbnails[item.thumbnails.length - 1] as { url: string }).url
+          ? (item.thumbnails as Array<{ url: string; width?: number }>).sort(
+              (a, b) => (b.width || 0) - (a.width || 0)
+            )[0]?.url || ''
           : '';
 
       const duration =

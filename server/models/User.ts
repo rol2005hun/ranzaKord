@@ -5,6 +5,11 @@ export interface IUser extends Document {
   name: string;
   email: string;
   picture: string;
+  lastPlayback?: {
+    videoId: string;
+    currentTime: number;
+    updatedAt: Date;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -14,7 +19,12 @@ const userSchema = new Schema<IUser>(
     sub: { type: String, required: true, unique: true, index: true },
     name: { type: String, required: true },
     email: { type: String, required: true },
-    picture: { type: String, default: '' }
+    picture: { type: String, default: '' },
+    lastPlayback: {
+      videoId: { type: String },
+      currentTime: { type: Number },
+      updatedAt: { type: Date }
+    }
   },
   { timestamps: true }
 );

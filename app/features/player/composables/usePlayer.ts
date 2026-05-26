@@ -1,8 +1,9 @@
-import type { Track, StreamResponse } from '../types/player.types';
+import type { Track } from '../types/player.types';
+
+const audioRef = ref<HTMLAudioElement | null>(null);
 
 export function usePlayer() {
   const store = usePlayerStore();
-  const audioRef = ref<HTMLAudioElement | null>(null);
 
   function bindAudio(el: HTMLAudioElement) {
     audioRef.value = el;
@@ -39,16 +40,15 @@ export function usePlayer() {
     store.error = null;
 
     try {
-      const data = await $fetch<StreamResponse>('/api/stream', {
-        query: { v: track.videoId }
-      });
+      await nextTick();
 
       if (!audioRef.value) {
         store.isLoading = false;
         return;
       }
 
-      audioRef.value.src = data.url;
+      // Point the audio element directly to our stream proxy endpoint
+      audioRef.value.src = `/api/stream?v=${track.videoId}`;
       audioRef.value.load();
 
       await audioRef.value.play();
