@@ -2,9 +2,15 @@
 const { search, query, clear } = useSearch();
 const inputRef = ref<HTMLInputElement | null>(null);
 
+const route = useRoute();
+const router = useRouter();
+
 function onInput(event: Event) {
   const el = event.target as HTMLInputElement;
   search(el.value);
+  if (route.path !== '/search' && el.value.trim() !== '') {
+    router.push('/search');
+  }
 }
 
 function onClear() {

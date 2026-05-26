@@ -9,7 +9,12 @@ export interface MeResponse {
 
 export default defineEventHandler(async (event): Promise<MeResponse> => {
   const config = useRuntimeConfig();
-  const session = await useSession(event, { password: config.sessionSecret as string });
+  let session;
+  try {
+    session = await useSession(event, { password: config.sessionSecret as string });
+  } catch {
+    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
+  }
   const sessionData = session.data as Partial<ServerSession>;
 
   if (!sessionData.accessToken || !sessionData.user) {

@@ -6,6 +6,7 @@
     "footer": "Secure authentication powered by ranzaKonnect"
   },
   "logout": "Sign out",
+  "profile": "Profile",
   "loginError": "Authentication failed. Please try again.",
   "sessionExpired": "Your session has expired. Please sign in again.",
   "callback": {

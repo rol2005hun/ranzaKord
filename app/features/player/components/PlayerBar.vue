@@ -30,7 +30,7 @@ function onVolumeInput(event: Event) {
   <div v-if="player.currentTrack.value" class="player-bar">
     <audio ref="audioEl" preload="metadata" />
 
-    <div class="player-bar__track">
+    <div class="player-bar__left">
       <div class="player-bar__artwork">
         <img
           v-if="player.currentTrack.value.thumbnailUrl"
@@ -47,49 +47,51 @@ function onVolumeInput(event: Event) {
       </div>
     </div>
 
-    <div class="player-bar__controls">
-      <button
-        class="player-bar__btn"
-        :disabled="!player.hasPrev.value"
-        :aria-label="$t('player.prev')"
-        @click="player.playPrev()">
-        <AppIcon name="ph:skip-back-fill" />
-      </button>
+    <div class="player-bar__center">
+      <div class="player-bar__controls">
+        <button
+          class="player-bar__btn"
+          :disabled="!player.hasPrev.value"
+          :aria-label="$t('player.prev')"
+          @click="player.playPrev()">
+          <AppIcon name="ph:skip-back-fill" />
+        </button>
 
-      <button
-        class="player-bar__btn player-bar__btn--play"
-        :aria-label="player.isPlaying.value ? $t('player.pause') : $t('player.play')"
-        @click="player.togglePlay()">
-        <AppSpinner v-if="player.isLoading.value" size="sm" />
-        <AppIcon v-else-if="player.isPlaying.value" name="ph:pause-fill" />
-        <AppIcon v-else name="ph:play-fill" />
-      </button>
+        <button
+          class="player-bar__btn player-bar__btn--play"
+          :aria-label="player.isPlaying.value ? $t('player.pause') : $t('player.play')"
+          @click="player.togglePlay()">
+          <AppSpinner v-if="player.isLoading.value" size="sm" />
+          <AppIcon v-else-if="player.isPlaying.value" name="ph:pause-fill" />
+          <AppIcon v-else name="ph:play-fill" />
+        </button>
 
-      <button
-        class="player-bar__btn"
-        :disabled="!player.hasNext.value"
-        :aria-label="$t('player.next')"
-        @click="player.playNext()">
-        <AppIcon name="ph:skip-forward-fill" />
-      </button>
+        <button
+          class="player-bar__btn"
+          :disabled="!player.hasNext.value"
+          :aria-label="$t('player.next')"
+          @click="player.playNext()">
+          <AppIcon name="ph:skip-forward-fill" />
+        </button>
+      </div>
+
+      <div class="player-bar__progress">
+        <span class="player-bar__time">{{ formatTime(player.currentTimeSeconds.value) }}</span>
+        <input
+          id="player-seek"
+          class="player-bar__slider player-bar__slider--seek"
+          type="range"
+          min="0"
+          :max="player.durationSeconds.value || 1"
+          :value="player.currentTimeSeconds.value"
+          step="1"
+          :aria-label="$t('player.seek')"
+          @input="onSeekInput" />
+        <span class="player-bar__time">{{ formatTime(player.durationSeconds.value) }}</span>
+      </div>
     </div>
 
-    <div class="player-bar__progress">
-      <span class="player-bar__time">{{ formatTime(player.currentTimeSeconds.value) }}</span>
-      <input
-        id="player-seek"
-        class="player-bar__slider player-bar__slider--seek"
-        type="range"
-        min="0"
-        :max="player.durationSeconds.value || 1"
-        :value="player.currentTimeSeconds.value"
-        step="1"
-        :aria-label="$t('player.seek')"
-        @input="onSeekInput" />
-      <span class="player-bar__time">{{ formatTime(player.durationSeconds.value) }}</span>
-    </div>
-
-    <div class="player-bar__volume">
+    <div class="player-bar__right">
       <AppIcon name="ph:speaker-high" class="player-bar__volume-icon" />
       <input
         id="player-volume"
@@ -112,28 +114,42 @@ function onVolumeInput(event: Event) {
   left: 0;
   right: 0;
   z-index: var(--z-player);
-  height: var(--player-height);
+  height: var(--player-height, 90px);
   display: grid;
-  grid-template-columns: 1fr auto 1fr auto;
+  grid-template-columns: 1fr 2fr 1fr;
   align-items: center;
   gap: var(--space-4);
   padding: 0 var(--space-6);
-  background: var(--player-bg, var(--color-surface));
-  border-top: 1px solid var(--player-border, var(--color-border));
-  backdrop-filter: blur(20px);
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
 
-  &__track {
+  &__left {
     display: flex;
     align-items: center;
     gap: var(--space-3);
     min-width: 0;
   }
 
+  &__center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+
   &__artwork {
     flex-shrink: 0;
-    width: 52px;
-    height: 52px;
-    border-radius: var(--radius-md);
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-sm);
     overflow: hidden;
     background: var(--color-surface-hover);
     display: flex;
@@ -186,8 +202,8 @@ function onVolumeInput(event: Event) {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border: none;
     background: transparent;
     color: var(--color-text-secondary);
@@ -200,25 +216,26 @@ function onVolumeInput(event: Event) {
 
     &:hover:not(:disabled) {
       color: var(--color-text-primary);
-      transform: scale(1.1);
+      transform: scale(1.05);
     }
 
     &:disabled {
-      opacity: 0.35;
+      opacity: 0.3;
       cursor: not-allowed;
     }
 
     &--play {
-      width: 44px;
-      height: 44px;
-      font-size: var(--text-2xl);
-      background: var(--color-primary);
-      color: var(--color-primary-foreground);
+      width: 40px;
+      height: 40px;
+      font-size: var(--text-xl);
+      background: var(--color-text-primary);
+      color: var(--color-bg);
       border-radius: var(--radius-full);
+      flex-shrink: 0;
 
       &:hover:not(:disabled) {
-        background: var(--color-primary-hover);
-        color: var(--color-primary-foreground);
+        background: var(--color-text-secondary);
+        color: var(--color-bg);
         transform: scale(1.05);
       }
     }
@@ -228,7 +245,7 @@ function onVolumeInput(event: Event) {
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    flex: 1;
+    width: 100%;
   }
 
   &__time {
@@ -236,13 +253,7 @@ function onVolumeInput(event: Event) {
     color: var(--color-text-secondary);
     font-variant-numeric: tabular-nums;
     min-width: 36px;
-  }
-
-  &__volume {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    width: 140px;
+    text-align: center;
   }
 
   &__volume-icon {
@@ -259,33 +270,69 @@ function onVolumeInput(event: Event) {
     background: var(--color-surface-hover);
     outline: none;
     cursor: pointer;
-    transition: background var(--transition-fast);
 
     &--seek {
       flex: 1;
     }
 
     &--volume {
-      flex: 1;
+      width: 100px;
     }
 
     &::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 14px;
-      height: 14px;
+      width: 12px;
+      height: 12px;
       border-radius: var(--radius-full);
-      background: var(--color-primary);
+      background: var(--color-text-primary);
       cursor: pointer;
-      transition: transform var(--transition-fast);
+      opacity: 0;
+      transition:
+        opacity var(--transition-fast),
+        transform var(--transition-fast);
+    }
 
-      &:hover {
-        transform: scale(1.3);
-      }
+    &:hover::-webkit-slider-thumb {
+      opacity: 1;
+    }
+
+    &::-webkit-slider-runnable-track {
+      background: #535353;
+      border-radius: var(--radius-full);
+      height: 4px;
     }
 
     &:hover {
-      background: var(--color-border-focus);
+      &::-webkit-slider-runnable-track {
+        background: var(--color-primary);
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    grid-template-columns: auto 1fr auto;
+    padding: 0 var(--space-3);
+    height: 72px;
+
+    &__info {
+      display: none;
+    }
+
+    &__right {
+      display: none;
+    }
+
+    &__center {
+      gap: var(--space-1);
+    }
+
+    &__progress {
+      display: none;
+    }
+
+    &__controls {
+      gap: var(--space-2);
     }
   }
 }

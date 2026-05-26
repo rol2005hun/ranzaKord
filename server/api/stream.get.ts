@@ -1,5 +1,3 @@
-import type { ServerSession } from '../types/auth.server.types';
-
 export interface StreamResponse {
   url: string;
   mimeType: string;
@@ -7,14 +5,6 @@ export interface StreamResponse {
 }
 
 export default defineEventHandler(async (event): Promise<StreamResponse> => {
-  const config = useRuntimeConfig();
-  const session = await useSession(event, { password: config.sessionSecret as string });
-  const sessionData = session.data as Partial<ServerSession>;
-
-  if (!sessionData.accessToken) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
-  }
-
   const query = getQuery(event);
   const videoId = query['v'] as string | undefined;
 
@@ -49,6 +39,7 @@ export default defineEventHandler(async (event): Promise<StreamResponse> => {
   if (!streamUrl) {
     throw createError({ statusCode: 500, statusMessage: 'Stream URL is empty' });
   }
+
   const mimeType = format.mime_type ?? 'audio/webm';
   const durationMs =
     'approx_duration_ms' in format && typeof format.approx_duration_ms === 'string'

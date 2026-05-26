@@ -6,6 +6,11 @@ export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
   const query = getQuery(event);
 
+  const error = query['error'] as string | undefined;
+  if (error) {
+    return sendRedirect(event, '/login', 302);
+  }
+
   const code = query['code'] as string | undefined;
   const state = query['state'] as string | undefined;
 

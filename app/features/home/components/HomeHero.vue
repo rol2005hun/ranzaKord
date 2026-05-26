@@ -18,11 +18,6 @@ const { data: featuredTracks, pending } = useLazyFetch<SearchResult[]>('/api/sea
         </p>
         <h1 class="home-dashboard__title">{{ $t('home.title') }}</h1>
         <p class="home-dashboard__subtitle">{{ $t('home.subtitle') }}</p>
-
-        <NuxtLink to="/search" class="home-dashboard__cta">
-          <AppIcon name="ph:magnifying-glass-bold" />
-          {{ $t('home.cta') }}
-        </NuxtLink>
       </div>
       <div class="home-dashboard__hero-visual">
         <div class="home-dashboard__orb home-dashboard__orb--1" />

@@ -1,5 +1,13 @@
-import { Innertube, UniversalCache } from 'youtubei.js';
-import Jintr from 'jintr';
+import { Innertube, UniversalCache, Platform } from 'youtubei.js';
+import { Jinter } from 'jintr';
+
+interface EvaluatorData {
+  output: string;
+}
+
+Platform.shim.eval = (client: EvaluatorData) => {
+  return new Jinter().evaluate(client.output);
+};
 
 let anonymousInstance: Innertube | null = null;
 let authenticatedInstance: Innertube | null = null;
@@ -14,9 +22,7 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
     authenticatedInstance = await Innertube.create({
       cookie,
       cache: new UniversalCache(false),
-      generate_session_locally: true,
-      // @ts-expect-error youtubei.js v17 types are missing evaluator
-      evaluator: new Jintr()
+      generate_session_locally: true
     });
 
     return authenticatedInstance;
@@ -26,9 +32,7 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
 
   anonymousInstance = await Innertube.create({
     cache: new UniversalCache(false),
-    generate_session_locally: true,
-    // @ts-expect-error youtubei.js v17 types are missing evaluator
-    evaluator: new Jintr()
+    generate_session_locally: true
   });
 
   return anonymousInstance;

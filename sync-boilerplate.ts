@@ -23,6 +23,9 @@ const TARGETS = [
   'stylelint.config.mjs',
   'sync-boilerplate.ts',
   'tsconfig.json',
+  'app/plugins/i18n-locales.ts',
+  'app/plugins/pinia-orm.ts',
+  'app/plugins/theme.client.ts',
   'vitest.config.ts'
 ];
 
@@ -69,6 +72,15 @@ const run = () => {
     process.exit(1);
   }
 
+  const mergeHead = exec('git rev-parse -q --verify MERGE_HEAD', true);
+  if (mergeHead !== '') {
+    log.error('A merge is already in progress.');
+    log.info(
+      'Please resolve it with `git merge --abort` or finish the merge before syncing again.'
+    );
+    process.exit(1);
+  }
+
   const remotes = exec('git remote');
   if (!remotes.split('\n').includes('boilerplate')) {
     log.step('Adding boilerplate remote...');
@@ -79,18 +91,21 @@ const run = () => {
   exec('git fetch boilerplate master', true);
 
   log.step('Merging changes...');
-  console.log(''); // Empty line before Git output
+  console.log('');
   try {
     execSync('git merge boilerplate/master --no-commit --no-ff --allow-unrelated-histories', {
       stdio: 'inherit'
     });
-  } catch {
-    log.warn('Merge conflicts occurred (or successful merge in no-commit mode).');
+  } catch (error) {
+    log.error('Merge failed. Resolve the issue and run the sync again.');
+    throw error;
   }
-  console.log(''); // Empty line after Git output
+  console.log('');
 
   log.step('Discarding changes for files not in TARGETS...');
-  const changedFiles = exec('git diff --name-only HEAD').split('\n').filter(Boolean);
+  const modifiedFiles = exec('git diff --name-only HEAD').split('\n').filter(Boolean);
+  const stagedFiles = exec('git diff --name-only --cached HEAD').split('\n').filter(Boolean);
+  const changedFiles = [...new Set([...modifiedFiles, ...stagedFiles])];
 
   for (const file of changedFiles) {
     const isTarget = TARGETS.some((t) => file === t || file.startsWith(`${t}/`));
