@@ -97,8 +97,12 @@ const run = () => {
       stdio: 'inherit'
     });
   } catch (error) {
-    log.error('Merge failed. Resolve the issue and run the sync again.');
-    throw error;
+    if (error && typeof error === 'object' && 'status' in error && error.status === 1) {
+      log.warn('Merge resulted in conflicts. Proceeding to discard non-target files...');
+    } else {
+      log.error('Merge failed. Resolve the issue and run the sync again.');
+      throw error;
+    }
   }
   console.log('');
 
