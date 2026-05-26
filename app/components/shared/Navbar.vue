@@ -1,5 +1,7 @@
 <script setup lang="ts">
 const { currentUser, logout, isAuthenticated } = useAuth();
+const { themeId, themes, setTheme } = useTheme();
+
 const isDropdownOpen = ref(false);
 
 function toggleDropdown() {
@@ -43,10 +45,39 @@ function closeDropdown() {
             <div class="app-navbar__dropdown-header">
               <span class="app-navbar__dropdown-name">{{ currentUser.name }}</span>
             </div>
+
             <div class="app-navbar__dropdown-divider"></div>
+
+            <div class="app-navbar__dropdown-header" style="padding-bottom: 4px">
+              <span
+                class="app-navbar__dropdown-name"
+                style="
+                  font-size: 0.75rem;
+                  color: var(--color-text-secondary);
+                  text-transform: uppercase;
+                ">
+                {{ $t('core.nav.theme') }}
+              </span>
+            </div>
+            <button
+              v-for="theme in themes"
+              :key="theme.id"
+              class="app-navbar__dropdown-item"
+              :class="{ 'app-navbar__dropdown-item--active': themeId === theme.id }"
+              @click="setTheme(theme.id)">
+              <AppIcon :name="theme.icon" class="app-navbar__dropdown-icon" />
+              <span class="app-navbar__dropdown-label">{{ theme.label }}</span>
+              <AppIcon
+                v-if="themeId === theme.id"
+                name="ph:check-bold"
+                class="app-navbar__dropdown-check" />
+            </button>
+
+            <div class="app-navbar__dropdown-divider"></div>
+
             <NuxtLink to="/settings" class="app-navbar__dropdown-item" @click="closeDropdown">
               <AppIcon name="ph:gear" class="app-navbar__dropdown-icon" />
-              <span>Settings</span>
+              <span class="app-navbar__dropdown-label">{{ $t('core.nav.settings') }}</span>
             </NuxtLink>
             <button
               class="app-navbar__dropdown-item app-navbar__dropdown-item--danger"
@@ -57,7 +88,7 @@ function closeDropdown() {
                 }
               ">
               <AppIcon name="ph:sign-out" class="app-navbar__dropdown-icon" />
-              <span>Logout</span>
+              <span class="app-navbar__dropdown-label">{{ $t('auth.logout') }}</span>
             </button>
           </div>
         </div>
@@ -71,6 +102,7 @@ function closeDropdown() {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-4);
   height: 4.5rem;
   padding: 0 var(--space-6);
   background-color: var(--color-surface);
@@ -84,6 +116,7 @@ function closeDropdown() {
     display: flex;
     align-items: center;
     max-width: 600px;
+    min-width: 0;
   }
 
   &__right {
@@ -206,10 +239,33 @@ function closeDropdown() {
         background-color: color-mix(in srgb, var(--color-danger) 10%, transparent);
       }
     }
+
+    &--active {
+      color: var(--color-primary);
+      background-color: var(--color-primary-subtle);
+
+      &:hover {
+        background-color: var(--color-primary-subtle);
+      }
+    }
   }
 
   &__dropdown-icon {
     font-size: var(--text-lg);
+    flex-shrink: 0;
+  }
+
+  &__dropdown-label {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__dropdown-check {
+    font-size: 0.85rem;
+    color: var(--color-primary);
+    flex-shrink: 0;
   }
 }
 

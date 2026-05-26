@@ -52,45 +52,47 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Teleport to="body">
-    <Transition name="modal">
-      <div v-if="props.modelValue" class="modal-overlay" @click.self="handleOverlayClick">
-        <div
-          class="modal"
-          :class="`modal--${props.size}`"
-          role="dialog"
-          aria-modal="true"
-          :aria-label="props.title">
-          <div v-if="props.title || $slots.header" class="modal__header">
-            <slot name="header">
-              <h2 class="modal__title">{{ props.title }}</h2>
-            </slot>
-            <button type="button" class="modal__close" aria-label="Close" @click="close">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d="M15 5L5 15M5 5L15 15"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round" />
-              </svg>
-            </button>
-          </div>
-          <div class="modal__body">
-            <slot />
-          </div>
-          <div v-if="$slots.footer" class="modal__footer">
-            <slot name="footer" />
+  <ClientOnly>
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="props.modelValue" class="modal-overlay" @click.self="handleOverlayClick">
+          <div
+            class="modal"
+            :class="`modal--${props.size}`"
+            role="dialog"
+            aria-modal="true"
+            :aria-label="props.title">
+            <div v-if="props.title || $slots.header" class="modal__header">
+              <slot name="header">
+                <h2 class="modal__title">{{ props.title }}</h2>
+              </slot>
+              <button type="button" class="modal__close" aria-label="Close" @click="close">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M15 5L5 15M5 5L15 15"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round" />
+                </svg>
+              </button>
+            </div>
+            <div class="modal__body">
+              <slot />
+            </div>
+            <div v-if="$slots.footer" class="modal__footer">
+              <slot name="footer" />
+            </div>
           </div>
         </div>
-      </div>
-    </Transition>
-  </Teleport>
+      </Transition>
+    </Teleport>
+  </ClientOnly>
 </template>
 
 <style scoped lang="scss">

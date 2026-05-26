@@ -1,8 +1,10 @@
-export type ThemeId = 'default' | 'dark' | 'ocean' | 'music';
+export type ThemeId = 'light' | 'dark' | 'ocean' | 'rose';
 
 export interface ThemeOption {
   id: ThemeId;
   label: string;
+  icon: string;
+  dark: boolean;
 }
 
 export interface CustomColor {

@@ -9,6 +9,9 @@
     "signIn": "Sign in",
     "home": "Home",
     "search": "Search",
-    "library": "Library"
+    "library": "Library",
+    "theme": "Theme",
+    "settings": "Settings",
+    "playlists": "Playlists"
   }
 }

@@ -27,3 +27,30 @@ export function hexToHsl(hex: string): { h: number; s: number; l: number } {
     l: Math.round(l * 100)
   };
 }
+
+function getLuminance(r: number, g: number, b: number) {
+  const toLinear = (c: number) => {
+    c = c / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  };
+  const rs = toLinear(r);
+  const gs = toLinear(g);
+  const bs = toLinear(b);
+  return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+}
+
+export function getContrastColor(hex: string): string {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return '#ffffff';
+
+  const [, rHex = '0', gHex = '0', bHex = '0'] = result;
+  const r = parseInt(rHex, 16);
+  const g = parseInt(gHex, 16);
+  const b = parseInt(bHex, 16);
+
+  const lum = getLuminance(r, g, b);
+  const contrastWhite = 1.05 / (lum + 0.05);
+  const contrastBlack = (lum + 0.05) / 0.05;
+
+  return contrastBlack > contrastWhite ? '#000000' : '#ffffff';
+}

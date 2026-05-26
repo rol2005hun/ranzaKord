@@ -38,6 +38,7 @@ export default defineNuxtConfig({
     ranzaKonnectClientId: process.env.RANZAKONNECT_CLIENT_ID || '',
     ranzaKonnectClientSecret: process.env.RANZAKONNECT_CLIENT_SECRET || '',
     youtubeCookies: process.env.YOUTUBE_COOKIES || '',
+    imgurClientId: process.env.IMGUR_CLIENT_ID || '',
     public: {
       baseUrl: process.env.NUXT_PUBLIC_BASE_URL || ''
     }

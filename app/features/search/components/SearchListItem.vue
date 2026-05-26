@@ -15,7 +15,7 @@ function onPlay() {
 <template>
   <div class="search-list-item" @click="onPlay">
     <div class="search-list-item__thumb">
-      <img :src="track.thumbnailUrl" :alt="track.title" />
+      <img :src="`/api/image?url=${encodeURIComponent(track.thumbnailUrl)}`" :alt="track.title" />
       <div class="search-list-item__overlay">
         <AppIcon name="ph:play-fill" />
       </div>

@@ -31,6 +31,33 @@ export function usePlayer() {
     });
 
     el.volume = store.volume;
+
+    if (store.currentTrack) {
+      const savedTime = store.currentTimeSeconds;
+      const wasPlaying = store.isPlaying;
+
+      store.isPlaying = false;
+
+      el.src = `/api/stream?v=${store.currentTrack.videoId}`;
+      el.load();
+
+      el.addEventListener('loadedmetadata', function onLoaded() {
+        if (savedTime > 0) {
+          el.currentTime = savedTime;
+          store.currentTimeSeconds = savedTime;
+        }
+        if (wasPlaying) {
+          el.play()
+            .then(() => {
+              store.isPlaying = true;
+            })
+            .catch(() => {
+              store.isPlaying = false;
+            });
+        }
+        el.removeEventListener('loadedmetadata', onLoaded);
+      });
+    }
   }
 
   async function playTrack(track: Track) {
@@ -112,6 +139,10 @@ export function usePlayer() {
     if (prev) playTrack(prev);
   }
 
+  function addToQueue(track: Track) {
+    store.addToQueue(track);
+  }
+
   return {
     currentTrack: computed(() => store.currentTrack),
     isPlaying: computed(() => store.isPlaying),
@@ -124,6 +155,7 @@ export function usePlayer() {
     hasPrev: computed(() => store.hasPrev),
     bindAudio,
     playTrack,
+    addToQueue,
     pause,
     resume,
     togglePlay,

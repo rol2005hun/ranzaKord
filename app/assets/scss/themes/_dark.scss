@@ -1,41 +1,52 @@
 [data-theme='dark'] {
   color-scheme: dark;
 
-  --color-primary-h: 239;
-  --color-primary-s: 84%;
-  --color-primary-l: 67%;
+  --color-primary-h: 262;
+  --color-primary-s: 80%;
+  --color-primary-l: 55%;
 
   --color-primary: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l));
   --color-primary-hover: hsl(
     var(--color-primary-h) var(--color-primary-s) calc(var(--color-primary-l) + 8%)
   );
   --color-primary-foreground: #ffffff;
+  --color-primary-subtle: hsl(var(--color-primary-h) var(--color-primary-s) 12%);
+  --color-primary-glow: hsl(
+    var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.25
+  );
 
-  --color-bg: #0f172a;
-  --color-surface: #1e293b;
-  --color-surface-hover: #334155;
-  --color-surface-raised: #1e293b;
-  --color-text-primary: #f1f5f9;
-  --color-text-secondary: #94a3b8;
-  --color-text-disabled: #475569;
-  --color-border: #334155;
+  --color-bg: #07070f;
+  --color-surface: #0d0d1e;
+  --color-surface-hover: #121230;
+  --color-surface-raised: #181838;
+
+  --color-text-primary: #e8e8ff;
+  --color-text-secondary: #9494c7;
+  --color-text-disabled: #363660;
+
+  --color-border: #1e1e40;
+  --color-border-hover: #2a2a60;
   --color-border-focus: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l));
 
-  --color-danger: #f87171;
-  --color-danger-hover: #ef4444;
+  --color-danger: #ef4444;
+  --color-danger-hover: #dc2626;
   --color-danger-foreground: #ffffff;
-  --color-danger-light: rgb(239 68 68 / 0.15);
+  --color-danger-light: rgb(239 68 68 / 0.12);
 
-  --color-success: #4ade80;
-  --color-success-hover: #22c55e;
+  --color-success: #10b981;
+  --color-success-hover: #059669;
   --color-success-foreground: #ffffff;
-  --color-success-light: rgb(34 197 94 / 0.15);
+  --color-success-light: rgb(16 185 129 / 0.12);
 
   --color-warning: #fbbf24;
   --color-warning-hover: #f59e0b;
   --color-warning-foreground: #000000;
-  --color-warning-light: rgb(245 158 11 / 0.15);
+  --color-warning-light: rgb(245 158 11 / 0.12);
+
+  --color-neutral: #6b7280;
+  --color-neutral-foreground: #ffffff;
+  --color-neutral-light: rgb(107 114 128 / 0.15);
 
   --color-ring: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.4);
-  --color-overlay: rgb(0 0 0 / 0.7);
+  --color-overlay: rgb(0 0 0 / 0.75);
 }

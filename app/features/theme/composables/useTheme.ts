@@ -1,10 +1,10 @@
 import type { ThemeId, ThemeOption } from '../types/theme.types';
 
 export const THEME_OPTIONS: ThemeOption[] = [
-  { id: 'music', label: 'Music (Dark)' },
-  { id: 'default', label: 'Default' },
-  { id: 'dark', label: 'Dark' },
-  { id: 'ocean', label: 'Ocean' }
+  { id: 'dark', label: 'Dark', icon: 'ph:moon-fill', dark: true },
+  { id: 'light', label: 'Light', icon: 'ph:sun-fill', dark: false },
+  { id: 'ocean', label: 'Ocean', icon: 'ph:waves-fill', dark: false },
+  { id: 'rose', label: 'Rose', icon: 'ph:flower-lotus-fill', dark: false }
 ];
 
 export function useTheme() {

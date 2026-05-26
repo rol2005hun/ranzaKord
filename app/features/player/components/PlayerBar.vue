@@ -46,16 +46,16 @@ function onVolumeInput(event: Event) {
 
 <template>
   <div>
-    <audio ref="audioEl" preload="metadata" autoplay playsinline />
-    <div v-if="player.currentTrack.value" class="player-bar">
+    <audio ref="audioEl" preload="metadata" playsinline />
+    <aside v-if="player.currentTrack.value" class="player-bar" :aria-label="$t('player.playerBar')">
       <div class="player-bar__left">
         <div class="player-bar__artwork">
           <img
-            v-if="player.currentTrack.value.thumbnailUrl"
-            :src="player.currentTrack.value.thumbnailUrl"
-            :alt="player.currentTrack.value.title"
-            class="player-bar__artwork-img" />
-          <div v-else class="player-bar__artwork-placeholder">
+            v-if="player.currentTrack.value?.thumbnailUrl"
+            :src="`/api/image?url=${encodeURIComponent(player.currentTrack.value.thumbnailUrl)}`"
+            :alt="player.currentTrack.value?.title"
+            class="player-bar__img" />
+          <div v-else class="player-bar__img-placeholder">
             <AppIcon name="ph:music-note" />
           </div>
         </div>
@@ -68,7 +68,7 @@ function onVolumeInput(event: Event) {
       <div class="player-bar__center">
         <div class="player-bar__controls">
           <button
-            class="player-bar__btn"
+            class="player-bar__btn player-bar__btn--secondary"
             :disabled="!player.hasPrev.value"
             :aria-label="$t('player.prev')"
             @click="player.playPrev()">
@@ -85,7 +85,7 @@ function onVolumeInput(event: Event) {
           </button>
 
           <button
-            class="player-bar__btn"
+            class="player-bar__btn player-bar__btn--secondary"
             :disabled="!player.hasNext.value"
             :aria-label="$t('player.next')"
             @click="player.playNext()">
@@ -114,7 +114,11 @@ function onVolumeInput(event: Event) {
       </div>
 
       <div class="player-bar__right">
-        <button class="player-bar__btn" style="width: auto; height: auto" @click="toggleMute">
+        <button
+          class="player-bar__btn"
+          style="width: auto; height: auto"
+          :aria-label="$t('player.mute')"
+          @click="toggleMute">
           <AppIcon :name="volumeIcon" class="player-bar__volume-icon" />
         </button>
         <input
@@ -129,7 +133,7 @@ function onVolumeInput(event: Event) {
           :style="{ '--progress': player.volume.value * 100 + '%' }"
           @input="onVolumeInput" />
       </div>
-    </div>
+    </aside>
   </div>
 </template>
 
@@ -140,16 +144,18 @@ function onVolumeInput(event: Event) {
   left: 0;
   right: 0;
   z-index: var(--z-player);
-  height: var(--player-height, 90px);
   display: grid;
+  grid-template-areas: 'left center right';
   grid-template-columns: 1fr 2fr 1fr;
   align-items: center;
   gap: var(--space-4);
   padding: 0 var(--space-6);
   background: var(--color-surface);
   border-top: 1px solid var(--color-border);
+  height: var(--player-height, 90px);
 
   &__left {
+    grid-area: left;
     display: flex;
     align-items: center;
     gap: var(--space-3);
@@ -157,6 +163,7 @@ function onVolumeInput(event: Event) {
   }
 
   &__center {
+    grid-area: center;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -164,6 +171,7 @@ function onVolumeInput(event: Event) {
   }
 
   &__right {
+    grid-area: right;
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -183,13 +191,13 @@ function onVolumeInput(event: Event) {
     justify-content: center;
   }
 
-  &__artwork-img {
+  &__img {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
 
-  &__artwork-placeholder {
+  &__img-placeholder {
     font-size: var(--text-xl);
     color: var(--color-text-secondary);
   }
@@ -221,6 +229,7 @@ function onVolumeInput(event: Event) {
   &__controls {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: var(--space-3);
   }
 
@@ -342,29 +351,65 @@ function onVolumeInput(event: Event) {
     }
   }
 
-  @media (max-width: 768px) {
-    grid-template-columns: auto 1fr auto;
-    padding: 0 var(--space-3);
-    height: 72px;
-
-    &__info {
-      display: none;
-    }
-
-    &__right {
-      display: none;
-    }
+  @media (max-width: 800px) {
+    grid-template-areas:
+      'left controls right'
+      'progress progress progress';
+    grid-template-columns: 1.5fr auto 1fr;
+    grid-template-rows: auto auto;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    height: auto;
+    min-height: 80px;
 
     &__center {
-      gap: var(--space-1);
-    }
-
-    &__progress {
-      display: none;
+      display: contents; /* Allows controls and progress to participate in the main grid */
     }
 
     &__controls {
-      gap: var(--space-2);
+      grid-area: controls;
+      gap: var(--space-1);
+
+      .player-bar__btn {
+        width: 28px;
+        height: 28px;
+        font-size: var(--text-lg);
+      }
+      .player-bar__btn--play {
+        width: 36px;
+        height: 36px;
+      }
+    }
+
+    &__progress {
+      grid-area: progress;
+      margin-top: 4px;
+    }
+
+    &__right {
+      gap: var(--space-1);
+    }
+
+    &__slider--volume {
+      width: 50px; /* Shorter volume slider on mobile */
+    }
+
+    &__artwork {
+      width: 40px;
+      height: 40px;
+    }
+
+    &__title {
+      font-size: var(--text-xs);
+    }
+
+    &__artist {
+      font-size: 10px;
+    }
+
+    &__time {
+      font-size: 10px;
+      min-width: 28px;
     }
   }
 }

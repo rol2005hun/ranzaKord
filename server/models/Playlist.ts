@@ -12,6 +12,8 @@ export interface IPlaylistItem {
 export interface IPlaylist extends Document {
   userId: string;
   name: string;
+  description: string;
+  imageUrl: string;
   items: IPlaylistItem[];
   createdAt: Date;
   updatedAt: Date;
@@ -33,6 +35,8 @@ const playlistSchema = new Schema<IPlaylist>(
   {
     userId: { type: String, required: true, index: true },
     name: { type: String, required: true },
+    description: { type: String, default: '' },
+    imageUrl: { type: String, default: '' },
     items: { type: [playlistItemSchema], default: [] }
   },
   { timestamps: true }

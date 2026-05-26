@@ -36,7 +36,7 @@ function onPlay() {
     <div class="track-card__thumbnail">
       <img
         v-if="track.thumbnailUrl"
-        :src="track.thumbnailUrl"
+        :src="`/api/image?url=${encodeURIComponent(track.thumbnailUrl)}`"
         :alt="track.title"
         class="track-card__img"
         loading="lazy" />

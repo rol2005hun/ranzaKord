@@ -3,79 +3,81 @@ const { toasts, remove } = useToast();
 </script>
 
 <template>
-  <Teleport to="body">
-    <div class="toast-container" aria-live="polite">
-      <TransitionGroup name="toast">
-        <div
-          v-for="toast in toasts"
-          :key="toast.id"
-          class="toast"
-          :class="`toast--${toast.variant}`"
-          role="alert">
-          <div class="toast__icon">
-            <svg
-              v-if="toast.variant === 'success'"
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none">
-              <path
-                d="M6 10L9 13L14 7"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round" />
-            </svg>
-            <svg
-              v-else-if="toast.variant === 'danger'"
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none">
-              <path
-                d="M13 7L7 13M7 7L13 13"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round" />
-            </svg>
-            <svg
-              v-else-if="toast.variant === 'warning'"
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none">
-              <path
-                d="M10 7V10.5M10 13H10.01"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round" />
-            </svg>
-            <svg v-else width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path
-                d="M10 7V10.5M10 13H10.01"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round" />
-            </svg>
+  <ClientOnly>
+    <Teleport to="body">
+      <div class="toast-container" aria-live="polite">
+        <TransitionGroup name="toast">
+          <div
+            v-for="toast in toasts"
+            :key="toast.id"
+            class="toast"
+            :class="`toast--${toast.variant}`"
+            role="alert">
+            <div class="toast__icon">
+              <svg
+                v-if="toast.variant === 'success'"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none">
+                <path
+                  d="M6 10L9 13L14 7"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+              <svg
+                v-else-if="toast.variant === 'danger'"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none">
+                <path
+                  d="M13 7L7 13M7 7L13 13"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+              <svg
+                v-else-if="toast.variant === 'warning'"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none">
+                <path
+                  d="M10 7V10.5M10 13H10.01"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+              <svg v-else width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path
+                  d="M10 7V10.5M10 13H10.01"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+            </div>
+            <span class="toast__message">{{ toast.message }}</span>
+            <button type="button" class="toast__close" aria-label="Close" @click="remove(toast.id)">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M12 4L4 12M4 4L12 12"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+            </button>
           </div>
-          <span class="toast__message">{{ toast.message }}</span>
-          <button type="button" class="toast__close" aria-label="Close" @click="remove(toast.id)">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path
-                d="M12 4L4 12M4 4L12 12"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round" />
-            </svg>
-          </button>
-        </div>
-      </TransitionGroup>
-    </div>
-  </Teleport>
+        </TransitionGroup>
+      </div>
+    </Teleport>
+  </ClientOnly>
 </template>
 
 <style scoped lang="scss">
