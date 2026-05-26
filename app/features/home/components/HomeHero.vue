@@ -45,10 +45,21 @@ const { data: featuredTracks, pending } = useLazyFetch<SearchResult[]>('/api/sea
             </div>
           </div>
         </div>
-
         <div v-else class="home-dashboard__grid">
           <TrackCard v-for="track in featuredTracks" :key="track.videoId" :track="track" />
         </div>
+
+        <template #fallback>
+          <div class="home-dashboard__grid">
+            <div v-for="i in 8" :key="i" class="home-dashboard__skeleton">
+              <div class="skeleton skeleton--thumb" />
+              <div class="home-dashboard__skeleton-info">
+                <div class="skeleton skeleton--title" />
+                <div class="skeleton skeleton--artist" />
+              </div>
+            </div>
+          </div>
+        </template>
       </ClientOnly>
     </section>
   </div>
@@ -177,10 +188,6 @@ const { data: featuredTracks, pending } = useLazyFetch<SearchResult[]>('/api/sea
       right: 60px;
       opacity: 0.25;
     }
-  }
-
-  &__section {
-    margin-bottom: var(--space-10);
   }
 
   &__section-title {

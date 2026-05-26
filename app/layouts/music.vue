@@ -225,7 +225,6 @@ const navItems = [
 
   &__main {
     min-height: 100dvh;
-    padding-bottom: var(--player-height);
     overflow-y: auto;
   }
 }
