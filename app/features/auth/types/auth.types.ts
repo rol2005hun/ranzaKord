@@ -1,9 +1,26 @@
-export interface LoginCredentials {
+export interface OAuthUser {
+  sub: string;
+  name: string;
   email: string;
-  password: string;
+  picture?: string;
 }
 
-export interface AuthSession {
-  token: string;
-  expiresAt: string;
+export interface OAuthSession {
+  accessToken: string;
+  idToken: string;
+  expiresAt: number;
+  user: OAuthUser;
+}
+
+export interface OAuthTokenResponse {
+  access_token: string;
+  id_token: string;
+  token_type: string;
+  expires_in: number;
+  refresh_token?: string;
+}
+
+export interface OAuthCallbackQuery {
+  code: string;
+  state: string;
 }

@@ -1,42 +1,18 @@
-import { useRepo } from 'pinia-orm';
+import type { OAuthUser } from '../types/auth.types';
 
-import { User } from '../models/User';
-import type { AuthSession, LoginCredentials } from '../types/auth.types';
+export const useAuthStore = defineStore('auth', () => {
+  const user = ref<OAuthUser | null>(null);
 
-export const useAuthStore = defineStore(
-  'auth',
-  () => {
-    const session = ref<AuthSession | null>(null);
+  const isAuthenticated = computed(() => !!user.value);
+  const currentUser = computed(() => user.value);
 
-    const isAuthenticated = computed(() => !!session.value?.token);
-
-    const currentUser = computed(() => {
-      return useRepo(User).all()[0] ?? null;
-    });
-
-    async function login(credentials: LoginCredentials) {
-      session.value = {
-        token: 'mock-token-abc123',
-        expiresAt: new Date(Date.now() + 3600_000).toISOString()
-      };
-
-      useRepo(User).save({
-        id: 1,
-        name: 'Demo User',
-        email: credentials.email,
-        isAdmin: false,
-        avatarUrl: ''
-      });
-    }
-
-    function logout() {
-      session.value = null;
-      useRepo(User).flush();
-    }
-
-    return { session, isAuthenticated, currentUser, login, logout };
-  },
-  {
-    persist: true
+  function setUser(data: OAuthUser | null) {
+    user.value = data;
   }
-);
+
+  function clearSession() {
+    user.value = null;
+  }
+
+  return { user, isAuthenticated, currentUser, setUser, clearSession };
+});

@@ -1,7 +1,10 @@
 <script setup lang="ts">
-useHead({
-  title: 'Home'
+definePageMeta({
+  layout: 'music',
+  middleware: ['auth']
 });
+
+useHead({ title: 'Home' });
 </script>
 
 <template>

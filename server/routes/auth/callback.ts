@@ -1,0 +1,70 @@
+import type { OAuthTokenResponse, OAuthUser } from '../../types/auth.server.types';
+import { connectDb } from '../../utils/db';
+import { UserModel } from '../../models/User';
+
+export default defineEventHandler(async (event) => {
+  const config = useRuntimeConfig();
+  const query = getQuery(event);
+
+  const code = query['code'] as string | undefined;
+  const state = query['state'] as string | undefined;
+
+  if (!code || !state) {
+    throw createError({ statusCode: 400, statusMessage: 'Missing code or state parameter' });
+  }
+
+  const session = await useSession(event, { password: config.sessionSecret as string });
+
+  if (session.data['oauthState'] !== state) {
+    throw createError({ statusCode: 400, statusMessage: 'Invalid OAuth state' });
+  }
+
+  const tokenResponse = await $fetch<OAuthTokenResponse>(
+    `https://${config.ranzaKonnectDomain}/api/oauth/token`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: `${config.public.baseUrl}/auth/callback`,
+        client_id: config.ranzaKonnectClientId as string,
+        client_secret: config.ranzaKonnectClientSecret as string
+      }).toString()
+    }
+  );
+
+  const userInfo = await $fetch<OAuthUser>(
+    `https://${config.ranzaKonnectDomain}/api/oauth/userinfo`,
+    {
+      headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+    }
+  );
+
+  await connectDb();
+  await UserModel.findOneAndUpdate(
+    { sub: userInfo.sub },
+    {
+      sub: userInfo.sub,
+      name: userInfo.name,
+      email: userInfo.email,
+      picture: userInfo.picture ?? ''
+    },
+    { upsert: true, returnDocument: 'after' }
+  );
+
+  await session.update({
+    oauthState: null,
+    accessToken: tokenResponse.access_token,
+    idToken: tokenResponse.id_token,
+    expiresAt: Date.now() + tokenResponse.expires_in * 1000,
+    user: {
+      sub: userInfo.sub,
+      name: userInfo.name,
+      email: userInfo.email,
+      picture: userInfo.picture ?? ''
+    }
+  });
+
+  return sendRedirect(event, '/', 302);
+});

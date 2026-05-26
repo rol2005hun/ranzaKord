@@ -1,41 +1,34 @@
-import type { LoginCredentials } from '../types/auth.types';
-
-/**
- * Auth composable.
- * Exposes login/logout logic and reactive auth state to components.
- */
 export function useAuth() {
   const store = useAuthStore();
   const router = useRouter();
-  const { t } = useI18n();
 
-  const isLoading = ref(false);
-  const error = ref<string | null>(null);
-
-  async function login(credentials: LoginCredentials) {
-    isLoading.value = true;
-    error.value = null;
-    try {
-      await store.login(credentials);
-      await router.push('/');
-    } catch {
-      error.value = t('auth.loginError');
-    } finally {
-      isLoading.value = false;
-    }
+  function loginWithRanzaKonnect() {
+    window.location.href = '/auth/login';
   }
 
   async function logout() {
-    store.logout();
+    store.clearSession();
+    await $fetch('/auth/logout', { method: 'POST' }).catch(() => null);
     await router.push('/login');
+  }
+
+  async function fetchUser() {
+    try {
+      const fetcher = import.meta.server ? useRequestFetch() : $fetch;
+      const user = await fetcher<{ sub: string; name: string; email: string; picture?: string }>(
+        '/api/me'
+      );
+      store.setUser(user || null);
+    } catch {
+      store.setUser(null);
+    }
   }
 
   return {
     isAuthenticated: computed(() => store.isAuthenticated),
     currentUser: computed(() => store.currentUser),
-    isLoading: readonly(isLoading),
-    error: readonly(error),
-    login,
-    logout
+    loginWithRanzaKonnect,
+    logout,
+    fetchUser
   };
 }

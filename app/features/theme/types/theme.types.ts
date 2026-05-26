@@ -1,4 +1,4 @@
-export type ThemeId = 'default' | 'dark' | 'ocean';
+export type ThemeId = 'default' | 'dark' | 'ocean' | 'music';
 
 export interface ThemeOption {
   id: ThemeId;

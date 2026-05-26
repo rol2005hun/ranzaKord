@@ -1,0 +1,8 @@
+{
+  "placeholder": "Search songs, artists…",
+  "clear": "Clear search",
+  "noResults": "No results found for \"{query}\"",
+  "title": "Search",
+  "trending": "Trending",
+  "recentSearches": "Recent Searches"
+}

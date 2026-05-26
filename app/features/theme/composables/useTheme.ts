@@ -1,6 +1,7 @@
 import type { ThemeId, ThemeOption } from '../types/theme.types';
 
 export const THEME_OPTIONS: ThemeOption[] = [
+  { id: 'music', label: 'Music (Dark)' },
   { id: 'default', label: 'Default' },
   { id: 'dark', label: 'Dark' },
   { id: 'ocean', label: 'Ocean' }

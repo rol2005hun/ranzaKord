@@ -1,0 +1,14 @@
+{
+  "appName": "ranzaKord",
+  "loading": "Loading…",
+  "error": {
+    "generic": "Something went wrong.",
+    "notFound": "Page not found."
+  },
+  "nav": {
+    "signIn": "Sign in",
+    "home": "Home",
+    "search": "Search",
+    "library": "Library"
+  }
+}

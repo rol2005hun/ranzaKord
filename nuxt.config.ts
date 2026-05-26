@@ -3,7 +3,7 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      titleTemplate: '%s | Nuxt Boilerplate',
+      titleTemplate: '%s | ranzaKord',
       charset: 'utf-8',
       viewport: 'width=device-width, initial-scale=1'
     }
@@ -26,22 +26,36 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@pinia/colada-nuxt',
     '@vueuse/nuxt',
-    '@nuxtjs/color-mode',
     '@nuxtjs/seo',
     'pinia-plugin-persistedstate/nuxt'
   ],
 
-  site: {
-    url: 'https://example.com',
-    name: 'Nuxt Boilerplate',
-    description: 'A scalable Nuxt boilerplate.'
+  runtimeConfig: {
+    mongodbUri: process.env.MONGODB_URI || '',
+    sessionSecret: process.env.SESSION_SECRET || '',
+    ranzaKonnectDomain: process.env.RANZAKONNECT_DOMAIN || '',
+    ranzaKonnectClientId: process.env.RANZAKONNECT_CLIENT_ID || '',
+    ranzaKonnectClientSecret: process.env.RANZAKONNECT_CLIENT_SECRET || '',
+    youtubeCookies: process.env.YOUTUBE_COOKIES || '',
+    public: {
+      baseUrl: process.env.NUXT_PUBLIC_BASE_URL || ''
+    }
   },
 
-  colorMode: {
-    preference: 'system',
-    fallback: 'light',
-    classSuffix: ''
+  nitro: {
+    preset: 'netlify',
+    experimental: {
+      wasm: true
+    }
   },
+
+  site: {
+    url: 'https://ranzakord.netlify.app',
+    name: 'ranzaKord',
+    description: 'Prémium zenei streaming alkalmazás.'
+  },
+
+
 
   sitemap: {
     zeroRuntime: true
