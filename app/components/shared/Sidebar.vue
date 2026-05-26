@@ -105,10 +105,6 @@ const isHovered = ref(false);
         color var(--transition-fast);
     }
 
-    .app-sidebar__text {
-      margin-left: 0.75rem;
-    }
-
     .app-sidebar-item {
       width: 13.5rem;
     }
@@ -125,7 +121,7 @@ const isHovered = ref(false);
   &__header {
     width: 15rem;
     height: 4.5rem;
-    padding: 0 0 0 1.3rem;
+    padding: 0 0 0 1.18rem;
     border-bottom: 1px solid var(--color-border);
     display: flex;
     flex-direction: column;

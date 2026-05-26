@@ -8,18 +8,20 @@ const isDropdownOpen = ref(false);
 const route = useRoute();
 const router = useRouter();
 
-// Update query when navigating with a query param
-watch(
-  () => route.query.q,
-  (newQ) => {
-    if (newQ && typeof newQ === 'string') {
-      if (newQ !== query.value) {
-        search(newQ);
+// Update query when navigating with a query param (client side only)
+onMounted(() => {
+  watch(
+    () => route.query.q,
+    (newQ) => {
+      if (newQ && typeof newQ === 'string') {
+        if (newQ !== query.value) {
+          search(newQ);
+        }
       }
-    }
-  },
-  { immediate: true }
-);
+    },
+    { immediate: true }
+  );
+});
 
 function onInput(event: Event) {
   const el = event.target as HTMLInputElement;

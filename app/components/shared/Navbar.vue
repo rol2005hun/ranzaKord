@@ -16,9 +16,7 @@ function closeDropdown() {
 <template>
   <header class="app-navbar">
     <div class="app-navbar__left">
-      <ClientOnly>
-        <SearchBar />
-      </ClientOnly>
+      <SearchBar />
     </div>
 
     <div class="app-navbar__right">

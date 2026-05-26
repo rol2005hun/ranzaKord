@@ -61,6 +61,7 @@ defineProps<Props>();
   &__icon {
     font-size: 1.5rem;
     flex-shrink: 0;
+    margin-right: var(--space-2);
   }
 
   @media (max-width: 768px) {

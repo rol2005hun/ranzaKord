@@ -36,7 +36,9 @@ export function usePlayer() {
       const savedTime = store.currentTimeSeconds;
       const wasPlaying = store.isPlaying;
 
-      store.isPlaying = false;
+      if (wasPlaying) {
+        store.isLoading = true;
+      }
 
       el.src = `/api/stream?v=${store.currentTrack.videoId}`;
       el.load();
@@ -53,6 +55,9 @@ export function usePlayer() {
             })
             .catch(() => {
               store.isPlaying = false;
+            })
+            .finally(() => {
+              store.isLoading = false;
             });
         }
         el.removeEventListener('loadedmetadata', onLoaded);

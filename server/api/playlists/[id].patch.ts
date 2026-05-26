@@ -29,7 +29,7 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
   const playlist = await PlaylistModel.findOneAndUpdate(
     { _id: id, userId: sessionData.user.sub },
     { $set: updates },
-    { new: true }
+    { returnDocument: 'after' }
   ).lean();
 
   if (!playlist) {

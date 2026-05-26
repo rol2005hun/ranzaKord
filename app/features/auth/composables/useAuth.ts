@@ -14,7 +14,7 @@ export function useAuth() {
 
   async function fetchUser() {
     try {
-      const fetcher = import.meta.server ? useRequestFetch() : $fetch;
+      const fetcher = (import.meta.server ? useRequestFetch() : $fetch) as typeof $fetch;
       const user = await fetcher<{ sub: string; name: string; email: string; picture?: string }>(
         '/api/me'
       );
