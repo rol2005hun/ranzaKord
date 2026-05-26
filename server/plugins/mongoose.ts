@@ -1,4 +1,4 @@
-import { connectDb } from '../utils/db';
+import mongoose from 'mongoose';
 
 export default defineNitroPlugin(async () => {
   if (import.meta.prerender) return;
@@ -7,5 +7,5 @@ export default defineNitroPlugin(async () => {
 
   if (!config.mongodbUri) throw new Error('MONGODB_URI is not set');
 
-  await connectDb();
+  await mongoose.connect(config.mongodbUri);
 });

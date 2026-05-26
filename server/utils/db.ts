@@ -4,14 +4,17 @@ let isConnected = false;
 
 export async function connectDb(): Promise<void> {
   if (isConnected) return;
+  if (mongoose.connection.readyState === 1) {
+    isConnected = true;
+    return;
+  }
 
   const config = useRuntimeConfig();
 
-  await mongoose.connect(config.mongodbUri as string, {
-    bufferCommands: false,
-    maxPoolSize: 5,
-    serverSelectionTimeoutMS: 5000
-  });
-
-  isConnected = true;
+  try {
+    await mongoose.connect(config.mongodbUri as string);
+    isConnected = true;
+  } catch (error) {
+    console.error('Failed to connect to MongoDB:', error);
+  }
 }
