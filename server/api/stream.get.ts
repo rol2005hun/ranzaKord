@@ -31,7 +31,19 @@ export default defineEventHandler(async (event): Promise<StreamResponse> => {
     throw createError({ statusCode: 404, statusMessage: 'No audio format available' });
   }
 
-  const streamUrl: string = await format.decipher(innertube.session.player);
+  let streamUrl = format.url as string | undefined;
+  if (!streamUrl) {
+    try {
+      streamUrl = await format.decipher(innertube.session.player);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      throw createError({ statusCode: 500, statusMessage: 'Failed to extract stream URL: ' + msg });
+    }
+  }
+
+  if (!streamUrl) {
+    throw createError({ statusCode: 500, statusMessage: 'Stream URL is empty' });
+  }
   const mimeType = format.mime_type ?? 'audio/webm';
   const durationMs =
     'approx_duration_ms' in format && typeof format.approx_duration_ms === 'string'
