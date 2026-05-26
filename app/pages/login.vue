@@ -4,7 +4,7 @@ definePageMeta({
 });
 
 const { t } = useI18n();
-useHead({ title: t('nav.signIn') });
+useHead({ title: t('core.nav.signIn') });
 
 const { loginWithRanzaKonnect, isAuthenticated } = useAuth();
 
@@ -14,11 +14,11 @@ if (isAuthenticated.value) {
 </script>
 
 <template>
-  <div class="login-page">
+  <main class="login-page">
     <div class="login-page__card">
       <div class="login-page__logo">
         <AppIcon name="ph:music-note-fill" class="login-page__logo-icon" />
-        <span class="login-page__logo-text">{{ $t('appName') }}</span>
+        <span class="login-page__logo-text">{{ $t('core.appName') }}</span>
       </div>
 
       <h1 class="login-page__title">{{ $t('auth.login.title') }}</h1>
@@ -37,7 +37,7 @@ if (isAuthenticated.value) {
       <div class="login-page__orb login-page__orb--2" />
       <div class="login-page__orb login-page__orb--3" />
     </div>
-  </div>
+  </main>
 </template>
 
 <style lang="scss" scoped>
@@ -107,12 +107,12 @@ if (isAuthenticated.value) {
     gap: var(--space-3);
     width: 100%;
     padding: var(--space-4) var(--space-6);
-    background: var(--color-primary, #7c3aed);
+    background: var(--color-primary-dark, #5b21b6);
     color: #ffffff;
     border: none;
     border-radius: var(--radius-lg);
     font-size: var(--text-base);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-bold);
     font-family: var(--font-sans, sans-serif);
     cursor: pointer;
     justify-content: center;
@@ -122,9 +122,9 @@ if (isAuthenticated.value) {
       box-shadow var(--transition-fast);
 
     &:hover {
-      background: var(--color-primary-hover, #6d28d9);
+      background: var(--color-primary-hover, #4c1d95);
       transform: translateY(-2px);
-      box-shadow: 0 0 30px rgb(124 58 237 / 0.4);
+      box-shadow: 0 0 30px rgb(91 33 182 / 0.4);
     }
 
     &:active {
@@ -134,7 +134,7 @@ if (isAuthenticated.value) {
 
   &__footer {
     font-size: var(--text-xs);
-    color: var(--color-text-disabled, #4a4a6a);
+    color: var(--color-text-secondary, #9090b0);
     margin-top: var(--space-2);
   }
 

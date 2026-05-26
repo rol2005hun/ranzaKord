@@ -25,7 +25,7 @@
         </linearGradient>
       </defs>
     </svg>
-    <span class="app-brand__name">{{ $t('appName') }}</span>
+    <span class="app-brand__name">{{ $t('core.appName') }}</span>
   </div>
 </template>
 

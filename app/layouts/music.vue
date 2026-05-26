@@ -22,8 +22,7 @@ const navItems = [
           :key="item.to"
           :to="item.to"
           class="music-layout__nav-item"
-          :class="{ 'music-layout__nav-item--active': route.path === item.to }"
-        >
+          :class="{ 'music-layout__nav-item--active': route.path === item.to }">
           <AppIcon :name="item.icon" class="music-layout__nav-icon" />
           <span>{{ $t(item.labelKey) }}</span>
         </NuxtLink>
@@ -36,19 +35,14 @@ const navItems = [
               v-if="currentUser.picture"
               :src="currentUser.picture"
               :alt="currentUser.name"
-              class="music-layout__avatar-img"
-            />
+              class="music-layout__avatar-img" />
             <AppIcon v-else name="ph:user-circle-fill" />
           </div>
           <div class="music-layout__user-info">
             <span class="music-layout__user-name">{{ currentUser.name }}</span>
             <span class="music-layout__user-email">{{ currentUser.email }}</span>
           </div>
-          <button
-            class="music-layout__logout-btn"
-            :aria-label="$t('auth.logout')"
-            @click="logout"
-          >
+          <button class="music-layout__logout-btn" :aria-label="$t('auth.logout')" @click="logout">
             <AppIcon name="ph:sign-out" />
           </button>
         </div>

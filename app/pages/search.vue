@@ -5,7 +5,7 @@ definePageMeta({
 });
 
 const { t } = useI18n();
-useHead({ title: t('nav.search') });
+useHead({ title: t('core.nav.search') });
 </script>
 
 <template>

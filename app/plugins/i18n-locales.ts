@@ -6,41 +6,30 @@ export default defineNuxtPlugin({
   setup(nuxtApp) {
     const messages: Record<string, Record<string, MessageSchema>> = {};
 
-    const featureLocales = import.meta.glob('../features/**/locales/**/*.json', {
+    const localeFiles = import.meta.glob('../features/**/locales/**/*.json', {
       eager: true,
       import: 'default'
     });
-
-    const sharedLocales = import.meta.glob('../shared/locales/*.json', {
-      eager: true,
-      import: 'default'
-    });
-
-    const localeFiles = { ...featureLocales, ...sharedLocales };
 
     for (const path in localeFiles) {
-      const featureMatch = path.match(/\/features\/([^/]+)\/locales\/(?:([^/]+)\/)?([a-z0-9-_]+)\.json$/i);
-      const sharedMatch = path.match(/\/shared\/locales\/([a-z0-9-_]+)\.json$/i);
+      const match = path.match(/\/features\/([^/]+)\/locales\/(?:([^/]+)\/)?([a-z0-9-_]+)\.json$/i);
 
-      const locale = featureMatch ? featureMatch[3] : (sharedMatch ? sharedMatch[1] : null);
-      if (!locale) continue;
+      if (!match || typeof match[1] !== 'string' || typeof match[3] !== 'string') {
+        continue;
+      }
 
+      const featureName = match[1];
+      const parentName = match[2];
+      const locale = match[3];
       const fileContent = localeFiles[path] as MessageSchema;
       const localeMessages = (messages[locale] ??= {});
 
-      if (sharedMatch) {
-        Object.assign(localeMessages, fileContent);
-      } else if (featureMatch && typeof featureMatch[1] === 'string') {
-        const featureName = featureMatch[1];
-        const parentName = featureMatch[2];
-        
-        const featureMessages = (localeMessages[featureName] ??= {} as MessageSchema);
+      const featureMessages = (localeMessages[featureName] ??= {} as MessageSchema);
 
-        if (!parentName) {
-          Object.assign(featureMessages, fileContent);
-        } else {
-          featureMessages[parentName] = fileContent;
-        }
+      if (!parentName) {
+        Object.assign(featureMessages, fileContent);
+      } else {
+        featureMessages[parentName] = fileContent;
       }
     }
 

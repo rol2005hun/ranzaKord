@@ -8,7 +8,7 @@ const { isAuthenticated, currentUser, logout } = useAuth();
     <header class="layout__header">
       <nav class="layout__nav">
         <NuxtLink to="/" class="layout__logo">
-          {{ $t('appName') }}
+          {{ $t('core.appName') }}
         </NuxtLink>
 
         <div class="layout__nav-actions">
@@ -30,7 +30,7 @@ const { isAuthenticated, currentUser, logout } = useAuth();
             </AppButton>
           </template>
           <template v-else>
-            <AppButton href="/login" variant="secondary">{{ $t('nav.signIn') }}</AppButton>
+            <AppButton href="/login" variant="secondary">{{ $t('core.nav.signIn') }}</AppButton>
           </template>
         </div>
       </nav>
@@ -41,7 +41,7 @@ const { isAuthenticated, currentUser, logout } = useAuth();
     </main>
 
     <footer class="layout__footer">
-      <p>{{ $t('appName') }} © {{ new Date().getFullYear() }}</p>
+      <p>{{ $t('core.appName') }} © {{ new Date().getFullYear() }}</p>
     </footer>
   </div>
 </template>
