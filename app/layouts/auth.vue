@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <main class="auth-layout">
     <slot />
-  </div>
+  </main>
 </template>
