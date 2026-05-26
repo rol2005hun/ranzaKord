@@ -10,16 +10,16 @@ const props = withDefaults(defineProps<Props>(), {
 </script>
 
 <template>
-  <span class="app-icon" :style="{ '--app-icon-size': String(props.size) }">
-    <ClientOnly>
-      <Icon :name="props.name" :size="String(props.size)" />
-    </ClientOnly>
+  <span class="app-icon-wrapper">
+    <Icon :name="props.name" :size="String(props.size)" class="app-icon" />
   </span>
 </template>
 
 <style scoped lang="scss">
-.app-icon {
+.app-icon-wrapper {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
   width: var(--app-icon-size);
   height: var(--app-icon-size);
@@ -27,7 +27,7 @@ const props = withDefaults(defineProps<Props>(), {
   color: inherit;
 }
 
-.app-icon :deep(svg) {
-  display: block;
+.app-icon {
+  color: inherit;
 }
 </style>
