@@ -55,8 +55,6 @@ export default defineNuxtConfig({
     description: 'Prémium zenei streaming alkalmazás.'
   },
 
-
-
   sitemap: {
     zeroRuntime: true
   },

@@ -27,5 +27,15 @@ export const useSearchStore = defineStore('search', () => {
     error.value = null;
   }
 
-  return { query, results, isLoading, error, setQuery, setResults, setLoading, setError, clearResults };
+  return {
+    query,
+    results,
+    isLoading,
+    error,
+    setQuery,
+    setResults,
+    setLoading,
+    setError,
+    clearResults
+  };
 });

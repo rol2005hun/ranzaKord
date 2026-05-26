@@ -10,9 +10,7 @@ const props = defineProps<Props>();
 
 const player = usePlayer();
 
-const isCurrentTrack = computed(
-  () => player.currentTrack.value?.videoId === props.track.videoId
-);
+const isCurrentTrack = computed(() => player.currentTrack.value?.videoId === props.track.videoId);
 
 function formatTime(seconds: number): string {
   if (!seconds) return '';
@@ -34,29 +32,20 @@ function onPlay() {
 </script>
 
 <template>
-  <article
-    class="track-card"
-    :class="{ 'track-card--active': isCurrentTrack }"
-    @click="onPlay"
-  >
+  <article class="track-card" :class="{ 'track-card--active': isCurrentTrack }" @click="onPlay">
     <div class="track-card__thumbnail">
       <img
         v-if="track.thumbnailUrl"
         :src="track.thumbnailUrl"
         :alt="track.title"
         class="track-card__img"
-        loading="lazy"
-      />
+        loading="lazy" />
       <div v-else class="track-card__img-placeholder">
         <AppIcon name="ph:music-note" />
       </div>
 
       <div class="track-card__overlay">
-        <button
-          class="track-card__play-btn"
-          :aria-label="$t('player.play')"
-          @click.stop="onPlay"
-        >
+        <button class="track-card__play-btn" :aria-label="$t('player.play')" @click.stop="onPlay">
           <AppIcon v-if="isCurrentTrack && player.isPlaying.value" name="ph:pause-fill" />
           <AppIcon v-else name="ph:play-fill" />
         </button>
@@ -195,9 +184,18 @@ function onPlay() {
     border-radius: 2px;
     animation: equalizer 0.8s ease-in-out infinite alternate;
 
-    &:nth-child(1) { height: 6px; animation-delay: 0s; }
-    &:nth-child(2) { height: 14px; animation-delay: 0.2s; }
-    &:nth-child(3) { height: 10px; animation-delay: 0.4s; }
+    &:nth-child(1) {
+      height: 6px;
+      animation-delay: 0s;
+    }
+    &:nth-child(2) {
+      height: 14px;
+      animation-delay: 0.2s;
+    }
+    &:nth-child(3) {
+      height: 10px;
+      animation-delay: 0.4s;
+    }
   }
 
   &__info {
@@ -233,7 +231,11 @@ function onPlay() {
 }
 
 @keyframes equalizer {
-  from { transform: scaleY(0.4); }
-  to { transform: scaleY(1); }
+  from {
+    transform: scaleY(0.4);
+  }
+  to {
+    transform: scaleY(1);
+  }
 }
 </style>

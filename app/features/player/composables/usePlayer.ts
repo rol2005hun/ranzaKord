@@ -66,11 +66,14 @@ export function usePlayer() {
   }
 
   function resume() {
-    audioRef.value?.play().then(() => {
-      store.isPlaying = true;
-    }).catch(() => {
-      store.isPlaying = false;
-    });
+    audioRef.value
+      ?.play()
+      .then(() => {
+        store.isPlaying = true;
+      })
+      .catch(() => {
+        store.isPlaying = false;
+      });
   }
 
   function togglePlay() {

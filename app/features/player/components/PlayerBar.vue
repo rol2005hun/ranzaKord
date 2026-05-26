@@ -36,8 +36,7 @@ function onVolumeInput(event: Event) {
           v-if="player.currentTrack.value.thumbnailUrl"
           :src="player.currentTrack.value.thumbnailUrl"
           :alt="player.currentTrack.value.title"
-          class="player-bar__artwork-img"
-        />
+          class="player-bar__artwork-img" />
         <div v-else class="player-bar__artwork-placeholder">
           <AppIcon name="ph:music-note" />
         </div>
@@ -53,16 +52,14 @@ function onVolumeInput(event: Event) {
         class="player-bar__btn"
         :disabled="!player.hasPrev.value"
         :aria-label="$t('player.prev')"
-        @click="player.playPrev()"
-      >
+        @click="player.playPrev()">
         <AppIcon name="ph:skip-back-fill" />
       </button>
 
       <button
         class="player-bar__btn player-bar__btn--play"
         :aria-label="player.isPlaying.value ? $t('player.pause') : $t('player.play')"
-        @click="player.togglePlay()"
-      >
+        @click="player.togglePlay()">
         <AppSpinner v-if="player.isLoading.value" size="sm" />
         <AppIcon v-else-if="player.isPlaying.value" name="ph:pause-fill" />
         <AppIcon v-else name="ph:play-fill" />
@@ -72,8 +69,7 @@ function onVolumeInput(event: Event) {
         class="player-bar__btn"
         :disabled="!player.hasNext.value"
         :aria-label="$t('player.next')"
-        @click="player.playNext()"
-      >
+        @click="player.playNext()">
         <AppIcon name="ph:skip-forward-fill" />
       </button>
     </div>
@@ -89,8 +85,7 @@ function onVolumeInput(event: Event) {
         :value="player.currentTimeSeconds.value"
         step="1"
         :aria-label="$t('player.seek')"
-        @input="onSeekInput"
-      />
+        @input="onSeekInput" />
       <span class="player-bar__time">{{ formatTime(player.durationSeconds.value) }}</span>
     </div>
 
@@ -105,8 +100,7 @@ function onVolumeInput(event: Event) {
         :value="player.volume.value"
         step="0.01"
         :aria-label="$t('player.volume')"
-        @input="onVolumeInput"
-      />
+        @input="onVolumeInput" />
     </div>
   </div>
 </template>

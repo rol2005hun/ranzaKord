@@ -46,11 +46,7 @@ const { data: featuredTracks, pending } = useLazyFetch<SearchResult[]>('/api/sea
       </div>
 
       <div v-else class="home-dashboard__grid">
-        <TrackCard
-          v-for="track in featuredTracks"
-          :key="track.videoId"
-          :track="track"
-        />
+        <TrackCard v-for="track in featuredTracks" :key="track.videoId" :track="track" />
       </div>
     </section>
   </div>
@@ -68,7 +64,10 @@ const { data: featuredTracks, pending } = useLazyFetch<SearchResult[]>('/api/sea
     gap: var(--space-8);
     padding: var(--space-12) var(--space-8);
     border-radius: var(--radius-xl);
-    background: var(--gradient-hero, linear-gradient(135deg, var(--color-surface) 0%, var(--color-bg) 100%));
+    background: var(
+      --gradient-hero,
+      linear-gradient(135deg, var(--color-surface) 0%, var(--color-bg) 100%)
+    );
     border: 1px solid var(--color-border);
     overflow: hidden;
     margin-bottom: var(--space-10);
@@ -241,12 +240,21 @@ const { data: featuredTracks, pending } = useLazyFetch<SearchResult[]>('/api/sea
 }
 
 @keyframes skeleton-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
 }
 </style>

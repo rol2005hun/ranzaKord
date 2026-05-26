@@ -24,14 +24,12 @@ function onClear() {
       :value="query"
       :placeholder="$t('search.placeholder')"
       autocomplete="off"
-      @input="onInput"
-    />
+      @input="onInput" />
     <button
       v-if="query"
       class="search-bar__clear"
       :aria-label="$t('search.clear')"
-      @click="onClear"
-    >
+      @click="onClear">
       <AppIcon name="ph:x" />
     </button>
   </div>
@@ -55,7 +53,8 @@ function onClear() {
 
   &__input {
     width: 100%;
-    padding: var(--space-3) var(--space-4) var(--space-3) calc(var(--space-4) + 1.5rem + var(--space-2));
+    padding: var(--space-3) var(--space-4) var(--space-3)
+      calc(var(--space-4) + 1.5rem + var(--space-2));
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-full);

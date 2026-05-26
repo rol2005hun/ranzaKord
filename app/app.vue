@@ -10,9 +10,7 @@ useHead({
   htmlAttrs: {
     'data-theme': themeId
   },
-  style: [
-    { innerHTML: customColorStyle, id: 'theme-custom-color' }
-  ]
+  style: [{ innerHTML: customColorStyle, id: 'theme-custom-color' }]
 });
 </script>
 

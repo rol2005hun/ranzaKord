@@ -2,7 +2,10 @@ import type { ThemeId, CustomColor } from '../types/theme.types';
 
 export const useThemeStore = defineStore('theme', () => {
   const themeId = useCookie<ThemeId>('theme-id', { default: () => 'music', maxAge: 31536000 });
-  const customColorHex = useCookie<string | null>('theme-custom-color', { default: () => null, maxAge: 31536000 });
+  const customColorHex = useCookie<string | null>('theme-custom-color', {
+    default: () => null,
+    maxAge: 31536000
+  });
 
   const customColor = computed<CustomColor | null>(() => {
     if (!customColorHex.value) return null;

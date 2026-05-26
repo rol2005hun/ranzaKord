@@ -63,11 +63,7 @@
     transparent 100%
   );
 
-  --gradient-card: linear-gradient(
-    180deg,
-    transparent 40%,
-    hsl(265 75% 10% / 0.8) 100%
-  );
+  --gradient-card: linear-gradient(180deg, transparent 40%, hsl(265 75% 10% / 0.8) 100%);
 
   --glow-primary: 0 0 40px hsl(265 75% 62% / 0.25);
   --glow-accent: 0 0 40px hsl(195 80% 58% / 0.2);

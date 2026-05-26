@@ -34,8 +34,7 @@ export default defineEventHandler(async (event): Promise<SearchResultItem[]> => 
     for (const item of section.contents) {
       if (items.length >= 20) break;
 
-      const id =
-        'id' in item && typeof item.id === 'string' ? item.id : null;
+      const id = 'id' in item && typeof item.id === 'string' ? item.id : null;
 
       const title =
         'title' in item && typeof item.title === 'string'
@@ -52,9 +51,7 @@ export default defineEventHandler(async (event): Promise<SearchResultItem[]> => 
             : '';
 
       const thumbnail =
-        'thumbnails' in item &&
-        Array.isArray(item.thumbnails) &&
-        item.thumbnails.length > 0
+        'thumbnails' in item && Array.isArray(item.thumbnails) && item.thumbnails.length > 0
           ? (item.thumbnails[item.thumbnails.length - 1] as { url: string }).url
           : '';
 
@@ -70,7 +67,13 @@ export default defineEventHandler(async (event): Promise<SearchResultItem[]> => 
           : 0;
 
       if (id && title) {
-        items.push({ videoId: id, title, artist, thumbnailUrl: thumbnail, durationSeconds: duration });
+        items.push({
+          videoId: id,
+          title,
+          artist,
+          thumbnailUrl: thumbnail,
+          durationSeconds: duration
+        });
       }
     }
 

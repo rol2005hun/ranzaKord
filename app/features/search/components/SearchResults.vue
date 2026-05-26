@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 const { results, isLoading, error, query } = useSearch();
 
 const skeletonItems = Array.from({ length: 8 }, (_, i) => i);
@@ -106,7 +105,11 @@ const skeletonItems = Array.from({ length: 8 }, (_, i) => i);
 }
 
 @keyframes skeleton-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 </style>
