@@ -1,5 +1,4 @@
 import type { OAuthTokenResponse, OAuthUser } from '../../types/auth.server.types';
-import { connectDb } from '../../utils/db';
 import { UserModel } from '../../models/User';
 
 export default defineEventHandler(async (event) => {
@@ -46,7 +45,6 @@ export default defineEventHandler(async (event) => {
     }
   );
 
-  await connectDb();
   await UserModel.findOneAndUpdate(
     { sub: userInfo.sub },
     {
