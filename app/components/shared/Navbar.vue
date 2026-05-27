@@ -21,7 +21,6 @@ function closeDropdown() {
     </div>
 
     <div class="app-navbar__right">
-      <ClientOnly>
         <div v-if="isAuthenticated && currentUser" class="app-navbar__user">
           <button
             class="app-navbar__avatar"
@@ -87,7 +86,6 @@ function closeDropdown() {
             </button>
           </div>
         </div>
-      </ClientOnly>
     </div>
   </header>
 </template>

@@ -3,9 +3,11 @@ const player = usePlayer();
 const audioEl = ref<HTMLAudioElement | null>(null);
 
 onMounted(() => {
-  if (audioEl.value) {
-    player.bindAudio(audioEl.value);
-  }
+  onNuxtReady(() => {
+    if (audioEl.value) {
+      player.bindAudio(audioEl.value);
+    }
+  });
 });
 
 const showAddToPlaylist = ref(false);
@@ -134,7 +136,7 @@ function onVolumeInput(event: Event) {
         </div>
 
         <div class="player-bar__progress">
-          <span class="player-bar__time" data-allow-mismatch="text">
+          <span class="player-bar__time" data-allow-mismatch>
             {{ formatTime(player.currentTimeSeconds.value) }}
           </span>
           <input
@@ -151,9 +153,9 @@ function onVolumeInput(event: Event) {
               '--progress':
                 (player.currentTimeSeconds.value / (player.durationSeconds.value || 1)) * 100 + '%'
             }"
-            data-allow-mismatch="attribute"
+            data-allow-mismatch
             @input="onSeekInput" />
-          <span class="player-bar__time" data-allow-mismatch="text">
+          <span class="player-bar__time" data-allow-mismatch>
             {{ formatTime(player.durationSeconds.value) }}
           </span>
         </div>
@@ -177,7 +179,7 @@ function onVolumeInput(event: Event) {
           step="0.01"
           :aria-label="$t('player.volume')"
           :style="{ '--progress': player.volume.value * 100 + '%' }"
-          data-allow-mismatch="attribute"
+          data-allow-mismatch
           @input="onVolumeInput" />
       </div>
     </aside>

@@ -4,22 +4,25 @@ import type { SearchResult } from '@/features/search/types/search.types';
 const { currentUser } = useAuth();
 
 const { data: featuredTracks, pending } = useLazyFetch<SearchResult[]>('/api/search', {
-  query: { q: 'top hits 2024', type: 'song' },
-  server: false
+  query: { q: 'top hits 2024', type: 'song' }
 });
 
 const recommendedTrack = computed(() => featuredTracks.value?.[0]);
 const otherFeaturedTracks = computed(() => featuredTracks.value?.slice(1));
 
-const { playTrack } = usePlayer();
-function onPlay(track: SearchResult) {
-  playTrack({
-    videoId: track.id,
-    title: track.title,
-    artist: track.artist,
-    thumbnailUrl: track.thumbnailUrl,
-    durationSeconds: track.durationSeconds || 0
-  });
+const { playQueue } = usePlayer();
+
+function onPlayFromList(track: SearchResult) {
+  if (!featuredTracks.value) return;
+  const tracksToPlay = featuredTracks.value.map(t => ({
+    videoId: t.id,
+    title: t.title,
+    artist: t.artist,
+    thumbnailUrl: t.thumbnailUrl,
+    durationSeconds: t.durationSeconds || 0
+  }));
+  const index = tracksToPlay.findIndex(t => t.videoId === track.id);
+  playQueue(tracksToPlay, Math.max(0, index));
 }
 </script>
 
@@ -34,14 +37,21 @@ function onPlay(track: SearchResult) {
         <p class="home-dashboard__subtitle">{{ $t('home.subtitle') }}</p>
       </div>
       <div class="home-dashboard__hero-visual">
-        <div v-if="pending || !recommendedTrack" class="home-dashboard__skeleton-visual">
-          <div class="skeleton skeleton--thumb" />
-        </div>
-        <TopResultCard
-          v-else
-          :result="recommendedTrack"
-          class="home-dashboard__recommended-card"
-          @play="onPlay" />
+        <ClientOnly>
+          <div v-if="pending || !recommendedTrack" class="home-dashboard__skeleton-visual">
+            <div class="skeleton skeleton--thumb" />
+          </div>
+          <TopResultCard
+            v-else
+            :result="recommendedTrack"
+            class="home-dashboard__recommended-card"
+            @play="onPlayFromList" />
+          <template #fallback>
+            <div class="home-dashboard__skeleton-visual">
+              <div class="skeleton skeleton--thumb" />
+            </div>
+          </template>
+        </ClientOnly>
       </div>
     </section>
 
@@ -59,7 +69,7 @@ function onPlay(track: SearchResult) {
           </div>
         </div>
         <div v-else class="home-dashboard__grid">
-          <TrackCard v-for="track in otherFeaturedTracks" :key="track.id" :track="track" />
+          <TrackCard v-for="track in otherFeaturedTracks" :key="track.id" :track="track" @play="onPlayFromList" />
         </div>
 
         <template #fallback>

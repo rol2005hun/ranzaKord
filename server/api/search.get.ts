@@ -5,7 +5,7 @@ import type {
   SearchResultType
 } from '../../app/features/search/types/search.types';
 
-export default defineEventHandler(
+export default defineCachedEventHandler(
   async (event): Promise<CategorizedSearchResults | SearchResult[]> => {
     const query = getQuery(event);
     const q = query['q'] as string | undefined;
@@ -172,5 +172,15 @@ export default defineEventHandler(
     response.albums = response.albums.slice(0, 10);
 
     return response;
+  },
+  {
+    maxAge: 60 * 60 * 12, // Cache for 12 hours
+    name: 'youtube-search',
+    getKey: (event) => {
+      const query = getQuery(event);
+      const q = String(query['q'] || '').trim().toLowerCase();
+      const type = String(query['type'] || 'all');
+      return `${q}-${type}`;
+    }
   }
 );

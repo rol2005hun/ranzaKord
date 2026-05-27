@@ -30,24 +30,16 @@ useHead({
 
 function playAll(): void {
   if (!playlist.value || playlist.value.tracks.length === 0) return;
-  const [first, ...rest] = playlist.value.tracks;
-  if (!first) return;
-  player.playTrack({
-    videoId: first.videoId,
-    title: first.title,
-    artist: first.artist,
-    thumbnailUrl: first.thumbnailUrl,
-    durationSeconds: Math.round(first.durationMs / 1000)
-  });
-  for (const track of rest) {
-    player.addToQueue({
-      videoId: track.videoId,
-      title: track.title,
-      artist: track.artist,
-      thumbnailUrl: track.thumbnailUrl,
-      durationSeconds: Math.round(track.durationMs / 1000)
-    });
-  }
+  
+  const tracksToPlay = playlist.value.tracks.map(t => ({
+    videoId: t.videoId,
+    title: t.title,
+    artist: t.artist,
+    thumbnailUrl: t.thumbnailUrl,
+    durationSeconds: Math.round(t.durationMs / 1000)
+  }));
+
+  player.playQueue(tracksToPlay, 0);
 }
 
 async function removeTrack(videoId: string): Promise<void> {
@@ -117,7 +109,15 @@ function formatDuration(ms: number): string {
     <template v-else>
       <div class="playlist-page__header">
         <div class="playlist-page__cover">
-          <img v-if="playlist.imageUrl" :src="playlist.imageUrl" :alt="playlist.name" />
+          <NuxtImg
+            v-if="playlist.imageUrl"
+            :src="playlist.imageUrl"
+            :alt="playlist.name"
+            width="200"
+            height="200"
+            format="webp"
+            fetchpriority="high"
+            preload />
           <div v-else class="playlist-page__cover-placeholder">
             <AppIcon name="ph:music-notes-fill" />
           </div>
@@ -178,13 +178,16 @@ function formatDuration(ms: number): string {
           :key="track.videoId"
           class="playlist-page__track"
           @click="
-            player.playTrack({
-              videoId: track.videoId,
-              title: track.title,
-              artist: track.artist,
-              thumbnailUrl: track.thumbnailUrl,
-              durationSeconds: Math.round(track.durationMs / 1000)
-            })
+            player.playQueue(
+              playlist.tracks.map(t => ({
+                videoId: t.videoId,
+                title: t.title,
+                artist: t.artist,
+                thumbnailUrl: t.thumbnailUrl,
+                durationSeconds: Math.round(t.durationMs / 1000)
+              })),
+              index
+            )
           ">
           <div class="playlist-page__track-num-wrapper">
             <ClientOnly>

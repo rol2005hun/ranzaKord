@@ -6,10 +6,13 @@ export function usePlayer() {
   const store = usePlayerStore();
   const { t } = useI18n();
 
+  let isRestoring = false;
+
   function bindAudio(el: HTMLAudioElement) {
     audioRef.value = el;
 
     el.addEventListener('timeupdate', () => {
+      if (isRestoring) return;
       store.currentTimeSeconds = el.currentTime;
     });
 
@@ -17,6 +20,14 @@ export function usePlayer() {
       if (isFinite(el.duration)) {
         store.durationSeconds = el.duration;
       }
+    });
+
+    el.addEventListener('play', () => {
+      store.isPlaying = true;
+    });
+
+    el.addEventListener('pause', () => {
+      store.isPlaying = false;
     });
 
     el.addEventListener('ended', () => {
@@ -45,6 +56,10 @@ export function usePlayer() {
       if (wasPlaying) {
         store.isLoading = true;
       }
+      
+      if (savedTime > 0) {
+        isRestoring = true;
+      }
 
       el.src = `/api/stream?v=${store.currentTrack.videoId}`;
       el.load();
@@ -53,6 +68,9 @@ export function usePlayer() {
         if (savedTime > 0) {
           el.currentTime = savedTime;
           store.currentTimeSeconds = savedTime;
+          setTimeout(() => {
+            isRestoring = false;
+          }, 50);
         }
         if (wasPlaying) {
           el.play()
@@ -81,6 +99,18 @@ export function usePlayer() {
     store.isLoading = true;
     store.isPlaying = false;
     store.error = null;
+
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: track.title,
+        artist: track.artist,
+        artwork: track.thumbnailUrl ? [{ src: track.thumbnailUrl, sizes: '512x512' }] : []
+      });
+      navigator.mediaSession.setActionHandler('play', resume);
+      navigator.mediaSession.setActionHandler('pause', pause);
+      navigator.mediaSession.setActionHandler('previoustrack', playPrev);
+      navigator.mediaSession.setActionHandler('nexttrack', playNext);
+    }
 
     try {
       await nextTick();
@@ -169,6 +199,18 @@ export function usePlayer() {
     store.addToQueue(track);
   }
 
+  function setQueue(tracks: Track[]) {
+    store.setQueue(tracks);
+  }
+
+  function playQueue(tracks: Track[], startIndex = 0) {
+    store.setQueue(tracks);
+    const track = tracks[startIndex];
+    if (track) {
+      playTrack(track);
+    }
+  }
+
   return {
     currentTrack: computed(() => store.currentTrack),
     isPlaying: computed(() => store.isPlaying),
@@ -192,6 +234,8 @@ export function usePlayer() {
     playNext,
     playPrev,
     toggleShuffle,
-    toggleRepeat
+    toggleRepeat,
+    setQueue,
+    playQueue
   };
 }

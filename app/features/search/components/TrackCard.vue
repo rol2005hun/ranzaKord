@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { SearchResult } from '../types/search.types';
-import type { Track } from '@/features/player/types/player.types';
 
 interface Props {
   track: SearchResult;
@@ -19,15 +18,12 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+const emit = defineEmits<{
+  (e: 'play', track: SearchResult): void;
+}>();
+
 function onPlay() {
-  const track: Track = {
-    videoId: props.track.id,
-    title: props.track.title,
-    artist: props.track.artist,
-    thumbnailUrl: props.track.thumbnailUrl,
-    durationSeconds: props.track.durationSeconds || 0
-  };
-  player.playTrack(track);
+  emit('play', props.track);
 }
 
 const showAddToPlaylist = ref(false);

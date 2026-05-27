@@ -1,4 +1,5 @@
 import type { ServerSession } from '../../types/auth.server.types';
+import mongoose from 'mongoose';
 import { PlaylistModel } from '../../models/Playlist';
 
 export default defineEventHandler(async (event): Promise<{ success: boolean }> => {
@@ -13,6 +14,10 @@ export default defineEventHandler(async (event): Promise<{ success: boolean }> =
 
   const id = getRouterParam(event, 'id');
   if (!id) throw createError({ statusCode: 400, statusMessage: t('playlists.errors.missingId') });
+
+  if (!mongoose.isValidObjectId(id)) {
+    throw createError({ statusCode: 404, statusMessage: t('playlists.errors.notFound') });
+  }
 
   const result = await PlaylistModel.deleteOne({ _id: id, userId: sessionData.user.sub });
 

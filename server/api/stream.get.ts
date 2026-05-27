@@ -15,7 +15,6 @@ export default defineEventHandler(async (event) => {
     ...(info.streaming_data?.adaptive_formats || [])
   ];
 
-  // Prefer audio-only formats
   let format = formats.find((f) => f.has_audio && !f.has_video && (f.url || f.signature_cipher));
   if (!format) {
     format = formats.find((f) => f.has_audio && (f.url || f.signature_cipher));
@@ -42,11 +41,24 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, statusMessage: t('player.errors.emptyStream') });
   }
 
-  // Proxy the stream through our server to bypass CORS, IP locks and Cookie requirements
-  return proxyRequest(event, streamUrl, {
+  const response = await fetch(streamUrl, {
     headers: {
-      // Pass the request's Range header if present
-      ...(event.node.req.headers.range ? { range: event.node.req.headers.range } : {})
+      ...(event.node.req.headers.range ? { range: event.node.req.headers.range as string } : {})
     }
   });
+
+  if (!response.ok) {
+    throw createError({ statusCode: response.status, statusMessage: response.statusText });
+  }
+
+  for (const [key, value] of response.headers.entries()) {
+    setHeader(event, key, value);
+  }
+
+  if (!response.body) {
+    throw createError({ statusCode: 500, statusMessage: t('player.errors.emptyStream') });
+  }
+
+  setResponseStatus(event, response.status);
+  return sendStream(event, response.body as ReadableStream);
 });

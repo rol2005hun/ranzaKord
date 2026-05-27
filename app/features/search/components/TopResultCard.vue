@@ -24,10 +24,15 @@ const emit = defineEmits<{
       <div
         class="top-result-card__image-container"
         :class="{ 'top-result-card__image-container--artist': isArtist }">
-        <img
+        <NuxtImg
           v-if="props.result.thumbnailUrl"
           :src="props.result.thumbnailUrl"
-          :alt="props.result.title" />
+          :alt="props.result.title"
+          width="92"
+          height="92"
+          format="webp"
+          fetchpriority="high"
+          preload />
         <AppIcon v-else name="ph:music-notes-simple" />
       </div>
       <div class="top-result-card__info">

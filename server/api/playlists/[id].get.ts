@@ -1,4 +1,5 @@
 import type { ServerSession } from '../../types/auth.server.types';
+import mongoose from 'mongoose';
 import { PlaylistModel } from '../../models/Playlist';
 
 export interface PlaylistTrackResponse {
@@ -34,6 +35,10 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
 
   const id = getRouterParam(event, 'id');
   if (!id) throw createError({ statusCode: 400, statusMessage: t('playlists.errors.missingId') });
+
+  if (!mongoose.isValidObjectId(id)) {
+    throw createError({ statusCode: 404, statusMessage: t('playlists.errors.notFound') });
+  }
 
   const playlist = await PlaylistModel.findOne({
     _id: id,
