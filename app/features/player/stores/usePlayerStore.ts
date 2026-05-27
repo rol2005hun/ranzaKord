@@ -134,6 +134,25 @@ export const usePlayerStore = defineStore(
     };
   },
   {
-    persist: true
+    persist: [
+      {
+        pick: [
+          'currentTrack',
+          'volume',
+          'currentTimeSeconds',
+          'durationSeconds',
+          'isShuffle',
+          'repeatMode',
+          'isPlaying'
+        ],
+        storage: piniaPluginPersistedstate.cookies({
+          maxAge: 31536000 // 1 year
+        })
+      },
+      {
+        pick: ['queue'],
+        storage: piniaPluginPersistedstate.localStorage()
+      }
+    ]
   }
 );

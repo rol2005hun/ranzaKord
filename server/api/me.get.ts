@@ -9,21 +9,22 @@ export interface MeResponse {
 
 export default defineEventHandler(async (event): Promise<MeResponse> => {
   const config = useRuntimeConfig();
+  const { t } = useServerTranslation(event);
   let session;
   try {
     session = await useSession(event, { password: config.sessionSecret as string });
   } catch {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
+    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
   }
   const sessionData = session.data as Partial<ServerSession>;
 
   if (!sessionData.accessToken || !sessionData.user) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
+    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
   }
 
   if (sessionData.expiresAt && Date.now() > sessionData.expiresAt) {
     await session.clear();
-    throw createError({ statusCode: 401, statusMessage: 'Session expired' });
+    throw createError({ statusCode: 401, statusMessage: t('auth.errors.sessionExpired') });
   }
 
   return {

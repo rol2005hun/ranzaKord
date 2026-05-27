@@ -2,8 +2,10 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const url = query['url'] as string | undefined;
 
-  if (!url || !url.startsWith('http')) {
-    throw createError({ statusCode: 400, statusMessage: 'Missing or invalid URL' });
+  const { t } = useServerTranslation(event);
+
+  if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+    throw createError({ statusCode: 400, statusMessage: t('core.errors.missingUrl') });
   }
 
   try {
@@ -17,7 +19,10 @@ export default defineEventHandler(async (event) => {
     });
 
     if (!response.ok) {
-      throw createError({ statusCode: response.status, statusMessage: response.statusText });
+      throw createError({
+        statusCode: response.status,
+        statusMessage: t('core.errors.proxyStatus', { statusText: response.statusText })
+      });
     }
 
     const arrayBuffer = await response.arrayBuffer();
@@ -28,6 +33,6 @@ export default defineEventHandler(async (event) => {
 
     return Buffer.from(arrayBuffer);
   } catch {
-    throw createError({ statusCode: 500, statusMessage: 'Failed to proxy image' });
+    throw createError({ statusCode: 500, statusMessage: t('core.errors.proxyFailed') });
   }
 });

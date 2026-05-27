@@ -9,5 +9,9 @@
   "playerBar": "Music player",
   "noTrack": "Nothing playing",
   "shuffle": "Shuffle",
-  "repeat": "Repeat"
+  "repeat": "Repeat",
+  "errors": {
+    "playback": "Playback error. Please try again.",
+    "stream": "Failed to load stream. Are you signed in?"
+  }
 }

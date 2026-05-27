@@ -6,15 +6,17 @@ export default defineEventHandler(async (event) => {
   const session = await useSession(event, { password: config.sessionSecret as string });
   const sessionData = session.data as Partial<ServerSession>;
 
-  if (!sessionData.user?.sub) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
+  const { t } = useServerTranslation(event);
+
+  if (!sessionData.user) {
+    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
   }
 
   const body = await readBody(event);
   const { videoId, currentTime } = body;
 
-  if (typeof videoId !== 'string' || typeof currentTime !== 'number') {
-    throw createError({ statusCode: 400, statusMessage: 'Invalid payload' });
+  if (!body || typeof body.videoId !== 'string' || typeof body.currentTime !== 'number') {
+    throw createError({ statusCode: 400, statusMessage: t('player.errors.invalidPayload') });
   }
 
   await UserModel.updateOne(

@@ -1,0 +1,8 @@
+{
+  "errors": {
+    "unauthorized": "Unauthorized",
+    "missingUrl": "Missing or invalid URL",
+    "proxyFailed": "Failed to proxy image",
+    "proxyStatus": "{statusText}"
+  }
+}

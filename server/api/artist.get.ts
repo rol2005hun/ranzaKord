@@ -5,8 +5,10 @@ export default defineEventHandler(async (event): Promise<ArtistDetail> => {
   const query = getQuery(event);
   const id = query['id'] as string | undefined;
 
+  const { t } = useServerTranslation(event);
+
   if (!id) {
-    throw createError({ statusCode: 400, statusMessage: 'Missing artist id' });
+    throw createError({ statusCode: 400, statusMessage: t('search.errors.missingArtistId') });
   }
 
   const config = useRuntimeConfig();
@@ -113,8 +115,7 @@ export default defineEventHandler(async (event): Promise<ArtistDetail> => {
       topSongs,
       albums
     };
-  } catch (error: unknown) {
-    const err = error as Error;
-    throw createError({ statusCode: 500, statusMessage: err.message || 'Failed to fetch artist' });
+  } catch {
+    throw createError({ statusCode: 500, statusMessage: t('search.errors.fetchArtistFailed') });
   }
 });

@@ -24,5 +24,11 @@
   "addedSuccess": "Added to playlist",
   "addFailed": "Failed to add to playlist",
   "removedSuccess": "Removed from playlist",
-  "removeFailed": "Failed to remove from playlist"
+  "removeFailed": "Failed to remove from playlist",
+  "errors": {
+    "load": "Failed to load playlists",
+    "create": "Failed to create playlist",
+    "update": "Failed to update playlist",
+    "delete": "Failed to delete playlist"
+  }
 }

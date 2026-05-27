@@ -4,6 +4,7 @@ const audioRef = ref<HTMLAudioElement | null>(null);
 
 export function usePlayer() {
   const store = usePlayerStore();
+  const { t } = useI18n();
 
   function bindAudio(el: HTMLAudioElement) {
     audioRef.value = el;
@@ -32,7 +33,7 @@ export function usePlayer() {
     el.addEventListener('error', () => {
       store.isLoading = false;
       store.isPlaying = false;
-      store.error = 'Playback error. Please try again.';
+      store.error = t('player.errors.playback');
     });
 
     el.volume = store.volume;
@@ -71,6 +72,11 @@ export function usePlayer() {
   }
 
   async function playTrack(track: Track) {
+    if (store.currentTrack?.videoId === track.videoId) {
+      togglePlay();
+      return;
+    }
+
     store.setTrack(track);
     store.isLoading = true;
     store.isPlaying = false;
@@ -91,7 +97,7 @@ export function usePlayer() {
       await audioRef.value.play();
       store.isPlaying = true;
     } catch {
-      store.error = 'Failed to load stream. Are you signed in?';
+      store.error = t('player.errors.stream');
     } finally {
       store.isLoading = false;
     }

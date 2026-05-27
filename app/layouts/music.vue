@@ -7,10 +7,11 @@ const navItems = [{ to: '/', icon: 'ph:house-fill', labelKey: 'core.nav.home' }]
 
 const showCreateModal = ref(false);
 
-onMounted(async () => {
+await useAsyncData('user-playlists', async () => {
   if (isAuthenticated.value) {
     await playlistsStore.fetchAll();
   }
+  return true;
 });
 
 function onPlaylistCreated(id: string): void {
@@ -288,7 +289,7 @@ function onPlaylistCreated(id: string): void {
   @media (max-width: 768px) {
     flex-direction: column;
 
-    &__content {
+    &__main {
       padding-bottom: calc(var(--player-height, 0px) + 60px);
     }
 

@@ -4,33 +4,44 @@ import type { SearchResult } from '@/features/search/types/search.types';
 const { currentUser } = useAuth();
 
 const { data: featuredTracks, pending } = useLazyFetch<SearchResult[]>('/api/search', {
-  query: { q: 'top hits 2024' },
+  query: { q: 'top hits 2024', type: 'song' },
   server: false
 });
+
+const recommendedTrack = computed(() => featuredTracks.value?.[0]);
+const otherFeaturedTracks = computed(() => featuredTracks.value?.slice(1));
+
+const { playTrack } = usePlayer();
+function onPlay(track: SearchResult) {
+  playTrack({
+    videoId: track.id,
+    title: track.title,
+    artist: track.artist,
+    thumbnailUrl: track.thumbnailUrl,
+    durationSeconds: track.durationSeconds || 0
+  });
+}
 </script>
 
 <template>
   <div class="home-dashboard">
     <section class="home-dashboard__hero">
       <div class="home-dashboard__hero-content">
-        <ClientOnly>
-          <p class="home-dashboard__greeting">
-            {{ $t('home.greeting', { name: currentUser?.name ?? $t('home.guest') }) }}
-          </p>
-          <template #fallback>
-            <p class="home-dashboard__greeting">
-              {{ $t('home.greeting', { name: $t('home.guest') }) }}
-            </p>
-          </template>
-        </ClientOnly>
+        <p class="home-dashboard__greeting">
+          {{ $t('home.greeting', { name: currentUser?.name ?? $t('home.guest') }) }}
+        </p>
         <h1 class="home-dashboard__title">{{ $t('home.title') }}</h1>
         <p class="home-dashboard__subtitle">{{ $t('home.subtitle') }}</p>
       </div>
       <div class="home-dashboard__hero-visual">
-        <div class="home-dashboard__orb home-dashboard__orb--1" />
-        <div class="home-dashboard__orb home-dashboard__orb--2" />
-        <div class="home-dashboard__orb home-dashboard__orb--3" />
-        <AppIcon name="ph:music-notes-fill" class="home-dashboard__hero-icon" />
+        <div v-if="pending || !recommendedTrack" class="home-dashboard__skeleton-visual">
+          <div class="skeleton skeleton--thumb" />
+        </div>
+        <TopResultCard
+          v-else
+          :result="recommendedTrack"
+          class="home-dashboard__recommended-card"
+          @play="onPlay" />
       </div>
     </section>
 
@@ -48,7 +59,7 @@ const { data: featuredTracks, pending } = useLazyFetch<SearchResult[]>('/api/sea
           </div>
         </div>
         <div v-else class="home-dashboard__grid">
-          <TrackCard v-for="track in featuredTracks" :key="track.id" :track="track" />
+          <TrackCard v-for="track in otherFeaturedTracks" :key="track.id" :track="track" />
         </div>
 
         <template #fallback>
@@ -77,7 +88,7 @@ const { data: featuredTracks, pending } = useLazyFetch<SearchResult[]>('/api/sea
     grid-template-columns: 1fr auto;
     align-items: center;
     gap: var(--space-8);
-    padding: var(--space-12) var(--space-8);
+    padding: var(--space-6) var(--space-8);
     border-radius: var(--radius-xl);
     background: var(
       --gradient-hero,
@@ -105,7 +116,7 @@ const { data: featuredTracks, pending } = useLazyFetch<SearchResult[]>('/api/sea
   }
 
   &__title {
-    font-size: var(--text-4xl);
+    font-size: var(--text-3xl);
     font-weight: var(--font-weight-bold);
     color: var(--color-text-primary);
     line-height: var(--leading-tight);
@@ -143,53 +154,28 @@ const { data: featuredTracks, pending } = useLazyFetch<SearchResult[]>('/api/sea
 
   &__hero-visual {
     position: relative;
-    width: 200px;
-    height: 200px;
+    width: 320px;
     display: flex;
     align-items: center;
     justify-content: center;
   }
 
-  &__hero-icon {
-    font-size: 7rem;
-    color: var(--color-primary);
-    opacity: 0.9;
-    position: relative;
-    z-index: 1;
-    animation: float 4s ease-in-out infinite;
+  &__recommended-card {
+    width: 100%;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
+    transform: translateY(0);
+    transition: transform var(--transition-normal);
+
+    &:hover {
+      transform: translateY(-4px);
+    }
   }
 
-  &__orb {
-    position: absolute;
-    border-radius: var(--radius-full);
-    filter: blur(40px);
-    opacity: 0.4;
-
-    &--1 {
-      width: 120px;
-      height: 120px;
-      background: var(--color-primary);
-      top: 20px;
-      left: 30px;
-    }
-
-    &--2 {
-      width: 80px;
-      height: 80px;
-      background: var(--color-accent, var(--color-primary));
-      bottom: 20px;
-      right: 20px;
-      opacity: 0.3;
-    }
-
-    &--3 {
-      width: 60px;
-      height: 60px;
-      background: var(--color-primary-hover);
-      top: 60px;
-      right: 60px;
-      opacity: 0.25;
-    }
+  &__skeleton-visual {
+    width: 100%;
+    height: 120px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
   }
 
   &__section-title {

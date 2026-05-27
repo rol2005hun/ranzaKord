@@ -16,9 +16,10 @@ export default defineEventHandler(async (event): Promise<PlaylistResponse[]> => 
   const config = useRuntimeConfig();
   const session = await useSession(event, { password: config.sessionSecret as string });
   const sessionData = session.data as Partial<ServerSession>;
+  const { t } = useServerTranslation(event);
 
   if (!sessionData.accessToken || !sessionData.user) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
+    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
   }
 
   const playlists = await PlaylistModel.find({ userId: sessionData.user.sub })

@@ -65,16 +65,15 @@ function onVolumeInput(event: Event) {
             :src="`/api/image?url=${encodeURIComponent(player.currentTrack.value.thumbnailUrl)}`"
             :alt="player.currentTrack.value?.title"
             class="player-bar__img" />
-          <div v-else class="player-bar__img-placeholder">
-            <AppIcon name="ph:music-note" />
-          </div>
+          <div v-else class="skeleton-box" style="width: 100%; height: 100%"></div>
         </div>
         <div v-if="player.currentTrack.value" class="player-bar__info">
           <span class="player-bar__title">{{ player.currentTrack.value.title }}</span>
           <span class="player-bar__artist">{{ player.currentTrack.value.artist }}</span>
         </div>
-        <div v-else class="player-bar__info">
-          <span class="player-bar__title">{{ $t('player.noTrack') || 'Nothing playing' }}</span>
+        <div v-else class="player-bar__info player-bar__info--skeleton">
+          <div class="skeleton-line skeleton-line--title"></div>
+          <div class="skeleton-line skeleton-line--artist"></div>
         </div>
         <button
           ref="playlistBtnRef"
@@ -82,17 +81,8 @@ function onVolumeInput(event: Event) {
           :disabled="!player.currentTrack.value"
           :aria-label="$t('playlists.addToPlaylist')"
           @click="showAddToPlaylist = !showAddToPlaylist">
-          <ClientOnly
-            fallback-tag="span"
-            style="display: flex; align-items: center; justify-content: center">
-            <AppIcon v-if="isInAnyPlaylist" name="ph:check-circle-fill" class="text-success" />
-            <AppIcon v-else name="ph:plus-circle" />
-            <template #fallback>
-              <span
-                class="skeleton-box"
-                style="display: block; width: 20px; height: 20px; border-radius: 50%"></span>
-            </template>
-          </ClientOnly>
+          <AppIcon v-if="isInAnyPlaylist" name="ph:check-circle-fill" class="text-success" />
+          <AppIcon v-else name="ph:plus-circle" />
         </button>
       </div>
 
@@ -120,18 +110,9 @@ function onVolumeInput(event: Event) {
             :disabled="!player.currentTrack.value"
             :aria-label="player.isPlaying.value ? $t('player.pause') : $t('player.play')"
             @click="player.togglePlay()">
-            <ClientOnly
-              fallback-tag="span"
-              style="display: flex; align-items: center; justify-content: center">
-              <AppSpinner v-if="player.isLoading.value" size="sm" />
-              <AppIcon v-else-if="player.isPlaying.value" name="ph:pause-fill" />
-              <AppIcon v-else name="ph:play-fill" />
-              <template #fallback>
-                <span
-                  class="skeleton-box"
-                  style="display: block; width: 24px; height: 24px; border-radius: 50%"></span>
-              </template>
-            </ClientOnly>
+            <AppSpinner v-if="player.isLoading.value" size="sm" />
+            <AppIcon v-else-if="player.isPlaying.value" name="ph:pause-fill" />
+            <AppIcon v-else name="ph:play-fill" />
           </button>
 
           <button
@@ -148,21 +129,14 @@ function onVolumeInput(event: Event) {
             :disabled="!player.currentTrack.value"
             :aria-label="$t('player.repeat') || 'Repeat'"
             @click="player.toggleRepeat()">
-            <ClientOnly
-              fallback-tag="span"
-              style="display: flex; align-items: center; justify-content: center">
-              <AppIcon :name="player.repeatMode.value === 'one' ? 'ph:repeat-once' : 'ph:repeat'" />
-              <template #fallback>
-                <span
-                  class="skeleton-box"
-                  style="display: block; width: 20px; height: 20px; border-radius: 50%"></span>
-              </template>
-            </ClientOnly>
+            <AppIcon :name="player.repeatMode.value === 'one' ? 'ph:repeat-once' : 'ph:repeat'" />
           </button>
         </div>
 
         <div class="player-bar__progress">
-          <span class="player-bar__time">{{ formatTime(player.currentTimeSeconds.value) }}</span>
+          <span class="player-bar__time" data-allow-mismatch="text">
+            {{ formatTime(player.currentTimeSeconds.value) }}
+          </span>
           <input
             id="player-seek"
             class="player-bar__slider player-bar__slider--seek"
@@ -177,8 +151,11 @@ function onVolumeInput(event: Event) {
               '--progress':
                 (player.currentTimeSeconds.value / (player.durationSeconds.value || 1)) * 100 + '%'
             }"
+            data-allow-mismatch="attribute"
             @input="onSeekInput" />
-          <span class="player-bar__time">{{ formatTime(player.durationSeconds.value) }}</span>
+          <span class="player-bar__time" data-allow-mismatch="text">
+            {{ formatTime(player.durationSeconds.value) }}
+          </span>
         </div>
       </div>
 
@@ -188,16 +165,7 @@ function onVolumeInput(event: Event) {
           style="width: auto; height: auto"
           :aria-label="$t('player.mute')"
           @click="toggleMute">
-          <ClientOnly
-            fallback-tag="span"
-            style="display: flex; align-items: center; justify-content: center">
-            <AppIcon :name="volumeIcon" class="player-bar__volume-icon" />
-            <template #fallback>
-              <span
-                class="skeleton-box"
-                style="display: block; width: 20px; height: 20px; border-radius: 50%"></span>
-            </template>
-          </ClientOnly>
+          <AppIcon :name="volumeIcon" class="player-bar__volume-icon" />
         </button>
         <input
           id="player-volume"
@@ -209,6 +177,7 @@ function onVolumeInput(event: Event) {
           step="0.01"
           :aria-label="$t('player.volume')"
           :style="{ '--progress': player.volume.value * 100 + '%' }"
+          data-allow-mismatch="attribute"
           @input="onVolumeInput" />
       </div>
     </aside>
@@ -297,6 +266,47 @@ function onVolumeInput(event: Event) {
     flex-direction: column;
     gap: 2px;
     min-width: 0;
+
+    &--skeleton {
+      justify-content: center;
+      gap: 6px;
+    }
+  }
+
+  .skeleton-box {
+    background: var(--color-surface-raised);
+    animation: pulse 1.5s infinite ease-in-out;
+    border-radius: inherit;
+  }
+
+  .skeleton-line {
+    background: var(--color-surface-raised);
+    height: 10px;
+    border-radius: var(--radius-sm);
+    animation: pulse 1.5s infinite ease-in-out;
+
+    &--title {
+      width: 120px;
+      height: 12px;
+    }
+
+    &--artist {
+      width: 80px;
+      height: 10px;
+      opacity: 0.7;
+    }
+  }
+
+  @keyframes pulse {
+    0% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 0.8;
+    }
+    100% {
+      opacity: 0.5;
+    }
   }
 
   &__title {

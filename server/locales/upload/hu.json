@@ -1,0 +1,7 @@
+{
+  "errors": {
+    "missingClientId": "Az Imgur kliens azonosító (Client ID) nincs beállítva",
+    "missingImage": "A kép megadása kötelező",
+    "uploadFailed": "Nem sikerült feltölteni a képet az Imgur-ra"
+  }
+}

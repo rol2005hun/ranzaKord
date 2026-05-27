@@ -17,7 +17,12 @@ export function useAuth() {
       const fetcher = import.meta.server
         ? (useRequestFetch() as unknown as (req: string) => Promise<unknown>)
         : ($fetch as unknown as (req: string) => Promise<unknown>);
-      const user = (await fetcher('/api/me')) as { sub: string; name: string; email: string; picture?: string };
+      const user = (await fetcher('/api/me')) as {
+        sub: string;
+        name: string;
+        email: string;
+        picture?: string;
+      };
       store.setUser(user || null);
     } catch {
       store.setUser(null);

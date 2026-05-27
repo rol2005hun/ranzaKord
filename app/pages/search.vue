@@ -40,8 +40,8 @@ function onPlay(track: SearchResult) {
   <div class="search-page">
     <div class="search-page__header">
       <h1 class="search-page__title">
-        <span v-if="query">Keresés: "{{ query }}"</span>
-        <span v-else>Keresés</span>
+        <span v-if="query">{{ $t('search.page.titleWithQuery', { query }) }}</span>
+        <span v-else>{{ $t('search.page.title') }}</span>
       </h1>
       <SearchCategoryTabs v-if="query" v-model="currentTab" />
     </div>
@@ -52,19 +52,19 @@ function onPlay(track: SearchResult) {
 
     <div v-else-if="!query" class="search-page__empty">
       <AppIcon name="ph:magnifying-glass" class="search-page__empty-icon" />
-      <p>Kereséshez írj be valamit a fenti sávba.</p>
+      <p>{{ $t('search.page.emptyPrompt') }}</p>
     </div>
 
     <div v-else-if="searchType === 'all' && categorizedResults" class="search-page__categorized">
       <!-- Top Result & Songs -->
       <div class="search-page__top-section">
         <div v-if="categorizedResults.topResult" class="search-page__top-result-col">
-          <h2 class="search-page__section-title">Legjobb találat</h2>
+          <h2 class="search-page__section-title">{{ $t('search.page.topResult') }}</h2>
           <TopResultCard :result="categorizedResults.topResult" @play="onPlay" />
         </div>
 
         <div v-if="categorizedResults.songs.length > 0" class="search-page__songs-col">
-          <h2 class="search-page__section-title">Dalok</h2>
+          <h2 class="search-page__section-title">{{ $t('search.page.songs') }}</h2>
           <div class="search-page__list">
             <SearchListItem
               v-for="item in categorizedResults.songs"
@@ -77,7 +77,7 @@ function onPlay(track: SearchResult) {
 
       <!-- Artists -->
       <div v-if="categorizedResults.artists.length > 0" class="search-page__section">
-        <h2 class="search-page__section-title">Előadók</h2>
+        <h2 class="search-page__section-title">{{ $t('search.page.artists') }}</h2>
         <div class="search-page__grid">
           <TopResultCard
             v-for="artist in categorizedResults.artists.slice(0, 5)"
@@ -89,7 +89,7 @@ function onPlay(track: SearchResult) {
 
       <!-- Albums -->
       <div v-if="categorizedResults.albums.length > 0" class="search-page__section">
-        <h2 class="search-page__section-title">Albumok</h2>
+        <h2 class="search-page__section-title">{{ $t('search.page.albums') }}</h2>
         <div class="search-page__grid">
           <TopResultCard
             v-for="album in categorizedResults.albums.slice(0, 5)"
@@ -107,7 +107,7 @@ function onPlay(track: SearchResult) {
           categorizedResults.albums.length === 0
         "
         class="search-page__empty">
-        <p>Nincs találat a következőre: "{{ query }}"</p>
+        <p>{{ $t('search.page.noResultsQuery', { query }) }}</p>
       </div>
     </div>
 
@@ -130,7 +130,7 @@ function onPlay(track: SearchResult) {
         </template>
       </div>
       <div v-else class="search-page__empty">
-        <p>Nincs találat a következőre: "{{ query }}" ebben a kategóriában.</p>
+        <p>{{ $t('search.page.noResultsCategory', { query }) }}</p>
       </div>
     </div>
   </div>

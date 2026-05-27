@@ -5,8 +5,10 @@ export default defineEventHandler(async (event): Promise<AlbumDetail> => {
   const query = getQuery(event);
   const id = query['id'] as string | undefined;
 
+  const { t } = useServerTranslation(event);
+
   if (!id) {
-    throw createError({ statusCode: 400, statusMessage: 'Missing album id' });
+    throw createError({ statusCode: 400, statusMessage: t('search.errors.missingAlbumId') });
   }
 
   const config = useRuntimeConfig();
@@ -82,8 +84,7 @@ export default defineEventHandler(async (event): Promise<AlbumDetail> => {
       year,
       tracks
     };
-  } catch (error: unknown) {
-    const err = error as Error;
-    throw createError({ statusCode: 500, statusMessage: err.message || 'Failed to fetch album' });
+  } catch {
+    throw createError({ statusCode: 500, statusMessage: t('search.errors.fetchAlbumFailed') });
   }
 });

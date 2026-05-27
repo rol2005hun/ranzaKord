@@ -42,6 +42,7 @@ const emit = defineEmits<{
       <button
         v-if="props.result.type === 'song'"
         class="top-result-card__play-btn"
+        :aria-label="$t('player.play') || 'Lejátszás'"
         @click.prevent="emit('play', props.result)">
         <AppIcon name="ph:play-fill" />
       </button>

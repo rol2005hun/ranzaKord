@@ -26,13 +26,14 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
   const config = useRuntimeConfig();
   const session = await useSession(event, { password: config.sessionSecret as string });
   const sessionData = session.data as Partial<ServerSession>;
+  const { t } = useServerTranslation(event);
 
   if (!sessionData.accessToken || !sessionData.user) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
+    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
   }
 
   const id = getRouterParam(event, 'id');
-  if (!id) throw createError({ statusCode: 400, statusMessage: 'Missing playlist ID' });
+  if (!id) throw createError({ statusCode: 400, statusMessage: t('playlists.errors.missingId') });
 
   const playlist = await PlaylistModel.findOne({
     _id: id,
@@ -40,7 +41,7 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
   }).lean();
 
   if (!playlist) {
-    throw createError({ statusCode: 404, statusMessage: 'Playlist not found' });
+    throw createError({ statusCode: 404, statusMessage: t('playlists.errors.notFound') });
   }
 
   return {

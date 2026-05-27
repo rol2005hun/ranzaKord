@@ -24,6 +24,10 @@ watchEffect(() => {
   }
 });
 
+useHead({
+  title: computed(() => playlist.value?.name || 'Playlist')
+});
+
 function playAll(): void {
   if (!playlist.value || playlist.value.tracks.length === 0) return;
   const [first, ...rest] = playlist.value.tracks;
@@ -184,27 +188,29 @@ function formatDuration(ms: number): string {
           ">
           <div class="playlist-page__track-num-wrapper">
             <ClientOnly>
-              <span
-                class="playlist-page__track-num"
-                :class="{
-                  'playlist-page__track-num--playing':
-                    player.currentTrack.value?.videoId === track.videoId
-                }">
-                <AppIcon
-                  v-if="
-                    player.currentTrack.value?.videoId === track.videoId && player.isPlaying.value
-                  "
-                  name="ph:speaker-high-fill"
-                  class="text-primary" />
-                <template v-else>{{ index + 1 }}</template>
-              </span>
-              <div class="playlist-page__track-play">
-                <AppIcon
-                  :name="
-                    player.currentTrack.value?.videoId === track.videoId && player.isPlaying.value
-                      ? 'ph:pause-fill'
-                      : 'ph:play-fill'
-                  " />
+              <div style="display: contents">
+                <span
+                  class="playlist-page__track-num"
+                  :class="{
+                    'playlist-page__track-num--playing':
+                      player.currentTrack.value?.videoId === track.videoId
+                  }">
+                  <AppIcon
+                    v-if="
+                      player.currentTrack.value?.videoId === track.videoId && player.isPlaying.value
+                    "
+                    name="ph:speaker-high-fill"
+                    class="text-primary" />
+                  <template v-else>{{ index + 1 }}</template>
+                </span>
+                <div class="playlist-page__track-play">
+                  <AppIcon
+                    :name="
+                      player.currentTrack.value?.videoId === track.videoId && player.isPlaying.value
+                        ? 'ph:pause-fill'
+                        : 'ph:play-fill'
+                    " />
+                </div>
               </div>
               <template #fallback>
                 <span class="playlist-page__track-num">{{ index + 1 }}</span>

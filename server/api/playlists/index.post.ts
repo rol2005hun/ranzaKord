@@ -12,15 +12,16 @@ export default defineEventHandler(async (event): Promise<PlaylistResponse> => {
   const config = useRuntimeConfig();
   const session = await useSession(event, { password: config.sessionSecret as string });
   const sessionData = session.data as Partial<ServerSession>;
+  const { t } = useServerTranslation(event);
 
   if (!sessionData.accessToken || !sessionData.user) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
+    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
   }
 
   const body = await readBody<CreatePlaylistBody>(event);
 
-  if (!body.name || body.name.trim().length === 0) {
-    throw createError({ statusCode: 400, statusMessage: 'Playlist name is required' });
+  if (!body.name) {
+    throw createError({ statusCode: 400, statusMessage: t('playlists.errors.missingName') });
   }
 
   const playlist = await PlaylistModel.create({

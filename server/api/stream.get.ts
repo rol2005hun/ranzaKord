@@ -1,9 +1,10 @@
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const videoId = query['v'] as string | undefined;
+  const { t } = useServerTranslation(event);
 
   if (!videoId || videoId.trim().length === 0) {
-    throw createError({ statusCode: 400, statusMessage: 'Missing video ID' });
+    throw createError({ statusCode: 400, statusMessage: t('player.errors.missingVideoId') });
   }
 
   const innertube = await createInnertube(true);
@@ -21,7 +22,7 @@ export default defineEventHandler(async (event) => {
   }
 
   if (!format) {
-    throw createError({ statusCode: 404, statusMessage: 'No audio format available' });
+    throw createError({ statusCode: 404, statusMessage: t('player.errors.noAudioFormat') });
   }
 
   let streamUrl = format.url as string | undefined;
@@ -29,13 +30,16 @@ export default defineEventHandler(async (event) => {
     try {
       streamUrl = await format.decipher(innertube.session.player);
     } catch (error) {
-      const msg = error instanceof Error ? error.message : 'Unknown error';
-      throw createError({ statusCode: 500, statusMessage: 'Failed to extract stream URL: ' + msg });
+      const msg = error instanceof Error ? error.message : String(error);
+      throw createError({
+        statusCode: 500,
+        statusMessage: t('player.errors.extractFailed', { msg })
+      });
     }
   }
 
   if (!streamUrl) {
-    throw createError({ statusCode: 500, statusMessage: 'Stream URL is empty' });
+    throw createError({ statusCode: 500, statusMessage: t('player.errors.emptyStream') });
   }
 
   // Proxy the stream through our server to bypass CORS, IP locks and Cookie requirements

@@ -11,8 +11,10 @@ export default defineEventHandler(
     const q = query['q'] as string | undefined;
     const type = query['type'] as string | undefined;
 
-    if (!q || q.trim().length === 0) {
-      throw createError({ statusCode: 400, statusMessage: 'Missing search query' });
+    const { t } = useServerTranslation(event);
+
+    if (!q) {
+      throw createError({ statusCode: 400, statusMessage: t('search.errors.missingQuery') });
     }
 
     const config = useRuntimeConfig();

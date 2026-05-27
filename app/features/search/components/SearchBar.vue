@@ -110,7 +110,7 @@ function onClear() {
       <AppIcon name="ph:x" />
     </button>
 
-    <div v-if="isDropdownOpen && query" class="search-bar__dropdown">
+    <div v-if="isDropdownOpen && query" class="search-bar__dropdown" @mousedown.prevent>
       <div v-if="isLoading" class="search-bar__dropdown-loading">
         <AppIcon name="ph:spinner-gap" class="spinner" />
       </div>

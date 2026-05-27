@@ -63,12 +63,13 @@ function onClick() {
     </div>
 
     <div v-if="track.type === 'song'" class="search-list-item__actions">
-      <button class="search-list-item__action" @click.stop>
+      <button class="search-list-item__action" aria-label="Opciók" @click.stop>
         <AppIcon name="ph:dots-three-bold" />
       </button>
       <button
         ref="addBtnRef"
         class="search-list-item__action"
+        :aria-label="$t('playlists.addToPlaylist') || 'Hozzáadás lejátszási listához'"
         @click.stop="showAddToPlaylist = !showAddToPlaylist">
         <AppIcon v-if="isInAnyPlaylist" name="ph:check-circle-fill" class="text-success" />
         <AppIcon v-else name="ph:plus-circle" />

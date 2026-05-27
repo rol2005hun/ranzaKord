@@ -8,6 +8,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
   const playlists = ref<PlaylistSummary[]>([]);
   const isLoading = ref(true);
   const error = ref<string | null>(null);
+  const { t } = useI18n();
 
   function isTrackInPlaylist(playlistId: string, videoId: string): boolean {
     const p = playlists.value.find((x) => x.id === playlistId);
@@ -22,9 +23,16 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     isLoading.value = true;
     error.value = null;
     try {
-      playlists.value = await $fetch<PlaylistSummary[]>('/api/playlists');
+      const fetchOptions: { headers?: Record<string, string> } = {};
+      if (import.meta.server) {
+        const reqHeaders = useRequestHeaders(['cookie']);
+        if (reqHeaders.cookie) {
+          fetchOptions.headers = { cookie: reqHeaders.cookie };
+        }
+      }
+      playlists.value = await $fetch<PlaylistSummary[]>('/api/playlists', fetchOptions);
     } catch {
-      error.value = 'Failed to load playlists';
+      error.value = t('playlists.errors.load');
     } finally {
       isLoading.value = false;
     }
@@ -39,7 +47,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
       playlists.value.unshift(created);
       return created;
     } catch {
-      error.value = 'Failed to create playlist';
+      error.value = t('playlists.errors.create');
       return null;
     }
   }
@@ -49,7 +57,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
       await $fetch(`/api/playlists/${id}`, { method: 'PATCH', body: payload });
       await fetchAll();
     } catch {
-      error.value = 'Failed to update playlist';
+      error.value = t('playlists.errors.update');
     }
   }
 
@@ -58,7 +66,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
       await $fetch(`/api/playlists/${id}`, { method: 'DELETE' });
       playlists.value = playlists.value.filter((p) => p.id !== id);
     } catch {
-      error.value = 'Failed to delete playlist';
+      error.value = t('playlists.errors.delete');
     }
   }
 

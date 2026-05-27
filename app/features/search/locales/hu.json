@@ -1,0 +1,19 @@
+{
+  "placeholder": "Dalok, előadók keresése…",
+  "clear": "Keresés törlése",
+  "noResults": "Nincs találat a következőre: \"{query}\"",
+  "title": "Keresés",
+  "trending": "Felkapott",
+  "recentSearches": "Legutóbbi keresések",
+  "page": {
+    "titleWithQuery": "Keresés: \"{query}\"",
+    "title": "Keresés",
+    "emptyPrompt": "Kereséshez írj be valamit a fenti sávba.",
+    "topResult": "Legjobb találat",
+    "songs": "Dalok",
+    "artists": "Előadók",
+    "albums": "Albumok",
+    "noResultsQuery": "Nincs találat a következőre: \"{query}\"",
+    "noResultsCategory": "Nincs találat a következőre: \"{query}\" ebben a kategóriában."
+  }
+}

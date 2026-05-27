@@ -13,14 +13,16 @@ export default defineEventHandler(async (event) => {
   const code = query['code'] as string | undefined;
   const state = query['state'] as string | undefined;
 
+  const { t } = useServerTranslation(event);
+
   if (!code || !state) {
-    throw createError({ statusCode: 400, statusMessage: 'Missing code or state parameter' });
+    throw createError({ statusCode: 400, statusMessage: t('auth.errors.missingParams') });
   }
 
   const session = await useSession(event, { password: config.sessionSecret as string });
 
   if (session.data['oauthState'] !== state) {
-    throw createError({ statusCode: 400, statusMessage: 'Invalid OAuth state' });
+    throw createError({ statusCode: 400, statusMessage: t('auth.errors.invalidState') });
   }
 
   const tokenResponse = await $fetch<OAuthTokenResponse>(
