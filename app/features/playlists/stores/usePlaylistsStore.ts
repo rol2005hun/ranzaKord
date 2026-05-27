@@ -9,6 +9,15 @@ export const usePlaylistsStore = defineStore('playlists', () => {
   const isLoading = ref(true);
   const error = ref<string | null>(null);
 
+  function isTrackInPlaylist(playlistId: string, videoId: string): boolean {
+    const p = playlists.value.find((x) => x.id === playlistId);
+    return p ? p.trackIds.includes(videoId) : false;
+  }
+
+  function isTrackInAnyPlaylist(videoId: string): boolean {
+    return playlists.value.some((p) => p.trackIds.includes(videoId));
+  }
+
   async function fetchAll(): Promise<void> {
     isLoading.value = true;
     error.value = null;
@@ -65,13 +74,21 @@ export const usePlaylistsStore = defineStore('playlists', () => {
   ): Promise<void> {
     await $fetch(`/api/playlists/${playlistId}/tracks`, { method: 'POST', body: track });
     const playlist = playlists.value.find((p) => p.id === playlistId);
-    if (playlist) playlist.trackCount++;
+    if (playlist) {
+      playlist.trackCount++;
+      if (!playlist.trackIds.includes(track.videoId)) {
+        playlist.trackIds.push(track.videoId);
+      }
+    }
   }
 
   async function removeTrack(playlistId: string, videoId: string): Promise<void> {
     await $fetch(`/api/playlists/${playlistId}/tracks/${videoId}`, { method: 'DELETE' });
     const playlist = playlists.value.find((p) => p.id === playlistId);
-    if (playlist) playlist.trackCount = Math.max(0, playlist.trackCount - 1);
+    if (playlist) {
+      playlist.trackCount = Math.max(0, playlist.trackCount - 1);
+      playlist.trackIds = playlist.trackIds.filter((id) => id !== videoId);
+    }
   }
 
   async function fetchDetail(id: string): Promise<PlaylistDetail | null> {
@@ -86,6 +103,8 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     playlists,
     isLoading,
     error,
+    isTrackInPlaylist,
+    isTrackInAnyPlaylist,
     fetchAll,
     create,
     update,

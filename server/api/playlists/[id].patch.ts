@@ -49,6 +49,8 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
       durationMs: item.durationMs,
       addedAt: item.addedAt.toISOString()
     })),
+    trackCount: playlist.items.length,
+    trackIds: playlist.items.map((i: { videoId: string }) => i.videoId),
     createdAt: playlist.createdAt.toISOString(),
     updatedAt: playlist.updatedAt.toISOString()
   };

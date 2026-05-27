@@ -4,6 +4,7 @@ export interface PlaylistSummary {
   description: string;
   imageUrl: string;
   trackCount: number;
+  trackIds: string[];
   createdAt: string;
   updatedAt: string;
 }

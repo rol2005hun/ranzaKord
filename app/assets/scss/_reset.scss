@@ -43,3 +43,7 @@ ul,
 ol {
   list-style: none;
 }
+
+.theme-transitioning * {
+  transition: none !important;
+}

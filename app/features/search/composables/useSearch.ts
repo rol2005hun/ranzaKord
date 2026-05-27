@@ -1,14 +1,17 @@
-import type { SearchResult } from '../types/search.types';
-import type { Track } from '@/features/player/types/player.types';
+import type {
+  SearchResult,
+  CategorizedSearchResults,
+  SearchResultType
+} from '../types/search.types';
 
 export function useSearch() {
   const store = useSearchStore();
-  const playerStore = usePlayerStore();
 
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-  async function search(q: string) {
+  async function search(q: string, type: 'all' | SearchResultType = 'all') {
     store.setQuery(q);
+    store.setSearchType(type);
     store.clearResults();
 
     if (!q.trim()) return;
@@ -20,21 +23,18 @@ export function useSearch() {
       store.setError(null);
 
       try {
-        const data = await $fetch<SearchResult[]>('/api/search', {
-          query: { q: q.trim() }
-        });
+        const fetchUrl =
+          type === 'all'
+            ? `/api/search?q=${encodeURIComponent(q.trim())}`
+            : `/api/search?q=${encodeURIComponent(q.trim())}&type=${type}`;
 
-        store.setResults(data);
+        const data = await $fetch<CategorizedSearchResults | SearchResult[]>(fetchUrl);
 
-        const tracks: Track[] = data.map((r) => ({
-          videoId: r.videoId,
-          title: r.title,
-          artist: r.artist,
-          thumbnailUrl: r.thumbnailUrl,
-          durationSeconds: r.durationSeconds
-        }));
-
-        playerStore.setQueue(tracks);
+        if (type === 'all') {
+          store.setCategorizedResults(data as CategorizedSearchResults);
+        } else {
+          store.setResults(data as SearchResult[]);
+        }
       } catch {
         store.setError('Search failed. Please try again.');
       } finally {
@@ -51,7 +51,9 @@ export function useSearch() {
 
   return {
     query: computed(() => store.query),
+    searchType: computed(() => store.searchType),
     results: computed(() => store.results),
+    categorizedResults: computed(() => store.categorizedResults),
     isLoading: computed(() => store.isLoading),
     error: computed(() => store.error),
     search,

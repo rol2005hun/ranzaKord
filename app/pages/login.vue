@@ -14,7 +14,7 @@ if (isAuthenticated.value) {
 </script>
 
 <template>
-  <main class="login-page">
+  <div id="main-content" class="login-page">
     <div class="login-page__card">
       <div class="login-page__logo">
         <AppIcon name="ph:music-note-fill" class="login-page__logo-icon" />
@@ -37,7 +37,7 @@ if (isAuthenticated.value) {
       <div class="login-page__orb login-page__orb--2" />
       <div class="login-page__orb login-page__orb--3" />
     </div>
-  </main>
+  </div>
 </template>
 
 <style lang="scss" scoped>

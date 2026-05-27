@@ -11,10 +11,14 @@ export const usePlayerStore = defineStore(
     const durationSeconds = ref(0);
     const isLoading = ref(false);
     const error = ref<string | null>(null);
+    const isShuffle = ref(false);
+    const repeatMode = ref<'off' | 'all' | 'one'>('off');
 
     const hasNext = computed(() => {
       const track = currentTrack.value;
       if (!track) return false;
+      if (isShuffle.value) return queue.value.length > 1;
+      if (repeatMode.value === 'all') return queue.value.length > 0;
       const idx = queue.value.findIndex((t) => t.videoId === track.videoId);
       return idx >= 0 && idx < queue.value.length - 1;
     });
@@ -22,6 +26,8 @@ export const usePlayerStore = defineStore(
     const hasPrev = computed(() => {
       const track = currentTrack.value;
       if (!track) return false;
+      if (isShuffle.value) return queue.value.length > 1;
+      if (repeatMode.value === 'all') return queue.value.length > 0;
       const idx = queue.value.findIndex((t) => t.videoId === track.videoId);
       return idx > 0;
     });
@@ -46,20 +52,48 @@ export const usePlayerStore = defineStore(
     function nextTrack(): Track | null {
       const track = currentTrack.value;
       if (!track) return null;
+      if (queue.value.length === 0) return null;
+
+      if (isShuffle.value) {
+        const others = queue.value.filter((t) => t.videoId !== track.videoId);
+        if (others.length === 0) return track;
+        const randomIdx = Math.floor(Math.random() * others.length);
+        return others[randomIdx] ?? null;
+      }
+
       const idx = queue.value.findIndex((t) => t.videoId === track.videoId);
       if (idx >= 0 && idx < queue.value.length - 1) {
         return queue.value[idx + 1] ?? null;
       }
+
+      if (repeatMode.value === 'all') {
+        return queue.value[0] ?? null;
+      }
+
       return null;
     }
 
     function prevTrack(): Track | null {
       const track = currentTrack.value;
       if (!track) return null;
+      if (queue.value.length === 0) return null;
+
+      if (isShuffle.value) {
+        const others = queue.value.filter((t) => t.videoId !== track.videoId);
+        if (others.length === 0) return track;
+        const randomIdx = Math.floor(Math.random() * others.length);
+        return others[randomIdx] ?? null;
+      }
+
       const idx = queue.value.findIndex((t) => t.videoId === track.videoId);
       if (idx > 0) {
         return queue.value[idx - 1] ?? null;
       }
+
+      if (repeatMode.value === 'all') {
+        return queue.value[queue.value.length - 1] ?? null;
+      }
+
       return null;
     }
 
@@ -88,6 +122,8 @@ export const usePlayerStore = defineStore(
       durationSeconds,
       isLoading,
       error,
+      isShuffle,
+      repeatMode,
       hasNext,
       hasPrev,
       setTrack,

@@ -8,12 +8,22 @@ onMounted(() => {
   }
 });
 
+const showAddToPlaylist = ref(false);
+const playlistBtnRef = ref<HTMLElement | null>(null);
+const playlistsStore = usePlaylistsStore();
+
+const isInAnyPlaylist = computed(() => {
+  return player.currentTrack.value
+    ? playlistsStore.isTrackInAnyPlaylist(player.currentTrack.value.videoId)
+    : false;
+});
+
 const previousVolume = ref(1);
 
 const volumeIcon = computed(() => {
   if (player.volume.value === 0) return 'ph:speaker-slash-fill';
   if (player.volume.value < 0.3) return 'ph:speaker-low-fill';
-  if (player.volume.value < 0.7) return 'ph:speaker-high-fill'; // Could be speaker-none, low, high, etc.
+  if (player.volume.value < 0.7) return 'ph:speaker-high-fill';
   return 'ph:speaker-high-fill';
 });
 
@@ -47,7 +57,7 @@ function onVolumeInput(event: Event) {
 <template>
   <div>
     <audio ref="audioEl" preload="metadata" playsinline />
-    <aside v-if="player.currentTrack.value" class="player-bar" :aria-label="$t('player.playerBar')">
+    <aside class="player-bar" :aria-label="$t('player.playerBar')">
       <div class="player-bar__left">
         <div class="player-bar__artwork">
           <img
@@ -59,17 +69,47 @@ function onVolumeInput(event: Event) {
             <AppIcon name="ph:music-note" />
           </div>
         </div>
-        <div class="player-bar__info">
+        <div v-if="player.currentTrack.value" class="player-bar__info">
           <span class="player-bar__title">{{ player.currentTrack.value.title }}</span>
           <span class="player-bar__artist">{{ player.currentTrack.value.artist }}</span>
         </div>
+        <div v-else class="player-bar__info">
+          <span class="player-bar__title">{{ $t('player.noTrack') || 'Nothing playing' }}</span>
+        </div>
+        <button
+          ref="playlistBtnRef"
+          class="player-bar__add-btn"
+          :disabled="!player.currentTrack.value"
+          :aria-label="$t('playlists.addToPlaylist')"
+          @click="showAddToPlaylist = !showAddToPlaylist">
+          <ClientOnly
+            fallback-tag="span"
+            style="display: flex; align-items: center; justify-content: center">
+            <AppIcon v-if="isInAnyPlaylist" name="ph:check-circle-fill" class="text-success" />
+            <AppIcon v-else name="ph:plus-circle" />
+            <template #fallback>
+              <span
+                class="skeleton-box"
+                style="display: block; width: 20px; height: 20px; border-radius: 50%"></span>
+            </template>
+          </ClientOnly>
+        </button>
       </div>
 
       <div class="player-bar__center">
         <div class="player-bar__controls">
           <button
             class="player-bar__btn player-bar__btn--secondary"
-            :disabled="!player.hasPrev.value"
+            :class="{ 'player-bar__btn--active': player.isShuffle.value }"
+            :disabled="!player.currentTrack.value"
+            :aria-label="$t('player.shuffle') || 'Shuffle'"
+            @click="player.toggleShuffle()">
+            <AppIcon name="ph:shuffle" />
+          </button>
+
+          <button
+            class="player-bar__btn player-bar__btn--secondary"
+            :disabled="!player.hasPrev.value && !player.currentTrack.value"
             :aria-label="$t('player.prev')"
             @click="player.playPrev()">
             <AppIcon name="ph:skip-back-fill" />
@@ -77,19 +117,47 @@ function onVolumeInput(event: Event) {
 
           <button
             class="player-bar__btn player-bar__btn--play"
+            :disabled="!player.currentTrack.value"
             :aria-label="player.isPlaying.value ? $t('player.pause') : $t('player.play')"
             @click="player.togglePlay()">
-            <AppSpinner v-if="player.isLoading.value" size="sm" />
-            <AppIcon v-else-if="player.isPlaying.value" name="ph:pause-fill" />
-            <AppIcon v-else name="ph:play-fill" />
+            <ClientOnly
+              fallback-tag="span"
+              style="display: flex; align-items: center; justify-content: center">
+              <AppSpinner v-if="player.isLoading.value" size="sm" />
+              <AppIcon v-else-if="player.isPlaying.value" name="ph:pause-fill" />
+              <AppIcon v-else name="ph:play-fill" />
+              <template #fallback>
+                <span
+                  class="skeleton-box"
+                  style="display: block; width: 24px; height: 24px; border-radius: 50%"></span>
+              </template>
+            </ClientOnly>
           </button>
 
           <button
             class="player-bar__btn player-bar__btn--secondary"
-            :disabled="!player.hasNext.value"
+            :disabled="!player.hasNext.value && !player.currentTrack.value"
             :aria-label="$t('player.next')"
             @click="player.playNext()">
             <AppIcon name="ph:skip-forward-fill" />
+          </button>
+
+          <button
+            class="player-bar__btn player-bar__btn--secondary"
+            :class="{ 'player-bar__btn--active': player.repeatMode.value !== 'off' }"
+            :disabled="!player.currentTrack.value"
+            :aria-label="$t('player.repeat') || 'Repeat'"
+            @click="player.toggleRepeat()">
+            <ClientOnly
+              fallback-tag="span"
+              style="display: flex; align-items: center; justify-content: center">
+              <AppIcon :name="player.repeatMode.value === 'one' ? 'ph:repeat-once' : 'ph:repeat'" />
+              <template #fallback>
+                <span
+                  class="skeleton-box"
+                  style="display: block; width: 20px; height: 20px; border-radius: 50%"></span>
+              </template>
+            </ClientOnly>
           </button>
         </div>
 
@@ -102,6 +170,7 @@ function onVolumeInput(event: Event) {
             min="0"
             :max="player.durationSeconds.value || 1"
             :value="player.currentTimeSeconds.value"
+            :disabled="!player.currentTrack.value"
             step="1"
             :aria-label="$t('player.seek')"
             :style="{
@@ -119,7 +188,16 @@ function onVolumeInput(event: Event) {
           style="width: auto; height: auto"
           :aria-label="$t('player.mute')"
           @click="toggleMute">
-          <AppIcon :name="volumeIcon" class="player-bar__volume-icon" />
+          <ClientOnly
+            fallback-tag="span"
+            style="display: flex; align-items: center; justify-content: center">
+            <AppIcon :name="volumeIcon" class="player-bar__volume-icon" />
+            <template #fallback>
+              <span
+                class="skeleton-box"
+                style="display: block; width: 20px; height: 20px; border-radius: 50%"></span>
+            </template>
+          </ClientOnly>
         </button>
         <input
           id="player-volume"
@@ -134,6 +212,18 @@ function onVolumeInput(event: Event) {
           @input="onVolumeInput" />
       </div>
     </aside>
+
+    <AddToPlaylistPopup
+      v-if="showAddToPlaylist && player.currentTrack.value"
+      :track="{
+        videoId: player.currentTrack.value.videoId,
+        title: player.currentTrack.value.title,
+        artist: player.currentTrack.value.artist,
+        thumbnailUrl: player.currentTrack.value.thumbnailUrl,
+        durationMs: player.durationSeconds.value * 1000
+      }"
+      :anchor="playlistBtnRef"
+      @close="showAddToPlaylist = false" />
   </div>
 </template>
 
@@ -230,7 +320,27 @@ function onVolumeInput(event: Event) {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--space-3);
+    gap: var(--space-4);
+  }
+
+  &__add-btn {
+    background: none;
+    border: none;
+    color: var(--color-text-secondary);
+    font-size: var(--text-2xl);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+      color var(--transition-fast),
+      transform var(--transition-fast);
+    padding: var(--space-1);
+
+    &:hover {
+      color: var(--color-primary);
+      transform: scale(1.1);
+    }
   }
 
   &__btn {
@@ -257,6 +367,23 @@ function onVolumeInput(event: Event) {
     &:disabled {
       opacity: 0.3;
       cursor: not-allowed;
+    }
+
+    &--active {
+      color: var(--color-primary);
+      position: relative;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 2px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background-color: var(--color-primary);
+      }
     }
 
     &--play {
@@ -363,21 +490,22 @@ function onVolumeInput(event: Event) {
     min-height: 80px;
 
     &__center {
-      display: contents; /* Allows controls and progress to participate in the main grid */
+      display: contents;
     }
 
     &__controls {
       grid-area: controls;
-      gap: var(--space-1);
+      gap: var(--space-2);
 
       .player-bar__btn {
-        width: 28px;
-        height: 28px;
-        font-size: var(--text-lg);
+        width: 24px;
+        height: 24px;
+        font-size: var(--text-base);
       }
       .player-bar__btn--play {
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
+        font-size: var(--text-lg);
       }
     }
 
@@ -391,7 +519,7 @@ function onVolumeInput(event: Event) {
     }
 
     &__slider--volume {
-      width: 50px; /* Shorter volume slider on mobile */
+      width: 50px;
     }
 
     &__artwork {
@@ -412,5 +540,9 @@ function onVolumeInput(event: Event) {
       min-width: 28px;
     }
   }
+}
+
+.text-success {
+  color: hsl(140, 60%, 50%) !important;
 }
 </style>

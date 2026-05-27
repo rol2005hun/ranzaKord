@@ -37,6 +37,7 @@ export default defineEventHandler(async (event): Promise<PlaylistResponse> => {
     description: playlist.description || '',
     imageUrl: playlist.imageUrl || '',
     trackCount: 0,
+    trackIds: [],
     createdAt: playlist.createdAt.toISOString(),
     updatedAt: playlist.updatedAt.toISOString()
   };

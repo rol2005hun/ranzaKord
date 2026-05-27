@@ -1,7 +1,7 @@
 <template>
-  <div class="auth-layout">
+  <main class="auth-layout">
     <slot />
-  </div>
+  </main>
 </template>
 
 <style lang="scss" scoped>

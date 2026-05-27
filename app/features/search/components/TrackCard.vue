@@ -10,7 +10,7 @@ const props = defineProps<Props>();
 
 const player = usePlayer();
 
-const isCurrentTrack = computed(() => player.currentTrack.value?.videoId === props.track.videoId);
+const isCurrentTrack = computed(() => player.currentTrack.value?.videoId === props.track.id);
 
 function formatTime(seconds: number): string {
   if (!seconds) return '';
@@ -21,14 +21,20 @@ function formatTime(seconds: number): string {
 
 function onPlay() {
   const track: Track = {
-    videoId: props.track.videoId,
+    videoId: props.track.id,
     title: props.track.title,
     artist: props.track.artist,
     thumbnailUrl: props.track.thumbnailUrl,
-    durationSeconds: props.track.durationSeconds
+    durationSeconds: props.track.durationSeconds || 0
   };
   player.playTrack(track);
 }
+
+const showAddToPlaylist = ref(false);
+const addBtnRef = ref<HTMLElement | null>(null);
+
+const playlistsStore = usePlaylistsStore();
+const isInAnyPlaylist = computed(() => playlistsStore.isTrackInAnyPlaylist(props.track.id));
 </script>
 
 <template>
@@ -45,10 +51,20 @@ function onPlay() {
       </div>
 
       <div class="track-card__overlay">
-        <button class="track-card__play-btn" :aria-label="$t('player.play')" @click.stop="onPlay">
-          <AppIcon v-if="isCurrentTrack && player.isPlaying.value" name="ph:pause-fill" />
-          <AppIcon v-else name="ph:play-fill" />
-        </button>
+        <div class="track-card__overlay-actions">
+          <button
+            ref="addBtnRef"
+            class="track-card__add-btn"
+            :aria-label="$t('playlists.addToPlaylist') || 'Add to playlist'"
+            @click.stop="showAddToPlaylist = !showAddToPlaylist">
+            <AppIcon v-if="isInAnyPlaylist" name="ph:check-circle-fill" class="text-success" />
+            <AppIcon v-else name="ph:plus-circle" />
+          </button>
+          <button class="track-card__play-btn" :aria-label="$t('player.play')" @click.stop="onPlay">
+            <AppIcon v-if="isCurrentTrack && player.isPlaying.value" name="ph:pause-fill" />
+            <AppIcon v-else name="ph:play-fill" />
+          </button>
+        </div>
       </div>
 
       <div v-if="isCurrentTrack" class="track-card__playing-indicator">
@@ -65,6 +81,18 @@ function onPlay() {
         {{ formatTime(track.durationSeconds) }}
       </p>
     </div>
+
+    <AddToPlaylistPopup
+      v-if="showAddToPlaylist"
+      :track="{
+        videoId: track.id,
+        title: track.title,
+        artist: track.artist,
+        thumbnailUrl: track.thumbnailUrl,
+        durationMs: (track.durationSeconds || 0) * 1000
+      }"
+      :anchor="addBtnRef"
+      @close="showAddToPlaylist = false" />
   </article>
 </template>
 
@@ -142,6 +170,35 @@ function onPlay() {
 
     .track-card--active & {
       opacity: 1;
+    }
+  }
+
+  &__overlay-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  &__add-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    border: none;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    font-size: var(--text-xl);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+      background var(--transition-fast),
+      transform var(--transition-fast);
+
+    &:hover {
+      background: var(--color-primary);
+      color: #fff;
+      transform: scale(1.1);
     }
   }
 
@@ -225,9 +282,14 @@ function onPlay() {
 
   &__duration {
     font-size: var(--text-xs);
-    color: var(--color-text-disabled);
-    margin-top: var(--space-1);
+    color: var(--color-text-tertiary);
+    margin-top: 4px;
+    font-variant-numeric: tabular-nums;
   }
+}
+
+.text-success {
+  color: hsl(140, 60%, 50%) !important;
 }
 
 @keyframes equalizer {

@@ -7,6 +7,7 @@ export interface PlaylistResponse {
   description: string;
   imageUrl: string;
   trackCount: number;
+  trackIds: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -30,6 +31,7 @@ export default defineEventHandler(async (event): Promise<PlaylistResponse[]> => 
     description: p.description || '',
     imageUrl: p.imageUrl || '',
     trackCount: p.items.length,
+    trackIds: p.items.map((i: { videoId: string }) => i.videoId),
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString()
   }));

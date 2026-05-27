@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const { currentUser, logout, isAuthenticated } = useAuth();
 const { themeId, themes, setTheme } = useTheme();
+const { locale, setLocale } = useI18n();
 
 const isDropdownOpen = ref(false);
 
@@ -40,45 +41,41 @@ function closeDropdown() {
             @click="closeDropdown"></div>
 
           <div v-if="isDropdownOpen" class="app-navbar__dropdown">
-            <div class="app-navbar__dropdown-header">
-              <span class="app-navbar__dropdown-name">{{ currentUser.name }}</span>
+            <div class="app-navbar__dropdown-row">
+              <span class="app-navbar__dropdown-row-label">Language</span>
+              <div class="app-navbar__dropdown-toggle">
+                <button
+                  :class="{ active: (locale as any) === 'en' }"
+                  @click="setLocale('en' as any)">
+                  EN
+                </button>
+                <button
+                  :class="{ active: (locale as any) === 'hu' }"
+                  @click="setLocale('hu' as any)">
+                  HU
+                </button>
+              </div>
             </div>
 
-            <div class="app-navbar__dropdown-divider"></div>
-
-            <div class="app-navbar__dropdown-header" style="padding-bottom: 4px">
-              <span
-                class="app-navbar__dropdown-name"
-                style="
-                  font-size: 0.75rem;
-                  color: var(--color-text-secondary);
-                  text-transform: uppercase;
-                ">
-                {{ $t('core.nav.theme') }}
-              </span>
+            <div class="app-navbar__dropdown-row">
+              <span class="app-navbar__dropdown-row-label">Theme</span>
+              <div class="app-navbar__dropdown-toggle">
+                <button
+                  v-for="theme in themes"
+                  :key="theme.id"
+                  :class="{ active: themeId === theme.id }"
+                  @click="setTheme(theme.id)">
+                  <AppIcon :name="theme.icon" />
+                </button>
+              </div>
             </div>
+
+            <div
+              class="app-navbar__dropdown-divider"
+              style="margin: var(--space-2) var(--space-4)"></div>
+
             <button
-              v-for="theme in themes"
-              :key="theme.id"
               class="app-navbar__dropdown-item"
-              :class="{ 'app-navbar__dropdown-item--active': themeId === theme.id }"
-              @click="setTheme(theme.id)">
-              <AppIcon :name="theme.icon" class="app-navbar__dropdown-icon" />
-              <span class="app-navbar__dropdown-label">{{ theme.label }}</span>
-              <AppIcon
-                v-if="themeId === theme.id"
-                name="ph:check-bold"
-                class="app-navbar__dropdown-check" />
-            </button>
-
-            <div class="app-navbar__dropdown-divider"></div>
-
-            <NuxtLink to="/settings" class="app-navbar__dropdown-item" @click="closeDropdown">
-              <AppIcon name="ph:gear" class="app-navbar__dropdown-icon" />
-              <span class="app-navbar__dropdown-label">{{ $t('core.nav.settings') }}</span>
-            </NuxtLink>
-            <button
-              class="app-navbar__dropdown-item app-navbar__dropdown-item--danger"
               @click="
                 () => {
                   logout();
@@ -176,7 +173,7 @@ function closeDropdown() {
     position: absolute;
     top: calc(100% + var(--space-2));
     right: 0;
-    width: 220px;
+    width: 260px;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -185,22 +182,58 @@ function closeDropdown() {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    padding: var(--space-2) 0;
     animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  &__dropdown-header {
-    padding: var(--space-3) var(--space-4);
+  &__dropdown-row {
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) var(--space-4);
   }
 
-  &__dropdown-name {
+  &__dropdown-row-label {
     font-size: var(--text-sm);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    color: var(--color-text-secondary);
+  }
+
+  &__dropdown-toggle {
+    display: flex;
+    background: var(--color-surface-hover);
+    border-radius: var(--radius-md);
+    padding: 2px;
+
+    button {
+      background: none;
+      border: none;
+      color: var(--color-text-secondary);
+      padding: var(--space-1) var(--space-3);
+      border-radius: var(--radius-sm);
+      font-size: var(--text-xs);
+      font-weight: var(--font-weight-medium);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition:
+        background var(--transition-fast),
+        color var(--transition-fast);
+
+      &.active {
+        background: var(--color-surface);
+        color: var(--color-primary);
+        box-shadow: var(--shadow-sm);
+      }
+
+      &:hover:not(.active) {
+        color: var(--color-text-primary);
+      }
+
+      .app-icon {
+        font-size: var(--text-lg);
+      }
+    }
   }
 
   &__dropdown-divider {

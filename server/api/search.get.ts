@@ -1,86 +1,174 @@
 import type { ServerSession } from '../types/auth.server.types';
+import type {
+  CategorizedSearchResults,
+  SearchResult,
+  SearchResultType
+} from '../../app/features/search/types/search.types';
 
-export interface SearchResultItem {
-  videoId: string;
-  title: string;
-  artist: string;
-  thumbnailUrl: string;
-  durationSeconds: number;
-}
+export default defineEventHandler(
+  async (event): Promise<CategorizedSearchResults | SearchResult[]> => {
+    const query = getQuery(event);
+    const q = query['q'] as string | undefined;
+    const type = query['type'] as string | undefined;
 
-export default defineEventHandler(async (event): Promise<SearchResultItem[]> => {
-  const query = getQuery(event);
-  const q = query['q'] as string | undefined;
+    if (!q || q.trim().length === 0) {
+      throw createError({ statusCode: 400, statusMessage: 'Missing search query' });
+    }
 
-  if (!q || q.trim().length === 0) {
-    throw createError({ statusCode: 400, statusMessage: 'Missing search query' });
-  }
+    const config = useRuntimeConfig();
+    const session = await useSession(event, { password: config.sessionSecret as string });
+    const sessionData = session.data as Partial<ServerSession>;
 
-  const config = useRuntimeConfig();
-  const session = await useSession(event, { password: config.sessionSecret as string });
-  const sessionData = session.data as Partial<ServerSession>;
+    const innertube = await createInnertube(!!sessionData.accessToken);
 
-  const innertube = await createInnertube(!!sessionData.accessToken);
-  const results = await innertube.music.search(q.trim(), { type: 'song' });
+    type YTItem = {
+      id?: string;
+      browse_id?: string;
+      endpoint?: {
+        payload?: { videoId?: string; browseId?: string };
+        metadata?: { pageType?: string };
+      };
+      title?: { toString: () => string };
+      name?: { toString: () => string };
+      type?: string;
+      item_type?: string;
+      authors?: Array<{ name?: string }>;
+      artists?: Array<{ name?: string }>;
+      author?: { toString: () => string };
+      subtitle?: { toString: () => string };
+      thumbnails?: Array<{ url: string; width?: number }>;
+      thumbnail?: { contents?: Array<{ url: string; width?: number }> };
+      duration?: { seconds?: number } | number;
+    };
 
-  const items: SearchResultItem[] = [];
+    const parseItem = (rawItem: unknown, forceType?: SearchResultType): SearchResult | null => {
+      const item = rawItem as YTItem;
+      const id =
+        item.id ||
+        item.browse_id ||
+        item.endpoint?.payload?.videoId ||
+        item.endpoint?.payload?.browseId;
+      if (!id || typeof id !== 'string') return null;
 
-  const contents = results.contents;
-  if (!contents) return items;
+      const title = item.title?.toString() || item.name?.toString() || '';
+      if (!title) return null;
 
-  for (const section of contents) {
-    if (!('contents' in section) || !Array.isArray(section.contents)) continue;
+      let parsedType: SearchResultType = forceType || 'song';
+      if (!forceType) {
+        const isArtist =
+          item.type === 'MusicArtist' ||
+          item.item_type === 'artist' ||
+          item.endpoint?.metadata?.pageType === 'MUSIC_PAGE_TYPE_ARTIST';
+        const isAlbum =
+          item.type === 'MusicAlbum' ||
+          item.item_type === 'album' ||
+          item.endpoint?.metadata?.pageType === 'MUSIC_PAGE_TYPE_ALBUM';
+        const isSong =
+          item.type === 'MusicSong' || item.item_type === 'song' || item.endpoint?.payload?.videoId;
 
-    for (const item of section.contents) {
-      if (items.length >= 20) break;
+        if (isArtist) parsedType = 'artist';
+        else if (isAlbum) parsedType = 'album';
+        else if (isSong) parsedType = 'song';
+      }
 
-      const id = 'id' in item && typeof item.id === 'string' ? item.id : null;
+      const artistName =
+        item.authors?.[0]?.name ||
+        item.artists?.[0]?.name ||
+        item.author?.toString() ||
+        item.subtitle?.toString() ||
+        '';
 
-      const title =
-        'title' in item && typeof item.title === 'string'
-          ? item.title
-          : 'name' in item && typeof item.name === 'string'
-            ? item.name
-            : '';
+      let thumbnail = '';
+      const thumbs = item.thumbnails || item.thumbnail?.contents;
+      if (Array.isArray(thumbs) && thumbs.length > 0) {
+        thumbnail = thumbs.sort((a, b) => (b.width || 0) - (a.width || 0))[0]?.url || '';
+      }
 
-      const artist =
-        'artists' in item && Array.isArray(item.artists) && item.artists.length > 0
-          ? (item.artists[0] as { name: string }).name
-          : 'author' in item && typeof item.author === 'string'
-            ? item.author
-            : '';
+      let duration = 0;
+      if (
+        item.duration &&
+        typeof item.duration === 'object' &&
+        'seconds' in item.duration &&
+        item.duration.seconds
+      ) {
+        duration = item.duration.seconds;
+      } else if (typeof item.duration === 'number') {
+        duration = item.duration;
+      }
 
-      const thumbnail =
-        'thumbnails' in item && Array.isArray(item.thumbnails) && item.thumbnails.length > 0
-          ? (item.thumbnails as Array<{ url: string; width?: number }>).sort(
-              (a, b) => (b.width || 0) - (a.width || 0)
-            )[0]?.url || ''
-          : '';
+      return {
+        id,
+        type: parsedType,
+        title,
+        artist: artistName,
+        thumbnailUrl: thumbnail,
+        durationSeconds: duration
+      };
+    };
 
-      const duration =
-        'duration' in item
-          ? typeof item.duration === 'number'
-            ? item.duration
-            : typeof item.duration === 'object' &&
-                item.duration !== null &&
-                'seconds' in (item.duration as object)
-              ? (item.duration as { seconds: number }).seconds
-              : 0
-          : 0;
+    if (type === 'song' || type === 'artist' || type === 'album') {
+      const results = await innertube.music.search(q.trim(), { type });
+      const items: SearchResult[] = [];
+      if (results.contents) {
+        for (const section of results.contents) {
+          if (!('contents' in section) || !Array.isArray(section.contents)) continue;
+          for (const item of section.contents) {
+            const parsed = parseItem(item, type as SearchResultType);
+            if (parsed) items.push(parsed);
+            if (items.length >= 20) break;
+          }
+        }
+      }
+      return items;
+    }
 
-      if (id && title) {
-        items.push({
-          videoId: id,
-          title,
-          artist,
-          thumbnailUrl: thumbnail,
-          durationSeconds: duration
-        });
+    const results = await innertube.music.search(q.trim());
+    const response: CategorizedSearchResults = {
+      songs: [],
+      artists: [],
+      albums: []
+    };
+
+    if (results.contents) {
+      for (const section of results.contents) {
+        const sectionTitle =
+          (section as unknown as { title?: { toString: () => string } }).title
+            ?.toString()
+            ?.toLowerCase() || '';
+        if (!('contents' in section) || !Array.isArray(section.contents)) continue;
+
+        for (const item of section.contents) {
+          let forcedType: SearchResultType | undefined;
+          if (sectionTitle.includes('song') || sectionTitle.includes('dalok')) forcedType = 'song';
+          else if (sectionTitle.includes('artist') || sectionTitle.includes('előadó'))
+            forcedType = 'artist';
+          else if (sectionTitle.includes('album') || sectionTitle.includes('albumok'))
+            forcedType = 'album';
+
+          const parsed = parseItem(item, forcedType);
+          if (parsed) {
+            if (sectionTitle.includes('top result') || sectionTitle.includes('legjobb találat')) {
+              if (!response.topResult) response.topResult = parsed;
+            } else if (parsed.type === 'song') {
+              response.songs.push(parsed);
+            } else if (parsed.type === 'artist') {
+              response.artists.push(parsed);
+            } else if (parsed.type === 'album') {
+              response.albums.push(parsed);
+            }
+          }
+        }
       }
     }
 
-    if (items.length >= 20) break;
-  }
+    if (!response.topResult && response.songs.length > 0) {
+      response.topResult = response.songs[0];
+    }
 
-  return items;
-});
+    response.songs = response.songs.slice(0, 5);
+    response.artists = response.artists.slice(0, 10);
+    response.albums = response.albums.slice(0, 10);
+
+    return response;
+  }
+);

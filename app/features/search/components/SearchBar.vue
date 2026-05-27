@@ -1,9 +1,19 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 
-const { search, query, clear, results, isLoading } = useSearch();
+const { search, query, clear, results, categorizedResults, isLoading } = useSearch();
 const inputRef = ref<HTMLInputElement | null>(null);
 const isDropdownOpen = ref(false);
+
+const dropdownItems = computed(() => {
+  if (categorizedResults.value) {
+    const items = [];
+    if (categorizedResults.value.topResult) items.push(categorizedResults.value.topResult);
+    if (categorizedResults.value.songs) items.push(...categorizedResults.value.songs);
+    return items.slice(0, 5);
+  }
+  return results.value.slice(0, 5);
+});
 
 const route = useRoute();
 const router = useRouter();
@@ -105,14 +115,14 @@ function onClear() {
         <AppIcon name="ph:spinner-gap" class="spinner" />
       </div>
 
-      <div v-else-if="results.length === 0" class="search-bar__dropdown-empty">
+      <div v-else-if="dropdownItems.length === 0" class="search-bar__dropdown-empty">
         {{ $t('search.noResults', { query }) }}
       </div>
 
       <div v-else class="search-bar__dropdown-list">
         <SearchListItem
-          v-for="track in results"
-          :key="track.videoId"
+          v-for="track in dropdownItems"
+          :key="track.id"
           :track="track"
           @click="isDropdownOpen = false" />
       </div>

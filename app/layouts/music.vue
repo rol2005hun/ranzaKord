@@ -36,60 +36,58 @@ function onPlaylistCreated(id: string): void {
         :label="$t(item.labelKey)"
         :active="route.path === item.to" />
 
-      <ClientOnly>
-        <div v-if="isAuthenticated" class="music-layout__library">
-          <div class="music-layout__library-header">
-            <span class="music-layout__library-title app-sidebar__text">
-              {{ $t('playlists.title') }}
-            </span>
-            <button
-              class="music-layout__library-add"
-              :title="$t('playlists.newPlaylist')"
-              @click="showCreateModal = true">
-              <AppIcon name="ph:plus-bold" />
-            </button>
-          </div>
-
-          <div v-if="playlistsStore.isLoading" class="music-layout__library-skeletons">
-            <div
-              v-for="i in 5"
-              :key="`skeleton-${i}`"
-              class="app-sidebar-item music-layout__playlist-item music-layout__playlist-skeleton">
-              <div class="music-layout__playlist-cover skeleton-box"></div>
-              <div class="music-layout__playlist-info app-sidebar__text">
-                <div class="skeleton-line skeleton-line--name"></div>
-                <div class="skeleton-line skeleton-line--count"></div>
-              </div>
-            </div>
-          </div>
-
-          <div
-            v-else-if="playlistsStore.playlists.length === 0"
-            class="music-layout__library-empty app-sidebar__text">
-            {{ $t('playlists.noPlaylists') }}
-          </div>
-
-          <NuxtLink
-            v-for="playlist in playlistsStore.playlists"
-            :key="playlist.id"
-            :to="`/playlist/${playlist.id}`"
-            class="app-sidebar-item music-layout__playlist-item"
-            :class="{
-              'app-sidebar-item--active': route.path === `/playlist/${playlist.id}`
-            }">
-            <div class="music-layout__playlist-cover">
-              <img v-if="playlist.imageUrl" :src="playlist.imageUrl" :alt="playlist.name" />
-              <AppIcon v-else name="ph:music-notes-fill" />
-            </div>
-            <div class="music-layout__playlist-info app-sidebar__text">
-              <span class="music-layout__playlist-name">{{ playlist.name }}</span>
-              <span class="music-layout__playlist-count">
-                {{ $t('playlists.trackCount', { count: playlist.trackCount }) }}
-              </span>
-            </div>
-          </NuxtLink>
+      <div v-if="isAuthenticated" class="music-layout__library">
+        <div class="music-layout__library-header">
+          <span class="music-layout__library-title app-sidebar__text">
+            {{ $t('playlists.title') }}
+          </span>
+          <button
+            class="music-layout__library-add"
+            :title="$t('playlists.newPlaylist')"
+            @click="showCreateModal = true">
+            <AppIcon name="ph:plus-bold" />
+          </button>
         </div>
-      </ClientOnly>
+
+        <div v-if="playlistsStore.isLoading" class="music-layout__library-skeletons">
+          <div
+            v-for="i in 5"
+            :key="`skeleton-${i}`"
+            class="app-sidebar-item music-layout__playlist-item music-layout__playlist-skeleton">
+            <div class="music-layout__playlist-cover skeleton-box"></div>
+            <div class="music-layout__playlist-info app-sidebar__text">
+              <div class="skeleton-line skeleton-line--name"></div>
+              <div class="skeleton-line skeleton-line--count"></div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          v-else-if="playlistsStore.playlists.length === 0"
+          class="music-layout__library-empty app-sidebar__text">
+          {{ $t('playlists.noPlaylists') }}
+        </div>
+
+        <NuxtLink
+          v-for="playlist in playlistsStore.playlists"
+          :key="playlist.id"
+          :to="`/playlist/${playlist.id}`"
+          class="app-sidebar-item music-layout__playlist-item"
+          :class="{
+            'app-sidebar-item--active': route.path === `/playlist/${playlist.id}`
+          }">
+          <div class="music-layout__playlist-cover">
+            <img v-if="playlist.imageUrl" :src="playlist.imageUrl" :alt="playlist.name" />
+            <AppIcon v-else name="ph:music-notes-fill" />
+          </div>
+          <div class="music-layout__playlist-info app-sidebar__text">
+            <span class="music-layout__playlist-name">{{ playlist.name }}</span>
+            <span class="music-layout__playlist-count">
+              {{ $t('playlists.trackCount', { count: playlist.trackCount }) }}
+            </span>
+          </div>
+        </NuxtLink>
+      </div>
     </AppSidebar>
 
     <div class="music-layout__content">
@@ -99,9 +97,7 @@ function onPlaylistCreated(id: string): void {
       </main>
     </div>
 
-    <ClientOnly>
-      <PlayerBar />
-    </ClientOnly>
+    <PlayerBar />
 
     <PlaylistModal
       :open="showCreateModal"

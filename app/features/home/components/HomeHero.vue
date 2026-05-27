@@ -48,7 +48,7 @@ const { data: featuredTracks, pending } = useLazyFetch<SearchResult[]>('/api/sea
           </div>
         </div>
         <div v-else class="home-dashboard__grid">
-          <TrackCard v-for="track in featuredTracks" :key="track.videoId" :track="track" />
+          <TrackCard v-for="track in featuredTracks" :key="track.id" :track="track" />
         </div>
 
         <template #fallback>

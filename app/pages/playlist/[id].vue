@@ -12,17 +12,17 @@ const store = usePlaylistsStore();
 const player = usePlayer();
 
 const playlist = ref<PlaylistDetail | null>(null);
-const isLoading = ref(true);
 const showEditModal = ref(false);
 const showDeleteConfirm = ref(false);
 
-async function load(): Promise<void> {
-  isLoading.value = true;
-  playlist.value = await store.fetchDetail(id.value);
-  isLoading.value = false;
-}
+const { data, status } = await useFetch<PlaylistDetail>(`/api/playlists/${id.value}`);
+const isLoading = computed(() => status.value === 'pending');
 
-await load();
+watchEffect(() => {
+  if (data.value) {
+    playlist.value = data.value;
+  }
+});
 
 function playAll(): void {
   if (!playlist.value || playlist.value.tracks.length === 0) return;
@@ -68,8 +68,41 @@ function formatDuration(ms: number): string {
 
 <template>
   <div class="playlist-page">
-    <div v-if="isLoading" class="playlist-page__loading">
-      <AppSpinner size="lg" />
+    <div v-if="isLoading" class="playlist-page__skeleton">
+      <div class="playlist-page__header">
+        <div class="playlist-page__cover skeleton-box"></div>
+        <div class="playlist-page__meta">
+          <div class="skeleton-line skeleton-line--type"></div>
+          <div class="skeleton-line skeleton-line--title"></div>
+          <div class="skeleton-line skeleton-line--desc"></div>
+        </div>
+      </div>
+      <div class="playlist-page__actions">
+        <div class="skeleton-btn skeleton-btn--play"></div>
+        <div class="skeleton-btn"></div>
+        <div class="skeleton-btn"></div>
+      </div>
+      <div class="playlist-page__tracks">
+        <div class="playlist-page__track-header">
+          <div class="skeleton-line" style="width: 100%; margin: 0"></div>
+        </div>
+        <div
+          v-for="i in 5"
+          :key="`track-skel-${i}`"
+          class="playlist-page__track"
+          style="cursor: default">
+          <div class="skeleton-line" style="width: 1rem; margin: 0 auto"></div>
+          <div class="playlist-page__track-info">
+            <div class="playlist-page__track-thumb skeleton-box"></div>
+            <div class="playlist-page__track-text">
+              <div class="skeleton-line skeleton-line--track-title"></div>
+              <div class="skeleton-line skeleton-line--artist"></div>
+            </div>
+          </div>
+          <div class="skeleton-line" style="width: 2rem; margin-left: auto"></div>
+          <div></div>
+        </div>
+      </div>
     </div>
 
     <div v-else-if="!playlist" class="playlist-page__error">
@@ -102,6 +135,7 @@ function formatDuration(ms: number): string {
         <button
           class="playlist-page__play-btn"
           :disabled="playlist.tracks.length === 0"
+          :aria-label="$t('player.play')"
           @click="playAll">
           <AppIcon name="ph:play-fill" />
         </button>
@@ -148,7 +182,35 @@ function formatDuration(ms: number): string {
               durationSeconds: Math.round(track.durationMs / 1000)
             })
           ">
-          <span class="playlist-page__track-num">{{ index + 1 }}</span>
+          <div class="playlist-page__track-num-wrapper">
+            <ClientOnly>
+              <span
+                class="playlist-page__track-num"
+                :class="{
+                  'playlist-page__track-num--playing':
+                    player.currentTrack.value?.videoId === track.videoId
+                }">
+                <AppIcon
+                  v-if="
+                    player.currentTrack.value?.videoId === track.videoId && player.isPlaying.value
+                  "
+                  name="ph:speaker-high-fill"
+                  class="text-primary" />
+                <template v-else>{{ index + 1 }}</template>
+              </span>
+              <div class="playlist-page__track-play">
+                <AppIcon
+                  :name="
+                    player.currentTrack.value?.videoId === track.videoId && player.isPlaying.value
+                      ? 'ph:pause-fill'
+                      : 'ph:play-fill'
+                  " />
+              </div>
+              <template #fallback>
+                <span class="playlist-page__track-num">{{ index + 1 }}</span>
+              </template>
+            </ClientOnly>
+          </div>
           <div class="playlist-page__track-info">
             <div class="playlist-page__track-thumb">
               <img
@@ -166,6 +228,7 @@ function formatDuration(ms: number): string {
           <button
             class="playlist-page__track-remove"
             :title="$t('playlists.removeFromPlaylist')"
+            :aria-label="$t('playlists.removeFromPlaylist')"
             @click.stop="removeTrack(track.videoId)">
             <AppIcon name="ph:x-bold" />
           </button>
@@ -244,6 +307,67 @@ function formatDuration(ms: number): string {
       flex-direction: column;
       align-items: flex-start;
       padding: var(--space-4);
+    }
+  }
+
+  .skeleton-box {
+    background: var(--color-surface-raised);
+    animation: pulse 1.5s infinite ease-in-out;
+    border-radius: var(--radius-lg);
+  }
+
+  .skeleton-line {
+    background: var(--color-surface-raised);
+    height: 12px;
+    border-radius: var(--radius-sm);
+    animation: pulse 1.5s infinite ease-in-out;
+    margin-bottom: var(--space-2);
+
+    &--type {
+      width: 60px;
+      height: 10px;
+      margin-bottom: var(--space-3);
+    }
+    &--title {
+      width: 200px;
+      height: 32px;
+      margin-bottom: var(--space-4);
+    }
+    &--desc {
+      width: 300px;
+    }
+    &--track-title {
+      width: 140px;
+      margin-bottom: 4px;
+    }
+    &--artist {
+      width: 90px;
+      height: 10px;
+    }
+  }
+
+  .skeleton-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    background: var(--color-surface-raised);
+    animation: pulse 1.5s infinite ease-in-out;
+
+    &--play {
+      width: 56px;
+      height: 56px;
+    }
+  }
+
+  @keyframes pulse {
+    0% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 0.8;
+    }
+    100% {
+      opacity: 0.5;
     }
   }
 
@@ -420,13 +544,46 @@ function formatDuration(ms: number): string {
       .playlist-page__track-remove {
         opacity: 1;
       }
+
+      .playlist-page__track-num {
+        opacity: 0;
+      }
+
+      .playlist-page__track-play {
+        opacity: 1;
+      }
     }
+  }
+
+  &__track-num-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   &__track-num {
     font-size: var(--text-sm);
     color: var(--color-text-secondary);
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity var(--transition-fast);
+
+    &--playing {
+      color: var(--color-primary);
+    }
+  }
+
+  &__track-play {
+    position: absolute;
+    opacity: 0;
+    color: var(--color-text-primary);
+    font-size: var(--text-base);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity var(--transition-fast);
   }
 
   &__track-info {

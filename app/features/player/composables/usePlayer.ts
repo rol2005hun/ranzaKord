@@ -20,8 +20,13 @@ export function usePlayer() {
 
     el.addEventListener('ended', () => {
       store.isPlaying = false;
-      const next = store.nextTrack();
-      if (next) playTrack(next);
+      if (store.repeatMode === 'one') {
+        seek(0);
+        resume();
+      } else {
+        const next = store.nextTrack();
+        if (next) playTrack(next);
+      }
     });
 
     el.addEventListener('error', () => {
@@ -144,6 +149,16 @@ export function usePlayer() {
     if (prev) playTrack(prev);
   }
 
+  function toggleShuffle() {
+    store.isShuffle = !store.isShuffle;
+  }
+
+  function toggleRepeat() {
+    if (store.repeatMode === 'off') store.repeatMode = 'all';
+    else if (store.repeatMode === 'all') store.repeatMode = 'one';
+    else store.repeatMode = 'off';
+  }
+
   function addToQueue(track: Track) {
     store.addToQueue(track);
   }
@@ -156,6 +171,8 @@ export function usePlayer() {
     currentTimeSeconds: computed(() => store.currentTimeSeconds),
     durationSeconds: computed(() => store.durationSeconds),
     error: computed(() => store.error),
+    isShuffle: computed(() => store.isShuffle),
+    repeatMode: computed(() => store.repeatMode),
     hasNext: computed(() => store.hasNext),
     hasPrev: computed(() => store.hasPrev),
     bindAudio,
@@ -167,6 +184,8 @@ export function usePlayer() {
     seek,
     setVolume,
     playNext,
-    playPrev
+    playPrev,
+    toggleShuffle,
+    toggleRepeat
   };
 }

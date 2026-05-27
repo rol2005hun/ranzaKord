@@ -6,34 +6,86 @@ const props = defineProps<{
 }>();
 
 const { playTrack } = usePlayer();
+const playlistsStore = usePlaylistsStore();
+const router = useRouter();
 
-function onPlay() {
-  playTrack(props.track);
+const showAddToPlaylist = ref(false);
+const addBtnRef = ref<HTMLElement | null>(null);
+const isInAnyPlaylist = computed(
+  () => props.track.type === 'song' && playlistsStore.isTrackInAnyPlaylist(props.track.id)
+);
+
+const emit = defineEmits<{
+  (e: 'click'): void;
+}>();
+
+function onClick() {
+  emit('click');
+  if (props.track.type === 'song') {
+    playTrack({
+      videoId: props.track.id,
+      title: props.track.title,
+      artist: props.track.artist,
+      thumbnailUrl: props.track.thumbnailUrl,
+      durationSeconds: props.track.durationSeconds || 0
+    });
+  } else if (props.track.type === 'artist') {
+    router.push(`/artist/${props.track.id}`);
+  } else if (props.track.type === 'album') {
+    router.push(`/album/${props.track.id}`);
+  }
 }
 </script>
 
 <template>
-  <div class="search-list-item" @click="onPlay">
+  <div
+    class="search-list-item"
+    :class="{ 'search-list-item--artist': track.type === 'artist' }"
+    @click="onClick">
     <div class="search-list-item__thumb">
-      <img :src="`/api/image?url=${encodeURIComponent(track.thumbnailUrl)}`" :alt="track.title" />
-      <div class="search-list-item__overlay">
+      <img
+        v-if="track.thumbnailUrl"
+        :src="`/api/image?url=${encodeURIComponent(track.thumbnailUrl)}`"
+        :alt="track.title" />
+      <AppIcon v-else name="ph:music-notes-simple" />
+      <div v-if="track.type === 'song'" class="search-list-item__overlay">
         <AppIcon name="ph:play-fill" />
       </div>
     </div>
 
     <div class="search-list-item__info">
       <h3 class="search-list-item__title">{{ track.title }}</h3>
-      <p class="search-list-item__subtitle">Videóklip • {{ track.artist }}</p>
+      <p class="search-list-item__subtitle">
+        <span v-if="track.type === 'song'">Dal • {{ track.artist }}</span>
+        <span v-else-if="track.type === 'artist'">Előadó</span>
+        <span v-else-if="track.type === 'album'">Album • {{ track.artist }}</span>
+      </p>
     </div>
 
-    <div class="search-list-item__actions">
+    <div v-if="track.type === 'song'" class="search-list-item__actions">
       <button class="search-list-item__action" @click.stop>
         <AppIcon name="ph:dots-three-bold" />
       </button>
-      <button class="search-list-item__action" @click.stop>
-        <AppIcon name="ph:plus-circle" />
+      <button
+        ref="addBtnRef"
+        class="search-list-item__action"
+        @click.stop="showAddToPlaylist = !showAddToPlaylist">
+        <AppIcon v-if="isInAnyPlaylist" name="ph:check-circle-fill" class="text-success" />
+        <AppIcon v-else name="ph:plus-circle" />
       </button>
     </div>
+
+    <AddToPlaylistPopup
+      v-if="showAddToPlaylist && track.type === 'song'"
+      :track="{
+        videoId: track.id,
+        title: track.title,
+        artist: track.artist,
+        thumbnailUrl: track.thumbnailUrl,
+        durationMs: (track.durationSeconds || 0) * 1000
+      }"
+      :anchor="addBtnRef"
+      @close="showAddToPlaylist = false" />
   </div>
 </template>
 
@@ -53,6 +105,10 @@ function onPlay() {
     .search-list-item__overlay {
       opacity: 1;
     }
+  }
+
+  &--artist &__thumb {
+    border-radius: 50%;
   }
 
   &__thumb {
@@ -149,5 +205,9 @@ function onPlay() {
   .search-list-item__actions {
     opacity: 1;
   }
+}
+
+.text-success {
+  color: hsl(140, 60%, 50%) !important;
 }
 </style>

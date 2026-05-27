@@ -7,5 +7,7 @@
   "volume": "Volume",
   "mute": "Toggle mute",
   "playerBar": "Music player",
-  "noTrack": "Nothing playing"
+  "noTrack": "Nothing playing",
+  "shuffle": "Shuffle",
+  "repeat": "Repeat"
 }

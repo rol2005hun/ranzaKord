@@ -20,5 +20,9 @@
   "namePlaceholder": "My awesome playlist",
   "descriptionPlaceholder": "Optional description…",
   "creating": "Creating…",
-  "saving": "Saving…"
+  "saving": "Saving…",
+  "addedSuccess": "Added to playlist",
+  "addFailed": "Failed to add to playlist",
+  "removedSuccess": "Removed from playlist",
+  "removeFailed": "Failed to remove from playlist"
 }
