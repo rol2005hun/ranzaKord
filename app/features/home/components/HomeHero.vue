@@ -13,9 +13,16 @@ const { data: featuredTracks, pending } = useLazyFetch<SearchResult[]>('/api/sea
   <div class="home-dashboard">
     <section class="home-dashboard__hero">
       <div class="home-dashboard__hero-content">
-        <p class="home-dashboard__greeting">
-          {{ $t('home.greeting', { name: currentUser?.name ?? $t('home.guest') }) }}
-        </p>
+        <ClientOnly>
+          <p class="home-dashboard__greeting">
+            {{ $t('home.greeting', { name: currentUser?.name ?? $t('home.guest') }) }}
+          </p>
+          <template #fallback>
+            <p class="home-dashboard__greeting">
+              {{ $t('home.greeting', { name: $t('home.guest') }) }}
+            </p>
+          </template>
+        </ClientOnly>
         <h1 class="home-dashboard__title">{{ $t('home.title') }}</h1>
         <p class="home-dashboard__subtitle">{{ $t('home.subtitle') }}</p>
       </div>

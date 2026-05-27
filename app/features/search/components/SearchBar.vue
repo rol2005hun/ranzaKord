@@ -85,6 +85,7 @@ function onClear() {
       type="search"
       :value="query"
       :placeholder="$t('search.placeholder')"
+      :aria-label="$t('search.placeholder')"
       autocomplete="off"
       @input="onInput"
       @focus="onFocus"
