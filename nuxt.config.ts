@@ -70,7 +70,7 @@ export default defineNuxtConfig({
   site: {
     url: 'https://kord.ranzak.dev',
     name: 'ranzaKord',
-    description: 'Prémium zenei streaming alkalmazás.'
+    description: 'Premium music streaming.'
   },
 
   sitemap: {
