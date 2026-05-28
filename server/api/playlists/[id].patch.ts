@@ -23,9 +23,9 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
 
   const body = await readBody<UpdatePlaylistBody>(event);
   const updates: Record<string, string> = {};
-  if (body.name !== undefined) updates['name'] = body.name.trim();
-  if (body.description !== undefined) updates['description'] = body.description.trim();
-  if (body.imageUrl !== undefined) updates['imageUrl'] = body.imageUrl;
+  if (body?.name !== undefined) updates['name'] = body.name.trim();
+  if (body?.description !== undefined) updates['description'] = body.description.trim();
+  if (body?.imageUrl !== undefined) updates['imageUrl'] = body.imageUrl;
 
   const playlist = await PlaylistModel.findOneAndUpdate(
     { _id: id, userId: sessionData.user.sub },

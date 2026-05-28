@@ -14,7 +14,9 @@ export default defineEventHandler(async (event): Promise<{ url: string }> => {
     throw createError({ statusCode: 500, statusMessage: t('upload.errors.missingClientId') });
   }
 
-  const { image } = await readBody<{ image: string }>(event);
+  const body = await readBody<{ image?: string }>(event);
+  const image = body?.image;
+
   if (!image)
     throw createError({ statusCode: 400, statusMessage: t('upload.errors.missingImage') });
 

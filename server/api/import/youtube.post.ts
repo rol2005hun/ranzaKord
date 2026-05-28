@@ -3,8 +3,8 @@ import type { Track } from '../../../app/features/player/types/player.types';
 
 export default defineEventHandler(async (event) => {
   const { t } = useServerTranslation(event);
-  const body = await readBody(event);
-  const { url } = body;
+  const body = await readBody<{ url?: string }>(event);
+  const url = body?.url;
 
   if (!url) {
     throw createError({

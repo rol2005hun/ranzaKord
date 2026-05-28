@@ -82,11 +82,11 @@ async function handleImport() {
           <span>
             <template v-if="isImporting">
               <template v-if="store.importProgress">
-                {{ $t('playlists.importing') }} {{ store.importProgress.current }}/{{ store.importProgress.total }}
+                {{ $t('playlists.importing') }} {{ store.importProgress.current }}/{{
+                  store.importProgress.total
+                }}
               </template>
-              <template v-else>
-                {{ $t('playlists.importing') }}...
-              </template>
+              <template v-else>{{ $t('playlists.importing') }}...</template>
             </template>
             <template v-else>
               {{ $t('playlists.importPlaylist') }}

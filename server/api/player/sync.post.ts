@@ -12,12 +12,13 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
   }
 
-  const body = await readBody(event);
-  const { videoId, currentTime } = body;
+  const body = await readBody<{ videoId?: string; currentTime?: number }>(event);
 
   if (!body || typeof body.videoId !== 'string' || typeof body.currentTime !== 'number') {
     throw createError({ statusCode: 400, statusMessage: t('player.errors.invalidPayload') });
   }
+
+  const { videoId, currentTime } = body;
 
   await UserModel.updateOne(
     { sub: sessionData.user.sub },

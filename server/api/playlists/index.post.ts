@@ -18,9 +18,9 @@ export default defineEventHandler(async (event): Promise<PlaylistResponse> => {
     throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
   }
 
-  const body = await readBody<CreatePlaylistBody>(event);
+  const body = await readBody<Partial<CreatePlaylistBody>>(event);
 
-  if (!body.name) {
+  if (!body?.name) {
     throw createError({ statusCode: 400, statusMessage: t('playlists.errors.missingName') });
   }
 

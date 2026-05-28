@@ -22,8 +22,8 @@ export default defineEventHandler(async (event): Promise<{ success: boolean }> =
   const id = getRouterParam(event, 'id');
   if (!id) throw createError({ statusCode: 400, statusMessage: t('playlists.errors.missingId') });
 
-  const body = await readBody<AddTrackBody>(event);
-  if (!body.videoId || !body.title) {
+  const body = await readBody<Partial<AddTrackBody>>(event);
+  if (!body?.videoId || !body.title) {
     throw createError({ statusCode: 400, statusMessage: t('playlists.errors.missingTrackInfo') });
   }
 
