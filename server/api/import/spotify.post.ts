@@ -1,6 +1,3 @@
-import { createInnertube } from '../../utils/innertube';
-import type { Track } from '../../../app/features/player/types/player.types';
-
 export default defineEventHandler(async (event) => {
   const { t } = useServerTranslation(event);
   const body = await readBody(event);
@@ -38,59 +35,15 @@ export default defineEventHandler(async (event) => {
     const description = preview.description || '';
     const coverUrl = preview.image || '';
 
-    const tracks: Track[] = [];
-    const innertube = await createInnertube(false);
-
-    const itemsToProcess = spotifyTracks;
-
-    for (const track of itemsToProcess) {
-      if (!track || !track.name) continue;
-
-      const artistNames = track.artist || 'Unknown Artist';
-      const searchQuery = `${track.name} ${artistNames}`;
-
-      try {
-        const searchResults = await innertube.search(searchQuery, { type: 'video' });
-
-        interface YtVideoResult {
-          type: string;
-          id?: string;
-          title?: { text: string } | string;
-          author?: { name: string };
-          duration?: { seconds: number };
-          thumbnails?: { url: string; width: number; height: number }[];
-        }
-
-        const firstResult = searchResults.results?.[0] as unknown as YtVideoResult;
-
-        if (firstResult && firstResult.type === 'Video' && typeof firstResult.id === 'string') {
-          const trackThumbnails = firstResult.thumbnails || [];
-          const bestThumbnail = trackThumbnails.length
-            ? trackThumbnails.sort((a, b) => (b.width || 0) - (a.width || 0))[0]?.url || ''
-            : '';
-
-          let durationSeconds = 0;
-          if (firstResult.duration && firstResult.duration.seconds) {
-            durationSeconds = firstResult.duration.seconds;
-          }
-
-          tracks.push({
-            videoId: firstResult.id,
-            title:
-              ((typeof firstResult.title === 'object' &&
-              firstResult.title !== null &&
-              'text' in firstResult.title
-                ? firstResult.title.text
-                : firstResult.title) as string) || track.name,
-            artist: firstResult.author?.name || artistNames,
-            thumbnailUrl: bestThumbnail,
-            durationSeconds: durationSeconds
-          });
-        }
-      } catch (err) {
-        console.error(`Failed to find match for: ${searchQuery}`, err);
-      }
-    }
+    const tracks = spotifyTracks
+      .filter((track): track is { name: string; artist?: string } => !!track && !!track.name)
+      .map((track) => ({
+        title: track.name,
+        artist: track.artist || 'Unknown Artist',
+        videoId: '',
+        thumbnailUrl: '',
+        durationSeconds: 0
+      }));
 
     return {
       name: title,

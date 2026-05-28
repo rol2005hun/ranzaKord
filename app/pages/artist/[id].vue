@@ -8,11 +8,13 @@ definePageMeta({
 const route = useRoute();
 const id = route.params.id as string;
 
+const headers = useRequestHeaders(['cookie']);
 const {
   data: artist,
   status,
   error
 } = await useFetch<ArtistDetail>('/api/artist', {
+  headers,
   query: { id },
   lazy: true
 });

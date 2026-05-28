@@ -15,7 +15,11 @@ const playlist = ref<PlaylistDetail | null>(null);
 const showEditModal = ref(false);
 const showDeleteConfirm = ref(false);
 
-const { data, status } = await useFetch<PlaylistDetail>(`/api/playlists/${id.value}`);
+const headers = import.meta.server ? useRequestHeaders(['cookie']) : undefined;
+const { data, status } = await useFetch<PlaylistDetail>(
+  `/api/playlists/${id.value}`,
+  headers ? { headers } : {}
+);
 const isLoading = computed(() => status.value === 'pending');
 
 watchEffect(() => {
@@ -307,7 +311,7 @@ function formatDuration(ms: number): string {
 
   &__header {
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     gap: var(--space-8);
     padding: var(--space-8) var(--space-8) var(--space-6);
     background: linear-gradient(to bottom, var(--color-surface), transparent);

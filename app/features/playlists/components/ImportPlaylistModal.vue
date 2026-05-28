@@ -80,7 +80,17 @@ async function handleImport() {
           @click="handleImport">
           <AppSpinner v-if="isImporting" size="sm" />
           <span>
-            {{ isImporting ? $t('playlists.importing') : $t('playlists.importPlaylist') }}
+            <template v-if="isImporting">
+              <template v-if="store.importProgress">
+                {{ $t('playlists.importing') }} {{ store.importProgress.current }}/{{ store.importProgress.total }}
+              </template>
+              <template v-else>
+                {{ $t('playlists.importing') }}...
+              </template>
+            </template>
+            <template v-else>
+              {{ $t('playlists.importPlaylist') }}
+            </template>
           </span>
         </button>
       </div>

@@ -4,11 +4,13 @@ import type {
   CreatePlaylistPayload
 } from '../types/playlists.types';
 import type { Track } from '../../player/types/player.types';
+import type { SearchResult } from '@/features/search/types/search.types';
 
 export const usePlaylistsStore = defineStore('playlists', () => {
   const playlists = ref<PlaylistSummary[]>([]);
   const isLoading = ref(true);
   const error = ref<string | null>(null);
+  const importProgress = ref<{ current: number; total: number } | null>(null);
   const { t } = useI18n();
 
   function isTrackInPlaylist(playlistId: string, videoId: string): boolean {
@@ -113,12 +115,15 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     platform: 'youtube' | 'spotify'
   ): Promise<PlaylistSummary | null> {
     try {
+      importProgress.value = { current: 0, total: 0 };
       const result = await $fetch<{
         name: string;
         description: string;
         imageUrl: string;
         tracks: Track[];
       }>(`/api/import/${platform}`, { method: 'POST', body: { url } });
+
+      importProgress.value = { current: 0, total: result.tracks.length };
 
       let targetPlaylist = playlists.value.find((p) => p.name === result.name);
 
@@ -131,15 +136,49 @@ export const usePlaylistsStore = defineStore('playlists', () => {
           })) || undefined;
       }
 
-      if (!targetPlaylist) return null;
+      if (!targetPlaylist) {
+        importProgress.value = null;
+        return null;
+      }
 
       const playlistDetail = await fetchDetail(targetPlaylist.id);
       const existingTrackIds = new Set(
         playlistDetail?.tracks.map((t) => t.videoId) || targetPlaylist.trackIds || []
       );
 
-      for (const track of result.tracks) {
-        if (!existingTrackIds.has(track.videoId)) {
+      for (let i = 0; i < result.tracks.length; i++) {
+        importProgress.value = { current: i + 1, total: result.tracks.length };
+        let track = result.tracks[i] as Track;
+
+        if (platform === 'spotify') {
+          const searchQuery = `${track.title} ${track.artist}`;
+          try {
+            const searchRes = await $fetch<SearchResult[]>(`/api/search`, {
+              query: { q: searchQuery, type: 'song' }
+            });
+            if (searchRes && searchRes.length > 0) {
+              const ytTrack = searchRes[0];
+              if (!ytTrack) {
+                continue;
+              }
+              track = {
+                ...track,
+                videoId: ytTrack.id,
+                title: ytTrack.title,
+                artist: ytTrack.artist,
+                thumbnailUrl: ytTrack.thumbnailUrl,
+                durationSeconds: ytTrack.durationSeconds ?? 0
+              };
+            } else {
+              continue;
+            }
+          } catch (e) {
+            console.error(`Search failed for ${searchQuery}`, e);
+            continue;
+          }
+        }
+
+        if (track.videoId && !existingTrackIds.has(track.videoId)) {
           await addTrack(targetPlaylist.id, {
             videoId: track.videoId,
             title: track.title,
@@ -151,8 +190,10 @@ export const usePlaylistsStore = defineStore('playlists', () => {
         }
       }
 
+      importProgress.value = null;
       return targetPlaylist;
     } catch {
+      importProgress.value = null;
       error.value = t('playlists.errors.import') || 'Failed to import playlist';
       return null;
     }
@@ -162,6 +203,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     playlists,
     isLoading,
     error,
+    importProgress,
     isTrackInPlaylist,
     isTrackInAnyPlaylist,
     fetchAll,
