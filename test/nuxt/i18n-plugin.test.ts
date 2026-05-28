@@ -4,16 +4,28 @@ import i18nPlugin from '@/plugins/i18n-locales';
 describe('i18n-locales plugin', () => {
   it('merges locale messages correctly', () => {
     const mergeLocaleMessage = vi.fn();
-    const nuxtApp = {
+
+    type NuxtAppWithI18n = {
+      $i18n: {
+        mergeLocaleMessage: (locale: string, messages: Record<string, unknown>) => void;
+      };
+    };
+
+    const nuxtApp: NuxtAppWithI18n = {
       $i18n: {
         mergeLocaleMessage
       }
     };
 
-    if (typeof i18nPlugin === 'function') {
-      (i18nPlugin as any)(nuxtApp as any);
-    } else if (i18nPlugin && typeof i18nPlugin === 'object' && (i18nPlugin as any).setup) {
-      (i18nPlugin as any).setup(nuxtApp as any);
+    type PluginFn = (nuxtApp: NuxtAppWithI18n) => void;
+    type PluginWithSetup = { setup: (nuxtApp: NuxtAppWithI18n) => void };
+
+    const plugin = i18nPlugin as unknown as PluginFn | PluginWithSetup;
+
+    if (typeof plugin === 'function') {
+      plugin(nuxtApp);
+    } else if (plugin && typeof plugin === 'object' && 'setup' in plugin) {
+      plugin.setup(nuxtApp);
     }
 
     expect(mergeLocaleMessage).toHaveBeenCalled();
