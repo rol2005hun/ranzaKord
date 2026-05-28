@@ -34,9 +34,9 @@ export default defineNuxtConfig({
   runtimeConfig: {
     mongodbUri: '',
     sessionSecret: '',
-    ranzaKonnectDomain: '',
-    ranzaKonnectClientId: '',
-    ranzaKonnectClientSecret: '',
+    ranzakonnectDomain: '',
+    ranzakonnectClientId: '',
+    ranzakonnectClientSecret: '',
     youtubeOauthToken: '',
     imgurClientId: '',
     public: {
