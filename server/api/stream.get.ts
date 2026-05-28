@@ -1,7 +1,8 @@
 import type { Misc } from 'youtubei.js';
 
-type ClientType = 'WEB' | 'YTMUSIC' | 'ANDROID' | 'IOS' | 'TV_EMBEDDED' | 'WEB_CREATOR';
+type ClientType = 'TV' | 'WEB' | 'YTMUSIC' | 'ANDROID' | 'IOS' | 'TV_EMBEDDED' | 'WEB_CREATOR';
 const workingClients: ClientType[] = [
+  'TV',
   'WEB',
   'YTMUSIC',
   'ANDROID',
