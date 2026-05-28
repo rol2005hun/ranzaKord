@@ -15,6 +15,7 @@ export default defineEventHandler(async (event) => {
   const innertube = await createInnertube(true);
   let formats: Misc.Format[] = [];
   let format: Misc.Format | undefined;
+  const debugInfo: Record<string, string> = {};
 
   for (const client of workingClients) {
     try {
@@ -34,14 +35,21 @@ export default defineEventHandler(async (event) => {
           workingClients.unshift(workingClients.splice(workingClients.indexOf(client), 1)[0] as ClientType);
         }
         break;
+      } else {
+        // @ts-expect-error playability_status is loosely typed in youtubei.js
+        debugInfo[client] = `No audio format. Formats: ${formats.length}. Status: ${info.playability_status?.status} - ${info.playability_status?.reason}`;
       }
-    } catch {
-      // Continue to next client if this one fails
+    } catch (e) {
+      debugInfo[client] = e instanceof Error ? e.message : String(e);
     }
   }
 
   if (!format) {
-    throw createError({ statusCode: 404, statusMessage: t('player.errors.noAudioFormat') });
+    throw createError({ 
+      statusCode: 404, 
+      statusMessage: t('player.errors.noAudioFormat'),
+      data: { debugInfo }
+    });
   }
 
   let streamUrl = format.url as string | undefined;
