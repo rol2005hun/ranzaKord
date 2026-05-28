@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const tokenResponse = await $fetch<OAuthTokenResponse>(
-    `https://${config.ranzaKonnectDomain}/api/oauth/token`,
+    `https://${config.ranzakonnectDomain}/api/oauth/token`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -34,14 +34,14 @@ export default defineEventHandler(async (event) => {
         grant_type: 'authorization_code',
         code,
         redirect_uri: `${config.public.baseUrl}/auth/callback`,
-        client_id: config.ranzaKonnectClientId as string,
-        client_secret: config.ranzaKonnectClientSecret as string
+        client_id: config.ranzakonnectClientId as string,
+        client_secret: config.ranzakonnectClientSecret as string
       }).toString()
     }
   );
 
   const userInfo = await $fetch<OAuthUser>(
-    `https://${config.ranzaKonnectDomain}/api/oauth/userinfo`,
+    `https://${config.ranzakonnectDomain}/api/oauth/userinfo`,
     {
       headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
     }

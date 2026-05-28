@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
 
   const params = new URLSearchParams({
     response_type: 'code',
-    client_id: config.ranzaKonnectClientId as string,
+    client_id: config.ranzakonnectClientId as string,
     redirect_uri: `${config.public.baseUrl}/auth/callback`,
     state,
     scope: 'openid profile email'
@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
 
   return sendRedirect(
     event,
-    `https://${config.ranzaKonnectDomain}/oauth/authorize?${params.toString()}`,
+    `https://${config.ranzakonnectDomain}/oauth/authorize?${params.toString()}`,
     302
   );
 });
