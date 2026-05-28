@@ -110,10 +110,12 @@ async function submit(): Promise<void> {
           <div v-else class="playlist-modal__image-placeholder">
             <AppIcon name="ph:music-notes-fill" />
           </div>
-          <div class="playlist-modal__image-overlay">
-            <AppIcon v-if="isUploading" name="ph:circle-notch" class="playlist-modal__spinner" />
+          <div
+            class="playlist-modal__image-overlay"
+            :style="isUploading ? 'pointer-events: none' : ''">
+            <AppSpinner v-if="isUploading" size="sm" />
             <AppIcon v-else name="ph:pencil-simple-fill" />
-            <span>
+            <span class="playlist-modal__upload-text">
               {{ imagePreview ? $t('playlists.changeImage') : $t('playlists.uploadImage') }}
             </span>
           </div>
@@ -191,11 +193,9 @@ async function submit(): Promise<void> {
     }
   }
 
-  &__image-label {
-    cursor: pointer;
+  &__image-container {
     width: 100%;
     max-width: 200px;
-    display: block;
   }
 
   &__file-input {
@@ -249,17 +249,13 @@ async function submit(): Promise<void> {
     gap: var(--space-1);
     opacity: 0;
     transition: opacity var(--transition-fast);
-    font-size: var(--text-xs);
     color: #fff;
     font-size: var(--text-2xl);
 
     span {
       font-size: var(--text-xs);
+      font-weight: var(--font-weight-medium);
     }
-  }
-
-  &__spinner {
-    animation: spin 1s linear infinite;
   }
 
   &__fields {

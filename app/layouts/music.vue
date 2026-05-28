@@ -7,6 +7,7 @@ const navItems = [{ to: '/', icon: 'ph:house-fill', labelKey: 'core.nav.home' }]
 
 const showCreateModal = ref(false);
 const showImportModal = ref(false);
+const showMobilePlaylists = ref(false);
 
 await useAsyncData('user-playlists', async () => {
   if (isAuthenticated.value) {
@@ -17,6 +18,11 @@ await useAsyncData('user-playlists', async () => {
 
 function onPlaylistCreated(id: string): void {
   showCreateModal.value = false;
+  navigateTo(`/playlist/${id}`);
+}
+
+function onPlaylistImported(id: string): void {
+  showImportModal.value = false;
   navigateTo(`/playlist/${id}`);
 }
 </script>
@@ -101,7 +107,7 @@ function onPlaylistCreated(id: string): void {
     </AppSidebar>
 
     <div class="music-layout__content">
-      <AppNavbar />
+      <AppNavbar @open-playlists="showMobilePlaylists = true" />
       <main class="music-layout__main">
         <slot />
       </main>
@@ -117,7 +123,59 @@ function onPlaylistCreated(id: string): void {
     <ImportPlaylistModal
       :open="showImportModal"
       @close="showImportModal = false"
-      @imported="onPlaylistCreated" />
+      @imported="onPlaylistImported" />
+
+    <AppModal
+      :model-value="showMobilePlaylists"
+      :title="$t('playlists.title')"
+      @update:model-value="showMobilePlaylists = false">
+      <div class="mobile-playlists">
+        <div class="mobile-playlists__actions">
+          <button
+            class="mobile-playlists__btn"
+            @click="
+              showMobilePlaylists = false;
+              showImportModal = true;
+            ">
+            <AppIcon name="ph:download-simple-bold" /> {{ $t('playlists.importPlaylist') }}
+          </button>
+          <button
+            class="mobile-playlists__btn mobile-playlists__btn--primary"
+            @click="
+              showMobilePlaylists = false;
+              showCreateModal = true;
+            ">
+            <AppIcon name="ph:plus-bold" /> {{ $t('playlists.newPlaylist') }}
+          </button>
+        </div>
+
+        <div v-if="playlistsStore.isLoading" class="mobile-playlists__list">
+          <AppSpinner />
+        </div>
+        <div v-else-if="playlistsStore.playlists.length === 0" class="mobile-playlists__empty">
+          {{ $t('playlists.noPlaylists') }}
+        </div>
+        <div v-else class="mobile-playlists__list">
+          <NuxtLink
+            v-for="playlist in playlistsStore.playlists"
+            :key="playlist.id"
+            :to="`/playlist/${playlist.id}`"
+            class="mobile-playlists__item"
+            @click="showMobilePlaylists = false">
+            <div class="mobile-playlists__cover">
+              <img v-if="playlist.imageUrl" :src="playlist.imageUrl" :alt="playlist.name" />
+              <AppIcon v-else name="ph:music-notes-fill" />
+            </div>
+            <div class="mobile-playlists__info">
+              <span class="mobile-playlists__name">{{ playlist.name }}</span>
+              <span class="mobile-playlists__count">{{
+                $t('playlists.trackCount', { count: playlist.trackCount })
+              }}</span>
+            </div>
+          </NuxtLink>
+        </div>
+      </div>
+    </AppModal>
   </div>
 </template>
 
@@ -316,6 +374,108 @@ function onPlaylistCreated(id: string): void {
     &__library {
       display: none;
     }
+  }
+}
+
+.mobile-playlists {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+
+  &__actions {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  &__btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-2);
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+
+    &--primary {
+      background: var(--color-surface-hover);
+      border-color: transparent;
+    }
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    max-height: 50vh;
+    overflow-y: auto;
+    padding-right: var(--space-2);
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    transition: background var(--transition-fast);
+
+    &:hover, &:active {
+      background: var(--color-surface-hover);
+    }
+  }
+
+  &__cover {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-hover);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-secondary);
+    font-size: var(--text-2xl);
+    overflow: hidden;
+    flex-shrink: 0;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__count {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+  }
+
+  &__empty {
+    padding: var(--space-4) 0;
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
   }
 }
 </style>

@@ -119,10 +119,6 @@ const isInAnyPlaylist = computed(() => playlistsStore.isTrackInAnyPlaylist(props
   &--active {
     border-color: var(--color-primary);
     box-shadow: var(--glow-primary, var(--shadow-md));
-
-    .track-card__title {
-      color: var(--color-primary);
-    }
   }
 
   &__thumbnail {

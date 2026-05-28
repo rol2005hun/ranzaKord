@@ -2,7 +2,15 @@
 const player = usePlayer();
 const audioEl = ref<HTMLAudioElement | null>(null);
 
+const isHydrated = ref(false);
+
+const displayTrack = computed(() => (isHydrated.value ? player.currentTrack.value : null));
+const displayVolume = computed(() => (isHydrated.value ? player.volume.value : 1));
+const displayTime = computed(() => (isHydrated.value ? player.currentTimeSeconds.value : 0));
+const displayDuration = computed(() => (isHydrated.value ? player.durationSeconds.value : 0));
+
 onMounted(() => {
+  isHydrated.value = true;
   onNuxtReady(() => {
     if (audioEl.value) {
       player.bindAudio(audioEl.value);
@@ -23,15 +31,15 @@ const isInAnyPlaylist = computed(() => {
 const previousVolume = ref(1);
 
 const volumeIcon = computed(() => {
-  if (player.volume.value === 0) return 'ph:speaker-slash-fill';
-  if (player.volume.value < 0.3) return 'ph:speaker-low-fill';
-  if (player.volume.value < 0.7) return 'ph:speaker-high-fill';
+  if (displayVolume.value === 0) return 'ph:speaker-slash-fill';
+  if (displayVolume.value < 0.3) return 'ph:speaker-low-fill';
+  if (displayVolume.value < 0.7) return 'ph:speaker-high-fill';
   return 'ph:speaker-high-fill';
 });
 
 function toggleMute() {
-  if (player.volume.value > 0) {
-    previousVolume.value = player.volume.value;
+  if (displayVolume.value > 0) {
+    previousVolume.value = displayVolume.value;
     player.setVolume(0);
   } else {
     player.setVolume(previousVolume.value);
@@ -63,37 +71,42 @@ function onVolumeInput(event: Event) {
       <div class="player-bar__left">
         <div class="player-bar__artwork">
           <img
-            v-if="player.currentTrack.value?.thumbnailUrl"
-            :src="`/api/image?url=${encodeURIComponent(player.currentTrack.value.thumbnailUrl)}`"
-            :alt="player.currentTrack.value?.title"
+            v-if="displayTrack?.thumbnailUrl"
+            :src="`/api/image?url=${encodeURIComponent(displayTrack.thumbnailUrl)}`"
+            :alt="displayTrack?.title"
             class="player-bar__img" />
           <AppSkeleton v-else width="100%" height="100%" />
         </div>
-        <div v-if="player.currentTrack.value" class="player-bar__info">
-          <span class="player-bar__title">{{ player.currentTrack.value.title }}</span>
-          <span class="player-bar__artist">{{ player.currentTrack.value.artist }}</span>
+        <div v-if="displayTrack" class="player-bar__info">
+          <span class="player-bar__title">{{ displayTrack.title }}</span>
+          <span class="player-bar__artist">{{ displayTrack.artist }}</span>
         </div>
         <div v-else class="player-bar__info player-bar__info--skeleton">
           <AppSkeleton height="12px" width="120px" border-radius="var(--radius-sm)" />
           <AppSkeleton height="10px" width="80px" border-radius="var(--radius-sm)" />
         </div>
-        <button
-          ref="playlistBtnRef"
-          class="player-bar__add-btn"
-          :disabled="!player.currentTrack.value"
-          :aria-label="$t('playlists.addToPlaylist')"
-          @click="showAddToPlaylist = !showAddToPlaylist">
-          <AppIcon v-if="isInAnyPlaylist" name="ph:check-circle-fill" class="text-success" />
-          <AppIcon v-else name="ph:plus-circle" />
-        </button>
+        <ClientOnly>
+          <button
+            ref="playlistBtnRef"
+            class="player-bar__add-btn"
+            :disabled="!displayTrack"
+            :aria-label="$t('playlists.addToPlaylist')"
+            @click="showAddToPlaylist = !showAddToPlaylist">
+            <AppIcon v-if="isInAnyPlaylist" name="ph:check-circle-fill" class="text-success" />
+            <AppIcon v-else name="ph:plus-circle" />
+          </button>
+          <template #fallback>
+            <AppSkeleton width="20px" height="20px" border-radius="var(--radius-full)" />
+          </template>
+        </ClientOnly>
       </div>
 
       <div class="player-bar__center">
         <div class="player-bar__controls">
           <button
             class="player-bar__btn player-bar__btn--secondary"
-            :class="{ 'player-bar__btn--active': player.isShuffle.value }"
-            :disabled="!player.currentTrack.value"
+            :class="{ 'player-bar__btn--active': isHydrated ? player.isShuffle.value : false }"
+            :disabled="!displayTrack"
             :aria-label="$t('player.shuffle') || 'Shuffle'"
             @click="player.toggleShuffle()">
             <AppIcon name="ph:shuffle" />
@@ -101,25 +114,30 @@ function onVolumeInput(event: Event) {
 
           <button
             class="player-bar__btn player-bar__btn--secondary"
-            :disabled="!player.hasPrev.value && !player.currentTrack.value"
+            :disabled="!displayTrack"
             :aria-label="$t('player.prev')"
             @click="player.playPrev()">
             <AppIcon name="ph:skip-back-fill" />
           </button>
 
-          <button
-            class="player-bar__btn player-bar__btn--play"
-            :disabled="!player.currentTrack.value"
-            :aria-label="player.isPlaying.value ? $t('player.pause') : $t('player.play')"
-            @click="player.togglePlay()">
-            <AppSpinner v-if="player.isLoading.value" size="sm" />
-            <AppIcon v-else-if="player.isPlaying.value" name="ph:pause-fill" />
-            <AppIcon v-else name="ph:play-fill" />
-          </button>
+          <ClientOnly>
+            <button
+              class="player-bar__btn player-bar__btn--play"
+              :disabled="!displayTrack"
+              :aria-label="player.isPlaying.value ? $t('player.pause') : $t('player.play')"
+              @click="player.togglePlay()">
+              <AppSpinner v-if="player.isLoading.value" size="sm" />
+              <AppIcon v-else-if="player.isPlaying.value" name="ph:pause-fill" />
+              <AppIcon v-else name="ph:play-fill" />
+            </button>
+            <template #fallback>
+              <AppSkeleton width="40px" height="40px" border-radius="var(--radius-full)" style="flex-shrink: 0" />
+            </template>
+          </ClientOnly>
 
           <button
             class="player-bar__btn player-bar__btn--secondary"
-            :disabled="!player.hasNext.value && !player.currentTrack.value"
+            :disabled="isHydrated ? !player.hasNext.value || !player.currentTrack.value : true"
             :aria-label="$t('player.next')"
             @click="player.playNext()">
             <AppIcon name="ph:skip-forward-fill" />
@@ -127,8 +145,10 @@ function onVolumeInput(event: Event) {
 
           <button
             class="player-bar__btn player-bar__btn--secondary"
-            :class="{ 'player-bar__btn--active': player.repeatMode.value !== 'off' }"
-            :disabled="!player.currentTrack.value"
+            :class="{
+              'player-bar__btn--active': isHydrated ? player.repeatMode.value !== 'off' : false
+            }"
+            :disabled="!displayTrack"
             :aria-label="$t('player.repeat') || 'Repeat'"
             @click="player.toggleRepeat()">
             <AppIcon :name="player.repeatMode.value === 'one' ? 'ph:repeat-once' : 'ph:repeat'" />
@@ -137,26 +157,27 @@ function onVolumeInput(event: Event) {
 
         <div class="player-bar__progress">
           <span class="player-bar__time" data-allow-mismatch>
-            {{ formatTime(player.currentTimeSeconds.value) }}
+            {{ formatTime(displayTime) }}
           </span>
           <input
+            v-if="displayTrack"
             id="player-seek"
             class="player-bar__slider player-bar__slider--seek"
             type="range"
             min="0"
-            :max="player.durationSeconds.value || 1"
-            :value="player.currentTimeSeconds.value"
-            :disabled="!player.currentTrack.value"
+            :max="displayDuration || 1"
+            :value="displayTime"
+            :disabled="!displayTrack"
             step="1"
             :aria-label="$t('player.seek')"
             :style="{
-              '--progress':
-                (player.currentTimeSeconds.value / (player.durationSeconds.value || 1)) * 100 + '%'
+              '--progress': (displayTime / (displayDuration || 1)) * 100 + '%'
             }"
             data-allow-mismatch
             @input="onSeekInput" />
+          <AppSkeleton v-else height="4px" class="player-bar__slider--seek" />
           <span class="player-bar__time" data-allow-mismatch>
-            {{ formatTime(player.durationSeconds.value) }}
+            {{ formatTime(displayDuration) }}
           </span>
         </div>
       </div>
@@ -175,28 +196,30 @@ function onVolumeInput(event: Event) {
           </ClientOnly>
         </button>
         <input
+          v-if="displayTrack"
           id="player-volume"
           class="player-bar__slider player-bar__slider--volume"
           type="range"
           min="0"
           max="1"
-          :value="player.volume.value"
+          :value="displayVolume"
           step="0.01"
           :aria-label="$t('player.volume')"
-          :style="{ '--progress': player.volume.value * 100 + '%' }"
+          :style="{ '--progress': displayVolume * 100 + '%' }"
           data-allow-mismatch
           @input="onVolumeInput" />
+        <AppSkeleton v-else height="4px" width="100px" class="player-bar__slider--volume" />
       </div>
     </aside>
 
     <AddToPlaylistPopup
-      v-if="showAddToPlaylist && player.currentTrack.value"
+      v-if="showAddToPlaylist && displayTrack"
       :track="{
-        videoId: player.currentTrack.value.videoId,
-        title: player.currentTrack.value.title,
-        artist: player.currentTrack.value.artist,
-        thumbnailUrl: player.currentTrack.value.thumbnailUrl,
-        durationMs: player.durationSeconds.value * 1000
+        videoId: displayTrack.videoId,
+        title: displayTrack.title,
+        artist: displayTrack.artist,
+        thumbnailUrl: displayTrack.thumbnailUrl,
+        durationMs: displayDuration * 1000
       }"
       :anchor="playlistBtnRef"
       @close="showAddToPlaylist = false" />

@@ -5,6 +5,10 @@ const { locale, setLocale } = useI18n();
 
 const isDropdownOpen = ref(false);
 
+const emit = defineEmits<{
+  (e: 'open-playlists'): void;
+}>();
+
 function toggleDropdown() {
   isDropdownOpen.value = !isDropdownOpen.value;
 }
@@ -17,6 +21,12 @@ function closeDropdown() {
 <template>
   <header class="app-navbar">
     <div class="app-navbar__left">
+      <button
+        class="app-navbar__mobile-menu"
+        :aria-label="$t('playlists.title')"
+        @click="emit('open-playlists')">
+        <AppIcon name="ph:list" />
+      </button>
       <SearchBar />
     </div>
 
@@ -110,6 +120,24 @@ function closeDropdown() {
     align-items: center;
     max-width: 600px;
     min-width: 0;
+  }
+
+  &__mobile-menu {
+    display: none;
+    background: transparent;
+    border: none;
+    color: var(--color-text-primary);
+    font-size: var(--text-2xl);
+    cursor: pointer;
+    margin-right: var(--space-3);
+    padding: var(--space-1);
+    outline: none;
+
+    @media (max-width: 768px) {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   }
 
   &__right {

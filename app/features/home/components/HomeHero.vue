@@ -37,21 +37,14 @@ function onPlayFromList(track: SearchResult) {
         <p class="home-dashboard__subtitle">{{ $t('home.subtitle') }}</p>
       </div>
       <div class="home-dashboard__hero-visual">
-        <ClientOnly>
-          <div v-if="pending || !recommendedTrack" class="home-dashboard__skeleton-visual">
-            <div class="skeleton skeleton--thumb" />
-          </div>
-          <TopResultCard
-            v-else
-            :result="recommendedTrack"
-            class="home-dashboard__recommended-card"
-            @play="onPlayFromList" />
-          <template #fallback>
-            <div class="home-dashboard__skeleton-visual">
-              <div class="skeleton skeleton--thumb" />
-            </div>
-          </template>
-        </ClientOnly>
+        <div v-if="pending || !recommendedTrack" class="home-dashboard__skeleton-visual">
+          <div class="skeleton skeleton--thumb" />
+        </div>
+        <TopResultCard
+          v-else
+          :result="recommendedTrack"
+          class="home-dashboard__recommended-card"
+          @play="onPlayFromList" />
       </div>
     </section>
 

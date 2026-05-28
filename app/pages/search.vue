@@ -34,16 +34,42 @@ onMounted(() => {
   }
 });
 
-const { playTrack } = usePlayer();
+const { playQueue } = usePlayer();
 
 function onPlay(track: SearchResult) {
-  playTrack({
-    videoId: track.id,
-    title: track.title,
-    artist: track.artist,
-    thumbnailUrl: track.thumbnailUrl,
-    durationSeconds: track.durationSeconds || 0
-  });
+  let tracksToQueue: SearchResult[] = [];
+  if (currentTab.value === 'all' && categorizedResults.value) {
+    tracksToQueue = categorizedResults.value.songs || [];
+  } else if (currentTab.value === 'video' || currentTab.value === 'song') {
+    tracksToQueue = results.value;
+  }
+
+  if (tracksToQueue.length === 0) {
+    tracksToQueue = [track];
+  }
+
+  const mappedQueue = tracksToQueue.map((r) => ({
+    videoId: r.id,
+    title: r.title,
+    artist: r.artist,
+    thumbnailUrl: r.thumbnailUrl,
+    durationSeconds: r.durationSeconds || 0
+  }));
+
+  let startIndex = mappedQueue.findIndex((t) => t.videoId === track.id);
+
+  if (startIndex === -1) {
+    mappedQueue.unshift({
+      videoId: track.id,
+      title: track.title,
+      artist: track.artist,
+      thumbnailUrl: track.thumbnailUrl,
+      durationSeconds: track.durationSeconds || 0
+    });
+    startIndex = 0;
+  }
+
+  playQueue(mappedQueue, startIndex);
 }
 </script>
 
