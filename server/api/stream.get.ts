@@ -1,5 +1,8 @@
 import type { Misc } from 'youtubei.js';
 
+type ClientType = 'WEB' | 'YTMUSIC' | 'ANDROID' | 'IOS' | 'TV_EMBEDDED' | 'WEB_CREATOR';
+const workingClients: ClientType[] = ['WEB', 'YTMUSIC', 'ANDROID', 'IOS', 'TV_EMBEDDED', 'WEB_CREATOR'];
+
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const videoId = query['v'] as string | undefined;
@@ -10,11 +13,10 @@ export default defineEventHandler(async (event) => {
   }
 
   const innertube = await createInnertube(true);
-  const clients = ['WEB', 'YTMUSIC', 'ANDROID', 'IOS', 'TV_EMBEDDED', 'WEB_CREATOR'] as const;
   let formats: Misc.Format[] = [];
   let format: Misc.Format | undefined;
 
-  for (const client of clients) {
+  for (const client of workingClients) {
     try {
       const info = await innertube.getBasicInfo(videoId.trim(), { client });
       formats = [
@@ -27,7 +29,12 @@ export default defineEventHandler(async (event) => {
         format = formats.find((f) => f.has_audio && (f.url || f.signature_cipher));
       }
 
-      if (format) break;
+      if (format) {
+        if (workingClients[0] !== client) {
+          workingClients.unshift(workingClients.splice(workingClients.indexOf(client), 1)[0] as ClientType);
+        }
+        break;
+      }
     } catch {
       // Continue to next client if this one fails
     }
