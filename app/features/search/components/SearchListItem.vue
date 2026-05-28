@@ -46,7 +46,7 @@ function onClick() {
 <template>
   <div
     class="search-list-item"
-    :class="{ 
+    :class="{
       'search-list-item--artist': track.type === 'artist',
       'search-list-item--active': isCurrentlyPlaying
     }"
@@ -57,7 +57,10 @@ function onClick() {
         :src="`/api/image?url=${encodeURIComponent(track.thumbnailUrl)}`"
         :alt="track.title" />
       <AppIcon v-else name="ph:music-notes-simple" />
-      <div v-if="track.type === 'song'" class="search-list-item__overlay" :class="{ 'search-list-item__overlay--active': isCurrentlyPlaying }">
+      <div
+        v-if="track.type === 'song'"
+        class="search-list-item__overlay"
+        :class="{ 'search-list-item__overlay--active': isCurrentlyPlaying }">
         <AppIcon v-if="isPlaying" name="ph:pause-fill" />
         <AppIcon v-else name="ph:play-fill" />
       </div>
@@ -65,8 +68,14 @@ function onClick() {
 
     <div class="search-list-item__info">
       <h3 class="search-list-item__title" :class="{ 'text-primary': isCurrentlyPlaying }">
-        <AppIcon v-if="isPlaying" name="ph:speaker-high-fill" style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom;" />
-        <AppIcon v-else-if="isCurrentlyPlaying" name="ph:speaker-none-fill" style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom;" />
+        <AppIcon
+          v-if="isPlaying"
+          name="ph:speaker-high-fill"
+          style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom" />
+        <AppIcon
+          v-else-if="isCurrentlyPlaying"
+          name="ph:speaker-none-fill"
+          style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom" />
         {{ track.title }}
       </h3>
       <p class="search-list-item__subtitle">

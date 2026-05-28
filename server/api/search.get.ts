@@ -178,7 +178,9 @@ export default defineCachedEventHandler(
     name: 'youtube-search',
     getKey: (event) => {
       const query = getQuery(event);
-      const q = String(query['q'] || '').trim().toLowerCase();
+      const q = String(query['q'] || '')
+        .trim()
+        .toLowerCase();
       const type = String(query['type'] || 'all');
       return `${q}-${type}`;
     }

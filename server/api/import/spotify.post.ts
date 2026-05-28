@@ -41,7 +41,7 @@ export default defineEventHandler(async (event) => {
     const tracks: Track[] = [];
     const innertube = await createInnertube(false);
 
-    const itemsToProcess = spotifyTracks.slice(0, 150);
+    const itemsToProcess = spotifyTracks;
 
     for (const track of itemsToProcess) {
       if (!track || !track.name) continue;

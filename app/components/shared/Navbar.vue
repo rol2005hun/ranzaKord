@@ -31,71 +31,64 @@ function closeDropdown() {
     </div>
 
     <div class="app-navbar__right">
-        <div v-if="isAuthenticated && currentUser" class="app-navbar__user">
-          <button
-            class="app-navbar__avatar"
-            :aria-label="$t('auth.profile')"
-            @click="toggleDropdown">
-            <img
-              v-if="currentUser.picture"
-              :src="currentUser.picture"
-              :alt="currentUser.name"
-              class="app-navbar__avatar-img" />
-            <AppIcon v-else name="ph:user-circle-fill" />
-          </button>
+      <div v-if="isAuthenticated && currentUser" class="app-navbar__user">
+        <button class="app-navbar__avatar" :aria-label="$t('auth.profile')" @click="toggleDropdown">
+          <img
+            v-if="currentUser.picture"
+            :src="currentUser.picture"
+            :alt="currentUser.name"
+            class="app-navbar__avatar-img" />
+          <AppIcon v-else name="ph:user-circle-fill" />
+        </button>
+
+        <div
+          v-if="isDropdownOpen"
+          class="app-navbar__dropdown-overlay"
+          @click="closeDropdown"></div>
+
+        <div v-if="isDropdownOpen" class="app-navbar__dropdown">
+          <div class="app-navbar__dropdown-row">
+            <span class="app-navbar__dropdown-row-label">Language</span>
+            <div class="app-navbar__dropdown-toggle">
+              <button :class="{ active: (locale as any) === 'en' }" @click="setLocale('en' as any)">
+                EN
+              </button>
+              <button :class="{ active: (locale as any) === 'hu' }" @click="setLocale('hu' as any)">
+                HU
+              </button>
+            </div>
+          </div>
+
+          <div class="app-navbar__dropdown-row">
+            <span class="app-navbar__dropdown-row-label">Theme</span>
+            <div class="app-navbar__dropdown-toggle">
+              <button
+                v-for="theme in themes"
+                :key="theme.id"
+                :class="{ active: themeId === theme.id }"
+                @click="setTheme(theme.id)">
+                <AppIcon :name="theme.icon" />
+              </button>
+            </div>
+          </div>
 
           <div
-            v-if="isDropdownOpen"
-            class="app-navbar__dropdown-overlay"
-            @click="closeDropdown"></div>
+            class="app-navbar__dropdown-divider"
+            style="margin: var(--space-2) var(--space-4)"></div>
 
-          <div v-if="isDropdownOpen" class="app-navbar__dropdown">
-            <div class="app-navbar__dropdown-row">
-              <span class="app-navbar__dropdown-row-label">Language</span>
-              <div class="app-navbar__dropdown-toggle">
-                <button
-                  :class="{ active: (locale as any) === 'en' }"
-                  @click="setLocale('en' as any)">
-                  EN
-                </button>
-                <button
-                  :class="{ active: (locale as any) === 'hu' }"
-                  @click="setLocale('hu' as any)">
-                  HU
-                </button>
-              </div>
-            </div>
-
-            <div class="app-navbar__dropdown-row">
-              <span class="app-navbar__dropdown-row-label">Theme</span>
-              <div class="app-navbar__dropdown-toggle">
-                <button
-                  v-for="theme in themes"
-                  :key="theme.id"
-                  :class="{ active: themeId === theme.id }"
-                  @click="setTheme(theme.id)">
-                  <AppIcon :name="theme.icon" />
-                </button>
-              </div>
-            </div>
-
-            <div
-              class="app-navbar__dropdown-divider"
-              style="margin: var(--space-2) var(--space-4)"></div>
-
-            <button
-              class="app-navbar__dropdown-item"
-              @click="
-                () => {
-                  logout();
-                  closeDropdown();
-                }
-              ">
-              <AppIcon name="ph:sign-out" class="app-navbar__dropdown-icon" />
-              <span class="app-navbar__dropdown-label">{{ $t('auth.logout') }}</span>
-            </button>
-          </div>
+          <button
+            class="app-navbar__dropdown-item"
+            @click="
+              () => {
+                logout();
+                closeDropdown();
+              }
+            ">
+            <AppIcon name="ph:sign-out" class="app-navbar__dropdown-icon" />
+            <span class="app-navbar__dropdown-label">{{ $t('auth.logout') }}</span>
+          </button>
         </div>
+      </div>
     </div>
   </header>
 </template>

@@ -120,25 +120,38 @@ export const usePlaylistsStore = defineStore('playlists', () => {
         tracks: Track[];
       }>(`/api/import/${platform}`, { method: 'POST', body: { url } });
 
-      const created = await create({
-        name: result.name,
-        description: result.description,
-        imageUrl: result.imageUrl
-      });
+      let targetPlaylist = playlists.value.find((p) => p.name === result.name);
 
-      if (!created) return null;
-
-      for (const track of result.tracks) {
-        await addTrack(created.id, {
-          videoId: track.videoId,
-          title: track.title,
-          artist: track.artist,
-          thumbnailUrl: track.thumbnailUrl,
-          durationMs: track.durationSeconds * 1000
-        });
+      if (!targetPlaylist) {
+        targetPlaylist =
+          (await create({
+            name: result.name,
+            description: result.description,
+            imageUrl: result.imageUrl
+          })) || undefined;
       }
 
-      return created;
+      if (!targetPlaylist) return null;
+
+      const playlistDetail = await fetchDetail(targetPlaylist.id);
+      const existingTrackIds = new Set(
+        playlistDetail?.tracks.map((t) => t.videoId) || targetPlaylist.trackIds || []
+      );
+
+      for (const track of result.tracks) {
+        if (!existingTrackIds.has(track.videoId)) {
+          await addTrack(targetPlaylist.id, {
+            videoId: track.videoId,
+            title: track.title,
+            artist: track.artist,
+            thumbnailUrl: track.thumbnailUrl,
+            durationMs: track.durationSeconds * 1000
+          });
+          existingTrackIds.add(track.videoId);
+        }
+      }
+
+      return targetPlaylist;
     } catch {
       error.value = t('playlists.errors.import') || 'Failed to import playlist';
       return null;

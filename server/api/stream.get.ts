@@ -1,4 +1,3 @@
-
 type ClientType = 'TV' | 'WEB' | 'YTMUSIC' | 'ANDROID' | 'IOS' | 'TV_EMBEDDED' | 'WEB_CREATOR';
 const workingClients: ClientType[] = [
   'TV',
@@ -79,7 +78,7 @@ export default defineEventHandler(async (event) => {
         debugInfo[client] = e instanceof Error ? e.message : String(e);
       }
     }
-    
+
     if (successfulResponse) {
       break;
     }

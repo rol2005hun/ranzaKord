@@ -131,7 +131,11 @@ function onVolumeInput(event: Event) {
               <AppIcon v-else name="ph:play-fill" />
             </button>
             <template #fallback>
-              <AppSkeleton width="40px" height="40px" border-radius="var(--radius-full)" style="flex-shrink: 0" />
+              <AppSkeleton
+                width="40px"
+                height="40px"
+                border-radius="var(--radius-full)"
+                style="flex-shrink: 0" />
             </template>
           </ClientOnly>
 

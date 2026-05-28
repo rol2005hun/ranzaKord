@@ -56,7 +56,7 @@ export function usePlayer() {
       if (wasPlaying) {
         store.isLoading = true;
       }
-      
+
       if (savedTime > 0) {
         isRestoring = true;
       }

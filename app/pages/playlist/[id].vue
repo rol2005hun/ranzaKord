@@ -30,8 +30,8 @@ useHead({
 
 function playAll(): void {
   if (!playlist.value || playlist.value.tracks.length === 0) return;
-  
-  const tracksToPlay = playlist.value.tracks.map(t => ({
+
+  const tracksToPlay = playlist.value.tracks.map((t) => ({
     videoId: t.videoId,
     title: t.title,
     artist: t.artist,
@@ -179,7 +179,7 @@ function formatDuration(ms: number): string {
           class="playlist-page__track"
           @click="
             player.playQueue(
-              playlist.tracks.map(t => ({
+              playlist.tracks.map((t) => ({
                 videoId: t.videoId,
                 title: t.title,
                 artist: t.artist,

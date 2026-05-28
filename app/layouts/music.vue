@@ -137,7 +137,8 @@ function onPlaylistImported(id: string): void {
               showMobilePlaylists = false;
               showImportModal = true;
             ">
-            <AppIcon name="ph:download-simple-bold" /> {{ $t('playlists.importPlaylist') }}
+            <AppIcon name="ph:download-simple-bold" />
+            {{ $t('playlists.importPlaylist') }}
           </button>
           <button
             class="mobile-playlists__btn mobile-playlists__btn--primary"
@@ -145,7 +146,8 @@ function onPlaylistImported(id: string): void {
               showMobilePlaylists = false;
               showCreateModal = true;
             ">
-            <AppIcon name="ph:plus-bold" /> {{ $t('playlists.newPlaylist') }}
+            <AppIcon name="ph:plus-bold" />
+            {{ $t('playlists.newPlaylist') }}
           </button>
         </div>
 
@@ -168,9 +170,9 @@ function onPlaylistImported(id: string): void {
             </div>
             <div class="mobile-playlists__info">
               <span class="mobile-playlists__name">{{ playlist.name }}</span>
-              <span class="mobile-playlists__count">{{
-                $t('playlists.trackCount', { count: playlist.trackCount })
-              }}</span>
+              <span class="mobile-playlists__count">
+                {{ $t('playlists.trackCount', { count: playlist.trackCount }) }}
+              </span>
             </div>
           </NuxtLink>
         </div>
@@ -426,7 +428,8 @@ function onPlaylistImported(id: string): void {
     text-decoration: none;
     transition: background var(--transition-fast);
 
-    &:hover, &:active {
+    &:hover,
+    &:active {
       background: var(--color-surface-hover);
     }
   }

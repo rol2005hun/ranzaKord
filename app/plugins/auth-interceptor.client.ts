@@ -1,10 +1,15 @@
+import type { FetchRequest, FetchOptions } from 'ofetch';
+
 export default defineNuxtPlugin({
   name: 'auth-interceptor',
   enforce: 'post',
   setup() {
-    const originalFetch = globalThis.$fetch;
+    const originalFetch = globalThis.$fetch as (
+      request: FetchRequest,
+      options?: FetchOptions
+    ) => Promise<unknown>;
 
-    globalThis.$fetch = async function (request, options) {
+    globalThis.$fetch = (async (request: FetchRequest, options?: FetchOptions) => {
       try {
         return await originalFetch(request, options);
       } catch (error: unknown) {
@@ -23,6 +28,6 @@ export default defineNuxtPlugin({
         }
         throw error;
       }
-    } as typeof $fetch;
+    }) as typeof $fetch;
   }
 });

@@ -14,14 +14,14 @@ const { playQueue } = usePlayer();
 
 function onPlayFromList(track: SearchResult) {
   if (!featuredTracks.value) return;
-  const tracksToPlay = featuredTracks.value.map(t => ({
+  const tracksToPlay = featuredTracks.value.map((t) => ({
     videoId: t.id,
     title: t.title,
     artist: t.artist,
     thumbnailUrl: t.thumbnailUrl,
     durationSeconds: t.durationSeconds || 0
   }));
-  const index = tracksToPlay.findIndex(t => t.videoId === track.id);
+  const index = tracksToPlay.findIndex((t) => t.videoId === track.id);
   playQueue(tracksToPlay, Math.max(0, index));
 }
 </script>
@@ -62,7 +62,11 @@ function onPlayFromList(track: SearchResult) {
           </div>
         </div>
         <div v-else class="home-dashboard__grid">
-          <TrackCard v-for="track in otherFeaturedTracks" :key="track.id" :track="track" @play="onPlayFromList" />
+          <TrackCard
+            v-for="track in otherFeaturedTracks"
+            :key="track.id"
+            :track="track"
+            @play="onPlayFromList" />
         </div>
 
         <template #fallback>
