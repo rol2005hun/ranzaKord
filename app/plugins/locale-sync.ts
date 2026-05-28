@@ -6,12 +6,10 @@ export default defineNuxtPlugin((nuxtApp) => {
     path: '/'
   });
 
-  // Sync on load
   if (i18n.locale.value && i18n.locale.value !== localeCookie.value) {
     localeCookie.value = i18n.locale.value;
   }
 
-  // Watch for future changes
   if (import.meta.client) {
     watch(
       () => i18n.locale.value,
