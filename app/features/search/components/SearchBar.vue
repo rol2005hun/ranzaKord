@@ -1,69 +1,87 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-
-const { search, query, clear, results, categorizedResults, isLoading } = useSearch();
-const inputRef = ref<HTMLInputElement | null>(null);
-const isDropdownOpen = ref(false);
-
-const dropdownItems = computed(() => {
-  if (categorizedResults.value) {
-    const items = [];
-    if (categorizedResults.value.topResult) items.push(categorizedResults.value.topResult);
-    if (categorizedResults.value.songs) items.push(...categorizedResults.value.songs);
-    return items.slice(0, 5);
-  }
-  return results.value.slice(0, 5);
-});
+import type { SearchResult, CategorizedSearchResults } from '../types/search.types';
 
 const route = useRoute();
 const router = useRouter();
 
-// Update query when navigating with a query param (client side only)
-onMounted(() => {
-  watch(
-    () => route.query.q,
-    (newQ) => {
-      if (newQ && typeof newQ === 'string') {
-        if (newQ !== query.value) {
-          search(newQ);
-        }
-      }
-    },
-    { immediate: true }
-  );
-});
+const localQuery = ref((route.query.q as string) || '');
+const isDropdownOpen = ref(false);
+const isLoading = ref(false);
+const dropdownItems = ref<SearchResult[]>([]);
+
+let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+// Sync localQuery if URL changes externally (e.g. back button)
+watch(
+  () => route.query.q,
+  (newQ) => {
+    if (newQ && typeof newQ === 'string' && !isDropdownOpen.value) {
+      localQuery.value = newQ;
+    }
+  }
+);
 
 function onInput(event: Event) {
-  const el = event.target as HTMLInputElement;
-  const text = el.value;
-  search(text);
-  isDropdownOpen.value = text.trim().length > 0;
-
-  if (text.trim().length > 0) {
-    router.replace({ query: { ...route.query, q: text } });
-  } else {
-    const newQuery = { ...route.query };
-    delete newQuery.q;
-    router.replace({ query: newQuery });
+  const text = (event.target as HTMLInputElement).value;
+  localQuery.value = text;
+  
+  if (text.trim().length === 0) {
+    isDropdownOpen.value = false;
+    dropdownItems.value = [];
+    return;
   }
+
+  isDropdownOpen.value = true;
+  isLoading.value = true;
+
+  if (debounceTimer) clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(async () => {
+    try {
+      const data = await $fetch<CategorizedSearchResults>(`/api/search?q=${encodeURIComponent(text.trim())}`);
+      const items = [];
+      const seenIds = new Set();
+
+      if (data.topResult) {
+        items.push(data.topResult);
+        seenIds.add(data.topResult.id);
+      }
+      
+      if (data.songs) {
+        for (const song of data.songs) {
+          if (!seenIds.has(song.id)) {
+            items.push(song);
+            seenIds.add(song.id);
+          }
+        }
+      }
+      
+      dropdownItems.value = items.slice(0, 5);
+    } catch {
+      dropdownItems.value = [];
+    } finally {
+      isLoading.value = false;
+    }
+  }, 350);
 }
 
 function onFocus() {
-  if (query.value.trim().length > 0) {
+  if (localQuery.value.trim().length > 0) {
     isDropdownOpen.value = true;
   }
 }
 
 function onBlur() {
-  // Use a small timeout to allow clicking on dropdown items before closing
   setTimeout(() => {
     isDropdownOpen.value = false;
   }, 200);
 }
 
+const inputRef = ref<HTMLInputElement | null>(null);
+
 function onKeyDown(event: KeyboardEvent) {
   if (event.key === 'Enter') {
-    const text = query.value.trim();
+    const text = localQuery.value.trim();
     if (text) {
       isDropdownOpen.value = false;
       inputRef.value?.blur();
@@ -76,12 +94,10 @@ function onKeyDown(event: KeyboardEvent) {
 }
 
 function onClear() {
-  clear();
+  localQuery.value = '';
   isDropdownOpen.value = false;
+  dropdownItems.value = [];
   inputRef.value?.focus();
-  const newQuery = { ...route.query };
-  delete newQuery.q;
-  router.replace({ query: newQuery });
 }
 </script>
 
@@ -93,7 +109,7 @@ function onClear() {
       ref="inputRef"
       class="search-bar__input"
       type="search"
-      :value="query"
+      :value="localQuery"
       :placeholder="$t('search.placeholder')"
       :aria-label="$t('search.placeholder')"
       autocomplete="off"
@@ -103,20 +119,29 @@ function onClear() {
       @keydown="onKeyDown" />
 
     <button
-      v-if="query"
+      v-if="localQuery"
       class="search-bar__clear"
       :aria-label="$t('search.clear')"
       @click="onClear">
       <AppIcon name="ph:x" />
     </button>
 
-    <div v-if="isDropdownOpen && query" class="search-bar__dropdown" @mousedown.prevent>
-      <div v-if="isLoading" class="search-bar__dropdown-loading">
-        <AppIcon name="ph:spinner-gap" class="spinner" />
+    <div v-if="isDropdownOpen && localQuery" class="search-bar__dropdown" @mousedown.prevent>
+      <div v-if="isLoading" class="search-bar__dropdown-list">
+        <div
+          v-for="i in 5"
+          :key="i"
+          style="display: flex; gap: var(--space-3); align-items: center; padding: var(--space-2) var(--space-3);">
+          <AppSkeleton width="40px" height="40px" border-radius="var(--radius-sm)" />
+          <div style="display: flex; flex-direction: column; gap: var(--space-1); flex: 1">
+            <AppSkeleton height="14px" width="70%" />
+            <AppSkeleton height="10px" width="40%" />
+          </div>
+        </div>
       </div>
 
       <div v-else-if="dropdownItems.length === 0" class="search-bar__dropdown-empty">
-        {{ $t('search.noResults', { query }) }}
+        {{ $t('search.noResults', { query: localQuery }) }}
       </div>
 
       <div v-else class="search-bar__dropdown-list">

@@ -1,4 +1,3 @@
-import type { Misc } from 'youtubei.js';
 
 type ClientType = 'TV' | 'WEB' | 'YTMUSIC' | 'ANDROID' | 'IOS' | 'TV_EMBEDDED' | 'WEB_CREATOR';
 const workingClients: ClientType[] = [
@@ -21,82 +20,83 @@ export default defineEventHandler(async (event) => {
   }
 
   const innertube = await createInnertube(true);
-  let formats: Misc.Format[] = [];
-  let format: Misc.Format | undefined;
   const debugInfo: Record<string, string> = {};
 
-  for (const client of workingClients) {
-    try {
-      const info = await innertube.getBasicInfo(videoId.trim(), { client });
-      formats = [
-        ...(info.streaming_data?.formats || []),
-        ...(info.streaming_data?.adaptive_formats || [])
-      ];
+  let successfulResponse: Response | undefined;
 
-      format = formats.find((f) => f.has_audio && !f.has_video && (f.url || f.signature_cipher));
-      if (!format) {
-        format = formats.find((f) => f.has_audio && (f.url || f.signature_cipher));
-      }
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    for (const client of workingClients) {
+      try {
+        const info = await innertube.getBasicInfo(videoId.trim(), { client });
+        const formats = [
+          ...(info.streaming_data?.formats || []),
+          ...(info.streaming_data?.adaptive_formats || [])
+        ];
 
-      if (format) {
-        if (workingClients[0] !== client) {
-          workingClients.unshift(
-            workingClients.splice(workingClients.indexOf(client), 1)[0] as ClientType
-          );
+        let format = formats.find(
+          (f) => f.has_audio && !f.has_video && (f.url || f.signature_cipher)
+        );
+        if (!format) {
+          format = formats.find((f) => f.has_audio && (f.url || f.signature_cipher));
         }
-        break;
-      } else {
-        debugInfo[client] =
-          `No audio format. Formats: ${formats.length}. Status: ${info.playability_status?.status} - ${info.playability_status?.reason}`;
+
+        if (!format) {
+          debugInfo[client] = `No audio format found on attempt ${attempt}.`;
+          continue;
+        }
+
+        let streamUrl = format.url as string | undefined;
+        if (!streamUrl) {
+          streamUrl = await format.decipher(innertube.session.player);
+        }
+
+        if (!streamUrl) {
+          debugInfo[client] = `Failed to extract stream URL on attempt ${attempt}.`;
+          continue;
+        }
+
+        const response = await fetch(streamUrl, {
+          headers: {
+            ...(event.node.req.headers.range
+              ? { range: event.node.req.headers.range as string }
+              : {})
+          }
+        });
+
+        if (response.ok && response.body) {
+          successfulResponse = response;
+          // Move successful client to the front
+          if (workingClients[0] !== client) {
+            workingClients.unshift(
+              workingClients.splice(workingClients.indexOf(client), 1)[0] as ClientType
+            );
+          }
+          break;
+        } else {
+          debugInfo[client] = `Fetch returned ${response.status} ${response.statusText}`;
+        }
+      } catch (e) {
+        debugInfo[client] = e instanceof Error ? e.message : String(e);
       }
-    } catch (e) {
-      debugInfo[client] = e instanceof Error ? e.message : String(e);
+    }
+    
+    if (successfulResponse) {
+      break;
     }
   }
 
-  if (!format) {
+  if (!successfulResponse) {
     throw createError({
-      statusCode: 404,
-      statusMessage: t('player.errors.noAudioFormat'),
+      statusCode: 500,
+      statusMessage: t('player.errors.extractFailed', { msg: 'All clients failed' }),
       data: { debugInfo }
     });
   }
 
-  let streamUrl = format.url as string | undefined;
-  if (!streamUrl) {
-    try {
-      streamUrl = await format.decipher(innertube.session.player);
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      throw createError({
-        statusCode: 500,
-        statusMessage: t('player.errors.extractFailed', { msg })
-      });
-    }
-  }
-
-  if (!streamUrl) {
-    throw createError({ statusCode: 500, statusMessage: t('player.errors.emptyStream') });
-  }
-
-  const response = await fetch(streamUrl, {
-    headers: {
-      ...(event.node.req.headers.range ? { range: event.node.req.headers.range as string } : {})
-    }
-  });
-
-  if (!response.ok) {
-    throw createError({ statusCode: response.status, statusMessage: response.statusText });
-  }
-
-  for (const [key, value] of response.headers.entries()) {
+  for (const [key, value] of successfulResponse.headers.entries()) {
     setHeader(event, key, value);
   }
 
-  if (!response.body) {
-    throw createError({ statusCode: 500, statusMessage: t('player.errors.emptyStream') });
-  }
-
-  setResponseStatus(event, response.status);
-  return sendStream(event, response.body as ReadableStream);
+  setResponseStatus(event, successfulResponse.status);
+  return sendStream(event, successfulResponse.body as ReadableStream);
 });

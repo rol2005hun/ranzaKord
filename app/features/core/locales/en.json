@@ -13,5 +13,9 @@
     "theme": "Theme",
     "settings": "Settings",
     "playlists": "Playlists"
+  },
+  "actions": {
+    "cancel": "Cancel",
+    "save": "Save"
   }
 }

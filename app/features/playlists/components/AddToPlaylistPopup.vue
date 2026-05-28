@@ -16,9 +16,13 @@ const toast = useToast();
 
 const popupRef = ref<HTMLElement | null>(null);
 
-onClickOutside(popupRef, () => {
-  emit('close');
-});
+onClickOutside(
+  popupRef,
+  () => {
+    emit('close');
+  },
+  { ignore: props.anchor ? [props.anchor] : [] }
+);
 
 const style = ref<Record<string, string>>({ top: '-9999px', left: '-9999px', opacity: '0' });
 

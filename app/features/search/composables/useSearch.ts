@@ -9,17 +9,20 @@ export function useSearch() {
 
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-  async function search(q: string, type: 'all' | SearchResultType = 'all') {
+  async function search(q: string, type: 'all' | SearchResultType = 'all', immediate = false) {
     store.setQuery(q);
     store.setSearchType(type);
     store.clearResults();
 
-    if (!q.trim()) return;
+    if (!q.trim()) {
+      store.setLoading(false);
+      return;
+    }
 
+    store.setLoading(true);
     if (debounceTimer) clearTimeout(debounceTimer);
 
-    debounceTimer = setTimeout(async () => {
-      store.setLoading(true);
+    const performSearch = async () => {
       store.setError(null);
 
       try {
@@ -40,7 +43,13 @@ export function useSearch() {
       } finally {
         store.setLoading(false);
       }
-    }, 350);
+    };
+
+    if (immediate) {
+      performSearch();
+    } else {
+      debounceTimer = setTimeout(performSearch, 350);
+    }
   }
 
   function clear() {

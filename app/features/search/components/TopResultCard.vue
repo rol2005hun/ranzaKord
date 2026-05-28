@@ -13,6 +13,12 @@ const routeTo = computed(() => {
   return undefined;
 });
 
+const playerStore = usePlayerStore();
+const isCurrentlyPlaying = computed(
+  () => props.result.type === 'song' && playerStore.currentTrack?.videoId === props.result.id
+);
+const isPlaying = computed(() => isCurrentlyPlaying.value && playerStore.isPlaying);
+
 const emit = defineEmits<{
   (e: 'play', result: SearchResult): void;
 }>();
@@ -23,7 +29,10 @@ const emit = defineEmits<{
     <component :is="routeTo ? 'NuxtLink' : 'div'" :to="routeTo" class="top-result-card__inner">
       <div
         class="top-result-card__image-container"
-        :class="{ 'top-result-card__image-container--artist': isArtist }">
+        :class="{
+          'top-result-card__image-container--artist': isArtist,
+          'top-result-card__image-container--active': isCurrentlyPlaying
+        }">
         <NuxtImg
           v-if="props.result.thumbnailUrl"
           :src="props.result.thumbnailUrl"
@@ -36,7 +45,17 @@ const emit = defineEmits<{
         <AppIcon v-else name="ph:music-notes-simple" />
       </div>
       <div class="top-result-card__info">
-        <h2 class="top-result-card__title">{{ props.result.title }}</h2>
+        <h2 class="top-result-card__title" :class="{ 'text-primary': isCurrentlyPlaying }">
+          <AppIcon
+            v-if="isPlaying"
+            name="ph:speaker-high-fill"
+            style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom" />
+          <AppIcon
+            v-else-if="isCurrentlyPlaying"
+            name="ph:speaker-none-fill"
+            style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom" />
+          {{ props.result.title }}
+        </h2>
         <div class="top-result-card__meta">
           <span v-if="props.result.type !== 'artist'" class="top-result-card__artist">
             {{ props.result.artist }}
@@ -49,7 +68,8 @@ const emit = defineEmits<{
         class="top-result-card__play-btn"
         :aria-label="$t('player.play') || 'Lejátszás'"
         @click.prevent="emit('play', props.result)">
-        <AppIcon name="ph:play-fill" />
+        <AppIcon v-if="isPlaying" name="ph:pause-fill" />
+        <AppIcon v-else name="ph:play-fill" />
       </button>
     </component>
   </div>
@@ -104,6 +124,10 @@ const emit = defineEmits<{
       height: 100%;
       object-fit: cover;
     }
+
+    &--active {
+      opacity: 0.6;
+    }
   }
 
   &__info {
@@ -119,6 +143,7 @@ const emit = defineEmits<{
     margin: 0;
     line-height: 1.2;
     display: -webkit-box;
+    line-clamp: 2;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
@@ -171,5 +196,9 @@ const emit = defineEmits<{
       background-color: var(--color-primary-hover);
     }
   }
+}
+
+.text-primary {
+  color: var(--color-primary) !important;
 }
 </style>

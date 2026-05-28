@@ -5,11 +5,12 @@ import type {
 } from '../types/search.types';
 
 export const useSearchStore = defineStore('search', () => {
-  const query = ref('');
+  const route = useRoute();
+  const query = ref((route.query.q as string) || '');
   const searchType = ref<'all' | SearchResultType>('all');
   const results = ref<SearchResult[]>([]);
   const categorizedResults = ref<CategorizedSearchResults | null>(null);
-  const isLoading = ref(false);
+  const isLoading = ref(query.value.length > 0);
   const error = ref<string | null>(null);
 
   function setQuery(q: string) {

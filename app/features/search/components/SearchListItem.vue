@@ -7,6 +7,7 @@ const props = defineProps<{
 
 const { playTrack } = usePlayer();
 const playlistsStore = usePlaylistsStore();
+const playerStore = usePlayerStore();
 const router = useRouter();
 
 const showAddToPlaylist = ref(false);
@@ -14,6 +15,11 @@ const addBtnRef = ref<HTMLElement | null>(null);
 const isInAnyPlaylist = computed(
   () => props.track.type === 'song' && playlistsStore.isTrackInAnyPlaylist(props.track.id)
 );
+
+const isCurrentlyPlaying = computed(
+  () => props.track.type === 'song' && playerStore.currentTrack?.videoId === props.track.id
+);
+const isPlaying = computed(() => isCurrentlyPlaying.value && playerStore.isPlaying);
 
 const emit = defineEmits<{
   (e: 'click'): void;
@@ -40,7 +46,10 @@ function onClick() {
 <template>
   <div
     class="search-list-item"
-    :class="{ 'search-list-item--artist': track.type === 'artist' }"
+    :class="{ 
+      'search-list-item--artist': track.type === 'artist',
+      'search-list-item--active': isCurrentlyPlaying
+    }"
     @click="onClick">
     <div class="search-list-item__thumb">
       <img
@@ -48,13 +57,18 @@ function onClick() {
         :src="`/api/image?url=${encodeURIComponent(track.thumbnailUrl)}`"
         :alt="track.title" />
       <AppIcon v-else name="ph:music-notes-simple" />
-      <div v-if="track.type === 'song'" class="search-list-item__overlay">
-        <AppIcon name="ph:play-fill" />
+      <div v-if="track.type === 'song'" class="search-list-item__overlay" :class="{ 'search-list-item__overlay--active': isCurrentlyPlaying }">
+        <AppIcon v-if="isPlaying" name="ph:pause-fill" />
+        <AppIcon v-else name="ph:play-fill" />
       </div>
     </div>
 
     <div class="search-list-item__info">
-      <h3 class="search-list-item__title">{{ track.title }}</h3>
+      <h3 class="search-list-item__title" :class="{ 'text-primary': isCurrentlyPlaying }">
+        <AppIcon v-if="isPlaying" name="ph:speaker-high-fill" style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom;" />
+        <AppIcon v-else-if="isCurrentlyPlaying" name="ph:speaker-none-fill" style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom;" />
+        {{ track.title }}
+      </h3>
       <p class="search-list-item__subtitle">
         <span v-if="track.type === 'song'">Dal • {{ track.artist }}</span>
         <span v-else-if="track.type === 'artist'">Előadó</span>
@@ -138,6 +152,10 @@ function onClick() {
     transition: opacity var(--transition-fast);
     color: white;
     font-size: var(--text-xl);
+
+    &--active {
+      opacity: 0.6;
+    }
   }
 
   &__info {
@@ -210,5 +228,9 @@ function onClick() {
 
 .text-success {
   color: hsl(140, 60%, 50%) !important;
+}
+
+.text-primary {
+  color: var(--color-primary) !important;
 }
 </style>

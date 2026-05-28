@@ -16,10 +16,23 @@ watch(currentTab, (newTab) => {
   }
 });
 
+// The global store is now initialized directly from the route, so no need to set it here.
+
+watch(
+  () => route.query.q,
+  (newQ) => {
+    if (newQ && typeof newQ === 'string' && newQ !== query.value) {
+      search(newQ, currentTab.value, true);
+    }
+  }
+);
+
 onMounted(() => {
   const q = route.query.q as string;
-  if (q && q !== query.value) {
-    search(q, currentTab.value);
+  if (q && (q !== query.value || isLoading.value)) {
+    nextTick(() => {
+      search(q, currentTab.value, true);
+    });
   }
 });
 
@@ -46,8 +59,43 @@ function onPlay(track: SearchResult) {
       <SearchCategoryTabs v-if="query" v-model="currentTab" />
     </div>
 
-    <div v-if="isLoading" class="search-page__loading">
-      <AppSpinner size="lg" />
+    <div v-if="isLoading" class="search-page__loading-skeleton">
+      <div v-if="searchType === 'all'" class="search-page__categorized">
+        <div class="search-page__top-section">
+          <div class="search-page__top-result-col">
+            <AppSkeleton height="32px" width="150px" style="margin-bottom: var(--space-4)" />
+            <AppSkeleton height="250px" border-radius="var(--radius-xl)" />
+          </div>
+          <div class="search-page__songs-col">
+            <AppSkeleton height="32px" width="100px" style="margin-bottom: var(--space-4)" />
+            <div class="search-page__list">
+              <div v-for="i in 4" :key="i" style="display: flex; gap: var(--space-4); align-items: center; padding: var(--space-2) 0;">
+                <AppSkeleton width="48px" height="48px" border-radius="var(--radius-md)" />
+                <div style="display: flex; flex-direction: column; gap: var(--space-2); flex: 1">
+                  <AppSkeleton height="16px" width="60%" />
+                  <AppSkeleton height="12px" width="40%" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-else class="search-page__results">
+        <div :class="searchType === 'song' ? 'search-page__list' : 'search-page__grid search-page__grid--large'">
+          <template v-if="searchType === 'song'">
+            <div v-for="i in 8" :key="i" style="display: flex; gap: var(--space-4); align-items: center; padding: var(--space-2) 0;">
+              <AppSkeleton width="48px" height="48px" border-radius="var(--radius-md)" />
+              <div style="display: flex; flex-direction: column; gap: var(--space-2); flex: 1">
+                <AppSkeleton height="16px" width="40%" />
+                <AppSkeleton height="12px" width="30%" />
+              </div>
+            </div>
+          </template>
+          <template v-else>
+            <AppSkeleton v-for="i in 8" :key="i" height="250px" border-radius="var(--radius-xl)" />
+          </template>
+        </div>
+      </div>
     </div>
 
     <div v-else-if="!query" class="search-page__empty">
@@ -161,10 +209,8 @@ function onPlay(track: SearchResult) {
     color: var(--color-text-primary);
   }
 
-  &__loading {
-    display: flex;
-    justify-content: center;
-    padding: var(--space-12) 0;
+  &__loading-skeleton {
+    padding: var(--space-4) 0;
   }
 
   &__top-section {

@@ -11,6 +11,7 @@ dist
 node_modules
 .pnp
 .pnp.js
+.netlify
 
 # Logs and databases
 logs
