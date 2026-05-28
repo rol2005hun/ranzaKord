@@ -62,6 +62,7 @@ export default defineNuxtConfig({
   },
 
   image: {
+    domains: ['yt3.googleusercontent.com', 'i.ytimg.com'],
     format: ['webp', 'avif'],
     quality: 80
   },
@@ -100,9 +101,7 @@ export default defineNuxtConfig({
 
   i18n: {
     defaultLocale: 'en',
-    locales: [
-      { code: 'en', name: 'English' }
-    ],
+    locales: [{ code: 'en', name: 'English' }],
     strategy: 'no_prefix'
   },
 

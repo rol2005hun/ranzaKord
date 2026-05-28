@@ -8,12 +8,27 @@ export default defineEventHandler(async (event) => {
   }
 
   const innertube = await createInnertube(true);
-  const info = await innertube.getInfo(videoId.trim());
-
-  const formats = [
+  let info = await innertube.getInfo(videoId.trim());
+  let formats = [
     ...(info.streaming_data?.formats || []),
     ...(info.streaming_data?.adaptive_formats || [])
   ];
+
+  if (formats.length === 0) {
+    info = await innertube.getInfo(videoId.trim(), { client: 'IOS' });
+    formats = [
+      ...(info.streaming_data?.formats || []),
+      ...(info.streaming_data?.adaptive_formats || [])
+    ];
+  }
+
+  if (formats.length === 0) {
+    info = await innertube.getInfo(videoId.trim(), { client: 'ANDROID' });
+    formats = [
+      ...(info.streaming_data?.formats || []),
+      ...(info.streaming_data?.adaptive_formats || [])
+    ];
+  }
 
   let format = formats.find((f) => f.has_audio && !f.has_video && (f.url || f.signature_cipher));
   if (!format) {
