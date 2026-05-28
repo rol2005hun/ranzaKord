@@ -1,7 +1,14 @@
 import type { Misc } from 'youtubei.js';
 
 type ClientType = 'WEB' | 'YTMUSIC' | 'ANDROID' | 'IOS' | 'TV_EMBEDDED' | 'WEB_CREATOR';
-const workingClients: ClientType[] = ['WEB', 'YTMUSIC', 'ANDROID', 'IOS', 'TV_EMBEDDED', 'WEB_CREATOR'];
+const workingClients: ClientType[] = [
+  'WEB',
+  'YTMUSIC',
+  'ANDROID',
+  'IOS',
+  'TV_EMBEDDED',
+  'WEB_CREATOR'
+];
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
@@ -32,12 +39,14 @@ export default defineEventHandler(async (event) => {
 
       if (format) {
         if (workingClients[0] !== client) {
-          workingClients.unshift(workingClients.splice(workingClients.indexOf(client), 1)[0] as ClientType);
+          workingClients.unshift(
+            workingClients.splice(workingClients.indexOf(client), 1)[0] as ClientType
+          );
         }
         break;
       } else {
-        // @ts-expect-error playability_status is loosely typed in youtubei.js
-        debugInfo[client] = `No audio format. Formats: ${formats.length}. Status: ${info.playability_status?.status} - ${info.playability_status?.reason}`;
+        debugInfo[client] =
+          `No audio format. Formats: ${formats.length}. Status: ${info.playability_status?.status} - ${info.playability_status?.reason}`;
       }
     } catch (e) {
       debugInfo[client] = e instanceof Error ? e.message : String(e);
@@ -45,8 +54,8 @@ export default defineEventHandler(async (event) => {
   }
 
   if (!format) {
-    throw createError({ 
-      statusCode: 404, 
+    throw createError({
+      statusCode: 404,
       statusMessage: t('player.errors.noAudioFormat'),
       data: { debugInfo }
     });
