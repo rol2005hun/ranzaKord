@@ -6,26 +6,27 @@ definePageMeta({
 });
 
 const route = useRoute();
-const id = computed(() => route.params['id'] as string);
+const id = computed(() => route.params.id as string);
 
 const store = usePlaylistsStore();
 const player = usePlayer();
 
 const playlist = ref<PlaylistDetail | null>(null);
+const isLoading = ref(true);
 const showEditModal = ref(false);
 const showDeleteConfirm = ref(false);
 
-const headers = import.meta.server ? useRequestHeaders(['cookie']) : undefined;
-const { data, status } = await useFetch<PlaylistDetail>(
-  `/api/playlists/${id.value}`,
-  headers ? { headers } : {}
-);
-const isLoading = computed(() => status.value === 'pending');
+const { status } = await useAsyncData(`playlist-${id.value}`, async () => {
+  if (!id.value) return null;
+  const result = await store.fetchDetail(id.value);
+  if (result) {
+    playlist.value = result;
+  }
+  return result;
+});
 
 watchEffect(() => {
-  if (data.value) {
-    playlist.value = data.value;
-  }
+  isLoading.value = status.value === 'pending';
 });
 
 useHead({
