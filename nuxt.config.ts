@@ -38,6 +38,7 @@ export default defineNuxtConfig({
     ranzaKonnectClientId: '',
     ranzaKonnectClientSecret: '',
     youtubeCookies: '',
+    youtubeOauthToken: '',
     imgurClientId: '',
     public: {
       baseUrl: ''

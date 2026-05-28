@@ -17,13 +17,23 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
     if (authenticatedInstance) return authenticatedInstance;
 
     const config = useRuntimeConfig();
+    const oauthTokenStr = config.youtubeOauthToken as string;
     const cookie = config.youtubeCookies as string;
 
     authenticatedInstance = await Innertube.create({
-      cookie,
+      cookie: !oauthTokenStr && cookie ? cookie : undefined,
       cache: new UniversalCache(false),
       generate_session_locally: true
     });
+
+    if (oauthTokenStr) {
+      try {
+        const credentials = JSON.parse(oauthTokenStr);
+        await authenticatedInstance.session.signIn(credentials);
+      } catch (e) {
+        console.error('Failed to sign in with YouTube OAuth token:', e);
+      }
+    }
 
     return authenticatedInstance;
   }

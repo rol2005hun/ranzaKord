@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: t('player.errors.missingVideoId') });
   }
 
-  const innertube = await createInnertube(false);
+  const innertube = await createInnertube(true);
   let formats: Misc.Format[] = [];
   let format: Misc.Format | undefined;
   const debugInfo: Record<string, string> = {};
