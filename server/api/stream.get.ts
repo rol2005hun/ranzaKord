@@ -54,12 +54,9 @@ export default defineEventHandler(async (event) => {
           continue;
         }
 
+        const rangeHeader = event.node.req.headers.range as string | undefined;
         const response = await fetch(streamUrl, {
-          headers: {
-            ...(event.node.req.headers.range
-              ? { range: event.node.req.headers.range as string }
-              : {})
-          }
+          headers: rangeHeader ? { range: rangeHeader } : undefined
         });
 
         if (response.ok && response.body) {
