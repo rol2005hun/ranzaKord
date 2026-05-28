@@ -12,7 +12,6 @@ const dropdownItems = ref<SearchResult[]>([]);
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-// Sync localQuery if URL changes externally (e.g. back button)
 watch(
   () => route.query.q,
   (newQ) => {
@@ -25,7 +24,7 @@ watch(
 function onInput(event: Event) {
   const text = (event.target as HTMLInputElement).value;
   localQuery.value = text;
-  
+
   if (text.trim().length === 0) {
     isDropdownOpen.value = false;
     dropdownItems.value = [];
@@ -38,7 +37,9 @@ function onInput(event: Event) {
   if (debounceTimer) clearTimeout(debounceTimer);
   debounceTimer = setTimeout(async () => {
     try {
-      const data = await $fetch<CategorizedSearchResults>(`/api/search?q=${encodeURIComponent(text.trim())}`);
+      const data = await $fetch<CategorizedSearchResults>(
+        `/api/search?q=${encodeURIComponent(text.trim())}`
+      );
       const items = [];
       const seenIds = new Set();
 
@@ -46,7 +47,7 @@ function onInput(event: Event) {
         items.push(data.topResult);
         seenIds.add(data.topResult.id);
       }
-      
+
       if (data.songs) {
         for (const song of data.songs) {
           if (!seenIds.has(song.id)) {
@@ -55,7 +56,7 @@ function onInput(event: Event) {
           }
         }
       }
-      
+
       dropdownItems.value = items.slice(0, 5);
     } catch {
       dropdownItems.value = [];
@@ -131,7 +132,12 @@ function onClear() {
         <div
           v-for="i in 5"
           :key="i"
-          style="display: flex; gap: var(--space-3); align-items: center; padding: var(--space-2) var(--space-3);">
+          style="
+            display: flex;
+            gap: var(--space-3);
+            align-items: center;
+            padding: var(--space-2) var(--space-3);
+          ">
           <AppSkeleton width="40px" height="40px" border-radius="var(--radius-sm)" />
           <div style="display: flex; flex-direction: column; gap: var(--space-1); flex: 1">
             <AppSkeleton height="14px" width="70%" />

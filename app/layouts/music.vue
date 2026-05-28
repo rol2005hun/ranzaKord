@@ -6,6 +6,7 @@ const playlistsStore = usePlaylistsStore();
 const navItems = [{ to: '/', icon: 'ph:house-fill', labelKey: 'core.nav.home' }];
 
 const showCreateModal = ref(false);
+const showImportModal = ref(false);
 
 await useAsyncData('user-playlists', async () => {
   if (isAuthenticated.value) {
@@ -42,12 +43,20 @@ function onPlaylistCreated(id: string): void {
           <span class="music-layout__library-title app-sidebar__text">
             {{ $t('playlists.title') }}
           </span>
-          <button
-            class="music-layout__library-add"
-            :title="$t('playlists.newPlaylist')"
-            @click="showCreateModal = true">
-            <AppIcon name="ph:plus-bold" />
-          </button>
+          <div class="music-layout__library-actions">
+            <button
+              class="music-layout__library-add"
+              :title="$t('playlists.importPlaylist')"
+              @click="showImportModal = true">
+              <AppIcon name="ph:download-simple-bold" />
+            </button>
+            <button
+              class="music-layout__library-add"
+              :title="$t('playlists.newPlaylist')"
+              @click="showCreateModal = true">
+              <AppIcon name="ph:plus-bold" />
+            </button>
+          </div>
         </div>
 
         <div v-if="playlistsStore.isLoading" class="music-layout__library-skeletons">
@@ -104,6 +113,11 @@ function onPlaylistCreated(id: string): void {
       :open="showCreateModal"
       @close="showCreateModal = false"
       @created="onPlaylistCreated" />
+
+    <ImportPlaylistModal
+      :open="showImportModal"
+      @close="showImportModal = false"
+      @imported="onPlaylistCreated" />
   </div>
 </template>
 
@@ -168,6 +182,12 @@ function onPlaylistCreated(id: string): void {
     color: var(--color-text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.08em;
+  }
+
+  &__library-actions {
+    display: flex;
+    gap: var(--space-1);
+    flex-shrink: 0;
   }
 
   &__library-add {

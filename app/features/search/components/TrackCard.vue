@@ -41,7 +41,7 @@ const isInAnyPlaylist = computed(() => playlistsStore.isTrackInAnyPlaylist(props
         :src="`/api/image?url=${encodeURIComponent(track.thumbnailUrl)}`"
         :alt="track.title"
         class="track-card__img"
-        loading="lazy" />
+        fetchpriority="high" />
       <div v-else class="track-card__img-placeholder">
         <AppIcon name="ph:music-note" />
       </div>

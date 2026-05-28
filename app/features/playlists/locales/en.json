@@ -25,7 +25,12 @@
   "addFailed": "Failed to add to playlist",
   "removedSuccess": "Removed from playlist",
   "removeFailed": "Failed to remove from playlist",
+  "importPlaylist": "Import Playlist",
+  "importUrlPlaceholder": "https://open.spotify.com/playlist/... or YouTube link",
+  "importUrlLabel": "Playlist URL",
+  "importing": "Importing…",
   "errors": {
+    "import": "Failed to import playlist",
     "load": "Failed to load playlists",
     "create": "Failed to create playlist",
     "update": "Failed to update playlist",

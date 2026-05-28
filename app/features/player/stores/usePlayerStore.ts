@@ -143,14 +143,9 @@ export const usePlayerStore = defineStore(
           'durationSeconds',
           'isShuffle',
           'repeatMode',
-          'isPlaying'
+          'isPlaying',
+          'queue'
         ],
-        storage: piniaPluginPersistedstate.cookies({
-          maxAge: 31536000 // 1 year
-        })
-      },
-      {
-        pick: ['queue'],
         storage: piniaPluginPersistedstate.localStorage()
       }
     ]

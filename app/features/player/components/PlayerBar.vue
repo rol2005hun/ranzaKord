@@ -67,15 +67,15 @@ function onVolumeInput(event: Event) {
             :src="`/api/image?url=${encodeURIComponent(player.currentTrack.value.thumbnailUrl)}`"
             :alt="player.currentTrack.value?.title"
             class="player-bar__img" />
-          <div v-else class="skeleton-box" style="width: 100%; height: 100%"></div>
+          <AppSkeleton v-else width="100%" height="100%" />
         </div>
         <div v-if="player.currentTrack.value" class="player-bar__info">
           <span class="player-bar__title">{{ player.currentTrack.value.title }}</span>
           <span class="player-bar__artist">{{ player.currentTrack.value.artist }}</span>
         </div>
         <div v-else class="player-bar__info player-bar__info--skeleton">
-          <div class="skeleton-line skeleton-line--title"></div>
-          <div class="skeleton-line skeleton-line--artist"></div>
+          <AppSkeleton height="12px" width="120px" border-radius="var(--radius-sm)" />
+          <AppSkeleton height="10px" width="80px" border-radius="var(--radius-sm)" />
         </div>
         <button
           ref="playlistBtnRef"
@@ -167,7 +167,12 @@ function onVolumeInput(event: Event) {
           style="width: auto; height: auto"
           :aria-label="$t('player.mute')"
           @click="toggleMute">
-          <AppIcon :name="volumeIcon" class="player-bar__volume-icon" />
+          <ClientOnly>
+            <AppIcon :name="volumeIcon" class="player-bar__volume-icon" />
+            <template #fallback>
+              <AppIcon name="ph:speaker-high-fill" class="player-bar__volume-icon" />
+            </template>
+          </ClientOnly>
         </button>
         <input
           id="player-volume"

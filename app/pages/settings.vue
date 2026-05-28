@@ -1,7 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
-  layout: 'music',
-  middleware: ['auth']
+  layout: 'music'
 });
 
 useHead({ title: 'Settings' });

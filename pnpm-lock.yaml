@@ -32,6 +32,9 @@ importers:
       pinia-plugin-persistedstate:
         specifier: ^4.7.1
         version: 4.7.1(@nuxt/kit@4.4.6(magicast@0.5.2))(@pinia/nuxt@0.11.3(magicast@0.5.2)(pinia@3.0.4(typescript@6.0.3)(vue@3.5.34(typescript@6.0.3))))(pinia@3.0.4(typescript@6.0.3)(vue@3.5.34(typescript@6.0.3)))
+      spotify-url-info:
+        specifier: ^3.3.0
+        version: 3.3.0
       vue:
         specifier: ^3.5.34
         version: 3.5.34(typescript@6.0.3)
@@ -5460,6 +5463,9 @@ packages:
   hey-listen@1.0.8:
     resolution: {integrity: sha512-COpmrF2NOg4TBWUJ5UVyaCU2A88wEMkUPK4hNqyCkqHbxT92BbvfjoSozkAIIm6XhicGlJHhFdullInrdhwU8Q==}
 
+  himalaya@1.1.1:
+    resolution: {integrity: sha512-mJLY5tErGWtsw8hO2fJ2vK4IpG6S1AIgVkduRo4FqFJhgI2H3XLzgemRemk45zcnFyxNNpOfrIDle2KcnJM0lA==}
+
   hookable@5.5.3:
     resolution: {integrity: sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ==}
 
@@ -7144,6 +7150,14 @@ packages:
   speakingurl@14.0.1:
     resolution: {integrity: sha512-1POYv7uv2gXoyGFpBCmpDVSNV74IfsWlDW216UPjbWufNf+bSU6GdbDsxdcxtfwb4xlI3yxzOTKClUosxARYrQ==}
     engines: {node: '>=0.10.0'}
+
+  spotify-uri@4.1.0:
+    resolution: {integrity: sha512-SFpBt8pQqO7DOFBsdUjv3GxGZAKYP7UqcTflfE7h3YL1lynl/6Motq7NERoJJR8eF9kXQRSpcdMmV5ou84rbng==}
+    engines: {node: '>= 16'}
+
+  spotify-url-info@3.3.0:
+    resolution: {integrity: sha512-Oln8MPghuttL6e2e8NyQg0MilZqEbMYawKZDAMbz1NpSX+on2bEtibKVBPYKlJGU/Lxvo/qXFqydMxa0fKCmwg==}
+    engines: {node: '>= 12'}
 
   srvx@0.11.15:
     resolution: {integrity: sha512-iXsux0UcOjdvs0LCMa2Ws3WwcDUozA3JN3BquNXkaFPP7TpRqgunKdEgoZ/uwb1J6xaYHfxtz9Twlh6yzwM6Tg==}
@@ -13353,6 +13367,8 @@ snapshots:
 
   hey-listen@1.0.8: {}
 
+  himalaya@1.1.1: {}
+
   hookable@5.5.3: {}
 
   hookable@6.1.1: {}
@@ -15855,6 +15871,13 @@ snapshots:
   spdx-license-ids@3.0.23: {}
 
   speakingurl@14.0.1: {}
+
+  spotify-uri@4.1.0: {}
+
+  spotify-url-info@3.3.0:
+    dependencies:
+      himalaya: 1.1.1
+      spotify-uri: 4.1.0
 
   srvx@0.11.15: {}
 

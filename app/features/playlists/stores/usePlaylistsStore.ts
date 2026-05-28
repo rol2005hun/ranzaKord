@@ -3,6 +3,7 @@ import type {
   PlaylistDetail,
   CreatePlaylistPayload
 } from '../types/playlists.types';
+import type { Track } from '../../player/types/player.types';
 
 export const usePlaylistsStore = defineStore('playlists', () => {
   const playlists = ref<PlaylistSummary[]>([]);
@@ -107,6 +108,43 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     }
   }
 
+  async function importPlaylist(
+    url: string,
+    platform: 'youtube' | 'spotify'
+  ): Promise<PlaylistSummary | null> {
+    try {
+      const result = await $fetch<{
+        name: string;
+        description: string;
+        imageUrl: string;
+        tracks: Track[];
+      }>(`/api/import/${platform}`, { method: 'POST', body: { url } });
+
+      const created = await create({
+        name: result.name,
+        description: result.description,
+        imageUrl: result.imageUrl
+      });
+
+      if (!created) return null;
+
+      for (const track of result.tracks) {
+        await addTrack(created.id, {
+          videoId: track.videoId,
+          title: track.title,
+          artist: track.artist,
+          thumbnailUrl: track.thumbnailUrl,
+          durationMs: track.durationSeconds * 1000
+        });
+      }
+
+      return created;
+    } catch {
+      error.value = t('playlists.errors.import') || 'Failed to import playlist';
+      return null;
+    }
+  }
+
   return {
     playlists,
     isLoading,
@@ -119,6 +157,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     remove,
     addTrack,
     removeTrack,
-    fetchDetail
+    fetchDetail,
+    importPlaylist
   };
 });

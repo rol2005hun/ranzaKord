@@ -177,18 +177,25 @@ async function submit(): Promise<void> {
 <style scoped lang="scss">
 .playlist-modal {
   &__image-section {
-    display: flex;
+    display: grid;
+    grid-template-columns: 160px 1fr;
     gap: var(--space-6);
 
-    @media (max-width: 480px) {
-      flex-direction: column;
-      align-items: center;
+    @media (max-width: 576px) {
+      grid-template-columns: 1fr;
+      justify-items: center;
+
+      .playlist-modal__fields {
+        width: 100%;
+      }
     }
   }
 
   &__image-label {
     cursor: pointer;
-    flex-shrink: 0;
+    width: 100%;
+    max-width: 200px;
+    display: block;
   }
 
   &__file-input {
@@ -197,8 +204,9 @@ async function submit(): Promise<void> {
 
   &__image-preview {
     position: relative;
-    width: 156px;
-    height: 156px;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
     border-radius: var(--radius-lg);
     overflow: hidden;
     background: var(--color-surface-hover);

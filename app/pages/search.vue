@@ -16,8 +16,6 @@ watch(currentTab, (newTab) => {
   }
 });
 
-// The global store is now initialized directly from the route, so no need to set it here.
-
 watch(
   () => route.query.q,
   (newQ) => {
@@ -69,7 +67,15 @@ function onPlay(track: SearchResult) {
           <div class="search-page__songs-col">
             <AppSkeleton height="32px" width="100px" style="margin-bottom: var(--space-4)" />
             <div class="search-page__list">
-              <div v-for="i in 4" :key="i" style="display: flex; gap: var(--space-4); align-items: center; padding: var(--space-2) 0;">
+              <div
+                v-for="i in 4"
+                :key="i"
+                style="
+                  display: flex;
+                  gap: var(--space-4);
+                  align-items: center;
+                  padding: var(--space-2) 0;
+                ">
                 <AppSkeleton width="48px" height="48px" border-radius="var(--radius-md)" />
                 <div style="display: flex; flex-direction: column; gap: var(--space-2); flex: 1">
                   <AppSkeleton height="16px" width="60%" />
@@ -81,9 +87,22 @@ function onPlay(track: SearchResult) {
         </div>
       </div>
       <div v-else class="search-page__results">
-        <div :class="searchType === 'song' ? 'search-page__list' : 'search-page__grid search-page__grid--large'">
+        <div
+          :class="
+            searchType === 'song'
+              ? 'search-page__list'
+              : 'search-page__grid search-page__grid--large'
+          ">
           <template v-if="searchType === 'song'">
-            <div v-for="i in 8" :key="i" style="display: flex; gap: var(--space-4); align-items: center; padding: var(--space-2) 0;">
+            <div
+              v-for="i in 8"
+              :key="i"
+              style="
+                display: flex;
+                gap: var(--space-4);
+                align-items: center;
+                padding: var(--space-2) 0;
+              ">
               <AppSkeleton width="48px" height="48px" border-radius="var(--radius-md)" />
               <div style="display: flex; flex-direction: column; gap: var(--space-2); flex: 1">
                 <AppSkeleton height="16px" width="40%" />
