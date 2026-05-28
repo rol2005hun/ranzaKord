@@ -1,3 +1,5 @@
+import type { Misc } from 'youtubei.js';
+
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const videoId = query['v'] as string | undefined;
@@ -8,31 +10,27 @@ export default defineEventHandler(async (event) => {
   }
 
   const innertube = await createInnertube(true);
-  let info = await innertube.getInfo(videoId.trim());
-  let formats = [
-    ...(info.streaming_data?.formats || []),
-    ...(info.streaming_data?.adaptive_formats || [])
-  ];
+  const clients = ['WEB', 'YTMUSIC', 'ANDROID', 'IOS', 'TV_EMBEDDED', 'WEB_CREATOR'] as const;
+  let formats: Misc.Format[] = [];
+  let format: Misc.Format | undefined;
 
-  if (formats.length === 0) {
-    info = await innertube.getInfo(videoId.trim(), { client: 'IOS' });
-    formats = [
-      ...(info.streaming_data?.formats || []),
-      ...(info.streaming_data?.adaptive_formats || [])
-    ];
-  }
+  for (const client of clients) {
+    try {
+      const info = await innertube.getBasicInfo(videoId.trim(), { client });
+      formats = [
+        ...(info.streaming_data?.formats || []),
+        ...(info.streaming_data?.adaptive_formats || [])
+      ];
 
-  if (formats.length === 0) {
-    info = await innertube.getInfo(videoId.trim(), { client: 'ANDROID' });
-    formats = [
-      ...(info.streaming_data?.formats || []),
-      ...(info.streaming_data?.adaptive_formats || [])
-    ];
-  }
+      format = formats.find((f) => f.has_audio && !f.has_video && (f.url || f.signature_cipher));
+      if (!format) {
+        format = formats.find((f) => f.has_audio && (f.url || f.signature_cipher));
+      }
 
-  let format = formats.find((f) => f.has_audio && !f.has_video && (f.url || f.signature_cipher));
-  if (!format) {
-    format = formats.find((f) => f.has_audio && (f.url || f.signature_cipher));
+      if (format) break;
+    } catch {
+      // Continue to next client if this one fails
+    }
   }
 
   if (!format) {
