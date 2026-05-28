@@ -32,15 +32,15 @@ export default defineNuxtConfig({
   ],
 
   runtimeConfig: {
-    mongodbUri: process.env.NUXT_MONGODB_URI || '',
-    sessionSecret: process.env.NUXT_SESSION_SECRET || '',
-    ranzaKonnectDomain: process.env.NUXT_RANZAKONNECT_DOMAIN || '',
-    ranzaKonnectClientId: process.env.NUXT_RANZAKONNECT_CLIENT_ID || '',
-    ranzaKonnectClientSecret: process.env.NUXT_RANZAKONNECT_CLIENT_SECRET || '',
-    youtubeCookies: process.env.NUXT_YOUTUBE_COOKIES || '',
-    imgurClientId: process.env.NUXT_IMGUR_CLIENT_ID || '',
+    mongodbUri: '',
+    sessionSecret: '',
+    ranzaKonnectDomain: '',
+    ranzaKonnectClientId: '',
+    ranzaKonnectClientSecret: '',
+    youtubeCookies: '',
+    imgurClientId: '',
     public: {
-      baseUrl: process.env.NUXT_PUBLIC_BASE_URL || ''
+      baseUrl: ''
     }
   },
 
