@@ -7,7 +7,6 @@ describe('Theme Feature', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
 
-    // Reset cookies
     const themeCookie = useCookie('theme-id');
     themeCookie.value = 'music';
     const colorCookie = useCookie('theme-custom-color');

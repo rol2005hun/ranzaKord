@@ -31,7 +31,6 @@ describe('Shared Components', () => {
       const img = wrapper.find('img');
       expect(img.exists()).toBe(true);
 
-      // trigger error
       await img.trigger('error');
       expect(wrapper.text()).toContain('C');
     });
@@ -103,7 +102,6 @@ describe('Shared Components', () => {
         props: { modelValue: false }
       });
       const input = wrapper.find('input');
-      // Set checked property directly before triggering change
       (input.element as HTMLInputElement).checked = true;
       await input.trigger('change');
       expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([true]);
@@ -247,15 +245,12 @@ describe('Shared Components', () => {
       const wrapper = await mountSuspended(AppToast, {
         global: { stubs: { Teleport: true } }
       });
-      // Need to add toast via composable since it's used internally
       const { add } = useToast();
       add({ message: 'Hello', variant: 'success', duration: 3000 });
       await nextTick();
 
       expect(wrapper.text()).toContain('Hello');
       await wrapper.find('.toast__close').trigger('click');
-      // The toast array should be empty after click, but wait for animation/timeout or check directly.
-      // Emitted 'close' is not used in AppToast, it uses remove() directly!
     });
   });
 

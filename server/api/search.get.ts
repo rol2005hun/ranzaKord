@@ -174,7 +174,7 @@ export default defineCachedEventHandler(
     return response;
   },
   {
-    maxAge: 60 * 60 * 12, // Cache for 12 hours
+    maxAge: 60 * 60 * 12,
     name: 'youtube-search',
     getKey: (event) => {
       const query = getQuery(event);

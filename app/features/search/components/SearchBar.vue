@@ -168,7 +168,7 @@ function onClear() {
   align-items: center;
   width: 100%;
   max-width: 600px;
-  z-index: 101; /* Above navbar dropdowns */
+  z-index: 101;
 
   &__icon {
     position: absolute;

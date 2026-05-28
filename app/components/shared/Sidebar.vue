@@ -32,7 +32,6 @@ const isHovered = ref(false);
 </template>
 
 <style lang="scss">
-/* Note: not scoped so child components like SidebarItem can easily inherit the transitions */
 .app-sidebar {
   width: 4.5rem;
   max-width: 4.5rem;

@@ -64,7 +64,6 @@ export default defineEventHandler(async (event) => {
 
         if (response.ok && response.body) {
           successfulResponse = response;
-          // Move successful client to the front
           if (workingClients[0] !== client) {
             workingClients.unshift(
               workingClients.splice(workingClients.indexOf(client), 1)[0] as ClientType

@@ -120,7 +120,6 @@ export function usePlayer() {
         return;
       }
 
-      // Point the audio element directly to our stream proxy endpoint
       audioRef.value.src = `/api/stream?v=${track.videoId}`;
       audioRef.value.load();
 

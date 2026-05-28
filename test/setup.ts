@@ -8,11 +8,9 @@ beforeAll(() => {
       setItem: (key: string, value: string) => {
         store[key] = value.toString();
       },
-      /* eslint-disable @typescript-eslint/no-dynamic-delete */
       removeItem: (key: string) => {
         delete store[key];
       },
-      /* eslint-enable @typescript-eslint/no-dynamic-delete */
       clear: () => {
         store = {};
       }

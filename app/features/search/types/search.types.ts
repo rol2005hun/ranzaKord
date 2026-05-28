@@ -1,7 +1,7 @@
 export type SearchResultType = 'song' | 'artist' | 'album' | 'video';
 
 export interface SearchResult {
-  id: string; // videoId for songs/videos, browseId for artists/albums
+  id: string;
   type: SearchResultType;
   title: string;
   artist: string;
