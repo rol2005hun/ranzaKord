@@ -26,9 +26,12 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
       generate_session_locally: true
     });
 
-    if (oauthTokenStr) {
+    if (config.youtubeOauthToken) {
       try {
-        const credentials = JSON.parse(oauthTokenStr);
+        const credentials = typeof config.youtubeOauthToken === 'string' 
+          ? JSON.parse(config.youtubeOauthToken) 
+          : JSON.parse(JSON.stringify(config.youtubeOauthToken));
+          
         await authenticatedInstance.session.signIn(credentials);
       } catch (e) {
         console.error('Failed to sign in with YouTube OAuth token:', e);

@@ -10,9 +10,11 @@ export default defineEventHandler(async () => {
   let parsedCredentials = null;
   let isLoggedIn = false;
 
-  if (oauthTokenStr) {
+  if (config.youtubeOauthToken) {
     try {
-      parsedCredentials = JSON.parse(oauthTokenStr);
+      parsedCredentials = typeof config.youtubeOauthToken === 'string'
+        ? JSON.parse(config.youtubeOauthToken)
+        : JSON.parse(JSON.stringify(config.youtubeOauthToken));
     } catch (e: unknown) {
       parseError = e instanceof Error ? e.message : String(e);
     }
