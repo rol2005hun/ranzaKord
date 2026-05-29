@@ -1,18 +1,43 @@
+import { Innertube, UniversalCache } from 'youtubei.js';
+
 export default defineEventHandler(async () => {
-  try {
-    const innertube = await createInnertube(true);
-    return {
-      success: true,
-      authenticated: innertube.session.logged_in,
-      oauthTokenExists: !!useRuntimeConfig().youtubeOauthToken,
-      cookieExists: !!useRuntimeConfig().youtubeCookies,
-      clientStatus: 'OK'
-    };
-  } catch (err: unknown) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : String(err),
-      stack: err instanceof Error ? err.stack : undefined
-    };
+  const config = useRuntimeConfig();
+  const oauthTokenStr = config.youtubeOauthToken as string;
+  const cookie = config.youtubeCookies as string;
+
+  let parseError = null;
+  let signInError = null;
+  let parsedCredentials = null;
+  let isLoggedIn = false;
+
+  if (oauthTokenStr) {
+    try {
+      parsedCredentials = JSON.parse(oauthTokenStr);
+    } catch (e: unknown) {
+      parseError = e instanceof Error ? e.message : String(e);
+    }
   }
+
+  if (parsedCredentials) {
+    try {
+      const yt = await Innertube.create({
+        cache: new UniversalCache(false),
+        generate_session_locally: true
+      });
+      await yt.session.signIn(parsedCredentials);
+      isLoggedIn = yt.session.logged_in;
+    } catch (e: unknown) {
+      signInError = e instanceof Error ? e.message : String(e);
+    }
+  }
+
+  return {
+    success: true,
+    authenticated: isLoggedIn,
+    oauthTokenStrLength: oauthTokenStr ? oauthTokenStr.length : 0,
+    cookieExists: !!cookie,
+    parseError,
+    signInError,
+    parsedCredentialsPreview: parsedCredentials ? Object.keys(parsedCredentials) : null
+  };
 });
