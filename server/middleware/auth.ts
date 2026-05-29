@@ -1,7 +1,7 @@
 import type { ServerSession } from '../types/auth.server.types';
 
 export default defineEventHandler(async (event) => {
-  const path = getRequestURL(event).pathname;
+  const path = event.path;
 
   if (path.startsWith('/api/') && path !== '/api/health') {
     const config = useRuntimeConfig();
