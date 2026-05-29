@@ -1,4 +1,4 @@
-import type { ServerSession } from '../types/auth.server.types';
+
 import type {
   CategorizedSearchResults,
   SearchResult,
@@ -17,11 +17,7 @@ export default defineCachedEventHandler(
       throw createError({ statusCode: 400, statusMessage: t('search.errors.missingQuery') });
     }
 
-    const config = useRuntimeConfig();
-    const session = await useSession(event, { password: config.sessionSecret as string });
-    const sessionData = session.data as Partial<ServerSession>;
-
-    const innertube = await createInnertube(!!sessionData.accessToken);
+    const innertube = await createInnertube(false);
 
     type YTItem = {
       id?: string;

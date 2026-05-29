@@ -192,7 +192,7 @@ function closeDropdown() {
     position: absolute;
     top: calc(100% + var(--space-2));
     right: 0;
-    width: 260px;
+    width: 280px;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -209,6 +209,7 @@ function closeDropdown() {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: var(--space-4);
     padding: var(--space-3) var(--space-4);
   }
 

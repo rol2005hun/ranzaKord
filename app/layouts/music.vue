@@ -188,6 +188,8 @@ function onPlaylistImported(id: string): void {
   width: 100%;
   background: var(--color-bg);
   overflow: hidden;
+  box-sizing: border-box;
+  padding-bottom: var(--player-height, 90px);
 
   &__content {
     flex: 1;
@@ -201,7 +203,6 @@ function onPlaylistImported(id: string): void {
   &__main {
     flex: 1;
     overflow-y: auto;
-    padding-bottom: var(--player-height, 0px);
   }
 
   &__library {
@@ -370,7 +371,7 @@ function onPlaylistImported(id: string): void {
     flex-direction: column;
 
     &__main {
-      padding-bottom: calc(var(--player-height, 0px) + 60px);
+      padding-bottom: 60px;
     }
 
     &__library {

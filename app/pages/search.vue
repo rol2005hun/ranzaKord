@@ -6,7 +6,7 @@ definePageMeta({
 });
 
 const route = useRoute();
-const { search, query, results, categorizedResults, searchType, isLoading } = useSearch();
+const { search, query, results, categorizedResults, searchType, isLoading, error } = useSearch();
 
 const currentTab = ref<'all' | SearchResultType>('all');
 
@@ -146,6 +146,11 @@ function onPlay(track: SearchResult) {
     <div v-else-if="!query" class="search-page__empty">
       <AppIcon name="ph:magnifying-glass" class="search-page__empty-icon" />
       <p>{{ $t('search.page.emptyPrompt') }}</p>
+    </div>
+
+    <div v-else-if="error" class="search-page__empty">
+      <AppIcon name="ph:warning-circle" class="search-page__empty-icon text-error" />
+      <p>{{ error }}</p>
     </div>
 
     <div v-else-if="searchType === 'all' && categorizedResults" class="search-page__categorized">
@@ -301,6 +306,11 @@ function onPlay(track: SearchResult) {
       opacity: 0.5;
     }
   }
+}
+
+.text-error {
+  color: hsl(0, 84%, 60%) !important;
+  opacity: 1 !important;
 }
 
 @media (max-width: 1024px) {
