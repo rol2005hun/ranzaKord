@@ -261,4 +261,31 @@ function onPlayFromList(track: SearchResult) {
     transform: translateY(-12px);
   }
 }
+
+@media (max-width: 1024px) {
+  .home-dashboard {
+    padding: var(--space-6) var(--space-4) var(--space-10);
+
+    &__hero {
+      grid-template-columns: 1fr;
+      text-align: center;
+      gap: var(--space-6);
+      padding: var(--space-6) var(--space-4);
+    }
+
+    &__hero-content {
+      align-items: center;
+    }
+
+    &__subtitle {
+      margin: 0 auto;
+    }
+
+    &__hero-visual {
+      width: 100%;
+      max-width: 320px;
+      margin: 0 auto;
+    }
+  }
+}
 </style>
