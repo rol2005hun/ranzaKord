@@ -47,7 +47,7 @@ export function usePlayer() {
       store.error = t('player.errors.playback');
     });
 
-    el.volume = store.volume;
+    el.volume = Math.pow(store.volume, 3);
 
     if (store.currentTrack) {
       const savedTime = store.currentTimeSeconds;
@@ -166,7 +166,7 @@ export function usePlayer() {
   function setVolume(value: number) {
     store.volume = value;
     if (audioRef.value) {
-      audioRef.value.volume = value;
+      audioRef.value.volume = Math.pow(value, 3);
     }
   }
 

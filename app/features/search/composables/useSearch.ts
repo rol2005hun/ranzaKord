@@ -28,8 +28,8 @@ export function useSearch() {
       try {
         const fetchUrl =
           type === 'all'
-            ? `/api/search?q=${encodeURIComponent(q.trim())}`
-            : `/api/search?q=${encodeURIComponent(q.trim())}&type=${type}`;
+            ? `/api/search?q=${encodeURIComponent(q.trim())}&_v=2`
+            : `/api/search?q=${encodeURIComponent(q.trim())}&type=${type}&_v=2`;
 
         const data = await $fetch<CategorizedSearchResults | SearchResult[]>(fetchUrl);
 
