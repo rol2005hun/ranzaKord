@@ -62,7 +62,12 @@ export default defineNuxtConfig({
   },
 
   image: {
-    domains: ['yt3.googleusercontent.com', 'i.ytimg.com'],
+    domains: [
+      'yt3.googleusercontent.com',
+      'i.ytimg.com',
+      'image-cdn-ak.spotifycdn.com',
+      'i.scdn.co'
+    ],
     format: ['webp', 'avif'],
     quality: 80
   },

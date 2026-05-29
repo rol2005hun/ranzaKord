@@ -75,11 +75,16 @@ function onVolumeInput(event: Event) {
             :src="`/api/image?url=${encodeURIComponent(displayTrack.thumbnailUrl)}`"
             :alt="displayTrack?.title"
             class="player-bar__img" />
+          <AppSkeleton v-else-if="!isHydrated" width="100%" height="100%" />
           <AppIcon v-else name="ph:music-notes-simple" class="player-bar__img-placeholder" />
         </div>
         <div v-if="displayTrack" class="player-bar__info">
           <span class="player-bar__title">{{ displayTrack.title }}</span>
           <span class="player-bar__artist">{{ displayTrack.artist }}</span>
+        </div>
+        <div v-else-if="!isHydrated" class="player-bar__info player-bar__info--skeleton">
+          <AppSkeleton height="12px" width="120px" border-radius="var(--radius-sm)" />
+          <AppSkeleton height="10px" width="80px" border-radius="var(--radius-sm)" />
         </div>
         <div v-else class="player-bar__info player-bar__info--empty">
           <span class="player-bar__title">{{ $t('player.noTrack') }}</span>
@@ -304,6 +309,11 @@ function onVolumeInput(event: Event) {
     &--empty {
       justify-content: center;
       gap: 2px;
+    }
+
+    &--skeleton {
+      justify-content: center;
+      gap: 6px;
     }
   }
 
