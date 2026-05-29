@@ -80,7 +80,14 @@ function onVolumeInput(event: Event) {
         </div>
         <div v-if="displayTrack" class="player-bar__info">
           <span class="player-bar__title">{{ displayTrack.title }}</span>
-          <span class="player-bar__artist">{{ displayTrack.artist }}</span>
+          <NuxtLink
+            v-if="displayTrack.artistId"
+            :to="`/artist/${displayTrack.artistId}`"
+            class="player-bar__artist artist-link"
+            @click.stop>
+            {{ displayTrack.artist }}
+          </NuxtLink>
+          <span v-else class="player-bar__artist">{{ displayTrack.artist }}</span>
         </div>
         <div v-else-if="!isHydrated" class="player-bar__info player-bar__info--skeleton">
           <AppSkeleton height="12px" width="120px" border-radius="var(--radius-sm)" />
@@ -368,6 +375,15 @@ function onVolumeInput(event: Event) {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .artist-link {
+    color: inherit;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
 
   &__controls {

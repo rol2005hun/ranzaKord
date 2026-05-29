@@ -5,6 +5,7 @@ interface AddTrackBody {
   videoId: string;
   title: string;
   artist: string;
+  artistId?: string;
   thumbnailUrl: string;
   durationMs: number;
 }
@@ -37,6 +38,7 @@ export default defineEventHandler(async (event): Promise<{ success: boolean }> =
       videoId: body.videoId,
       title: body.title,
       artist: body.artist || '',
+      artistId: body.artistId,
       thumbnailUrl: body.thumbnailUrl || '',
       durationMs: body.durationMs || 0,
       addedAt: new Date()

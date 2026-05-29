@@ -9,10 +9,21 @@ export interface PlaylistSummary {
   updatedAt: string;
 }
 
+export interface MusicTrack {
+  id: string;
+  title: string;
+  artist: string;
+  artistId?: string;
+  thumbnailUrl?: string | null;
+  durationSeconds: number;
+  isPlaying?: boolean;
+}
+
 export interface PlaylistTrack {
   videoId: string;
   title: string;
   artist: string;
+  artistId?: string;
   thumbnailUrl: string;
   durationMs: number;
   addedAt: string;
@@ -20,6 +31,11 @@ export interface PlaylistTrack {
 
 export interface PlaylistDetail extends PlaylistSummary {
   tracks: PlaylistTrack[];
+}
+
+export interface PlaylistDetailQuery {
+  limit?: number;
+  offset?: number;
 }
 
 export interface CreatePlaylistPayload {

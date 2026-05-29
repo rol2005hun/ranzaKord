@@ -15,9 +15,14 @@ export default defineEventHandler(async (event): Promise<AlbumDetail> => {
   try {
     const album = await innertube.music.getAlbum(id);
 
+    function firstNonEmptyString(...values: Array<string | undefined>): string | undefined {
+      return values.find((value) => typeof value === 'string' && value.trim().length > 0);
+    }
+
     type YTHeader = {
       title?: { toString: () => string };
       author?: { name?: string; channel_id?: string };
+      artists?: Array<{ name?: string; channel_id?: string }>;
       year?: string;
       thumbnails?: Array<{ url: string; width?: number }>;
       thumbnail?: { contents?: Array<{ url: string; width?: number }> };
@@ -36,7 +41,12 @@ export default defineEventHandler(async (event): Promise<AlbumDetail> => {
     const header = album.header as YTHeader | undefined;
 
     const title = header?.title?.toString() || 'Unknown Album';
-    const artist = header?.author?.name || 'Unknown Artist';
+    const artist =
+      firstNonEmptyString(
+        header?.author?.name,
+        header?.artists?.[0]?.name,
+        album.contents?.[0] ? (album.contents[0] as YTItem).authors?.[0]?.name : undefined
+      ) || 'Unknown Artist';
     const albumArtistId = header?.author?.channel_id || '';
     const year = header?.year || '';
 
@@ -55,7 +65,8 @@ export default defineEventHandler(async (event): Promise<AlbumDetail> => {
         if (!videoId) continue;
 
         const trackTitle = item.title?.toString() || item.name?.toString() || '';
-        const trackArtist = item.authors?.[0]?.name || artist;
+        const trackArtist =
+          firstNonEmptyString(item.authors?.[0]?.name, header?.author?.name, artist) || artist;
         const trackThumb = item.thumbnails?.[0]?.url || thumbnailUrl;
         const trackArtistId = item.authors?.[0]?.channel_id || albumArtistId;
 

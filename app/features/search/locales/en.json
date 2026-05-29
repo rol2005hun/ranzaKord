@@ -27,5 +27,12 @@
     "loadError": "Failed to load artist.",
     "topSongs": "Top Songs",
     "albums": "Albums"
+  },
+  "list": {
+    "song": "Song",
+    "artist": "Artist",
+    "album": "Album",
+    "options": "Options",
+    "addToPlaylist": "Add to playlist"
   }
 }

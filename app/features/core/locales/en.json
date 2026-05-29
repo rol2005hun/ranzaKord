@@ -17,5 +17,10 @@
   "actions": {
     "cancel": "Cancel",
     "save": "Save"
+  },
+  "musicDetail": {
+    "titleColumn": "Title",
+    "empty": "No tracks available",
+    "error": "Something went wrong."
   }
 }

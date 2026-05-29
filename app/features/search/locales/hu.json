@@ -27,5 +27,12 @@
     "loadError": "Nem sikerült betölteni az előadót.",
     "topSongs": "Legnépszerűbb dalok",
     "albums": "Albumok"
+  },
+  "list": {
+    "song": "Dal",
+    "artist": "Előadó",
+    "album": "Album",
+    "options": "Opciók",
+    "addToPlaylist": "Hozzáadás lejátszási listához"
   }
 }

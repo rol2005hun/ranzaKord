@@ -73,7 +73,7 @@ const emit = defineEmits<{
         </div>
       </div>
     </NuxtLink>
-    
+
     <div v-else class="top-result-card__inner">
       <div
         class="top-result-card__image-container"

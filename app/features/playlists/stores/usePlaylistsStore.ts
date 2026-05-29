@@ -1,7 +1,8 @@
 import type {
   PlaylistSummary,
   PlaylistDetail,
-  CreatePlaylistPayload
+  CreatePlaylistPayload,
+  PlaylistDetailQuery
 } from '../types/playlists.types';
 import type { Track } from '../../player/types/player.types';
 import type { SearchResult } from '@/features/search/types/search.types';
@@ -64,12 +65,14 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     }
   }
 
-  async function remove(id: string): Promise<void> {
+  async function remove(id: string): Promise<boolean> {
     try {
       await $fetch(`/api/playlists/${id}`, { method: 'DELETE' });
       playlists.value = playlists.value.filter((p) => p.id !== id);
+      return true;
     } catch {
       error.value = t('playlists.errors.delete');
+      return false;
     }
   }
 
@@ -79,6 +82,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
       videoId: string;
       title: string;
       artist: string;
+      artistId?: string;
       thumbnailUrl: string;
       durationMs: number;
     }
@@ -102,9 +106,30 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     }
   }
 
-  async function fetchDetail(id: string): Promise<PlaylistDetail | null> {
+  async function fetchDetail(
+    id: string,
+    query?: PlaylistDetailQuery
+  ): Promise<PlaylistDetail | null> {
     try {
-      return await $fetch<PlaylistDetail>(`/api/playlists/${id}`);
+      const fetchOptions: { headers?: Record<string, string> } = {};
+      if (import.meta.server) {
+        const reqHeaders = useRequestHeaders(['cookie']);
+        if (reqHeaders.cookie) {
+          fetchOptions.headers = { cookie: reqHeaders.cookie };
+        }
+      }
+
+      const searchParams = new URLSearchParams();
+      if (typeof query?.limit === 'number') {
+        searchParams.set('limit', String(query.limit));
+      }
+      if (typeof query?.offset === 'number') {
+        searchParams.set('offset', String(query.offset));
+      }
+      searchParams.set('id', id);
+
+      const suffix = searchParams.toString() ? `?${searchParams.toString()}` : '';
+      return await $fetch<PlaylistDetail>(`/api/playlists/${id}${suffix}`, fetchOptions);
     } catch {
       return null;
     }
@@ -166,6 +191,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
                 videoId: ytTrack.id,
                 title: ytTrack.title,
                 artist: ytTrack.artist,
+                artistId: ytTrack.artistId,
                 thumbnailUrl: ytTrack.thumbnailUrl,
                 durationSeconds: ytTrack.durationSeconds ?? 0
               };
@@ -183,6 +209,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
             videoId: track.videoId,
             title: track.title,
             artist: track.artist,
+            artistId: track.artistId,
             thumbnailUrl: track.thumbnailUrl,
             durationMs: track.durationSeconds * 1000
           });

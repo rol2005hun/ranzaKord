@@ -1,5 +1,21 @@
+import type { H3Event } from 'h3';
 import type { ServerSession } from '../../../../types/auth.server.types';
 import { PlaylistModel, type IPlaylistItem } from '../../../../models/Playlist';
+
+function resolveParam(event: H3Event, key: string): string | undefined {
+  const routeParam = getRouterParam(event, key) ?? event.context.params?.[key];
+  if (routeParam) {
+    return routeParam;
+  }
+
+  const pathname = getRequestURL(event).pathname;
+  const pathMatch = pathname.match(/\/api\/playlists\/([^/]+)\/tracks\/([^/]+)$/);
+  if (!pathMatch) {
+    return undefined;
+  }
+
+  return key === 'id' ? pathMatch[1] : pathMatch[2];
+}
 
 export default defineEventHandler(async (event): Promise<{ success: boolean }> => {
   const config = useRuntimeConfig();
@@ -12,8 +28,8 @@ export default defineEventHandler(async (event): Promise<{ success: boolean }> =
     throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
   }
 
-  const id = getRouterParam(event, 'id');
-  const videoId = getRouterParam(event, 'videoId');
+  const id = resolveParam(event, 'id');
+  const videoId = resolveParam(event, 'videoId');
   if (!id || !videoId) {
     throw createError({ statusCode: 400, statusMessage: t('playlists.errors.missingParams') });
   }

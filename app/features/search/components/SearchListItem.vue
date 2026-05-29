@@ -80,7 +80,7 @@ function onClick() {
       </h3>
       <p class="search-list-item__subtitle">
         <span v-if="track.type === 'song'">
-          Dal •
+          {{ $t('search.list.song') }} •
           <NuxtLink
             v-if="track.artistId"
             :to="`/artist/${track.artistId}`"
@@ -90,9 +90,9 @@ function onClick() {
           </NuxtLink>
           <span v-else>{{ track.artist }}</span>
         </span>
-        <span v-else-if="track.type === 'artist'">Előadó</span>
+        <span v-else-if="track.type === 'artist'">{{ $t('search.list.artist') }}</span>
         <span v-else-if="track.type === 'album'">
-          Album •
+          {{ $t('search.list.album') }} •
           <NuxtLink
             v-if="track.artistId"
             :to="`/artist/${track.artistId}`"
@@ -106,13 +106,13 @@ function onClick() {
     </div>
 
     <div v-if="track.type === 'song'" class="search-list-item__actions">
-      <button class="search-list-item__action" aria-label="Opciók" @click.stop>
+      <button class="search-list-item__action" :aria-label="$t('search.list.options')" @click.stop>
         <AppIcon name="ph:dots-three-bold" />
       </button>
       <button
         ref="addBtnRef"
         class="search-list-item__action"
-        :aria-label="$t('playlists.addToPlaylist') || 'Hozzáadás lejátszási listához'"
+        :aria-label="$t('search.list.addToPlaylist')"
         @click.stop="showAddToPlaylist = !showAddToPlaylist">
         <AppIcon v-if="isInAnyPlaylist" name="ph:check-circle-fill" class="text-success" />
         <AppIcon v-else name="ph:plus-circle" />

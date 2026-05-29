@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ArtistDetail, SearchResult } from '@/features/search/types/search.types';
+import type { Track } from '@/features/player/types/player.types';
 
 definePageMeta({
   layout: 'music'
@@ -19,260 +20,138 @@ const {
   lazy: true
 });
 
+const playerStore = usePlayerStore();
 const { playTrack } = usePlayer();
 
-function onPlaySong(track: SearchResult) {
+function onPlaySong(track: SearchResult): void {
   playTrack({
     videoId: track.id,
     title: track.title,
     artist: track.artist,
+    artistId: track.artistId,
     thumbnailUrl: track.thumbnailUrl,
     durationSeconds: track.durationSeconds || 0
   });
+}
+
+function onPlayArtist(): void {
+  if (!artist.value || artist.value.topSongs.length === 0) return;
+
+  const queue: Track[] = artist.value.topSongs.map((t: SearchResult) => ({
+    videoId: t.id,
+    title: t.title,
+    artist: t.artist,
+    artistId: t.artistId,
+    thumbnailUrl: t.thumbnailUrl,
+    durationSeconds: t.durationSeconds || 0
+  }));
+
+  playerStore.setQueue(queue);
+  if (queue[0]) playTrack(queue[0]);
 }
 </script>
 
 <template>
   <div class="artist-page">
-    <div v-if="status === 'pending'" class="artist-page__loading">
-      <div class="artist-page__loading-header">
-        <AppSkeleton width="200px" height="200px" border-radius="50%" />
-        <div class="artist-page__loading-info">
-          <AppSkeleton width="80px" height="14px" border-radius="var(--radius-sm)" />
-          <AppSkeleton width="min(520px, 70vw)" height="88px" border-radius="var(--radius-md)" />
-        </div>
-      </div>
+    <AppMusicDetailView
+      :is-loading="status === 'pending'"
+      :is-error="!!error || (!artist && status !== 'pending')"
+      :error-text="$t('search.artist.loadError')"
+      :title="artist?.name"
+      :badge="$t('search.artist.badge')"
+      :image-url="artist?.thumbnailUrl"
+      :rounded-image="true"
+      :show-tracks="false">
+      <template #fallback-icon>
+        <AppIcon name="ph:user" />
+      </template>
 
-      <div class="artist-page__loading-content">
-        <AppSkeleton width="180px" height="28px" border-radius="var(--radius-sm)" />
-        <div class="artist-page__loading-list">
-          <AppSkeleton
-            v-for="i in 5"
-            :key="`artist-loading-${i}`"
-            height="68px"
-            border-radius="var(--radius-lg)" />
-        </div>
-      </div>
-    </div>
+      <template #actions>
+        <button
+          class="artist-page__play-btn"
+          :disabled="!artist || artist.topSongs.length === 0"
+          @click="onPlayArtist">
+          <AppIcon name="ph:play-fill" />
+        </button>
+      </template>
 
-    <div v-else-if="error || !artist" class="artist-page__error">
-      <AppIcon name="ph:warning-circle" class="artist-page__error-icon" />
-      <p>{{ $t('search.artist.loadError') }}</p>
-    </div>
-
-    <template v-else>
-      <div class="artist-page__header">
-        <div
-          class="artist-page__header-bg"
-          :style="
-            artist.thumbnailUrl
-              ? `background-image: url('/api/image?url=${encodeURIComponent(artist.thumbnailUrl)}')`
-              : ''
-          "></div>
-        <div class="artist-page__header-overlay"></div>
-        <div class="artist-page__header-content">
-          <div class="artist-page__avatar">
-            <img
-              v-if="artist.thumbnailUrl"
-              :src="`/api/image?url=${encodeURIComponent(artist.thumbnailUrl)}`"
-              :alt="artist.name" />
-            <AppIcon v-else name="ph:user" />
+      <template #content>
+        <template v-if="status === 'pending'">
+          <div class="artist-page__section">
+            <div class="skeleton-line skeleton-line--section-title"></div>
+            <div class="artist-page__songs-list">
+              <div v-for="i in 5" :key="`track-skel-${i}`" class="artist-page__track-skeleton">
+                <div class="artist-page__track-info">
+                  <div class="artist-page__track-thumb skeleton-box"></div>
+                  <div class="artist-page__track-text">
+                    <div class="skeleton-line skeleton-line--track-title"></div>
+                    <div class="skeleton-line skeleton-line--artist"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="artist-page__info">
-            <div class="artist-page__badge">{{ $t('search.artist.badge') }}</div>
-            <h1 class="artist-page__title">{{ artist.name }}</h1>
-          </div>
-        </div>
-      </div>
+        </template>
 
-      <div class="artist-page__content">
-        <div v-if="artist.topSongs.length > 0" class="artist-page__section">
-          <h2 class="artist-page__section-title">{{ $t('search.artist.topSongs') }}</h2>
-          <div class="artist-page__songs-list">
-            <SearchListItem
-              v-for="song in artist.topSongs.slice(0, 5)"
-              :key="song.id"
-              :track="song"
-              @click="onPlaySong(song)" />
+        <template v-else-if="artist">
+          <div v-if="artist.topSongs.length > 0" class="artist-page__section">
+            <h2 class="artist-page__section-title">{{ $t('search.artist.topSongs') }}</h2>
+            <div class="artist-page__songs-list">
+              <SearchListItem
+                v-for="song in artist.topSongs.slice(0, 5)"
+                :key="song.id"
+                :track="song"
+                @click="onPlaySong(song)" />
+            </div>
           </div>
-        </div>
 
-        <div v-if="artist.albums.length > 0" class="artist-page__section">
-          <h2 class="artist-page__section-title">{{ $t('search.artist.albums') }}</h2>
-          <div class="artist-page__albums-grid">
-            <TopResultCard
-              v-for="album in artist.albums"
-              :key="album.id"
-              :result="album"
-              @play="onPlaySong" />
+          <div v-if="artist.albums.length > 0" class="artist-page__section">
+            <h2 class="artist-page__section-title">{{ $t('search.artist.albums') }}</h2>
+            <div class="artist-page__albums-grid">
+              <TopResultCard
+                v-for="album in artist.albums"
+                :key="album.id"
+                :result="album"
+                @play="onPlaySong" />
+            </div>
           </div>
-        </div>
-      </div>
-    </template>
+        </template>
+      </template>
+    </AppMusicDetailView>
   </div>
 </template>
 
 <style lang="scss" scoped>
 .artist-page {
-  padding: var(--space-8);
-  padding-bottom: var(--space-12);
-
-  &__loading,
-  &__error {
-    display: flex;
-    flex-direction: column;
-    color: var(--color-text-secondary);
-  }
-
-  &__loading {
-    gap: var(--space-8);
-    padding: var(--space-6) 0;
-  }
-
-  &__loading-header {
-    display: flex;
-    align-items: flex-end;
-    gap: var(--space-6);
-    padding: var(--space-8);
-    min-height: 350px;
-    border-radius: var(--radius-xl);
-    background: linear-gradient(to bottom, var(--color-surface), transparent);
-
-    @media (max-width: 768px) {
-      flex-direction: column;
-      align-items: flex-start;
-      min-height: 280px;
-      padding: var(--space-6);
-    }
-  }
-
-  &__loading-info {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-    flex: 1;
-    min-width: 0;
-  }
-
-  &__loading-content {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-6);
-  }
-
-  &__loading-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-  }
-
-  &__error-icon {
-    font-size: 4rem;
-    margin-bottom: var(--space-4);
-  }
-
-  &__header {
-    position: relative;
-    height: 350px;
-    display: flex;
-    align-items: flex-end;
-    padding: var(--space-8);
-    margin: 0 0 var(--space-8);
-    overflow: hidden;
-
-    @media (max-width: 768px) {
-      padding: var(--space-6) var(--space-4);
-      height: 280px;
-    }
-
-    &-bg {
-      position: absolute;
-      inset: -20px;
-      background-size: cover;
-      background-position: center;
-      filter: blur(20px);
-      z-index: 1;
-    }
-
-    &-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 0%, var(--color-background) 100%);
-      z-index: 2;
-    }
-
-    &-content {
-      position: relative;
-      z-index: 3;
-      display: flex;
-      align-items: flex-end;
-      gap: var(--space-6);
-    }
-  }
-
-  &__avatar {
-    width: 200px;
-    height: 200px;
+  &__play-btn {
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
-    overflow: hidden;
-    background-color: var(--color-surface-raised);
+    background-color: var(--color-primary);
+    color: var(--color-text-inverse);
+    border: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 4rem;
-    color: var(--color-text-secondary);
-    box-shadow: var(--shadow-xl);
-    flex-shrink: 0;
+    font-size: 2rem;
+    cursor: pointer;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    transition: all var(--transition-fast);
 
-    @media (max-width: 768px) {
-      width: 140px;
-      height: 140px;
+    &:hover:not(:disabled) {
+      transform: scale(1.05);
+      background-color: var(--color-primary-hover);
     }
 
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
   }
 
-  &__info {
+  &__section {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
-  }
-
-  &__badge {
-    font-size: var(--text-sm);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-inverse);
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-  }
-
-  &__title {
-    font-size: 5rem;
-    font-weight: var(--font-weight-black);
-    color: var(--color-text-inverse);
-    line-height: 1;
-    margin: 0;
-    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-
-    @media (max-width: 768px) {
-      font-size: 3rem;
-    }
-  }
-
-  &__content {
-    max-width: 1600px;
-    margin: 0 auto;
-    padding: 0 var(--space-8);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-10);
-
-    @media (max-width: 768px) {
-      padding: 0;
-    }
   }
 
   &__section-title {
@@ -288,6 +167,36 @@ function onPlaySong(track: SearchResult) {
     gap: var(--space-2);
   }
 
+  &__track-skeleton {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+  }
+
+  &__track-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+
+  &__track-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-hover);
+    flex-shrink: 0;
+  }
+
+  &__track-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
   &__albums-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -295,6 +204,45 @@ function onPlaySong(track: SearchResult) {
 
     @media (min-width: 1024px) {
       grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+  }
+
+  .skeleton-box {
+    background: var(--color-surface-raised);
+    animation: pulse 1.5s infinite ease-in-out;
+  }
+
+  .skeleton-line {
+    background: var(--color-surface-raised);
+    height: 12px;
+    border-radius: var(--radius-sm);
+    animation: pulse 1.5s infinite ease-in-out;
+    margin-bottom: var(--space-2);
+
+    &--section-title {
+      width: 180px;
+      height: 28px;
+      margin-bottom: var(--space-6);
+    }
+    &--track-title {
+      width: 140px;
+      margin-bottom: 4px;
+    }
+    &--artist {
+      width: 90px;
+      height: 10px;
+    }
+  }
+
+  @keyframes pulse {
+    0% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 0.8;
+    }
+    100% {
+      opacity: 0.5;
     }
   }
 }

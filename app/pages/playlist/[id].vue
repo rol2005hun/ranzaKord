@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import type { PlaylistDetail } from '@/features/playlists/types/playlists.types';
+import type { PlaylistDetail, MusicTrack } from '@/features/playlists/types/playlists.types';
 
 definePageMeta({
   layout: 'music'
 });
+
+const PAGE_SIZE = 50;
 
 const route = useRoute();
 const id = computed(() => route.params.id as string);
@@ -13,6 +15,8 @@ const player = usePlayer();
 
 const playlist = ref<PlaylistDetail | null>(null);
 const isLoading = ref(true);
+const isLoadingMore = ref(false);
+const isDeleting = ref(false);
 const showEditModal = ref(false);
 const showDeleteConfirm = ref(false);
 
@@ -20,7 +24,7 @@ const { data, status } = await useAsyncData<PlaylistDetail | null>(
   () => `playlist-${id.value}`,
   async () => {
     if (!id.value) return null;
-    return await store.fetchDetail(id.value);
+    return await store.fetchDetail(id.value, { limit: PAGE_SIZE, offset: 0 });
   },
   {
     lazy: true,
@@ -33,6 +37,45 @@ watchEffect(() => {
   isLoading.value = status.value === 'pending';
 });
 
+const hasMoreTracks = computed(() => {
+  if (!playlist.value) return false;
+  return playlist.value.tracks.length < playlist.value.trackCount;
+});
+
+const mappedTracks = computed<MusicTrack[]>(() => {
+  if (!playlist.value) return [];
+  return playlist.value.tracks.map((t) => ({
+    id: t.videoId,
+    title: t.title,
+    artist: t.artist,
+    artistId: t.artistId,
+    thumbnailUrl: t.thumbnailUrl,
+    durationSeconds: Math.round(t.durationMs / 1000),
+    isPlaying: player.currentTrack.value?.videoId === t.videoId
+  }));
+});
+
+async function loadMoreTracks(): Promise<void> {
+  if (!playlist.value || isLoadingMore.value || !hasMoreTracks.value) return;
+
+  isLoadingMore.value = true;
+  try {
+    const nextPage = await store.fetchDetail(id.value, {
+      limit: PAGE_SIZE,
+      offset: playlist.value.tracks.length
+    });
+
+    if (!nextPage || nextPage.tracks.length === 0) return;
+
+    playlist.value = {
+      ...nextPage,
+      tracks: [...playlist.value.tracks, ...nextPage.tracks]
+    };
+  } finally {
+    isLoadingMore.value = false;
+  }
+}
+
 useHead({
   title: computed(() => playlist.value?.name || 'Playlist')
 });
@@ -44,11 +87,28 @@ function playAll(): void {
     videoId: t.videoId,
     title: t.title,
     artist: t.artist,
+    artistId: t.artistId,
     thumbnailUrl: t.thumbnailUrl,
     durationSeconds: Math.round(t.durationMs / 1000)
   }));
 
   player.playQueue(tracksToPlay, 0);
+}
+
+function onPlaySong(track: MusicTrack, index: number): void {
+  if (!playlist.value) return;
+
+  const tracksToPlay = playlist.value.tracks.map((t) => ({
+    videoId: t.videoId,
+    title: t.title,
+    artist: t.artist,
+    artistId: t.artistId,
+    thumbnailUrl: t.thumbnailUrl,
+    durationSeconds: Math.round(t.durationMs / 1000)
+  }));
+
+  const resolvedIndex = playlist.value.tracks.findIndex((item) => item.videoId === track.id);
+  player.playQueue(tracksToPlay, resolvedIndex >= 0 ? resolvedIndex : index);
 }
 
 async function removeTrack(videoId: string): Promise<void> {
@@ -59,95 +119,58 @@ async function removeTrack(videoId: string): Promise<void> {
 }
 
 async function onDelete(): Promise<void> {
-  await store.remove(id.value);
-  navigateTo('/');
-}
+  if (isDeleting.value) return;
 
-function formatDuration(ms: number): string {
-  const seconds = Math.round(ms / 1000);
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${s.toString().padStart(2, '0')}`;
+  isDeleting.value = true;
+  try {
+    const deleted = await store.remove(id.value);
+    if (deleted) {
+      showDeleteConfirm.value = false;
+      await navigateTo('/');
+    }
+  } finally {
+    isDeleting.value = false;
+  }
 }
 </script>
 
 <template>
   <div class="playlist-page">
-    <div v-if="isLoading" class="playlist-page__skeleton">
-      <div class="playlist-page__header">
-        <div class="playlist-page__cover skeleton-box"></div>
-        <div class="playlist-page__meta">
-          <div class="skeleton-line skeleton-line--type"></div>
-          <div class="skeleton-line skeleton-line--title"></div>
-          <div class="skeleton-line skeleton-line--desc"></div>
-        </div>
-      </div>
-      <div class="playlist-page__actions">
-        <div class="skeleton-btn skeleton-btn--play"></div>
+    <AppMusicDetailView
+      :is-loading="isLoading"
+      :is-error="!playlist && !isLoading"
+      :title="playlist?.name"
+      :badge="$t('playlists.title').slice(0, -1)"
+      :image-url="playlist?.imageUrl"
+      :tracks="mappedTracks"
+      :has-more-tracks="hasMoreTracks"
+      :is-loading-more="isLoadingMore"
+      :empty-text="$t('playlists.emptyPlaylist')"
+      @play="onPlaySong"
+      @load-more="loadMoreTracks">
+      <template #meta>
+        <span v-if="playlist?.description" class="playlist-page__description">
+          {{ playlist.description }}
+        </span>
+        <span v-if="playlist?.description">•</span>
+        <span class="playlist-page__count">
+          {{
+            $t('playlists.trackCount', {
+              count: playlist?.trackCount || playlist?.tracks.length || 0
+            })
+          }}
+        </span>
+      </template>
+
+      <template #skeleton-actions>
         <div class="skeleton-btn"></div>
         <div class="skeleton-btn"></div>
-      </div>
-      <div class="playlist-page__tracks">
-        <div class="playlist-page__track-header">
-          <div class="skeleton-line" style="width: 100%; margin: 0"></div>
-        </div>
-        <div
-          v-for="i in 5"
-          :key="`track-skel-${i}`"
-          class="playlist-page__track"
-          style="cursor: default">
-          <div class="skeleton-line" style="width: 1rem; margin: 0 auto"></div>
-          <div class="playlist-page__track-info">
-            <div class="playlist-page__track-thumb skeleton-box"></div>
-            <div class="playlist-page__track-text">
-              <div class="skeleton-line skeleton-line--track-title"></div>
-              <div class="skeleton-line skeleton-line--artist"></div>
-            </div>
-          </div>
-          <div class="skeleton-line" style="width: 2rem; margin-left: auto"></div>
-          <div></div>
-        </div>
-      </div>
-    </div>
+      </template>
 
-    <div v-else-if="!playlist" class="playlist-page__error">
-      <AppIcon name="ph:warning-circle" class="playlist-page__error-icon" />
-      <p>Playlist not found.</p>
-    </div>
-
-    <template v-else>
-      <div class="playlist-page__header">
-        <div class="playlist-page__cover">
-          <NuxtImg
-            v-if="playlist.imageUrl"
-            :src="playlist.imageUrl"
-            :alt="playlist.name"
-            width="200"
-            height="200"
-            format="webp"
-            fetchpriority="high"
-            preload />
-          <div v-else class="playlist-page__cover-placeholder">
-            <AppIcon name="ph:music-notes-fill" />
-          </div>
-        </div>
-
-        <div class="playlist-page__meta">
-          <span class="playlist-page__type">{{ $t('playlists.title').slice(0, -1) }}</span>
-          <h1 class="playlist-page__title">{{ playlist.name }}</h1>
-          <p v-if="playlist.description" class="playlist-page__description">
-            {{ playlist.description }}
-          </p>
-          <p class="playlist-page__count">
-            {{ $t('playlists.trackCount', { count: playlist.tracks.length }) }}
-          </p>
-        </div>
-      </div>
-
-      <div class="playlist-page__actions">
+      <template #actions>
         <button
           class="playlist-page__play-btn"
-          :disabled="playlist.tracks.length === 0"
+          :disabled="!playlist || playlist.tracks.length === 0"
           :aria-label="$t('player.play')"
           @click="playAll">
           <AppIcon name="ph:play-fill" />
@@ -163,96 +186,21 @@ function formatDuration(ms: number): string {
         <button
           class="playlist-page__action-btn playlist-page__action-btn--danger"
           :title="$t('playlists.deletePlaylist')"
+          :disabled="isDeleting"
           @click="showDeleteConfirm = true">
           <AppIcon name="ph:trash" />
         </button>
-      </div>
+      </template>
 
-      <div v-if="playlist.tracks.length === 0" class="playlist-page__empty">
-        <AppIcon name="ph:music-notes-plus" class="playlist-page__empty-icon" />
-        <p>{{ $t('playlists.emptyPlaylist') }}</p>
-      </div>
-
-      <div v-else class="playlist-page__tracks">
-        <div class="playlist-page__track-header">
-          <span class="playlist-page__track-num">#</span>
-          <span>Title</span>
-          <span class="playlist-page__track-duration">
-            <AppIcon name="ph:clock" />
-          </span>
-        </div>
-
-        <div
-          v-for="(track, index) in playlist.tracks"
-          :key="track.videoId"
-          class="playlist-page__track"
-          @click="
-            player.playQueue(
-              playlist.tracks.map((t) => ({
-                videoId: t.videoId,
-                title: t.title,
-                artist: t.artist,
-                thumbnailUrl: t.thumbnailUrl,
-                durationSeconds: Math.round(t.durationMs / 1000)
-              })),
-              index
-            )
-          ">
-          <div class="playlist-page__track-num-wrapper">
-            <ClientOnly>
-              <div style="display: contents">
-                <span
-                  class="playlist-page__track-num"
-                  :class="{
-                    'playlist-page__track-num--playing':
-                      player.currentTrack.value?.videoId === track.videoId
-                  }">
-                  <AppIcon
-                    v-if="
-                      player.currentTrack.value?.videoId === track.videoId && player.isPlaying.value
-                    "
-                    name="ph:speaker-high-fill"
-                    class="text-primary" />
-                  <template v-else>{{ index + 1 }}</template>
-                </span>
-                <div class="playlist-page__track-play">
-                  <AppIcon
-                    :name="
-                      player.currentTrack.value?.videoId === track.videoId && player.isPlaying.value
-                        ? 'ph:pause-fill'
-                        : 'ph:play-fill'
-                    " />
-                </div>
-              </div>
-              <template #fallback>
-                <span class="playlist-page__track-num">{{ index + 1 }}</span>
-              </template>
-            </ClientOnly>
-          </div>
-          <div class="playlist-page__track-info">
-            <div class="playlist-page__track-thumb">
-              <img
-                v-if="track.thumbnailUrl"
-                :src="`/api/image?url=${encodeURIComponent(track.thumbnailUrl)}`"
-                :alt="track.title" />
-              <AppIcon v-else name="ph:music-note" />
-            </div>
-            <div class="playlist-page__track-text">
-              <span class="playlist-page__track-title">{{ track.title }}</span>
-              <span class="playlist-page__track-artist">{{ track.artist }}</span>
-            </div>
-          </div>
-          <span class="playlist-page__track-duration">{{ formatDuration(track.durationMs) }}</span>
-          <button
-            class="playlist-page__track-remove"
-            :title="$t('playlists.removeFromPlaylist')"
-            :aria-label="$t('playlists.removeFromPlaylist')"
-            @click.stop="removeTrack(track.videoId)">
-            <AppIcon name="ph:x-bold" />
-          </button>
-        </div>
-      </div>
-    </template>
+      <template #track-actions="{ track }">
+        <button
+          class="playlist-page__track-remove"
+          :title="$t('playlists.removeFromPlaylist')"
+          @click.stop="removeTrack(track.id)">
+          <AppIcon name="ph:x-bold" />
+        </button>
+      </template>
+    </AppMusicDetailView>
 
     <PlaylistModal
       v-if="playlist"
@@ -270,20 +218,23 @@ function formatDuration(ms: number): string {
           <div
             v-if="showDeleteConfirm"
             class="playlist-page__confirm-overlay"
-            @click.self="showDeleteConfirm = false">
+            @click.self="!isDeleting && (showDeleteConfirm = false)">
             <div class="playlist-page__confirm-dialog">
               <h3>{{ $t('playlists.deletePlaylist') }}</h3>
               <p>{{ $t('playlists.confirmDelete') }}</p>
               <div class="playlist-page__confirm-actions">
                 <button
                   class="playlist-page__confirm-btn playlist-page__confirm-btn--ghost"
+                  :disabled="isDeleting"
                   @click="showDeleteConfirm = false">
-                  Cancel
+                  {{ $t('core.actions.cancel') }}
                 </button>
                 <button
                   class="playlist-page__confirm-btn playlist-page__confirm-btn--danger"
+                  :disabled="isDeleting"
                   @click="onDelete">
-                  Delete
+                  <AppSpinner v-if="isDeleting" size="sm" />
+                  <span>{{ isDeleting ? $t('playlists.deleting') : $t('playlists.delete') }}</span>
                 </button>
               </div>
             </div>
@@ -296,188 +247,31 @@ function formatDuration(ms: number): string {
 
 <style scoped lang="scss">
 .playlist-page {
-  max-width: 1200px;
-  margin: 0 auto;
-
-  &__loading,
-  &__error {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 50vh;
-    gap: var(--space-4);
-    color: var(--color-text-secondary);
-  }
-
-  &__error-icon {
-    font-size: 3rem;
-  }
-
-  &__header {
-    display: flex;
-    align-items: center;
-    gap: var(--space-8);
-    padding: var(--space-8) var(--space-8) var(--space-6);
-    background: linear-gradient(to bottom, var(--color-surface), transparent);
-
-    @media (max-width: 600px) {
-      flex-direction: column;
-      align-items: flex-start;
-      padding: var(--space-4);
-    }
-  }
-
-  .skeleton-box {
-    background: var(--color-surface-raised);
-    animation: pulse 1.5s infinite ease-in-out;
-    border-radius: var(--radius-lg);
-  }
-
-  .skeleton-line {
-    background: var(--color-surface-raised);
-    height: 12px;
-    border-radius: var(--radius-sm);
-    animation: pulse 1.5s infinite ease-in-out;
-    margin-bottom: var(--space-2);
-
-    &--type {
-      width: 60px;
-      height: 10px;
-      margin-bottom: var(--space-3);
-    }
-    &--title {
-      width: 200px;
-      height: 32px;
-      margin-bottom: var(--space-4);
-    }
-    &--desc {
-      width: 300px;
-    }
-    &--track-title {
-      width: 140px;
-      margin-bottom: 4px;
-    }
-    &--artist {
-      width: 90px;
-      height: 10px;
-    }
-  }
-
-  .skeleton-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--radius-full);
-    background: var(--color-surface-raised);
-    animation: pulse 1.5s infinite ease-in-out;
-
-    &--play {
-      width: 56px;
-      height: 56px;
-    }
-  }
-
-  @keyframes pulse {
-    0% {
-      opacity: 0.5;
-    }
-    50% {
-      opacity: 0.8;
-    }
-    100% {
-      opacity: 0.5;
-    }
-  }
-
-  &__cover {
-    width: 200px;
-    height: 200px;
-    flex-shrink: 0;
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    background: var(--color-surface-hover);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    @media (max-width: 600px) {
-      width: 140px;
-      height: 140px;
-    }
-  }
-
-  &__cover-placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 4rem;
-    color: var(--color-text-secondary);
-  }
-
-  &__meta {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    min-width: 0;
-  }
-
-  &__type {
-    font-size: var(--text-xs);
-    font-weight: var(--font-weight-semibold);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--color-text-secondary);
-  }
-
-  &__title {
-    font-size: clamp(var(--text-3xl), 5vw, 4rem);
-    font-weight: var(--font-weight-black);
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-  }
-
   &__description {
-    font-size: var(--text-sm);
-    color: var(--color-text-secondary);
     max-width: 500px;
-  }
-
-  &__count {
-    font-size: var(--text-sm);
-    color: var(--color-text-secondary);
-  }
-
-  &__actions {
-    display: flex;
-    align-items: center;
-    gap: var(--space-4);
-    padding: var(--space-4) var(--space-8);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   &__play-btn {
-    width: 56px;
-    height: 56px;
-    border-radius: var(--radius-full);
-    background: var(--color-primary);
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background-color: var(--color-primary);
     color: #000;
     border: none;
-    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: var(--text-2xl);
-    transition:
-      transform var(--transition-fast),
-      opacity var(--transition-fast);
+    font-size: 2rem;
+    cursor: pointer;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    transition: all var(--transition-fast);
 
     &:hover:not(:disabled) {
       transform: scale(1.05);
+      background-color: var(--color-primary-hover);
     }
 
     &:disabled {
@@ -487,9 +281,9 @@ function formatDuration(ms: number): string {
   }
 
   &__action-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--radius-full);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
     background: transparent;
     color: var(--color-text-secondary);
     border: none;
@@ -497,168 +291,21 @@ function formatDuration(ms: number): string {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: var(--text-xl);
+    font-size: 1.5rem;
     transition: color var(--transition-fast);
 
     &:hover {
       color: var(--color-text-primary);
     }
 
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
     &--danger:hover {
       color: hsl(0, 65%, 55%);
     }
-  }
-
-  &__empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: var(--space-12) 0;
-    gap: var(--space-3);
-    color: var(--color-text-secondary);
-  }
-
-  &__empty-icon {
-    font-size: 3rem;
-    opacity: 0.5;
-  }
-
-  &__tracks {
-    padding: 0 var(--space-8) var(--space-8);
-
-    @media (max-width: 600px) {
-      padding: 0 var(--space-3) var(--space-6);
-    }
-  }
-
-  &__track-header {
-    display: grid;
-    grid-template-columns: 2rem 1fr 4rem 2rem;
-    align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-2) var(--space-3);
-    border-bottom: 1px solid var(--color-border);
-    margin-bottom: var(--space-2);
-    font-size: var(--text-xs);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  &__track {
-    display: grid;
-    grid-template-columns: 2rem 1fr 4rem 2rem;
-    align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: background-color var(--transition-fast);
-
-    &:hover {
-      background: var(--color-surface-hover);
-
-      .playlist-page__track-remove {
-        opacity: 1;
-      }
-
-      .playlist-page__track-num {
-        opacity: 0;
-      }
-
-      .playlist-page__track-play {
-        opacity: 1;
-      }
-    }
-  }
-
-  &__track-num-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  &__track-num {
-    font-size: var(--text-sm);
-    color: var(--color-text-secondary);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: opacity var(--transition-fast);
-
-    &--playing {
-      color: var(--color-primary);
-    }
-  }
-
-  &__track-play {
-    position: absolute;
-    opacity: 0;
-    color: var(--color-text-primary);
-    font-size: var(--text-base);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: opacity var(--transition-fast);
-  }
-
-  &__track-info {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    min-width: 0;
-  }
-
-  &__track-thumb {
-    width: 40px;
-    height: 40px;
-    border-radius: var(--radius-sm);
-    background: var(--color-surface-hover);
-    overflow: hidden;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--color-text-secondary);
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-  }
-
-  &__track-text {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-  }
-
-  &__track-title {
-    font-size: var(--text-sm);
-    font-weight: var(--font-weight-medium);
-    color: var(--color-text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  &__track-artist {
-    font-size: var(--text-xs);
-    color: var(--color-text-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  &__track-duration {
-    font-size: var(--text-xs);
-    color: var(--color-text-secondary);
-    text-align: right;
-    font-variant-numeric: tabular-nums;
   }
 
   &__track-remove {
@@ -678,6 +325,30 @@ function formatDuration(ms: number): string {
 
     &:hover {
       color: hsl(0, 65%, 55%);
+    }
+  }
+
+  :deep(.music-detail__track:hover) .playlist-page__track-remove {
+    opacity: 1;
+  }
+
+  .skeleton-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--color-surface-raised);
+    animation: pulse 1.5s infinite ease-in-out;
+  }
+
+  @keyframes pulse {
+    0% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 0.8;
+    }
+    100% {
+      opacity: 0.5;
     }
   }
 
@@ -726,6 +397,15 @@ function formatDuration(ms: number): string {
     border: none;
     cursor: pointer;
     transition: all var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
 
     &--ghost {
       background: transparent;

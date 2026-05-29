@@ -2,6 +2,7 @@ export interface Track {
   videoId: string;
   title: string;
   artist: string;
+  artistId?: string;
   thumbnailUrl: string;
   durationSeconds: number;
 }

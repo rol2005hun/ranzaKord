@@ -17,6 +17,8 @@
   "noPlaylists": "No playlists yet",
   "createFirst": "Create your first playlist",
   "confirmDelete": "Are you sure you want to delete this playlist?",
+  "delete": "Delete",
+  "deleting": "Deleting…",
   "namePlaceholder": "My awesome playlist",
   "descriptionPlaceholder": "Optional description…",
   "creating": "Creating…",

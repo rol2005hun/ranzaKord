@@ -9,7 +9,9 @@ const route = useRoute();
 const router = useRouter();
 const { search, query, results, categorizedResults, searchType, isLoading, error } = useSearch();
 
-const currentTab = ref<'all' | SearchResultType>((route.query.type as 'all' | SearchResultType) || 'all');
+const currentTab = ref<'all' | SearchResultType>(
+  (route.query.type as 'all' | SearchResultType) || 'all'
+);
 
 watch(currentTab, (newTab) => {
   router.replace({
@@ -36,9 +38,21 @@ watch(
 watch(
   () => route.query.type,
   (newType) => {
-    const validTypes = ['all', 'song', 'artist', 'album', 'video', 'playlist', 'podcast', 'profile'];
-    const typeToSet = (newType as string) && validTypes.includes(newType as string) ? (newType as 'all' | SearchResultType) : 'all';
-    
+    const validTypes = [
+      'all',
+      'song',
+      'artist',
+      'album',
+      'video',
+      'playlist',
+      'podcast',
+      'profile'
+    ];
+    const typeToSet =
+      (newType as string) && validTypes.includes(newType as string)
+        ? (newType as 'all' | SearchResultType)
+        : 'all';
+
     if (currentTab.value !== typeToSet) {
       currentTab.value = typeToSet;
     }
@@ -72,6 +86,7 @@ function onPlay(track: SearchResult) {
     videoId: r.id,
     title: r.title,
     artist: r.artist,
+    artistId: r.artistId,
     thumbnailUrl: r.thumbnailUrl,
     durationSeconds: r.durationSeconds || 0
   }));
@@ -83,6 +98,7 @@ function onPlay(track: SearchResult) {
       videoId: track.id,
       title: track.title,
       artist: track.artist,
+      artistId: track.artistId,
       thumbnailUrl: track.thumbnailUrl,
       durationSeconds: track.durationSeconds || 0
     });
