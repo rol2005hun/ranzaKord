@@ -5,6 +5,8 @@ export interface SearchResult {
   type: SearchResultType;
   title: string;
   artist: string;
+  artistId?: string;
+  albumId?: string;
   thumbnailUrl: string;
   durationSeconds?: number;
 }

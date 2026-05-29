@@ -1,4 +1,3 @@
-import type { ServerSession } from '../types/auth.server.types';
 import type { ArtistDetail, SearchResult } from '../../app/features/search/types/search.types';
 
 export default defineEventHandler(async (event): Promise<ArtistDetail> => {
@@ -11,11 +10,7 @@ export default defineEventHandler(async (event): Promise<ArtistDetail> => {
     throw createError({ statusCode: 400, statusMessage: t('search.errors.missingArtistId') });
   }
 
-  const config = useRuntimeConfig();
-  const session = await useSession(event, { password: config.sessionSecret as string });
-  const sessionData = session.data as Partial<ServerSession>;
-
-  const innertube = await createInnertube(!!sessionData.accessToken);
+  const innertube = await createInnertube(false);
 
   try {
     const artist = await innertube.music.getArtist(id);
@@ -35,7 +30,7 @@ export default defineEventHandler(async (event): Promise<ArtistDetail> => {
       endpoint?: { payload?: { videoId?: string; browseId?: string } };
       title?: { toString: () => string };
       name?: { toString: () => string };
-      authors?: Array<{ name?: string }>;
+      authors?: Array<{ name?: string; channel_id?: string }>;
       thumbnails?: Array<{ url: string }>;
       duration?: { seconds?: number };
       type?: string;
@@ -65,6 +60,7 @@ export default defineEventHandler(async (event): Promise<ArtistDetail> => {
 
               const trackTitle = item.title?.toString() || item.name?.toString() || '';
               const trackArtist = item.authors?.[0]?.name || name;
+              const trackArtistId = item.authors?.[0]?.channel_id || id;
               const trackThumb = item.thumbnails?.[0]?.url || '';
 
               if (!thumbnailUrl && trackThumb) thumbnailUrl = trackThumb;
@@ -77,6 +73,7 @@ export default defineEventHandler(async (event): Promise<ArtistDetail> => {
                 type: 'song',
                 title: trackTitle,
                 artist: trackArtist,
+                artistId: trackArtistId,
                 thumbnailUrl: trackThumb,
                 durationSeconds: duration
               });
@@ -115,7 +112,12 @@ export default defineEventHandler(async (event): Promise<ArtistDetail> => {
       topSongs,
       albums
     };
-  } catch {
-    throw createError({ statusCode: 500, statusMessage: t('search.errors.fetchArtistFailed') });
+  } catch (error: unknown) {
+    console.error('artist.get.ts error:', error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw createError({
+      statusCode: 500,
+      statusMessage: errorMessage || t('search.errors.fetchArtistFailed')
+    });
   }
 });

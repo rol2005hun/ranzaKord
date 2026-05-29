@@ -26,7 +26,7 @@ const emit = defineEmits<{
 
 <template>
   <div class="top-result-card">
-    <component :is="routeTo ? 'NuxtLink' : 'div'" :to="routeTo" class="top-result-card__inner">
+    <NuxtLink v-if="routeTo" :to="routeTo" class="top-result-card__inner">
       <div
         class="top-result-card__image-container"
         :class="{
@@ -46,19 +46,76 @@ const emit = defineEmits<{
       </div>
       <div class="top-result-card__info">
         <h2 class="top-result-card__title" :class="{ 'text-primary': isCurrentlyPlaying }">
-          <AppIcon
-            v-if="isPlaying"
-            name="ph:speaker-high-fill"
-            style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom" />
-          <AppIcon
-            v-else-if="isCurrentlyPlaying"
-            name="ph:speaker-none-fill"
-            style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom" />
+          <ClientOnly>
+            <AppIcon
+              v-if="isPlaying"
+              name="ph:speaker-high-fill"
+              style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom" />
+            <AppIcon
+              v-else-if="isCurrentlyPlaying"
+              name="ph:speaker-none-fill"
+              style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom" />
+          </ClientOnly>
           {{ props.result.title }}
         </h2>
         <div class="top-result-card__meta">
           <span v-if="props.result.type !== 'artist'" class="top-result-card__artist">
-            {{ props.result.artist }}
+            <NuxtLink
+              v-if="props.result.artistId"
+              :to="`/artist/${props.result.artistId}`"
+              class="artist-link"
+              @click.stop>
+              {{ props.result.artist }}
+            </NuxtLink>
+            <span v-else>{{ props.result.artist }}</span>
+          </span>
+          <span class="top-result-card__badge">{{ props.result.type }}</span>
+        </div>
+      </div>
+    </NuxtLink>
+    
+    <div v-else class="top-result-card__inner">
+      <div
+        class="top-result-card__image-container"
+        :class="{
+          'top-result-card__image-container--artist': isArtist,
+          'top-result-card__image-container--active': isCurrentlyPlaying
+        }">
+        <NuxtImg
+          v-if="props.result.thumbnailUrl"
+          :src="props.result.thumbnailUrl"
+          :alt="props.result.title"
+          width="92"
+          height="92"
+          format="webp"
+          fetchpriority="high"
+          preload />
+        <AppIcon v-else name="ph:music-notes-simple" />
+      </div>
+      <div class="top-result-card__info">
+        <h2 class="top-result-card__title" :class="{ 'text-primary': isCurrentlyPlaying }">
+          <ClientOnly>
+            <AppIcon
+              v-if="isPlaying"
+              name="ph:speaker-high-fill"
+              style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom" />
+            <AppIcon
+              v-else-if="isCurrentlyPlaying"
+              name="ph:speaker-none-fill"
+              style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom" />
+          </ClientOnly>
+          {{ props.result.title }}
+        </h2>
+        <div class="top-result-card__meta">
+          <span v-if="props.result.type !== 'artist'" class="top-result-card__artist">
+            <NuxtLink
+              v-if="props.result.artistId"
+              :to="`/artist/${props.result.artistId}`"
+              class="artist-link"
+              @click.stop>
+              {{ props.result.artist }}
+            </NuxtLink>
+            <span v-else>{{ props.result.artist }}</span>
           </span>
           <span class="top-result-card__badge">{{ props.result.type }}</span>
         </div>
@@ -68,10 +125,12 @@ const emit = defineEmits<{
         class="top-result-card__play-btn"
         :aria-label="$t('player.play') || 'Lejátszás'"
         @click.prevent="emit('play', props.result)">
-        <AppIcon v-if="isPlaying" name="ph:pause-fill" />
-        <AppIcon v-else name="ph:play-fill" />
+        <ClientOnly>
+          <AppIcon v-if="isPlaying" name="ph:pause-fill" />
+          <AppIcon v-else name="ph:play-fill" />
+        </ClientOnly>
       </button>
-    </component>
+    </div>
   </div>
 </template>
 
@@ -200,5 +259,16 @@ const emit = defineEmits<{
 
 .text-primary {
   color: var(--color-primary) !important;
+}
+
+.artist-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+
+  &:hover {
+    text-decoration: underline;
+    color: var(--color-text-primary);
+  }
 }
 </style>

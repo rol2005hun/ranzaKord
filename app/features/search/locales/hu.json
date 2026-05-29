@@ -15,5 +15,17 @@
     "albums": "Albumok",
     "noResultsQuery": "Nincs találat a következőre: \"{query}\"",
     "noResultsCategory": "Nincs találat a következőre: \"{query}\" ebben a kategóriában."
+  },
+  "album": {
+    "badge": "ALBUM",
+    "loadError": "Nem sikerült betölteni az albumot.",
+    "trackCount": "• {count} dal",
+    "titleColumn": "Cím"
+  },
+  "artist": {
+    "badge": "ELŐADÓ",
+    "loadError": "Nem sikerült betölteni az előadót.",
+    "topSongs": "Legnépszerűbb dalok",
+    "albums": "Albumok"
   }
 }

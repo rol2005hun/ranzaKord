@@ -57,7 +57,7 @@ function onPlayAlbum() {
 
     <div v-else-if="error || !album" class="album-page__error">
       <AppIcon name="ph:warning-circle" class="album-page__error-icon" />
-      <p>Nem sikerült betölteni az albumot.</p>
+      <p>{{ $t('search.album.loadError') }}</p>
     </div>
 
     <template v-else>
@@ -79,12 +79,12 @@ function onPlayAlbum() {
             <AppIcon v-else name="ph:music-notes" />
           </div>
           <div class="album-page__info">
-            <div class="album-page__badge">ALBUM</div>
+            <div class="album-page__badge">{{ $t('search.album.badge') }}</div>
             <h1 class="album-page__title">{{ album.title }}</h1>
             <div class="album-page__meta">
               <span class="album-page__artist">{{ album.artist }}</span>
               <span v-if="album.year" class="album-page__year">• {{ album.year }}</span>
-              <span class="album-page__tracks-count">• {{ album.tracks.length }} dal</span>
+              <span class="album-page__tracks-count">{{ $t('search.album.trackCount', { count: album.tracks.length }) }}</span>
             </div>
           </div>
         </div>
@@ -100,7 +100,7 @@ function onPlayAlbum() {
         <div v-if="album.tracks.length > 0" class="album-page__tracks">
           <div class="album-page__tracks-header">
             <div class="album-page__tracks-col-index">#</div>
-            <div class="album-page__tracks-col-title">Cím</div>
+            <div class="album-page__tracks-col-title">{{ $t('search.album.titleColumn') }}</div>
             <div class="album-page__tracks-col-time">
               <AppIcon name="ph:clock" />
             </div>
@@ -114,7 +114,16 @@ function onPlayAlbum() {
             <div class="album-page__tracks-col-index">{{ index + 1 }}</div>
             <div class="album-page__tracks-col-title">
               <div class="album-page__track-name">{{ track.title }}</div>
-              <div class="album-page__track-artist">{{ track.artist }}</div>
+              <div class="album-page__track-artist">
+                <NuxtLink
+                  v-if="track.artistId"
+                  :to="`/artist/${track.artistId}`"
+                  class="artist-link"
+                  @click.stop>
+                  {{ track.artist }}
+                </NuxtLink>
+                <span v-else>{{ track.artist }}</span>
+              </div>
             </div>
             <div class="album-page__tracks-col-time">
               {{
@@ -387,6 +396,17 @@ function onPlayAlbum() {
     justify-content: flex-end;
     color: var(--color-text-secondary);
     font-size: var(--text-sm);
+  }
+}
+
+.artist-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+
+  &:hover {
+    text-decoration: underline;
+    color: var(--color-text-primary);
   }
 }
 </style>

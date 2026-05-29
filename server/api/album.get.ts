@@ -1,4 +1,3 @@
-import type { ServerSession } from '../types/auth.server.types';
 import type { AlbumDetail, SearchResult } from '../../app/features/search/types/search.types';
 
 export default defineEventHandler(async (event): Promise<AlbumDetail> => {
@@ -11,18 +10,14 @@ export default defineEventHandler(async (event): Promise<AlbumDetail> => {
     throw createError({ statusCode: 400, statusMessage: t('search.errors.missingAlbumId') });
   }
 
-  const config = useRuntimeConfig();
-  const session = await useSession(event, { password: config.sessionSecret as string });
-  const sessionData = session.data as Partial<ServerSession>;
-
-  const innertube = await createInnertube(!!sessionData.accessToken);
+  const innertube = await createInnertube(false);
 
   try {
     const album = await innertube.music.getAlbum(id);
 
     type YTHeader = {
       title?: { toString: () => string };
-      author?: { name?: string };
+      author?: { name?: string; channel_id?: string };
       year?: string;
       thumbnails?: Array<{ url: string; width?: number }>;
       thumbnail?: { contents?: Array<{ url: string; width?: number }> };
@@ -33,7 +28,7 @@ export default defineEventHandler(async (event): Promise<AlbumDetail> => {
       endpoint?: { payload?: { videoId?: string } };
       title?: { toString: () => string };
       name?: { toString: () => string };
-      authors?: Array<{ name?: string }>;
+      authors?: Array<{ name?: string; channel_id?: string }>;
       thumbnails?: Array<{ url: string }>;
       duration?: { seconds?: number };
     };
@@ -42,6 +37,7 @@ export default defineEventHandler(async (event): Promise<AlbumDetail> => {
 
     const title = header?.title?.toString() || 'Unknown Album';
     const artist = header?.author?.name || 'Unknown Artist';
+    const albumArtistId = header?.author?.channel_id || '';
     const year = header?.year || '';
 
     let thumbnailUrl = '';
@@ -61,6 +57,7 @@ export default defineEventHandler(async (event): Promise<AlbumDetail> => {
         const trackTitle = item.title?.toString() || item.name?.toString() || '';
         const trackArtist = item.authors?.[0]?.name || artist;
         const trackThumb = item.thumbnails?.[0]?.url || thumbnailUrl;
+        const trackArtistId = item.authors?.[0]?.channel_id || albumArtistId;
 
         let duration = 0;
         if (item.duration?.seconds) duration = item.duration.seconds;
@@ -70,6 +67,7 @@ export default defineEventHandler(async (event): Promise<AlbumDetail> => {
           type: 'song',
           title: trackTitle,
           artist: trackArtist,
+          artistId: trackArtistId,
           thumbnailUrl: trackThumb,
           durationSeconds: duration
         });

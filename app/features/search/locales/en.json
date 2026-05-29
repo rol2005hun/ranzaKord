@@ -15,5 +15,17 @@
     "albums": "Albums",
     "noResultsQuery": "No results for: \"{query}\"",
     "noResultsCategory": "No results for: \"{query}\" in this category."
+  },
+  "album": {
+    "badge": "ALBUM",
+    "loadError": "Failed to load album.",
+    "trackCount": "• {count} songs",
+    "titleColumn": "Title"
+  },
+  "artist": {
+    "badge": "ARTIST",
+    "loadError": "Failed to load artist.",
+    "topSongs": "Top Songs",
+    "albums": "Albums"
   }
 }

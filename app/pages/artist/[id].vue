@@ -40,7 +40,7 @@ function onPlaySong(track: SearchResult) {
 
     <div v-else-if="error || !artist" class="artist-page__error">
       <AppIcon name="ph:warning-circle" class="artist-page__error-icon" />
-      <p>Nem sikerült betölteni az előadót.</p>
+      <p>{{ $t('search.artist.loadError') }}</p>
     </div>
 
     <template v-else>
@@ -62,7 +62,7 @@ function onPlaySong(track: SearchResult) {
             <AppIcon v-else name="ph:user" />
           </div>
           <div class="artist-page__info">
-            <div class="artist-page__badge">ELŐADÓ</div>
+            <div class="artist-page__badge">{{ $t('search.artist.badge') }}</div>
             <h1 class="artist-page__title">{{ artist.name }}</h1>
           </div>
         </div>
@@ -70,7 +70,7 @@ function onPlaySong(track: SearchResult) {
 
       <div class="artist-page__content">
         <div v-if="artist.topSongs.length > 0" class="artist-page__section">
-          <h2 class="artist-page__section-title">Legnépszerűbb dalok</h2>
+          <h2 class="artist-page__section-title">{{ $t('search.artist.topSongs') }}</h2>
           <div class="artist-page__songs-list">
             <SearchListItem
               v-for="song in artist.topSongs.slice(0, 5)"
@@ -81,7 +81,7 @@ function onPlaySong(track: SearchResult) {
         </div>
 
         <div v-if="artist.albums.length > 0" class="artist-page__section">
-          <h2 class="artist-page__section-title">Albumok</h2>
+          <h2 class="artist-page__section-title">{{ $t('search.artist.albums') }}</h2>
           <div class="artist-page__albums-grid">
             <TopResultCard
               v-for="album in artist.albums"

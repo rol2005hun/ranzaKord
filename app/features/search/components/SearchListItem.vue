@@ -79,9 +79,29 @@ function onClick() {
         {{ track.title }}
       </h3>
       <p class="search-list-item__subtitle">
-        <span v-if="track.type === 'song'">Dal • {{ track.artist }}</span>
+        <span v-if="track.type === 'song'">
+          Dal •
+          <NuxtLink
+            v-if="track.artistId"
+            :to="`/artist/${track.artistId}`"
+            class="artist-link"
+            @click.stop>
+            {{ track.artist }}
+          </NuxtLink>
+          <span v-else>{{ track.artist }}</span>
+        </span>
         <span v-else-if="track.type === 'artist'">Előadó</span>
-        <span v-else-if="track.type === 'album'">Album • {{ track.artist }}</span>
+        <span v-else-if="track.type === 'album'">
+          Album •
+          <NuxtLink
+            v-if="track.artistId"
+            :to="`/artist/${track.artistId}`"
+            class="artist-link"
+            @click.stop>
+            {{ track.artist }}
+          </NuxtLink>
+          <span v-else>{{ track.artist }}</span>
+        </span>
       </p>
     </div>
 
@@ -241,5 +261,16 @@ function onClick() {
 
 .text-primary {
   color: var(--color-primary) !important;
+}
+
+.artist-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+
+  &:hover {
+    text-decoration: underline;
+    color: var(--color-text-primary);
+  }
 }
 </style>

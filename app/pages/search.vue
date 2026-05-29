@@ -6,11 +6,19 @@ definePageMeta({
 });
 
 const route = useRoute();
+const router = useRouter();
 const { search, query, results, categorizedResults, searchType, isLoading, error } = useSearch();
 
-const currentTab = ref<'all' | SearchResultType>('all');
+const currentTab = ref<'all' | SearchResultType>((route.query.type as 'all' | SearchResultType) || 'all');
 
 watch(currentTab, (newTab) => {
+  router.replace({
+    query: {
+      ...route.query,
+      type: newTab === 'all' ? undefined : newTab
+    }
+  });
+
   if (query.value) {
     search(query.value, newTab);
   }
@@ -21,6 +29,18 @@ watch(
   (newQ) => {
     if (newQ && typeof newQ === 'string' && newQ !== query.value) {
       search(newQ, currentTab.value, true);
+    }
+  }
+);
+
+watch(
+  () => route.query.type,
+  (newType) => {
+    const validTypes = ['all', 'song', 'artist', 'album', 'video', 'playlist', 'podcast', 'profile'];
+    const typeToSet = (newType as string) && validTypes.includes(newType as string) ? (newType as 'all' | SearchResultType) : 'all';
+    
+    if (currentTab.value !== typeToSet) {
+      currentTab.value = typeToSet;
     }
   }
 );

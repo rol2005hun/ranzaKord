@@ -29,9 +29,9 @@ export default defineCachedEventHandler(
       name?: { toString: () => string };
       type?: string;
       item_type?: string;
-      authors?: Array<{ name?: string }>;
-      artists?: Array<{ name?: string }>;
-      author?: { toString: () => string; name?: string } | Array<{ name?: string }> | string;
+      authors?: Array<{ name?: string; channel_id?: string }>;
+      artists?: Array<{ name?: string; channel_id?: string }>;
+      author?: { toString: () => string; name?: string; channel_id?: string } | Array<{ name?: string; channel_id?: string }> | string;
       subtitle?: { toString: () => string; name?: string } | Array<{ name?: string }> | string;
       thumbnails?: Array<{ url: string; width?: number }>;
       thumbnail?: { contents?: Array<{ url: string; width?: number }> };
@@ -105,6 +105,15 @@ export default defineCachedEventHandler(
         artistName = item.subtitle.toString();
       }
 
+      let artistId: string | undefined = undefined;
+      if (item.artists?.[0]?.channel_id) {
+        artistId = item.artists[0].channel_id;
+      } else if (item.authors?.[0]?.channel_id) {
+        artistId = item.authors[0].channel_id;
+      } else if (item.author && typeof item.author === 'object' && 'channel_id' in item.author && !Array.isArray(item.author)) {
+        artistId = item.author.channel_id;
+      }
+
       let thumbnail = '';
       const thumbs = item.thumbnails || item.thumbnail?.contents;
       if (Array.isArray(thumbs) && thumbs.length > 0) {
@@ -128,6 +137,7 @@ export default defineCachedEventHandler(
         type: parsedType,
         title,
         artist: artistName,
+        artistId,
         thumbnailUrl: thumbnail,
         durationSeconds: duration
       };
