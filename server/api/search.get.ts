@@ -1,4 +1,3 @@
-
 import type {
   CategorizedSearchResults,
   SearchResult,
@@ -32,8 +31,8 @@ export default defineCachedEventHandler(
       item_type?: string;
       authors?: Array<{ name?: string }>;
       artists?: Array<{ name?: string }>;
-      author?: { toString: () => string };
-      subtitle?: { toString: () => string };
+      author?: { toString: () => string; name?: string } | Array<{ name?: string }> | string;
+      subtitle?: { toString: () => string; name?: string } | Array<{ name?: string }> | string;
       thumbnails?: Array<{ url: string; width?: number }>;
       thumbnail?: { contents?: Array<{ url: string; width?: number }> };
       duration?: { seconds?: number } | number;
@@ -69,12 +68,42 @@ export default defineCachedEventHandler(
         else if (isSong) parsedType = 'song';
       }
 
-      const artistName =
-        item.authors?.[0]?.name ||
-        item.artists?.[0]?.name ||
-        item.author?.toString() ||
-        item.subtitle?.toString() ||
-        '';
+      let artistName = '';
+      if (item.authors?.[0]?.name) {
+        artistName = item.authors[0].name;
+      } else if (item.artists?.[0]?.name) {
+        artistName = item.artists[0].name;
+      } else if (Array.isArray(item.author) && item.author[0]?.name) {
+        artistName = item.author[0].name;
+      } else if (
+        item.author &&
+        typeof item.author === 'object' &&
+        'name' in item.author &&
+        !Array.isArray(item.author)
+      ) {
+        artistName = item.author.name || '';
+      } else if (
+        item.author &&
+        typeof item.author.toString === 'function' &&
+        item.author.toString() !== '[object Object]'
+      ) {
+        artistName = item.author.toString();
+      } else if (Array.isArray(item.subtitle) && item.subtitle[0]?.name) {
+        artistName = item.subtitle[0].name;
+      } else if (
+        item.subtitle &&
+        typeof item.subtitle === 'object' &&
+        'name' in item.subtitle &&
+        !Array.isArray(item.subtitle)
+      ) {
+        artistName = item.subtitle.name || '';
+      } else if (
+        item.subtitle &&
+        typeof item.subtitle.toString === 'function' &&
+        item.subtitle.toString() !== '[object Object]'
+      ) {
+        artistName = item.subtitle.toString();
+      }
 
       let thumbnail = '';
       const thumbs = item.thumbnails || item.thumbnail?.contents;
@@ -178,7 +207,7 @@ export default defineCachedEventHandler(
         .trim()
         .toLowerCase();
       const type = String(query['type'] || 'all');
-      return `${q}-${type}`;
+      return `${q}-${type}-v2`;
     }
   }
 );
