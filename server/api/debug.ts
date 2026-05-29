@@ -1,4 +1,4 @@
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async () => {
   try {
     const innertube = await createInnertube(true);
     return {
@@ -8,11 +8,11 @@ export default defineEventHandler(async (event) => {
       cookieExists: !!useRuntimeConfig().youtubeCookies,
       clientStatus: 'OK'
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     return {
       success: false,
-      error: err.message,
-      stack: err.stack
+      error: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined
     };
   }
 });
