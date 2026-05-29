@@ -35,7 +35,24 @@ function onPlaySong(track: SearchResult) {
 <template>
   <div class="artist-page">
     <div v-if="status === 'pending'" class="artist-page__loading">
-      <AppSpinner size="lg" />
+      <div class="artist-page__loading-header">
+        <AppSkeleton width="200px" height="200px" border-radius="50%" />
+        <div class="artist-page__loading-info">
+          <AppSkeleton width="80px" height="14px" border-radius="var(--radius-sm)" />
+          <AppSkeleton width="min(520px, 70vw)" height="88px" border-radius="var(--radius-md)" />
+        </div>
+      </div>
+
+      <div class="artist-page__loading-content">
+        <AppSkeleton width="180px" height="28px" border-radius="var(--radius-sm)" />
+        <div class="artist-page__loading-list">
+          <AppSkeleton
+            v-for="i in 5"
+            :key="`artist-loading-${i}`"
+            height="68px"
+            border-radius="var(--radius-lg)" />
+        </div>
+      </div>
     </div>
 
     <div v-else-if="error || !artist" class="artist-page__error">
@@ -97,16 +114,56 @@ function onPlaySong(track: SearchResult) {
 
 <style lang="scss" scoped>
 .artist-page {
+  padding: var(--space-8);
   padding-bottom: var(--space-12);
 
   &__loading,
   &__error {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-24) 0;
     color: var(--color-text-secondary);
+  }
+
+  &__loading {
+    gap: var(--space-8);
+    padding: var(--space-6) 0;
+  }
+
+  &__loading-header {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-6);
+    padding: var(--space-8);
+    min-height: 350px;
+    border-radius: var(--radius-xl);
+    background: linear-gradient(to bottom, var(--color-surface), transparent);
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      align-items: flex-start;
+      min-height: 280px;
+      padding: var(--space-6);
+    }
+  }
+
+  &__loading-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__loading-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  &__loading-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
   }
 
   &__error-icon {
@@ -120,13 +177,10 @@ function onPlaySong(track: SearchResult) {
     display: flex;
     align-items: flex-end;
     padding: var(--space-8);
-    margin: calc(var(--space-8) * -1) calc(var(--space-8) * -1) var(--space-8)
-      calc(var(--space-8) * -1);
+    margin: 0 0 var(--space-8);
     overflow: hidden;
 
     @media (max-width: 768px) {
-      margin: calc(var(--space-4) * -1) calc(var(--space-4) * -1) var(--space-8)
-        calc(var(--space-4) * -1);
       padding: var(--space-6) var(--space-4);
       height: 280px;
     }
@@ -211,9 +265,14 @@ function onPlaySong(track: SearchResult) {
   &__content {
     max-width: 1600px;
     margin: 0 auto;
+    padding: 0 var(--space-8);
     display: flex;
     flex-direction: column;
     gap: var(--space-10);
+
+    @media (max-width: 768px) {
+      padding: 0;
+    }
   }
 
   &__section-title {

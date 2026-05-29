@@ -16,16 +16,20 @@ const isLoading = ref(true);
 const showEditModal = ref(false);
 const showDeleteConfirm = ref(false);
 
-const { status } = await useAsyncData(`playlist-${id.value}`, async () => {
-  if (!id.value) return null;
-  const result = await store.fetchDetail(id.value);
-  if (result) {
-    playlist.value = result;
+const { data, status } = await useAsyncData<PlaylistDetail | null>(
+  () => `playlist-${id.value}`,
+  async () => {
+    if (!id.value) return null;
+    return await store.fetchDetail(id.value);
+  },
+  {
+    lazy: true,
+    watch: [id]
   }
-  return result;
-});
+);
 
 watchEffect(() => {
+  playlist.value = data.value ?? null;
   isLoading.value = status.value === 'pending';
 });
 

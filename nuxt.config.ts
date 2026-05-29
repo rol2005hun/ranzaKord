@@ -62,11 +62,13 @@ export default defineNuxtConfig({
   },
 
   image: {
+    provider: 'ipx',
     domains: [
       'yt3.googleusercontent.com',
       'i.ytimg.com',
       'image-cdn-ak.spotifycdn.com',
-      'i.scdn.co'
+      'i.scdn.co',
+      'i.imgur.com'
     ],
     format: ['webp', 'avif'],
     quality: 80

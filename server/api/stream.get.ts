@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
   const innertube = await createInnertube(true);
   const debugInfo: Record<string, string> = {};
 
-  let successfulResponse: Response | undefined;
+  let resolvedStreamUrl: string | undefined;
 
   for (let attempt = 1; attempt <= 2; attempt++) {
     for (const client of workingClients) {
@@ -44,43 +44,35 @@ export default defineEventHandler(async (event) => {
           continue;
         }
 
-        let streamUrl = format.url as string | undefined;
-        if (!streamUrl) {
-          streamUrl = await format.decipher(innertube.session.player);
+        let candidateUrl = format.url as string | undefined;
+        if (!candidateUrl) {
+          candidateUrl = await format.decipher(innertube.session.player);
         }
 
-        if (!streamUrl) {
+        if (!candidateUrl) {
           debugInfo[client] = `Failed to extract stream URL on attempt ${attempt}.`;
           continue;
         }
 
-        const rangeHeader = getRequestHeader(event, 'range') ?? undefined;
-        const response = await fetch(streamUrl, {
-          headers: rangeHeader ? { range: rangeHeader } : undefined
-        });
-
-        if (response.ok && response.body) {
-          successfulResponse = response;
-          if (workingClients[0] !== client) {
-            workingClients.unshift(
-              workingClients.splice(workingClients.indexOf(client), 1)[0] as ClientType
-            );
-          }
-          break;
-        } else {
-          debugInfo[client] = `Fetch returned ${response.status} ${response.statusText}`;
+        if (workingClients[0] !== client) {
+          workingClients.unshift(
+            workingClients.splice(workingClients.indexOf(client), 1)[0] as ClientType
+          );
         }
+
+        resolvedStreamUrl = candidateUrl;
+        break;
       } catch (e) {
         debugInfo[client] = e instanceof Error ? e.message : String(e);
       }
     }
 
-    if (successfulResponse) {
+    if (resolvedStreamUrl) {
       break;
     }
   }
 
-  if (!successfulResponse) {
+  if (!resolvedStreamUrl) {
     throw createError({
       statusCode: 500,
       statusMessage: t('player.errors.extractFailed', { msg: 'All clients failed' }),
@@ -88,10 +80,5 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  for (const [key, value] of successfulResponse.headers.entries()) {
-    setHeader(event, key, value);
-  }
-
-  setResponseStatus(event, successfulResponse.status);
-  return sendStream(event, successfulResponse.body as ReadableStream);
+  return sendRedirect(event, resolvedStreamUrl, 302);
 });

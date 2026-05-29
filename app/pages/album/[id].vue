@@ -52,7 +52,25 @@ function onPlayAlbum() {
 <template>
   <div class="album-page">
     <div v-if="status === 'pending'" class="album-page__loading">
-      <AppSpinner size="lg" />
+      <div class="album-page__loading-header">
+        <AppSkeleton width="232px" height="232px" border-radius="var(--radius-sm)" />
+        <div class="album-page__loading-info">
+          <AppSkeleton width="72px" height="12px" border-radius="var(--radius-sm)" />
+          <AppSkeleton width="min(560px, 72vw)" height="88px" border-radius="var(--radius-md)" />
+          <AppSkeleton width="min(420px, 58vw)" height="16px" border-radius="var(--radius-sm)" />
+        </div>
+      </div>
+
+      <div class="album-page__loading-content">
+        <AppSkeleton width="64px" height="64px" border-radius="50%" />
+        <div class="album-page__loading-tracks">
+          <AppSkeleton
+            v-for="i in 8"
+            :key="`album-loading-${i}`"
+            height="58px"
+            border-radius="var(--radius-md)" />
+        </div>
+      </div>
     </div>
 
     <div v-else-if="error || !album" class="album-page__error">
@@ -84,7 +102,9 @@ function onPlayAlbum() {
             <div class="album-page__meta">
               <span class="album-page__artist">{{ album.artist }}</span>
               <span v-if="album.year" class="album-page__year">• {{ album.year }}</span>
-              <span class="album-page__tracks-count">{{ $t('search.album.trackCount', { count: album.tracks.length }) }}</span>
+              <span class="album-page__tracks-count">
+                {{ $t('search.album.trackCount', { count: album.tracks.length }) }}
+              </span>
             </div>
           </div>
         </div>
@@ -143,16 +163,57 @@ function onPlayAlbum() {
 
 <style lang="scss" scoped>
 .album-page {
+  padding: var(--space-8);
   padding-bottom: var(--space-12);
 
   &__loading,
   &__error {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-24) 0;
     color: var(--color-text-secondary);
+  }
+
+  &__loading {
+    gap: var(--space-8);
+    padding: var(--space-6) 0;
+  }
+
+  &__loading-header {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-6);
+    padding: var(--space-8);
+    min-height: 350px;
+    border-radius: var(--radius-xl);
+    background: linear-gradient(to bottom, var(--color-surface), transparent);
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-height: 280px;
+      padding: var(--space-6);
+    }
+  }
+
+  &__loading-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__loading-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  &__loading-tracks {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
   }
 
   &__error-icon {
@@ -166,13 +227,10 @@ function onPlayAlbum() {
     display: flex;
     align-items: flex-end;
     padding: var(--space-8);
-    margin: calc(var(--space-8) * -1) calc(var(--space-8) * -1) var(--space-8)
-      calc(var(--space-8) * -1);
+    margin: 0 0 var(--space-8);
     overflow: hidden;
 
     @media (max-width: 768px) {
-      margin: calc(var(--space-4) * -1) calc(var(--space-4) * -1) var(--space-8)
-        calc(var(--space-4) * -1);
       padding: var(--space-6) var(--space-4);
       height: auto;
       min-height: 280px;
@@ -290,9 +348,14 @@ function onPlayAlbum() {
   &__content {
     max-width: 1600px;
     margin: 0 auto;
+    padding: 0 var(--space-8);
     display: flex;
     flex-direction: column;
     gap: var(--space-8);
+
+    @media (max-width: 768px) {
+      padding: 0;
+    }
   }
 
   &__actions {

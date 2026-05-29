@@ -9,12 +9,18 @@ const showCreateModal = ref(false);
 const showImportModal = ref(false);
 const showMobilePlaylists = ref(false);
 
-await useAsyncData('user-playlists', async () => {
-  if (isAuthenticated.value) {
-    await playlistsStore.fetchAll();
+useAsyncData(
+  'user-playlists',
+  async () => {
+    if (isAuthenticated.value) {
+      await playlistsStore.fetchAll();
+    }
+    return true;
+  },
+  {
+    lazy: true
   }
-  return true;
-});
+);
 
 function onPlaylistCreated(id: string): void {
   showCreateModal.value = false;
