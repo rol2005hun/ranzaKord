@@ -536,7 +536,7 @@ function onVolumeInput(event: Event) {
     grid-template-areas:
       'left controls right'
       'progress progress progress';
-    grid-template-columns: 1.5fr auto 1fr;
+    grid-template-columns: 1fr auto 1fr;
     grid-template-rows: auto auto;
     gap: var(--space-2);
     padding: var(--space-2) var(--space-3);
@@ -573,7 +573,7 @@ function onVolumeInput(event: Event) {
     }
 
     &__slider--volume {
-      width: 50px;
+      width: 80px;
     }
 
     &__artwork {
@@ -592,6 +592,12 @@ function onVolumeInput(event: Event) {
     &__time {
       font-size: 10px;
       min-width: 28px;
+    }
+  }
+
+  @media (max-width: 400px) {
+    &__slider--volume {
+      width: 50px;
     }
   }
 }
