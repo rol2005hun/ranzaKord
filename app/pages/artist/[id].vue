@@ -64,7 +64,7 @@ async function loadSongs() {
   try {
     const data = await $fetch<PaginatedSongs>('/api/artist/songs', {
       query: {
-        q: !continuation.value ? artist.value?.name : undefined,
+        q: artist.value?.name,
         continuation: continuation.value || undefined
       }
     });

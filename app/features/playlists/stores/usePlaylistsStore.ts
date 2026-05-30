@@ -10,6 +10,7 @@ import type { SearchResult } from '@/features/search/types/search.types';
 export const usePlaylistsStore = defineStore('playlists', () => {
   const playlists = ref<PlaylistSummary[]>([]);
   const isLoading = ref(true);
+  const hasLoaded = ref(false);
   const error = ref<string | null>(null);
   const importProgress = ref<{ current: number; total: number } | null>(null);
   const { t } = useI18n();
@@ -23,7 +24,11 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     return playlists.value.some((p) => p.trackIds.includes(videoId));
   }
 
-  async function fetchAll(): Promise<void> {
+  async function fetchAll(force = false): Promise<void> {
+    if (!force && hasLoaded.value) {
+      isLoading.value = false;
+      return;
+    }
     isLoading.value = true;
     error.value = null;
     try {
@@ -35,6 +40,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
         }
       }
       playlists.value = await $fetch<PlaylistSummary[]>('/api/playlists', fetchOptions);
+      hasLoaded.value = true;
     } catch {
       error.value = t('playlists.errors.load');
     } finally {
@@ -59,7 +65,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
   async function update(id: string, payload: Partial<CreatePlaylistPayload>): Promise<void> {
     try {
       await $fetch(`/api/playlists/${id}`, { method: 'PATCH', body: payload });
-      await fetchAll();
+      await fetchAll(true);
     } catch {
       error.value = t('playlists.errors.update');
     }
@@ -126,7 +132,6 @@ export const usePlaylistsStore = defineStore('playlists', () => {
       if (typeof query?.offset === 'number') {
         searchParams.set('offset', String(query.offset));
       }
-      searchParams.set('id', id);
 
       const suffix = searchParams.toString() ? `?${searchParams.toString()}` : '';
       return await $fetch<PlaylistDetail>(`/api/playlists/${id}${suffix}`, fetchOptions);

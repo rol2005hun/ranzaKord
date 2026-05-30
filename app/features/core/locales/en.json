@@ -13,7 +13,8 @@
     "theme": "Theme",
     "settings": "Settings",
     "playlists": "Playlists",
-    "language": "Language"
+    "language": "Language",
+    "downloadApp": "Get Desktop App"
   },
   "actions": {
     "cancel": "Cancel",

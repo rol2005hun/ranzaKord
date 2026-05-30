@@ -4,6 +4,16 @@ const { themeId, themes, setTheme } = useTheme();
 const { locale, setLocale } = useI18n();
 
 const isDropdownOpen = ref(false);
+const isDesktopApp = ref(true);
+
+onMounted(async () => {
+  try {
+    const { isTauri } = await import('@tauri-apps/api/core');
+    isDesktopApp.value = isTauri();
+  } catch {
+    isDesktopApp.value = false;
+  }
+});
 
 const emit = defineEmits<{
   (e: 'open-playlists'): void;
@@ -31,6 +41,15 @@ function closeDropdown() {
     </div>
 
     <div class="app-navbar__right">
+      <a
+        v-if="!isDesktopApp"
+        href="https://github.com/rol2005hun/ranzaKord/releases/latest"
+        target="_blank"
+        class="app-navbar__download-btn">
+        <AppIcon name="ph:desktop" />
+        <span>{{ $t('core.nav.downloadApp') }}</span>
+      </a>
+
       <div v-if="isAuthenticated && currentUser" class="app-navbar__user">
         <button class="app-navbar__avatar" :aria-label="$t('auth.profile')" @click="toggleDropdown">
           <img
@@ -113,6 +132,33 @@ function closeDropdown() {
     align-items: center;
     max-width: 600px;
     min-width: 0;
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  &__download-btn {
+    display: none;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    background-color: var(--color-surface-hover);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+
+    &:hover {
+      background-color: var(--color-primary);
+      color: var(--color-text-inverse);
+      border-color: var(--color-primary);
+    }
   }
 
   &__mobile-menu {
@@ -334,6 +380,12 @@ function closeDropdown() {
 @media (max-width: 768px) {
   .app-navbar {
     padding: 0 var(--space-4);
+  }
+}
+
+@media (min-width: 769px) {
+  .app-navbar__download-btn {
+    display: flex;
   }
 }
 </style>

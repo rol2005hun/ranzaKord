@@ -13,7 +13,8 @@
     "theme": "Téma",
     "settings": "Beállítások",
     "playlists": "Lejátszási listák",
-    "language": "Nyelv"
+    "language": "Nyelv",
+    "downloadApp": "Asztali alkalmazás letöltése"
   },
   "actions": {
     "cancel": "Mégsem",

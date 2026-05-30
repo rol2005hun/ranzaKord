@@ -102,7 +102,12 @@ export default defineEventHandler(async (event) => {
       if (contents?.contents) {
         for (const item of contents.contents) {
           const s = parseItem(item);
-          if (s) items.push(s);
+          if (s) {
+            if (q && s.artist && !s.artist.toLowerCase().includes(q.toLowerCase())) {
+              continue;
+            }
+            items.push(s);
+          }
         }
       }
       nextContinuation = contents?.continuation || undefined;
@@ -121,7 +126,12 @@ export default defineEventHandler(async (event) => {
       if (shelf?.contents) {
         for (const item of shelf.contents) {
           const s = parseItem(item);
-          if (s) items.push(s);
+          if (s) {
+            if (q && s.artist && !s.artist.toLowerCase().includes(q.toLowerCase())) {
+              continue;
+            }
+            items.push(s);
+          }
         }
       }
       nextContinuation = shelf?.continuation || undefined;

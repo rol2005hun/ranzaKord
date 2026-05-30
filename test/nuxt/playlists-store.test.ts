@@ -155,7 +155,7 @@ describe('usePlaylistsStore', () => {
       const res = await store.fetchDetail('p1', { limit: 10, offset: 0 });
       expect(res).toEqual(detail);
       expect(globalThis.$fetch).toHaveBeenCalledWith(
-        '/api/playlists/p1?limit=10&offset=0&id=p1',
+        '/api/playlists/p1?limit=10&offset=0',
         expect.anything()
       );
     });

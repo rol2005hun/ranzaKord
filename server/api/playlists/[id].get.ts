@@ -43,19 +43,7 @@ function parseNonNegativeInteger(value: unknown): number | undefined {
 }
 
 function resolvePlaylistId(event: H3Event): string | undefined {
-  const queryId = getQuery(event).id;
-  if (typeof queryId === 'string' && queryId.length > 0) {
-    return queryId;
-  }
-
-  const routeId = getRouterParam(event, 'id') ?? event.context.params?.id;
-  if (routeId) {
-    return routeId;
-  }
-
-  const pathname = getRequestURL(event).pathname;
-  const pathMatch = pathname.match(/\/api\/playlists\/([^/]+)$/);
-  return pathMatch?.[1];
+  return getRouterParam(event, 'id') ?? event.context.params?.id;
 }
 
 export default defineEventHandler(async (event): Promise<PlaylistDetailResponse> => {
