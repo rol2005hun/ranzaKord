@@ -3,8 +3,6 @@ const route = useRoute();
 const { isAuthenticated } = useAuth();
 const playlistsStore = usePlaylistsStore();
 
-const navItems = [{ to: '/', icon: 'ph:house-fill', labelKey: 'core.nav.home' }];
-
 const showCreateModal = ref(false);
 const showImportModal = ref(false);
 const showMobilePlaylists = ref(false);
@@ -41,14 +39,6 @@ function onPlaylistImported(id: string): void {
           <AppBrand />
         </NuxtLink>
       </template>
-
-      <AppSidebarItem
-        v-for="item in navItems"
-        :key="item.to"
-        :to="item.to"
-        :icon="item.icon"
-        :label="$t(item.labelKey)"
-        :active="route.path === item.to" />
 
       <div v-if="isAuthenticated" class="music-layout__library">
         <div class="music-layout__library-header">
@@ -213,8 +203,6 @@ function onPlaylistImported(id: string): void {
 
   &__library {
     padding: var(--space-2) 0;
-    border-top: 1px solid var(--color-border);
-    margin-top: var(--space-2);
   }
 
   &__library-header {

@@ -27,6 +27,11 @@ export interface ArtistDetail {
   albums: SearchResult[];
 }
 
+export interface PaginatedSongs {
+  items: SearchResult[];
+  continuation?: string;
+}
+
 export interface AlbumDetail {
   id: string;
   title: string;

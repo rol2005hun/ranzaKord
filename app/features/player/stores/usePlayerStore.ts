@@ -117,11 +117,17 @@ export const usePlayerStore = defineStore(
           const { isTauri, invoke } = await import('@tauri-apps/api/core');
           if (isTauri()) {
             if (playing && track) {
-              const endTimestamp =
-                Math.floor(Date.now() / 1000) + (track.durationSeconds - currentTimeSeconds.value);
+              // We add a +2 second offset because the audio takes a bit to buffer,
+              // making Discord's counter appear 'ahead' of the actual song playback.
+              const startTimestamp =
+                Math.floor(Date.now() / 1000) - Math.floor(currentTimeSeconds.value) + 2;
+              const endTimestamp = startTimestamp + track.durationSeconds;
               await invoke('set_discord_presence', {
                 details: track.title,
-                stateStr: `by ${track.artist}`,
+                stateStr: `${track.artist} on ranzaKord`,
+                largeImage: track.thumbnailUrl,
+                trackId: track.videoId,
+                startTimestamp,
                 endTimestamp
               });
             } else {

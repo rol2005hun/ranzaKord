@@ -200,7 +200,6 @@ const isHovered = ref(false);
 
   &__nav {
     width: 15rem;
-    padding: var(--space-3) 0;
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -246,6 +245,64 @@ const isHovered = ref(false);
 
     &__pin {
       display: none;
+    }
+  }
+}
+
+.app-sidebar-item {
+  display: flex;
+  align-items: center;
+  width: 3rem;
+  height: 3rem;
+  margin: 0 0.75rem 4px 0.75rem;
+  padding: 0;
+  padding-left: 0.85rem;
+  border-radius: var(--radius-lg);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+  overflow: hidden;
+  transition:
+    width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color var(--transition-fast),
+    color var(--transition-fast);
+
+  &:hover {
+    background-color: var(--color-surface-hover);
+    color: var(--color-text-primary);
+  }
+
+  &--active {
+    background-color: var(--color-primary-subtle);
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    margin-right: var(--space-2);
+  }
+
+  @media (max-width: 768px) {
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: var(--space-2);
+    flex-direction: column;
+    justify-content: center;
+
+    .app-sidebar__text {
+      display: none;
+    }
+
+    .app-sidebar-item__icon {
+      font-size: 1.5rem;
     }
   }
 }

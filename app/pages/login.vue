@@ -124,6 +124,10 @@ if (isAuthenticated.value) {
     width: 100%;
   }
 
+  &__spinner {
+    --spinner-color: currentColor;
+  }
+
   &__footer {
     font-size: var(--text-xs);
     color: var(--color-text-secondary, #9090b0);

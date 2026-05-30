@@ -1,0 +1,17 @@
+{
+  "login": {
+    "title": "Üdvözöl a ranzaKord",
+    "subtitle": "Jelentkezz be a zenéid eléréséhez",
+    "button": "Folytatás ranzaKonnect-el",
+    "redirecting": "Átirányítás a ranzaKonnect-re...",
+    "footer": "Biztonságos bejelentkezés ranzaKonnect segítségével"
+  },
+  "logout": "Kijelentkezés",
+  "profile": "Profil",
+  "loginError": "Sikertelen bejelentkezés. Kérjük próbáld újra.",
+  "sessionExpired": "A munkamenet lejárt. Kérjük jelentkezz be újra.",
+  "callback": {
+    "loading": "Bejelentkezés befejezése…",
+    "error": "Sikertelen bejelentkezés. Kérjük próbáld újra."
+  }
+}

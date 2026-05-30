@@ -48,7 +48,7 @@ function closeDropdown() {
 
         <div v-if="isDropdownOpen" class="app-navbar__dropdown">
           <div class="app-navbar__dropdown-row">
-            <span class="app-navbar__dropdown-row-label">Language</span>
+            <span class="app-navbar__dropdown-row-label">{{ $t('core.nav.language') }}</span>
             <div class="app-navbar__dropdown-toggle">
               <button :class="{ active: (locale as any) === 'en' }" @click="setLocale('en' as any)">
                 EN
@@ -60,7 +60,7 @@ function closeDropdown() {
           </div>
 
           <div class="app-navbar__dropdown-row">
-            <span class="app-navbar__dropdown-row-label">Theme</span>
+            <span class="app-navbar__dropdown-row-label">{{ $t('core.nav.theme') }}</span>
             <div class="app-navbar__dropdown-toggle">
               <button
                 v-for="theme in themes"

@@ -1,0 +1,27 @@
+{
+  "appName": "ranzaKord",
+  "loading": "Betöltés…",
+  "error": {
+    "generic": "Valami hiba történt.",
+    "notFound": "Az oldal nem található."
+  },
+  "nav": {
+    "signIn": "Bejelentkezés",
+    "home": "Főoldal",
+    "search": "Keresés",
+    "library": "Könyvtár",
+    "theme": "Téma",
+    "settings": "Beállítások",
+    "playlists": "Lejátszási listák",
+    "language": "Nyelv"
+  },
+  "actions": {
+    "cancel": "Mégsem",
+    "save": "Mentés"
+  },
+  "musicDetail": {
+    "titleColumn": "Cím",
+    "empty": "Nincsenek zenék",
+    "error": "Valami hiba történt."
+  }
+}

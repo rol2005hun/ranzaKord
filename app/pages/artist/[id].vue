@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import type { ArtistDetail, SearchResult } from '@/features/search/types/search.types';
+import type {
+  ArtistDetail,
+  SearchResult,
+  PaginatedSongs
+} from '@/features/search/types/search.types';
 import type { Track } from '@/features/player/types/player.types';
 
 definePageMeta({
@@ -49,6 +53,56 @@ function onPlayArtist(): void {
   playerStore.setQueue(queue);
   if (queue[0]) playTrack(queue[0]);
 }
+
+const allSongs = ref<SearchResult[]>([]);
+const continuation = ref<string | null>(null);
+const isLoadingSongs = ref(false);
+
+async function loadSongs() {
+  if (isLoadingSongs.value || (!artist.value?.name && !continuation.value)) return;
+  isLoadingSongs.value = true;
+  try {
+    const data = await $fetch<PaginatedSongs>('/api/artist/songs', {
+      query: {
+        q: !continuation.value ? artist.value?.name : undefined,
+        continuation: continuation.value || undefined
+      }
+    });
+    if (data.items) {
+      const newItems = data.items.filter(
+        (item) => !allSongs.value.some((existing) => existing.id === item.id)
+      );
+      allSongs.value.push(...newItems);
+    }
+    continuation.value = data.continuation || null;
+  } catch (e) {
+    console.error('Failed to load songs', e);
+  } finally {
+    isLoadingSongs.value = false;
+  }
+}
+
+watch(
+  artist,
+  (newVal) => {
+    if (newVal && allSongs.value.length === 0) {
+      loadSongs();
+    }
+  },
+  { immediate: true }
+);
+
+onMounted(() => {
+  useInfiniteScroll(
+    window,
+    () => {
+      if (continuation.value && !isLoadingSongs.value) {
+        loadSongs();
+      }
+    },
+    { distance: 200 }
+  );
+});
 </script>
 
 <template>
@@ -94,14 +148,18 @@ function onPlayArtist(): void {
         </template>
 
         <template v-else-if="artist">
-          <div v-if="artist.topSongs.length > 0" class="artist-page__section">
-            <h2 class="artist-page__section-title">{{ $t('search.artist.topSongs') }}</h2>
+          <div v-if="allSongs.length > 0" class="artist-page__section">
+            <h2 class="artist-page__section-title">{{ $t('search.artist.topSongs') }} (All)</h2>
             <div class="artist-page__songs-list">
               <SearchListItem
-                v-for="song in artist.topSongs.slice(0, 5)"
+                v-for="song in allSongs"
                 :key="song.id"
                 :track="song"
                 @click="onPlaySong(song)" />
+            </div>
+
+            <div v-if="isLoadingSongs" class="artist-page__songs-loading">
+              <AppSpinner />
             </div>
           </div>
 
@@ -165,6 +223,12 @@ function onPlayArtist(): void {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
+  }
+
+  &__songs-loading {
+    display: flex;
+    justify-content: center;
+    padding: var(--space-6);
   }
 
   &__track-skeleton {

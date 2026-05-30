@@ -69,15 +69,29 @@
     "eslint-plugin-oxlint": "^1.67.0",
     "happy-dom": "^20.9.0",
     "husky": "^9.1.7",
+    "lint-staged": "^17.0.6",
     "oxlint": "^1.67.0",
     "playwright-core": "^1.60.0",
     "prettier": "^3.8.3",
+    "replace-in-file": "^8.4.0",
     "sass": "^1.100.0",
     "tsx": "^4.22.3",
     "typescript": "^6.0.3",
     "vitest": "^4.1.7",
     "vue-tsc": "^3.3.2",
     "zod": "^4.4.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "lint-staged": {
+    "*.{vue,js,ts}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{scss,css,json}": [
+      "prettier --write"
+    ]
   },
   "pnpm": {
     "peerDependencyRules": {

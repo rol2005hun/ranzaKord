@@ -12,7 +12,8 @@
     "library": "Library",
     "theme": "Theme",
     "settings": "Settings",
-    "playlists": "Playlists"
+    "playlists": "Playlists",
+    "language": "Language"
   },
   "actions": {
     "cancel": "Cancel",

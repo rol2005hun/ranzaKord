@@ -1,5 +1,5 @@
 {
-  "placeholder": "Dalok, előadók keresése…",
+  "placeholder": "Zenék, előadók keresése…",
   "clear": "Keresés törlése",
   "noResults": "Nincs találat a következőre: \"{query}\"",
   "title": "Keresés",
@@ -8,28 +8,28 @@
   "page": {
     "titleWithQuery": "Keresés: \"{query}\"",
     "title": "Keresés",
-    "emptyPrompt": "Kereséshez írj be valamit a fenti sávba.",
+    "emptyPrompt": "Írj be valamit a fenti keresőbe.",
     "topResult": "Legjobb találat",
-    "songs": "Dalok",
+    "songs": "Zenék",
     "artists": "Előadók",
     "albums": "Albumok",
-    "noResultsQuery": "Nincs találat a következőre: \"{query}\"",
-    "noResultsCategory": "Nincs találat a következőre: \"{query}\" ebben a kategóriában."
+    "noResultsQuery": "Nincs találat: \"{query}\"",
+    "noResultsCategory": "Nincs találat: \"{query}\" ebben a kategóriában."
   },
   "album": {
     "badge": "ALBUM",
-    "loadError": "Nem sikerült betölteni az albumot.",
-    "trackCount": "• {count} dal",
+    "loadError": "Album betöltése sikertelen.",
+    "trackCount": "• {count} zene",
     "titleColumn": "Cím"
   },
   "artist": {
     "badge": "ELŐADÓ",
-    "loadError": "Nem sikerült betölteni az előadót.",
-    "topSongs": "Legnépszerűbb dalok",
+    "loadError": "Előadó betöltése sikertelen.",
+    "topSongs": "Legnépszerűbb zenék",
     "albums": "Albumok"
   },
   "list": {
-    "song": "Dal",
+    "song": "Zene",
     "artist": "Előadó",
     "album": "Album",
     "options": "Opciók",

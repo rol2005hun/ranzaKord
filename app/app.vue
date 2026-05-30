@@ -18,13 +18,12 @@ onMounted(async () => {
     const { isTauri } = await import('@tauri-apps/api/core');
     if (isTauri()) {
       const { getCurrentWindow } = await import('@tauri-apps/api/window');
-      // Delay showing the window slightly to avoid a black flash during webview initialization
       setTimeout(() => {
         getCurrentWindow().show();
       }, 50);
     }
-  } catch {
-    // Ignored
+  } catch (err) {
+    console.error('Failed to initialize Tauri window:', err);
   }
 });
 </script>

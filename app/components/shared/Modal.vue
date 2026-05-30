@@ -35,6 +35,7 @@ function handleKeydown(event: KeyboardEvent): void {
 watch(
   () => props.modelValue,
   (isOpen: boolean) => {
+    if (!import.meta.client) return;
     if (isOpen) {
       document.addEventListener('keydown', handleKeydown);
       document.body.style.overflow = 'hidden';
@@ -47,6 +48,7 @@ watch(
 );
 
 onUnmounted(() => {
+  if (!import.meta.client) return;
   document.removeEventListener('keydown', handleKeydown);
   document.body.style.overflow = '';
 });
