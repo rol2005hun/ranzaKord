@@ -2,9 +2,11 @@
 const { currentUser, logout, isAuthenticated } = useAuth();
 const { themeId, themes, setTheme } = useTheme();
 const { locale, setLocale } = useI18n();
+const { updateInfo } = useAppUpdate();
 
 const isDropdownOpen = ref(false);
 const isDesktopApp = ref(true);
+const showUpdateModal = ref(false);
 
 onMounted(async () => {
   try {
@@ -14,6 +16,15 @@ onMounted(async () => {
     isDesktopApp.value = false;
   }
 });
+
+watch(
+  () => updateInfo.value.available,
+  (available) => {
+    if (available && updateInfo.value.isMandatory) {
+      showUpdateModal.value = true;
+    }
+  }
+);
 
 const emit = defineEmits<{
   (e: 'open-playlists'): void;
@@ -41,6 +52,14 @@ function closeDropdown() {
     </div>
 
     <div class="app-navbar__right">
+      <button
+        v-if="updateInfo.available"
+        class="app-navbar__update-btn"
+        @click="showUpdateModal = true">
+        <AppIcon name="ph:download-simple" />
+        <span>{{ $t('updater.updateAvailable') }}</span>
+      </button>
+
       <a
         v-if="!isDesktopApp"
         href="https://github.com/rol2005hun/ranzaKord/releases/latest"
@@ -109,6 +128,8 @@ function closeDropdown() {
         </div>
       </div>
     </div>
+
+    <UpdateModal v-model="showUpdateModal" />
   </header>
 </template>
 
@@ -158,6 +179,27 @@ function closeDropdown() {
       background-color: var(--color-primary);
       color: var(--color-text-inverse);
       border-color: var(--color-primary);
+    }
+  }
+
+  &__update-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
+    color: var(--color-primary);
+    border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    animation: pulse 2s infinite;
+
+    &:hover {
+      background-color: var(--color-primary);
+      color: var(--color-text-inverse);
     }
   }
 
@@ -374,6 +416,18 @@ function closeDropdown() {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-primary) 40%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
   }
 }
 

@@ -24,5 +24,16 @@
     "titleColumn": "Cím",
     "empty": "Nincsenek zenék",
     "error": "Valami hiba történt."
+  },
+  "updater": {
+    "updateAvailable": "Frissítés elérhető",
+    "title": "Szoftverfrissítés",
+    "mandatory": "Kötelező Frissítés",
+    "newVersion": "Új verzió",
+    "releaseNotes": "Újdonságok",
+    "downloading": "Letöltés folyamatban",
+    "skip": "Kihagyás most",
+    "installing": "Telepítés...",
+    "installAndRestart": "Telepítés és Újraindítás"
   }
 }

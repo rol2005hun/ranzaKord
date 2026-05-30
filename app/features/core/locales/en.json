@@ -24,5 +24,16 @@
     "titleColumn": "Title",
     "empty": "No tracks available",
     "error": "Something went wrong."
+  },
+  "updater": {
+    "updateAvailable": "Update Available",
+    "title": "Software Update",
+    "mandatory": "Mandatory Update",
+    "newVersion": "New Version",
+    "releaseNotes": "Release Notes",
+    "downloading": "Downloading",
+    "skip": "Skip for now",
+    "installing": "Installing...",
+    "installAndRestart": "Install & Restart"
   }
 }
