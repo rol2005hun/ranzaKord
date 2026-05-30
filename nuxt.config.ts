@@ -44,8 +44,9 @@ export default defineNuxtConfig({
     }
   },
 
+  ssr: !process.env.TAURI_ENV_PLATFORM,
   nitro: {
-    preset: 'netlify',
+    preset: process.env.TAURI_ENV_PLATFORM ? 'static' : 'netlify',
     experimental: {
       wasm: true
     },
