@@ -47,7 +47,7 @@ pub fn run() {
         set_discord_presence,
         clear_discord_presence
     ])
-    .setup(|app| {
+    .setup(|_app| {
       if cfg!(debug_assertions) {
         // app.handle().plugin(
         //   tauri_plugin_log::Builder::default()

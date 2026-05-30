@@ -7,6 +7,12 @@ const { t } = useI18n();
 useHead({ title: t('core.nav.signIn') });
 
 const { loginWithRanzaKonnect, isAuthenticated } = useAuth();
+const isRedirecting = ref(false);
+
+const handleLogin = () => {
+  isRedirecting.value = true;
+  loginWithRanzaKonnect();
+};
 
 if (isAuthenticated.value) {
   await navigateTo('/');
@@ -24,10 +30,21 @@ if (isAuthenticated.value) {
       <h1 class="login-page__title">{{ $t('auth.login.title') }}</h1>
       <p class="login-page__subtitle">{{ $t('auth.login.subtitle') }}</p>
 
-      <button id="login-with-ranzakonnect" class="login-page__btn" @click="loginWithRanzaKonnect">
-        <AppIcon name="ph:key-fill" />
-        {{ $t('auth.login.button') }}
-      </button>
+      <AppButton
+        id="login-with-ranzakonnect"
+        class="login-page__btn"
+        :disabled="isRedirecting"
+        size="lg"
+        @click="handleLogin">
+        <template v-if="isRedirecting">
+          <AppSpinner size="sm" class="login-page__spinner" />
+          {{ $t('auth.login.redirecting') }}
+        </template>
+        <template v-else>
+          <AppIcon name="ph:key-fill" />
+          {{ $t('auth.login.button') }}
+        </template>
+      </AppButton>
 
       <p class="login-page__footer">{{ $t('auth.login.footer') }}</p>
     </div>
@@ -104,34 +121,7 @@ if (isAuthenticated.value) {
   }
 
   &__btn {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
     width: 100%;
-    padding: var(--space-4) var(--space-6);
-    background: var(--color-primary-dark, #5b21b6);
-    color: #ffffff;
-    border: none;
-    border-radius: var(--radius-lg);
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-bold);
-    font-family: var(--font-sans, sans-serif);
-    cursor: pointer;
-    justify-content: center;
-    transition:
-      background var(--transition-fast),
-      transform var(--transition-fast),
-      box-shadow var(--transition-fast);
-
-    &:hover {
-      background: var(--color-primary-hover, #4c1d95);
-      transform: translateY(-2px);
-      box-shadow: 0 0 30px rgb(91 33 182 / 0.4);
-    }
-
-    &:active {
-      transform: translateY(0);
-    }
   }
 
   &__footer {

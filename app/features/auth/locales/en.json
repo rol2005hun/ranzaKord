@@ -3,6 +3,7 @@
     "title": "Welcome to ranzaKord",
     "subtitle": "Sign in to access your music",
     "button": "Continue with ranzaKonnect",
+    "redirecting": "Redirecting to ranzaKonnect...",
     "footer": "Secure authentication powered by ranzaKonnect"
   },
   "logout": "Sign out",

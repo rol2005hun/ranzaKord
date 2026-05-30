@@ -61,6 +61,14 @@ describe('Shared Components', () => {
       expect(wrapper.find('.btn__spinner').exists()).toBe(true);
       await wrapper.trigger('click');
     });
+
+    it('renders as anchor when href is provided', async () => {
+      const wrapper = await mountSuspended(AppButton, { props: { href: 'https://example.com' } });
+      expect(wrapper.element.tagName).toBe('A');
+      expect(wrapper.attributes('href')).toBe('https://example.com');
+      expect(wrapper.attributes('type')).toBeUndefined();
+      expect(wrapper.attributes('disabled')).toBeUndefined();
+    });
   });
 
   describe('Card', () => {
@@ -105,6 +113,14 @@ describe('Shared Components', () => {
       (input.element as HTMLInputElement).checked = true;
       await input.trigger('change');
       expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([true]);
+    });
+
+    it('renders checked state', async () => {
+      const wrapper = await mountSuspended(AppCheckbox, {
+        props: { modelValue: true }
+      });
+      expect(wrapper.find('svg').exists()).toBe(true);
+      expect(wrapper.find('.checkbox__box').classes()).toContain('checkbox__box--checked');
     });
   });
 
@@ -171,6 +187,57 @@ describe('Shared Components', () => {
       await wrapper.find('.modal').trigger('click');
       expect(wrapper.emitted('update:modelValue')).toBeUndefined();
     });
+
+    it('closes on escape key', async () => {
+      const wrapper = await mountSuspended(AppModal, {
+        props: { modelValue: true },
+        global: { stubs: { Teleport: true } }
+      });
+      const event = new KeyboardEvent('keydown', { key: 'Escape' });
+      document.dispatchEvent(event);
+      expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([false]);
+    });
+
+    it('does not close on escape key when persistent', async () => {
+      const wrapper = await mountSuspended(AppModal, {
+        props: { modelValue: true, persistent: true },
+        global: { stubs: { Teleport: true } }
+      });
+      const event = new KeyboardEvent('keydown', { key: 'Escape' });
+      document.dispatchEvent(event);
+      expect(wrapper.emitted('update:modelValue')).toBeUndefined();
+
+      // also test overlay click when persistent
+      await wrapper.find('.modal-overlay').trigger('click.self');
+      expect(wrapper.emitted('update:modelValue')).toBeUndefined();
+    });
+
+    it('adds and removes event listeners correctly', async () => {
+      const wrapper = await mountSuspended(AppModal, {
+        props: { modelValue: false },
+        global: { stubs: { Teleport: true } }
+      });
+
+      // trigger watch
+      await wrapper.setProps({ modelValue: true });
+      expect(document.body.style.overflow).toBe('hidden');
+
+      await wrapper.setProps({ modelValue: false });
+      expect(document.body.style.overflow).toBe('');
+
+      await wrapper.setProps({ modelValue: true });
+      wrapper.unmount();
+      expect(document.body.style.overflow).toBe('');
+    });
+
+    it('renders footer slot', async () => {
+      const wrapper = await mountSuspended(AppModal, {
+        props: { modelValue: true },
+        slots: { footer: () => 'Footer content' },
+        global: { stubs: { Teleport: true } }
+      });
+      expect(wrapper.text()).toContain('Footer content');
+    });
   });
 
   describe('Select', () => {
@@ -205,6 +272,28 @@ describe('Shared Components', () => {
       await select.trigger('change');
       expect(wrapper.emitted('update:modelValue')?.[0]).toEqual(['2']);
     });
+
+    it('renders placeholder', async () => {
+      const wrapper = await mountSuspended(AppSelect, {
+        props: { modelValue: '', options, placeholder: 'Select an option' }
+      });
+      expect(wrapper.text()).toContain('Select an option');
+    });
+
+    it('handles error state', async () => {
+      const wrapper = await mountSuspended(AppSelect, {
+        props: { error: 'Select error', modelValue: '1', options, id: 'test-select' }
+      });
+      expect(wrapper.text()).toContain('Select error');
+      expect(wrapper.find('select').classes()).toContain('select--error');
+    });
+
+    it('handles error state without id', async () => {
+      const wrapper = await mountSuspended(AppSelect, {
+        props: { error: 'Select error no id', modelValue: '1', options }
+      });
+      expect(wrapper.text()).toContain('Select error no id');
+    });
   });
 
   describe('Spinner', () => {
@@ -234,9 +323,16 @@ describe('Shared Components', () => {
 
     it('renders error state', async () => {
       const wrapper = await mountSuspended(AppTextarea, {
-        props: { error: 'Textarea error' }
+        props: { error: 'Textarea error', id: 'test-textarea' }
       });
       expect(wrapper.text()).toContain('Textarea error');
+    });
+
+    it('renders error state without id', async () => {
+      const wrapper = await mountSuspended(AppTextarea, {
+        props: { error: 'Textarea error no id' }
+      });
+      expect(wrapper.text()).toContain('Textarea error no id');
     });
   });
 
@@ -246,11 +342,19 @@ describe('Shared Components', () => {
         global: { stubs: { Teleport: true } }
       });
       const { add } = useToast();
-      add({ message: 'Hello', variant: 'success', duration: 3000 });
+      add({ message: 'Success message', variant: 'success', duration: 3000 });
+      add({ message: 'Danger message', variant: 'danger', duration: 3000 });
+      add({ message: 'Warning message', variant: 'warning', duration: 3000 });
+      add({ message: 'Info message', variant: 'info', duration: 3000 });
       await nextTick();
 
-      expect(wrapper.text()).toContain('Hello');
-      await wrapper.find('.toast__close').trigger('click');
+      expect(wrapper.text()).toContain('Success message');
+      expect(wrapper.text()).toContain('Danger message');
+      expect(wrapper.text()).toContain('Warning message');
+      expect(wrapper.text()).toContain('Info message');
+
+      const closeBtns = wrapper.findAll('.toast__close');
+      await closeBtns[0]?.trigger('click');
     });
   });
 

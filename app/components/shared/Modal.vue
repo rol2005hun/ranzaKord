@@ -42,7 +42,8 @@ watch(
       document.removeEventListener('keydown', handleKeydown);
       document.body.style.overflow = '';
     }
-  }
+  },
+  { immediate: true }
 );
 
 onUnmounted(() => {
