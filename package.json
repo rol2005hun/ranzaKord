@@ -6,6 +6,7 @@
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
+    "tauri": "tauri",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
@@ -26,6 +27,7 @@
   },
   "dependencies": {
     "@pinia/colada": "^1.3.1",
+    "@tauri-apps/api": "^2.11.0",
     "@unhead/vue": "^3.1.1",
     "jintr": "^3.3.1",
     "mongoose": "^9.6.3",
@@ -58,6 +60,7 @@
     "@pinia/colada-nuxt": "1.0.1",
     "@pinia/nuxt": "0.11.3",
     "@playwright/test": "^1.60.0",
+    "@tauri-apps/cli": "^2.11.2",
     "@types/node": "^25.9.1",
     "@vitest/coverage-v8": "^4.1.7",
     "@vue/test-utils": "^2.4.10",

@@ -58,7 +58,16 @@ export default defineNuxtConfig({
 
   routeRules: {
     '/_nuxt/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
-    '/logo.webp': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } }
+    '/logo.webp': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
+    '/api/**': {
+      cors: true,
+      headers: {
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Allow-Origin': 'http://tauri.localhost, https://tauri.localhost',
+        'Access-Control-Allow-Methods': 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+        'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept, Authorization, Cookie'
+      }
+    }
   },
 
   image: {

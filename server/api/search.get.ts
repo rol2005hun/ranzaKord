@@ -31,7 +31,10 @@ export default defineCachedEventHandler(
       item_type?: string;
       authors?: Array<{ name?: string; channel_id?: string }>;
       artists?: Array<{ name?: string; channel_id?: string }>;
-      author?: { toString: () => string; name?: string; channel_id?: string } | Array<{ name?: string; channel_id?: string }> | string;
+      author?:
+        | { toString: () => string; name?: string; channel_id?: string }
+        | Array<{ name?: string; channel_id?: string }>
+        | string;
       subtitle?: { toString: () => string; name?: string } | Array<{ name?: string }> | string;
       thumbnails?: Array<{ url: string; width?: number }>;
       thumbnail?: { contents?: Array<{ url: string; width?: number }> };
@@ -110,7 +113,12 @@ export default defineCachedEventHandler(
         artistId = item.artists[0].channel_id;
       } else if (item.authors?.[0]?.channel_id) {
         artistId = item.authors[0].channel_id;
-      } else if (item.author && typeof item.author === 'object' && 'channel_id' in item.author && !Array.isArray(item.author)) {
+      } else if (
+        item.author &&
+        typeof item.author === 'object' &&
+        'channel_id' in item.author &&
+        !Array.isArray(item.author)
+      ) {
         artistId = item.author.channel_id;
       }
 

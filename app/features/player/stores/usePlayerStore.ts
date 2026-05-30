@@ -111,6 +111,28 @@ export const usePlayerStore = defineStore(
           }).catch(() => {});
         }
       });
+
+      watch([isPlaying, currentTrack], async ([playing, track]) => {
+        try {
+          const { isTauri, invoke } = await import('@tauri-apps/api/core');
+          if (isTauri()) {
+            if (playing && track) {
+              const endTimestamp =
+                Math.floor(Date.now() / 1000) + (track.durationSeconds - currentTimeSeconds.value);
+              await invoke('set_discord_presence', {
+                details: track.title,
+                stateStr: `by ${track.artist}`,
+                endTimestamp
+              });
+            } else {
+              await invoke('clear_discord_presence');
+            }
+          }
+        } catch (e) {
+          // Tauri API not available or invoke failed
+          console.error('Discord RPC error:', e);
+        }
+      });
     }
 
     return {
