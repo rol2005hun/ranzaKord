@@ -43,7 +43,17 @@ export default defineEventHandler(async (event) => {
 
     const tracks: Track[] = [];
 
-    for (const item of playlist.items) {
+    let currentPlaylist = playlist;
+    const items = [...(playlist.items || [])];
+
+    while (currentPlaylist.has_continuation) {
+      currentPlaylist = await currentPlaylist.getContinuation();
+      if (currentPlaylist.items) {
+        items.push(...currentPlaylist.items);
+      }
+    }
+
+    for (const item of items) {
       if (item.type !== 'PlaylistVideo' && item.type !== 'Video' && item.type !== 'MusicTrack')
         continue;
 
