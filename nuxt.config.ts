@@ -62,7 +62,6 @@ export default defineNuxtConfig({
   },
 
   image: {
-    provider: 'ipx',
     domains: [
       'yt3.googleusercontent.com',
       'i.ytimg.com',
