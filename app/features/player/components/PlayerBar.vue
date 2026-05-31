@@ -1,8 +1,11 @@
 <script setup lang="ts">
 const player = usePlayer();
 const audioEl = ref<HTMLAudioElement | null>(null);
+const layoutStore = useLayoutStore();
+const { lyricsData, isLoading: lyricsLoading, fetchLyrics, getActiveLine } = useLyrics();
 
 const isHydrated = ref(false);
+const showMobileLyrics = ref(false);
 
 const displayTrack = computed(() => (isHydrated.value ? player.currentTrack.value : null));
 const displayVolume = computed(() => (isHydrated.value ? player.volume.value : 1));
@@ -36,6 +39,58 @@ const volumeIcon = computed(() => {
   if (displayVolume.value < 0.7) return 'ph:speaker-high-fill';
   return 'ph:speaker-high-fill';
 });
+
+const isLyricsActive = computed(
+  () => layoutStore.isRightSidebarOpen && layoutStore.rightSidebarMode === 'lyrics'
+);
+
+watch(
+  displayTrack,
+  (track) => {
+    if (track) fetchLyrics(track);
+  },
+  { immediate: true }
+);
+
+const mobileLyricsListRef = ref<HTMLElement | null>(null);
+const mobileActiveLine = computed(() => getActiveLine(displayTime.value));
+const syncedLines = computed(() => lyricsData.value?.synced ?? []);
+const plainLyrics = computed(() => lyricsData.value?.plain ?? null);
+const hasSyncedLyrics = computed(() => syncedLines.value.length > 0);
+const hasAnyLyrics = computed(() => hasSyncedLyrics.value || !!plainLyrics.value);
+
+let mobileAutoScroll = true;
+let mobileScrollTimer: ReturnType<typeof setTimeout> | null = null;
+
+watch(mobileActiveLine, (idx) => {
+  if (!mobileAutoScroll || !showMobileLyrics.value || idx < 0) return;
+  nextTick(() => {
+    const el = mobileLyricsListRef.value?.querySelector(
+      `[data-line="${idx}"]`
+    ) as HTMLElement | null;
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+});
+
+function onMobileLyricsScroll() {
+  mobileAutoScroll = false;
+  if (mobileScrollTimer) clearTimeout(mobileScrollTimer);
+  mobileScrollTimer = setTimeout(() => {
+    mobileAutoScroll = true;
+  }, 5000);
+}
+
+function toggleLyrics() {
+  if (window.innerWidth <= 768) {
+    showMobileLyrics.value = !showMobileLyrics.value;
+    return;
+  }
+  if (isLyricsActive.value) {
+    layoutStore.closeRightSidebar();
+  } else {
+    layoutStore.openRightSidebar('lyrics');
+  }
+}
 
 function toggleMute() {
   if (displayVolume.value > 0) {
@@ -200,6 +255,14 @@ function onVolumeInput(event: Event) {
 
       <div class="player-bar__right">
         <button
+          id="player-lyrics-btn"
+          class="player-bar__btn player-bar__btn--lyrics"
+          :class="{ 'player-bar__btn--active': isLyricsActive || showMobileLyrics }"
+          :aria-label="$t('player.lyrics')"
+          @click="toggleLyrics">
+          <AppIcon name="ph:microphone-stage" />
+        </button>
+        <button
           class="player-bar__btn"
           style="width: auto; height: auto"
           :aria-label="$t('player.mute')"
@@ -227,6 +290,70 @@ function onVolumeInput(event: Event) {
         <AppSkeleton v-else height="4px" width="100px" class="player-bar__slider--volume" />
       </div>
     </aside>
+
+    <Teleport to="body">
+      <Transition name="mobile-lyrics">
+        <div v-if="showMobileLyrics" class="mobile-lyrics-overlay" role="dialog" aria-modal="true">
+          <div class="mobile-lyrics-overlay__header">
+            <div class="mobile-lyrics-overlay__track">
+              <div class="mobile-lyrics-overlay__artwork">
+                <img
+                  v-if="displayTrack?.thumbnailUrl"
+                  :src="`/api/image?url=${encodeURIComponent(displayTrack.thumbnailUrl)}`"
+                  :alt="displayTrack?.title" />
+                <AppIcon v-else name="ph:music-notes-simple" />
+              </div>
+              <div class="mobile-lyrics-overlay__meta">
+                <span class="mobile-lyrics-overlay__title">
+                  {{ displayTrack?.title ?? $t('player.noTrack') }}
+                </span>
+                <span class="mobile-lyrics-overlay__artist">{{ displayTrack?.artist }}</span>
+              </div>
+            </div>
+            <button
+              id="mobile-lyrics-close"
+              class="mobile-lyrics-overlay__close"
+              :aria-label="$t('player.closeInfoPanel')"
+              @click="showMobileLyrics = false">
+              <AppIcon name="ph:x-bold" />
+            </button>
+          </div>
+
+          <div class="mobile-lyrics-overlay__body">
+            <div v-if="lyricsLoading" class="mobile-lyrics-overlay__loading">
+              <AppSpinner size="sm" />
+              <span>{{ $t('player.lyricsLoading') }}</span>
+            </div>
+            <div v-else-if="!hasAnyLyrics" class="mobile-lyrics-overlay__empty">
+              <AppIcon name="ph:file-x-duotone" />
+              <p>{{ $t('player.lyricsNotFound') }}</p>
+            </div>
+            <div
+              v-else-if="hasSyncedLyrics"
+              ref="mobileLyricsListRef"
+              class="mobile-lyrics-overlay__list"
+              @scroll.passive="onMobileLyricsScroll">
+              <p
+                v-for="(line, idx) in syncedLines"
+                :key="idx"
+                :data-line="idx"
+                class="mobile-lyrics-overlay__line"
+                :class="{ 'mobile-lyrics-overlay__line--active': idx === mobileActiveLine }"
+                @click="player.seek(line.time)">
+                {{ line.text }}
+              </p>
+            </div>
+            <div v-else class="mobile-lyrics-overlay__plain">
+              <p class="mobile-lyrics-overlay__unsync">
+                <AppIcon name="ph:warning" />
+                {{ $t('player.lyricsNotSynced') }}
+              </p>
+              <p>{{ plainLyrics }}</p>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
 
     <AddToPlaylistPopup
       v-if="showAddToPlaylist && displayTrack"
@@ -620,5 +747,187 @@ function onVolumeInput(event: Event) {
 
 .text-success {
   color: hsl(140, 60%, 50%) !important;
+}
+
+.mobile-lyrics-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-player) + 10);
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  overscroll-behavior: contain;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4) var(--space-4) var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+    gap: var(--space-3);
+    flex-shrink: 0;
+  }
+
+  &__track {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+    flex: 1;
+  }
+
+  &__artwork {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-md);
+    background: var(--color-surface-hover);
+    overflow: hidden;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-secondary);
+    font-size: var(--text-xl);
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__meta {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 2px;
+  }
+
+  &__title {
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__artist {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__close {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: var(--color-surface-hover);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    border-radius: var(--radius-full);
+    font-size: var(--text-base);
+    transition: all var(--transition-fast);
+
+    &:hover {
+      background: var(--color-border);
+    }
+  }
+
+  &__body {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__loading,
+  &__empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+    padding: var(--space-8);
+    text-align: center;
+  }
+
+  &__list {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-8) var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  &__line {
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    line-height: var(--leading-relaxed);
+    margin: 0;
+    cursor: pointer;
+    opacity: 0.4;
+    transition:
+      color var(--transition-base),
+      opacity var(--transition-base),
+      font-size var(--transition-base);
+
+    &--active {
+      color: var(--color-text-primary);
+      opacity: 1;
+      font-size: var(--text-2xl);
+    }
+  }
+
+  &__plain {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+
+    p {
+      margin: 0;
+      font-size: var(--text-base);
+      color: var(--color-text-secondary);
+      line-height: var(--leading-relaxed);
+      white-space: pre-line;
+    }
+  }
+
+  &__unsync {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    font-size: var(--text-xs);
+    background: var(--color-surface-hover);
+    border-radius: var(--radius-full);
+    padding: var(--space-1) var(--space-3);
+    align-self: flex-start;
+    color: var(--color-text-secondary);
+  }
+}
+
+.mobile-lyrics-enter-active,
+.mobile-lyrics-leave-active {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mobile-lyrics-enter-from,
+.mobile-lyrics-leave-to {
+  transform: translateY(100%);
 }
 </style>

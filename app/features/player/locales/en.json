@@ -11,6 +11,17 @@
   "startSomething": "Start playing some music",
   "shuffle": "Shuffle",
   "repeat": "Repeat",
+  "lyrics": "Lyrics",
+  "showLyrics": "Show lyrics",
+  "hideLyrics": "Hide lyrics",
+  "openInfoPanel": "Open info panel",
+  "closeInfoPanel": "Close info panel",
+  "lyricsNotFound": "No lyrics found for this track",
+  "lyricsLoading": "Loading lyrics...",
+  "lyricsNotSynced": "Lyrics not synced",
+  "nowPlaying": "Now Playing",
+  "moreFrom": "More from {artist}",
+  "noRecommendations": "No recommendations available",
   "errors": {
     "playback": "Playback error. Please try again.",
     "stream": "Failed to load stream. Are you signed in?"

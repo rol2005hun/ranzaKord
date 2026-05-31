@@ -2,6 +2,7 @@
 const route = useRoute();
 const { isAuthenticated } = useAuth();
 const playlistsStore = usePlaylistsStore();
+const layoutStore = useLayoutStore();
 
 const showCreateModal = ref(false);
 const showImportModal = ref(false);
@@ -115,6 +116,10 @@ function onPlaylistImported(id: string): void {
         <slot />
       </main>
     </div>
+
+    <Transition name="right-sidebar">
+      <PlayerRightSidebar v-if="layoutStore.isRightSidebarOpen" />
+    </Transition>
 
     <PlayerBar />
 
@@ -431,6 +436,20 @@ function onPlaylistImported(id: string): void {
       display: none;
     }
   }
+}
+
+.right-sidebar-enter-active,
+.right-sidebar-leave-active {
+  transition:
+    width var(--transition-slow),
+    opacity var(--transition-slow);
+  overflow: hidden;
+}
+
+.right-sidebar-enter-from,
+.right-sidebar-leave-to {
+  width: 0 !important;
+  opacity: 0;
 }
 
 .mobile-playlists {
