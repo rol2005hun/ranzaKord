@@ -62,14 +62,20 @@ const hasAnyLyrics = computed(() => hasSyncedLyrics.value || !!plainLyrics.value
 let mobileAutoScroll = true;
 let mobileScrollTimer: ReturnType<typeof setTimeout> | null = null;
 
-watch(mobileActiveLine, (idx) => {
-  if (!mobileAutoScroll || !showMobileLyrics.value || idx < 0) return;
+function scrollMobileToActiveLine() {
+  const idx = mobileActiveLine.value;
+  if (!showMobileLyrics.value || idx < 0) return;
   nextTick(() => {
     const el = mobileLyricsListRef.value?.querySelector(
       `[data-line="${idx}"]`
     ) as HTMLElement | null;
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
+}
+
+watch(mobileActiveLine, () => {
+  if (!mobileAutoScroll) return;
+  scrollMobileToActiveLine();
 });
 
 function onMobileLyricsScroll() {
@@ -77,7 +83,8 @@ function onMobileLyricsScroll() {
   if (mobileScrollTimer) clearTimeout(mobileScrollTimer);
   mobileScrollTimer = setTimeout(() => {
     mobileAutoScroll = true;
-  }, 5000);
+    scrollMobileToActiveLine();
+  }, 3000);
 }
 
 function toggleLyrics() {

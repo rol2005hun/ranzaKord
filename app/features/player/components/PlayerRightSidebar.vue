@@ -37,14 +37,20 @@ const hasAnyLyrics = computed(() => hasSyncedLyrics.value || !!plainLyrics.value
 let autoScrollEnabled = true;
 let scrollResumeTimer: ReturnType<typeof setTimeout> | null = null;
 
-watch(activeLineIndex, (idx) => {
-  if (!autoScrollEnabled || idx < 0) return;
+function scrollToActiveLine() {
+  const idx = activeLineIndex.value;
+  if (idx < 0) return;
   nextTick(() => {
     const el = lyricsListRef.value?.querySelector(`[data-line="${idx}"]`) as HTMLElement | null;
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   });
+}
+
+watch(activeLineIndex, () => {
+  if (!autoScrollEnabled) return;
+  scrollToActiveLine();
 });
 
 function onLyricsScroll() {
@@ -52,7 +58,8 @@ function onLyricsScroll() {
   if (scrollResumeTimer) clearTimeout(scrollResumeTimer);
   scrollResumeTimer = setTimeout(() => {
     autoScrollEnabled = true;
-  }, 5000);
+    scrollToActiveLine();
+  }, 3000);
 }
 
 function onResizeStart(event: MouseEvent | TouchEvent) {
