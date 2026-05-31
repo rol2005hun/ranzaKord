@@ -60,7 +60,8 @@ describe('app.vue', () => {
           AppToast: true,
           NuxtErrorBoundary: { template: '<div><slot/></div>' },
           ClientOnly: { template: '<div><slot/></div>' },
-          AppUpdateModal: true
+          AppUpdateModal: true,
+          AppTitlebar: true
         }
       }
     });

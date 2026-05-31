@@ -1,0 +1,126 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue';
+
+const isTauriApp = ref(false);
+const isMaximized = ref(false);
+
+onMounted(async () => {
+  try {
+    const { isTauri } = await import('@tauri-apps/api/core');
+    isTauriApp.value = isTauri();
+
+    if (isTauriApp.value) {
+      const { getCurrentWindow } = await import('@tauri-apps/api/window');
+      const appWindow = getCurrentWindow();
+      isMaximized.value = await appWindow.isMaximized();
+
+      appWindow.onResized(async () => {
+        isMaximized.value = await appWindow.isMaximized();
+      });
+    }
+  } catch (err) {
+    console.error('Failed to init titlebar:', err);
+  }
+});
+
+async function minimize() {
+  const { getCurrentWindow } = await import('@tauri-apps/api/window');
+  getCurrentWindow().minimize();
+}
+
+async function toggleMaximize() {
+  const { getCurrentWindow } = await import('@tauri-apps/api/window');
+  getCurrentWindow().toggleMaximize();
+}
+
+async function close() {
+  const { getCurrentWindow } = await import('@tauri-apps/api/window');
+  getCurrentWindow().close();
+}
+</script>
+
+<template>
+  <div v-if="isTauriApp" data-tauri-drag-region class="titlebar">
+    <div class="titlebar-left" data-tauri-drag-region>
+      <img src="/logo.webp" alt="Logo" class="titlebar-icon" />
+      <span class="titlebar-title">{{ $t('core.appName') || 'ranzaKord' }}</span>
+    </div>
+
+    <div class="titlebar-right">
+      <div class="titlebar-button" @click="minimize">
+        <AppIcon name="ph:minus" />
+      </div>
+      <div class="titlebar-button" @click="toggleMaximize">
+        <AppIcon :name="isMaximized ? 'ph:copy' : 'ph:square'" />
+      </div>
+      <div class="titlebar-button titlebar-button--close" @click="close">
+        <AppIcon name="ph:x" />
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped lang="scss">
+.titlebar {
+  height: var(--titlebar-height, 32px);
+  background: transparent;
+  user-select: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 99999;
+}
+
+.titlebar-left {
+  display: flex;
+  align-items: center;
+  padding-left: var(--space-3);
+  gap: var(--space-2);
+  flex: 1;
+  height: 100%;
+}
+
+.titlebar-icon {
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+}
+
+.titlebar-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+.titlebar-right {
+  display: flex;
+  height: 100%;
+}
+
+.titlebar-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 46px;
+  height: 100%;
+  color: var(--color-text-secondary);
+  transition: background 0.1s;
+  cursor: default;
+  font-size: 16px;
+
+  &:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text-primary);
+  }
+
+  &--close:hover {
+    background: #e81123;
+    color: #fff;
+  }
+}
+</style>

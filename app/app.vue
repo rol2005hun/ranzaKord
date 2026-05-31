@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+
 const { themeId, customColor } = useTheme();
 
 const customColorStyle = computed(() => {
@@ -8,6 +10,8 @@ const customColorStyle = computed(() => {
 
 const { locale } = useI18n();
 const { showUpdateModal } = useAppUpdate();
+
+const isTauriApp = ref(false);
 
 useHead({
   htmlAttrs: {
@@ -20,7 +24,8 @@ useHead({
 onMounted(async () => {
   try {
     const { isTauri } = await import('@tauri-apps/api/core');
-    if (isTauri()) {
+    isTauriApp.value = isTauri();
+    if (isTauriApp.value) {
       const { getCurrentWindow } = await import('@tauri-apps/api/window');
       setTimeout(() => {
         getCurrentWindow().show();
@@ -77,7 +82,10 @@ onMounted(async () => {
       </div>
     </template>
 
-    <div>
+    <div :class="{ 'is-tauri': isTauriApp }">
+      <ClientOnly>
+        <AppTitlebar v-if="isTauriApp" />
+      </ClientOnly>
       <NuxtRouteAnnouncer />
       <NuxtLayout>
         <NuxtPage />

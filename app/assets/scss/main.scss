@@ -4,3 +4,24 @@
 @use 'themes/dark';
 @use 'themes/ocean';
 @use 'themes/rose';
+
+:root {
+  --titlebar-height: 0px;
+}
+
+.is-tauri {
+  --titlebar-height: 32px;
+
+  .layout__header {
+    padding-top: calc(var(--space-3) + var(--titlebar-height)) !important;
+  }
+
+  .app-sidebar {
+    padding-top: var(--titlebar-height) !important;
+  }
+
+  .app-navbar {
+    padding-top: var(--titlebar-height) !important;
+    height: calc(4.5rem + var(--titlebar-height)) !important;
+  }
+}

@@ -14,7 +14,8 @@ mockNuxtImport('useI18n', () => {
 
 mockNuxtImport('useAuth', () => {
   return () => ({
-    currentUser: ref({ name: 'Roland' })
+    currentUser: ref({ name: 'Roland' }),
+    isAuthenticated: ref(true)
   });
 });
 

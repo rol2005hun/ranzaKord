@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils';
 import Search from '../../app/pages/search.vue';
 import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 import { ref } from 'vue';
+import { createPinia, setActivePinia } from 'pinia';
 
 const mockSearch = vi.fn();
 const mockQuery = ref('');
@@ -30,7 +31,9 @@ const mockRoute = {
 const mockRouter = {
   replace: vi.fn(),
   afterEach: vi.fn(),
-  beforeResolve: vi.fn()
+  beforeResolve: vi.fn(),
+  beforeEach: vi.fn(),
+  push: vi.fn()
 };
 
 mockNuxtImport('useRoute', () => () => mockRoute);
@@ -53,6 +56,7 @@ mockNuxtImport('definePageMeta', () => vi.fn());
 
 describe('search.vue', () => {
   beforeEach(() => {
+    setActivePinia(createPinia());
     vi.clearAllMocks();
     mockQuery.value = '';
     mockRoute.query = { q: '', type: '' };
