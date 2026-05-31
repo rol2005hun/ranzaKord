@@ -179,13 +179,18 @@ async function submit(): Promise<void> {
 <style scoped lang="scss">
 .playlist-modal {
   &__image-section {
-    display: grid;
-    grid-template-columns: 160px 1fr;
+    display: flex;
+    align-items: stretch;
     gap: var(--space-6);
 
     @media (max-width: 576px) {
-      grid-template-columns: 1fr;
-      justify-items: center;
+      flex-direction: column;
+      align-items: center;
+
+      .playlist-modal__image-label {
+        width: 180px;
+        height: 180px;
+      }
 
       .playlist-modal__fields {
         width: 100%;
@@ -193,9 +198,10 @@ async function submit(): Promise<void> {
     }
   }
 
-  &__image-container {
-    width: 100%;
-    max-width: 200px;
+  &__image-label {
+    display: block;
+    aspect-ratio: 1 / 1;
+    flex-shrink: 0;
   }
 
   &__file-input {
@@ -205,16 +211,14 @@ async function submit(): Promise<void> {
   &__image-preview {
     position: relative;
     width: 100%;
-    height: auto;
-    aspect-ratio: 1 / 1;
+    height: 100%;
     border-radius: var(--radius-lg);
     overflow: hidden;
     background: var(--color-surface-hover);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 
     @media (max-width: 480px) {
-      width: 180px;
-      height: 180px;
+      /* Handled by label sizing above */
     }
 
     &:hover .playlist-modal__image-overlay {

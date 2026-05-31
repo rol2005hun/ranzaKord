@@ -115,6 +115,13 @@ export default defineNuxtConfig({
     }
   },
 
+  icon: {
+    clientBundle: {
+      scan: true,
+      sizeLimitKb: 2048
+    }
+  },
+
   css: ['@/assets/scss/main.scss'],
 
   components: [

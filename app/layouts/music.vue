@@ -77,7 +77,14 @@ function onPlaylistImported(id: string): void {
         <div
           v-else-if="playlistsStore.playlists.length === 0"
           class="music-layout__library-empty app-sidebar__text">
-          {{ $t('playlists.noPlaylists') }}
+          <div class="music-layout__library-empty-content">
+            <AppIcon name="ph:music-notes-plus-duotone" class="music-layout__library-empty-icon" />
+            <p class="music-layout__library-empty-title">{{ $t('playlists.noPlaylists') }}</p>
+            <p class="music-layout__library-empty-desc">{{ $t('playlists.createFirst') }}</p>
+            <button class="music-layout__library-empty-btn" @click="showCreateModal = true">
+              {{ $t('playlists.newPlaylist') }}
+            </button>
+          </div>
         </div>
 
         <NuxtLink
@@ -307,9 +314,61 @@ function onPlaylistImported(id: string): void {
   }
 
   &__library-empty {
+    padding: var(--space-2) 1.3rem;
+  }
+
+  &__library-empty-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-2);
+    background: color-mix(in srgb, var(--color-surface-hover) 50%, transparent);
+    border: 1px dashed var(--color-border-hover);
+    border-radius: var(--radius-md);
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+    white-space: normal; /* override app-sidebar__text */
+  }
+
+  &__library-empty-icon {
+    font-size: 2rem;
+    color: var(--color-text-secondary);
+    opacity: 0.7;
+    margin-bottom: -4px;
+  }
+
+  &__library-empty-title {
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0;
+  }
+
+  &__library-empty-desc {
     font-size: var(--text-xs);
     color: var(--color-text-secondary);
-    padding: var(--space-2) 1.3rem;
+    margin: 0;
+  }
+
+  &__library-empty-btn {
+    margin-top: var(--space-1);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-full);
+    background: var(--color-text-primary);
+    color: var(--color-bg);
+    border: none;
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+
+    &:hover {
+      transform: scale(1.05);
+      background: var(--color-text-secondary);
+    }
   }
 
   &__playlist-item {

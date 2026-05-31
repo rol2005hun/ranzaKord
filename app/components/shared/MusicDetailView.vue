@@ -117,15 +117,20 @@ onBeforeUnmount(() => {
             :key="`track-skel-${i}`"
             class="music-detail__track"
             style="cursor: default">
-            <div class="skeleton-line" style="width: 1rem; margin: 0 auto"></div>
+            <div class="music-detail__track-num-wrapper">
+              <div class="skeleton-line" style="width: 1rem; margin: 0"></div>
+            </div>
             <div class="music-detail__track-info">
               <div v-if="showTrackThumbnails" class="music-detail__track-thumb skeleton-box"></div>
               <div class="music-detail__track-text">
                 <div class="skeleton-line skeleton-line--track-title"></div>
-                <div class="skeleton-line skeleton-line--artist"></div>
+                <div class="skeleton-line skeleton-line--artist" style="margin-bottom: 0"></div>
               </div>
             </div>
-            <div class="skeleton-line" style="width: 2rem; margin-left: auto"></div>
+            <div class="music-detail__track-duration">
+              <div class="skeleton-line" style="width: 2rem; margin: 0"></div>
+            </div>
+            <div class="music-detail__track-actions-slot"></div>
           </div>
         </div>
         <slot v-else name="content"></slot>
@@ -248,9 +253,32 @@ onBeforeUnmount(() => {
               v-if="hasMoreTracks || isLoadingMore"
               ref="loadMoreTrigger"
               class="music-detail__load-more">
-              <AppSkeleton v-if="isLoadingMore" height="58px" border-radius="var(--radius-md)" />
-              <AppSkeleton v-if="isLoadingMore" height="58px" border-radius="var(--radius-md)" />
-              <AppSkeleton v-if="isLoadingMore" height="58px" border-radius="var(--radius-md)" />
+              <template v-if="isLoadingMore">
+                <div
+                  v-for="i in 3"
+                  :key="`more-skel-${i}`"
+                  class="music-detail__track"
+                  style="cursor: default">
+                  <div class="music-detail__track-num-wrapper">
+                    <div class="skeleton-line" style="width: 1rem; margin: 0"></div>
+                  </div>
+                  <div class="music-detail__track-info">
+                    <div
+                      v-if="showTrackThumbnails"
+                      class="music-detail__track-thumb skeleton-box"></div>
+                    <div class="music-detail__track-text">
+                      <div class="skeleton-line skeleton-line--track-title"></div>
+                      <div
+                        class="skeleton-line skeleton-line--artist"
+                        style="margin-bottom: 0"></div>
+                    </div>
+                  </div>
+                  <div class="music-detail__track-duration">
+                    <div class="skeleton-line" style="width: 2rem; margin: 0"></div>
+                  </div>
+                  <div class="music-detail__track-actions-slot"></div>
+                </div>
+              </template>
             </div>
           </div>
         </template>
