@@ -195,7 +195,8 @@ function onPlaylistImported(id: string): void {
 <style lang="scss" scoped>
 .music-layout {
   display: flex;
-  height: 100dvh;
+  height: calc(100dvh - var(--titlebar-height, 0px));
+  margin-top: var(--titlebar-height, 0px);
   width: 100%;
   background: var(--color-bg);
   overflow: hidden;

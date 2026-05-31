@@ -1,4 +1,6 @@
 import { Innertube } from 'youtubei.js';
+import fs from 'fs';
+import path from 'path';
 
 console.log('Generating YouTube OAuth2 Token...\n');
 
@@ -14,8 +16,6 @@ try {
   yt.session.on('auth', (data) => {
     console.log('\n✅ Authorization successful!\n');
 
-    const fs = require('fs');
-    const path = require('path');
     const tokenPath = path.resolve(process.cwd(), 'youtube-oauth-token.json');
     const tokenStr = JSON.stringify(data.credentials);
 

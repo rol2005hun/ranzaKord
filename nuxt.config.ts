@@ -74,8 +74,8 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
-    '/_nuxt/**': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } },
-    '/logo.webp': { headers: { 'cache-control': 'public, max-age=31536000, immutable' } }
+    '/_nuxt/**': { headers: { 'Cache-Control': 'public, max-age=31536000, immutable' } },
+    '/logo.webp': { headers: { 'Cache-Control': 'public, max-age=31536000, immutable' } }
   },
 
   image: {

@@ -33,6 +33,7 @@ coverage
 playwright-report
 test-results
 blob-report
+youtube-oauth-token.json
 
 # OS generated files
 .DS_Store

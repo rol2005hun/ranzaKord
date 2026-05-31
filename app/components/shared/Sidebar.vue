@@ -42,7 +42,7 @@ const isHovered = ref(false);
   flex-direction: column;
   position: sticky;
   top: 0;
-  height: 100dvh;
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   transition:

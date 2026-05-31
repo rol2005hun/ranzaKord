@@ -3,7 +3,13 @@ export function useAuth() {
   const router = useRouter();
 
   function loginWithRanzaKonnect() {
-    window.location.href = '/auth/login';
+    const isTauri = '__TAURI_INTERNALS__' in window;
+    const origin = encodeURIComponent(window.location.origin);
+    if (isTauri && !import.meta.dev) {
+      window.location.href = `https://kord.ranzak.dev/auth/login?source=${origin}`;
+    } else {
+      window.location.href = `/auth/login?source=${origin}`;
+    }
   }
 
   async function logout() {
@@ -17,13 +23,12 @@ export function useAuth() {
       const fetcher = import.meta.server
         ? (useRequestFetch() as unknown as (req: string) => Promise<unknown>)
         : ($fetch as unknown as (req: string) => Promise<unknown>);
-      const user = (await fetcher('/api/me')) as {
-        sub: string;
-        name: string;
-        email: string;
-        picture?: string;
-      };
-      store.setUser(user || null);
+      const user = (await fetcher('/api/me')) as unknown;
+      if (user && typeof user === 'object' && 'sub' in user) {
+        store.setUser(user as { sub: string; name: string; email: string; picture?: string });
+      } else {
+        store.setUser(null);
+      }
     } catch {
       store.setUser(null);
     }

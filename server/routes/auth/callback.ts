@@ -58,8 +58,11 @@ export default defineEventHandler(async (event) => {
     { upsert: true, returnDocument: 'after' }
   );
 
+  const authSource = session.data['authSource'] as string | undefined;
+
   await session.update({
     oauthState: null,
+    authSource: null,
     accessToken: 'valid',
     expiresAt: Date.now() + (tokenResponse.expires_in || 2592000) * 1000,
     user: {
@@ -70,5 +73,6 @@ export default defineEventHandler(async (event) => {
     }
   });
 
-  return sendRedirect(event, '/', 302);
+  const redirectUrl = authSource ? `${authSource}/` : '/';
+  return sendRedirect(event, redirectUrl, 302);
 });
