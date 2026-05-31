@@ -66,10 +66,16 @@ function scrollMobileToActiveLine() {
   const idx = mobileActiveLine.value;
   if (!showMobileLyrics.value || idx < 0) return;
   nextTick(() => {
-    const el = mobileLyricsListRef.value?.querySelector(
-      `[data-line="${idx}"]`
-    ) as HTMLElement | null;
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const container = mobileLyricsListRef.value;
+    const el = container?.querySelector(`[data-line="${idx}"]`) as HTMLElement | null;
+    if (el && container) {
+      const containerRect = container.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const relativeTop = elRect.top - containerRect.top;
+      const scrollPosition =
+        container.scrollTop + relativeTop - containerRect.height / 2 + elRect.height / 2;
+      container.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+    }
   });
 }
 
