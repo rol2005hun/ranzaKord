@@ -28,6 +28,8 @@ export function useAppUpdate() {
     error: null
   });
 
+  const showUpdateModal = ref(false);
+
   async function checkForUpdates(manual = false) {
     if (!isTauri) return;
 
@@ -108,6 +110,7 @@ export function useAppUpdate() {
 
   return {
     updateInfo,
+    showUpdateModal,
     checkForUpdates,
     installUpdate,
     dismissUpdate

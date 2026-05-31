@@ -25,6 +25,21 @@ mockNuxtImport('useTheme', () => {
   });
 });
 
+mockNuxtImport('useI18n', () => {
+  return () => ({
+    locale: ref('en'),
+    t: (key: string) => key
+  });
+});
+
+mockNuxtImport('useAppUpdate', () => {
+  return () => ({
+    showUpdateModal: ref(false),
+    updateInfo: ref({ available: false }),
+    checkForUpdates: vi.fn()
+  });
+});
+
 mockNuxtImport('useHead', () => vi.fn());
 
 describe('app.vue', () => {
@@ -42,7 +57,10 @@ describe('app.vue', () => {
           NuxtRouteAnnouncer: true,
           NuxtLayout: { template: '<div><slot/></div>' },
           NuxtPage: true,
-          AppToast: true
+          AppToast: true,
+          NuxtErrorBoundary: { template: '<div><slot/></div>' },
+          ClientOnly: { template: '<div><slot/></div>' },
+          AppUpdateModal: true
         }
       }
     });

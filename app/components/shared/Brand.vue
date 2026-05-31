@@ -18,6 +18,11 @@
     height: 34px;
     width: auto;
     object-fit: contain;
+
+    :global([data-theme='light']) &,
+    :global([data-theme='rose']) & {
+      filter: invert(1) hue-rotate(180deg);
+    }
   }
 }
 </style>

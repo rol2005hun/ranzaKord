@@ -10,10 +10,13 @@ mockNuxtImport('useI18n', () => {
 });
 
 describe('usePlaylistsStore', () => {
+  let fetchMock: ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.resetAllMocks();
-    globalThis.$fetch = vi.fn() as unknown as typeof globalThis.$fetch;
+    fetchMock = vi.fn();
+    globalThis.$fetch = fetchMock as unknown as typeof globalThis.$fetch;
   });
 
   afterEach(() => {
@@ -58,7 +61,7 @@ describe('usePlaylistsStore', () => {
 
   describe('fetchAll', () => {
     it('fetches all playlists successfully', async () => {
-      vi.mocked(globalThis.$fetch).mockResolvedValue([mockPlaylist]);
+      fetchMock.mockResolvedValue([mockPlaylist]);
       const store = usePlaylistsStore();
       await store.fetchAll();
       expect(store.playlists).toEqual([mockPlaylist]);
@@ -66,7 +69,7 @@ describe('usePlaylistsStore', () => {
     });
 
     it('handles fetch all error', async () => {
-      vi.mocked(globalThis.$fetch).mockRejectedValue(new Error('Fetch error'));
+      fetchMock.mockRejectedValue(new Error('Fetch error'));
       const store = usePlaylistsStore();
       await store.fetchAll();
       expect(store.error).toBeDefined(); // Actually we mock useI18n, but since it's global let's just check truthy
@@ -76,7 +79,7 @@ describe('usePlaylistsStore', () => {
 
   describe('create / update / remove', () => {
     it('creates a playlist', async () => {
-      vi.mocked(globalThis.$fetch).mockResolvedValue(mockPlaylist);
+      fetchMock.mockResolvedValue(mockPlaylist);
       const store = usePlaylistsStore();
 
       const res = await store.create({ name: 'Test', description: '', imageUrl: '' });
@@ -85,7 +88,7 @@ describe('usePlaylistsStore', () => {
     });
 
     it('handles create error', async () => {
-      vi.mocked(globalThis.$fetch).mockRejectedValue(new Error());
+      fetchMock.mockRejectedValue(new Error());
       const store = usePlaylistsStore();
 
       const res = await store.create({ name: 'Test', description: '', imageUrl: '' });
@@ -94,7 +97,7 @@ describe('usePlaylistsStore', () => {
     });
 
     it('updates a playlist', async () => {
-      vi.mocked(globalThis.$fetch).mockResolvedValue({});
+      fetchMock.mockResolvedValue({});
       const store = usePlaylistsStore();
 
       await store.update('p1', { name: 'New Name' });
@@ -107,7 +110,7 @@ describe('usePlaylistsStore', () => {
     });
 
     it('removes a playlist', async () => {
-      vi.mocked(globalThis.$fetch).mockResolvedValue({});
+      fetchMock.mockResolvedValue({});
       const store = usePlaylistsStore();
       store.playlists = [mockPlaylist, { ...mockPlaylist, id: 'p2' }];
 
@@ -120,7 +123,7 @@ describe('usePlaylistsStore', () => {
 
   describe('addTrack / removeTrack', () => {
     it('adds a track', async () => {
-      vi.mocked(globalThis.$fetch).mockResolvedValue({});
+      fetchMock.mockResolvedValue({});
       const store = usePlaylistsStore();
       store.playlists = [{ ...mockPlaylist, trackIds: [], trackCount: 0 }];
 
@@ -136,7 +139,7 @@ describe('usePlaylistsStore', () => {
     });
 
     it('removes a track', async () => {
-      vi.mocked(globalThis.$fetch).mockResolvedValue({});
+      fetchMock.mockResolvedValue({});
       const store = usePlaylistsStore();
       store.playlists = [mockPlaylist]; // Has t1 and t2
 
@@ -149,7 +152,7 @@ describe('usePlaylistsStore', () => {
   describe('fetchDetail', () => {
     it('fetches detail successfully', async () => {
       const detail = { ...mockPlaylist, tracks: [] };
-      vi.mocked(globalThis.$fetch).mockResolvedValue(detail);
+      fetchMock.mockResolvedValue(detail);
       const store = usePlaylistsStore();
 
       const res = await store.fetchDetail('p1', { limit: 10, offset: 0 });
@@ -161,7 +164,7 @@ describe('usePlaylistsStore', () => {
     });
 
     it('handles fetchDetail error', async () => {
-      vi.mocked(globalThis.$fetch).mockRejectedValue(new Error());
+      fetchMock.mockRejectedValue(new Error());
       const store = usePlaylistsStore();
       const res = await store.fetchDetail('p1');
       expect(res).toBeNull();
@@ -170,7 +173,7 @@ describe('usePlaylistsStore', () => {
 
   describe('importPlaylist', () => {
     it('handles import error', async () => {
-      vi.mocked(globalThis.$fetch).mockRejectedValue(new Error());
+      fetchMock.mockRejectedValue(new Error());
       const store = usePlaylistsStore();
 
       const res = await store.importPlaylist('http://yt', 'youtube');
@@ -186,7 +189,7 @@ describe('usePlaylistsStore', () => {
         tracks: [{ title: 't', artist: 'a', videoId: 'v1', durationSeconds: 10 }]
       };
 
-      vi.mocked(globalThis.$fetch).mockImplementation(async (url) => {
+      fetchMock.mockImplementation(async (url) => {
         if (typeof url === 'string' && url.includes('/api/import/youtube')) return mockResult;
         if (typeof url === 'string' && url.includes('/api/playlists') && !url.includes('/tracks')) {
           // fetchDetail or create
@@ -214,7 +217,7 @@ describe('usePlaylistsStore', () => {
         tracks: [{ title: 'song', artist: 'artist', videoId: null, durationSeconds: 10 }]
       };
 
-      vi.mocked(globalThis.$fetch).mockImplementation(async (url) => {
+      fetchMock.mockImplementation(async (url) => {
         if (typeof url === 'string' && url.includes('/api/import/spotify')) return mockResult;
         if (typeof url === 'string' && url.includes('/api/search'))
           return [{ id: 'v2', title: 'song', artist: 'artist', durationSeconds: 10 }];
@@ -242,7 +245,7 @@ describe('usePlaylistsStore', () => {
         imageUrl: '',
         tracks: []
       };
-      vi.mocked(globalThis.$fetch).mockResolvedValueOnce(mockResult); // the /import call
+      fetchMock.mockResolvedValueOnce(mockResult); // the /import call
       const store = usePlaylistsStore();
       vi.spyOn(store, 'create').mockResolvedValue(null);
 

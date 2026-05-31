@@ -18,7 +18,7 @@ function close() {
 </script>
 
 <template>
-  <Modal
+  <AppModal
     :model-value="props.modelValue"
     :title="$t('updater.title')"
     :persistent="updateInfo.isMandatory || updateInfo.downloading"
@@ -81,7 +81,7 @@ function close() {
         {{ updateInfo.downloading ? $t('updater.installing') : $t('updater.installAndRestart') }}
       </AppButton>
     </template>
-  </Modal>
+  </AppModal>
 </template>
 
 <style scoped lang="scss">

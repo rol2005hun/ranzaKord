@@ -47,14 +47,16 @@ const emit = defineEmits<{
       <div class="top-result-card__info">
         <h2 class="top-result-card__title" :class="{ 'text-primary': isCurrentlyPlaying }">
           <ClientOnly>
-            <AppIcon
-              v-if="isPlaying"
-              name="ph:speaker-high-fill"
-              style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom" />
-            <AppIcon
-              v-else-if="isCurrentlyPlaying"
-              name="ph:speaker-none-fill"
-              style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom" />
+            <span>
+              <AppIcon
+                v-if="isPlaying"
+                name="ph:speaker-high-fill"
+                style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom" />
+              <AppIcon
+                v-else-if="isCurrentlyPlaying"
+                name="ph:speaker-none-fill"
+                style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom" />
+            </span>
           </ClientOnly>
           {{ props.result.title }}
         </h2>
@@ -95,14 +97,16 @@ const emit = defineEmits<{
       <div class="top-result-card__info">
         <h2 class="top-result-card__title" :class="{ 'text-primary': isCurrentlyPlaying }">
           <ClientOnly>
-            <AppIcon
-              v-if="isPlaying"
-              name="ph:speaker-high-fill"
-              style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom" />
-            <AppIcon
-              v-else-if="isCurrentlyPlaying"
-              name="ph:speaker-none-fill"
-              style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom" />
+            <span>
+              <AppIcon
+                v-if="isPlaying"
+                name="ph:speaker-high-fill"
+                style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom" />
+              <AppIcon
+                v-else-if="isCurrentlyPlaying"
+                name="ph:speaker-none-fill"
+                style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom" />
+            </span>
           </ClientOnly>
           {{ props.result.title }}
         </h2>

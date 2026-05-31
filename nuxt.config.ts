@@ -3,6 +3,7 @@ export default defineNuxtConfig({
 
   app: {
     head: {
+      htmlAttrs: { lang: 'en' },
       titleTemplate: '%s | ranzaKord',
       charset: 'utf-8',
       viewport: 'width=device-width, initial-scale=1',
@@ -59,7 +60,7 @@ export default defineNuxtConfig({
     }
   },
 
-  // ssr: !process.env.TAURI_ENV_PLATFORM,
+  ssr: process.env.NUXT_SSR === 'true',
   nitro: {
     preset: process.env.TAURI_ENV_PLATFORM ? 'static' : 'netlify',
     experimental: {

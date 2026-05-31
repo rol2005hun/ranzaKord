@@ -160,6 +160,7 @@ export function usePlayer() {
     if (audioRef.value) {
       audioRef.value.currentTime = seconds;
       store.currentTimeSeconds = seconds;
+      store.syncDiscordPresence();
     }
   }
 

@@ -2,10 +2,14 @@
 const { currentUser, logout, isAuthenticated } = useAuth();
 const { themeId, themes, setTheme } = useTheme();
 const { locale, setLocale } = useI18n();
-const { updateInfo } = useAppUpdate();
+const { updateInfo, showUpdateModal } = useAppUpdate();
 
 const isDropdownOpen = ref(false);
-const showUpdateModal = ref(false);
+const isTauriApp = ref(false);
+
+onMounted(() => {
+  isTauriApp.value = '__TAURI_INTERNALS__' in window;
+});
 
 watch(
   () => updateInfo.value.available,
@@ -51,6 +55,7 @@ function closeDropdown() {
       </button>
 
       <a
+        v-if="!isTauriApp"
         href="https://github.com/rol2005hun/ranzaKord/releases/latest"
         target="_blank"
         class="app-navbar__download-btn">
@@ -117,8 +122,6 @@ function closeDropdown() {
         </div>
       </div>
     </div>
-
-    <UpdateModal v-model="showUpdateModal" />
   </header>
 </template>
 
@@ -148,6 +151,7 @@ function closeDropdown() {
     display: flex;
     align-items: center;
     gap: var(--space-4);
+    margin-left: auto;
   }
 
   &__download-btn {
@@ -168,6 +172,10 @@ function closeDropdown() {
       background-color: var(--color-primary);
       color: var(--color-text-inverse);
       border-color: var(--color-primary);
+    }
+
+    @media (min-width: 769px) {
+      display: flex;
     }
   }
 
@@ -423,12 +431,6 @@ function closeDropdown() {
 @media (max-width: 768px) {
   .app-navbar {
     padding: 0 var(--space-4);
-  }
-}
-
-@media (min-width: 769px) {
-  :global(html:not(.is-tauri)) .app-navbar__download-btn {
-    display: flex;
   }
 }
 </style>

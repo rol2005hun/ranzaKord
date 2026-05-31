@@ -64,7 +64,7 @@ export default defineEventHandler(async (event) => {
   await session.update({
     oauthState: null,
     accessToken: 'valid',
-    expiresAt: Date.now() + tokenResponse.expires_in * 1000,
+    expiresAt: Date.now() + (tokenResponse.expires_in || 2592000) * 1000,
     user: {
       sub: userInfo.sub,
       name: userInfo.name,

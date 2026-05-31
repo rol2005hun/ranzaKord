@@ -97,6 +97,36 @@ export const usePlayerStore = defineStore(
       return null;
     }
 
+    const syncDiscordPresence = useDebounceFn(
+      async () => {
+        if (!import.meta.client) return;
+        try {
+          const { isTauri, invoke } = await import('@tauri-apps/api/core');
+          if (isTauri()) {
+            if (isPlaying.value && currentTrack.value) {
+              const startTimestamp =
+                Math.floor(Date.now() / 1000) - Math.floor(currentTimeSeconds.value);
+              const endTimestamp = startTimestamp + currentTrack.value.durationSeconds;
+              await invoke('set_discord_presence', {
+                details: currentTrack.value.title,
+                stateStr: `${currentTrack.value.artist} on ranzaKord`,
+                largeImage: currentTrack.value.thumbnailUrl,
+                trackId: currentTrack.value.videoId,
+                startTimestamp,
+                endTimestamp
+              });
+            } else {
+              await invoke('clear_discord_presence');
+            }
+          }
+        } catch (e) {
+          console.error('Discord RPC error:', e);
+        }
+      },
+      500,
+      { maxWait: 5000 }
+    );
+
     if (import.meta.client) {
       window.addEventListener('beforeunload', () => {
         if (currentTrack.value) {
@@ -112,32 +142,8 @@ export const usePlayerStore = defineStore(
         }
       });
 
-      watch([isPlaying, currentTrack], async ([playing, track]) => {
-        try {
-          const { isTauri, invoke } = await import('@tauri-apps/api/core');
-          if (isTauri()) {
-            if (playing && track) {
-              // We add a +2 second offset because the audio takes a bit to buffer,
-              // making Discord's counter appear 'ahead' of the actual song playback.
-              const startTimestamp =
-                Math.floor(Date.now() / 1000) - Math.floor(currentTimeSeconds.value) + 2;
-              const endTimestamp = startTimestamp + track.durationSeconds;
-              await invoke('set_discord_presence', {
-                details: track.title,
-                stateStr: `${track.artist} on ranzaKord`,
-                largeImage: track.thumbnailUrl,
-                trackId: track.videoId,
-                startTimestamp,
-                endTimestamp
-              });
-            } else {
-              await invoke('clear_discord_presence');
-            }
-          }
-        } catch (e) {
-          // Tauri API not available or invoke failed
-          console.error('Discord RPC error:', e);
-        }
+      watch([isPlaying, currentTrack], () => {
+        syncDiscordPresence();
       });
     }
 
@@ -158,7 +164,8 @@ export const usePlayerStore = defineStore(
       setQueue,
       addToQueue,
       nextTrack,
-      prevTrack
+      prevTrack,
+      syncDiscordPresence
     };
   },
   {
@@ -171,7 +178,6 @@ export const usePlayerStore = defineStore(
           'durationSeconds',
           'isShuffle',
           'repeatMode',
-          'isPlaying',
           'queue'
         ],
         storage: piniaPluginPersistedstate.localStorage()

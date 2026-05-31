@@ -4,6 +4,8 @@ import { useAuthStore } from '../../app/features/auth/stores/useAuthStore';
 import { useAuth } from '../../app/features/auth/composables/useAuth';
 
 describe('Auth Module', () => {
+  let fetchMock: ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.resetAllMocks();
@@ -21,7 +23,8 @@ describe('Auth Module', () => {
     });
 
     // Mock globalThis.$fetch
-    globalThis.$fetch = vi.fn() as unknown as typeof globalThis.$fetch;
+    fetchMock = vi.fn();
+    globalThis.$fetch = fetchMock as unknown as typeof globalThis.$fetch;
   });
 
   afterEach(() => {
@@ -70,7 +73,7 @@ describe('Auth Module', () => {
     });
 
     it('logout calls clearSession and fetches logout endpoint', async () => {
-      vi.mocked(globalThis.$fetch).mockResolvedValue(null);
+      fetchMock.mockResolvedValue(null);
       const store = useAuthStore();
       const clearSessionSpy = vi.spyOn(store, 'clearSession');
       const { logout } = useAuth();
@@ -82,7 +85,7 @@ describe('Auth Module', () => {
     });
 
     it('fetchUser sets user on success', async () => {
-      vi.mocked(globalThis.$fetch).mockResolvedValue({ sub: '2', name: 'Fetched User' });
+      fetchMock.mockResolvedValue({ sub: '2', name: 'Fetched User' });
       const store = useAuthStore();
       const { fetchUser } = useAuth();
 
@@ -93,7 +96,7 @@ describe('Auth Module', () => {
     });
 
     it('fetchUser sets user to null on failure', async () => {
-      vi.mocked(globalThis.$fetch).mockRejectedValue(new Error('Auth failed'));
+      fetchMock.mockRejectedValue(new Error('Auth failed'));
       const store = useAuthStore();
       const setUserSpy = vi.spyOn(store, 'setUser');
       const { fetchUser } = useAuth();
