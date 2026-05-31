@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
     }
 
     const innertube = await createInnertube(false);
-    const playlist = await innertube.getPlaylist(playlistId);
+    const playlist = await innertube.music.getPlaylist(playlistId);
 
     if (!playlist || !playlist.items) {
       throw createError({
@@ -32,14 +32,22 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const title = playlist.info.title || 'Imported Playlist';
-    const description = playlist.info.description || '';
+    interface YtHeader {
+      title?: { toString: () => string };
+      description?: { toString: () => string };
+      thumbnails?: Array<{ url: string; width?: number; height?: number }>;
+    }
 
-    const thumbnails = playlist.info.thumbnails;
-    const coverUrl =
-      thumbnails && thumbnails.length > 0
-        ? thumbnails.sort((a, b) => (b.width || 0) - (a.width || 0))[0]?.url || ''
-        : '';
+    const header = playlist.header as unknown as YtHeader | undefined;
+    const title = header?.title?.toString() || 'Imported Playlist';
+    const description = header?.description?.toString() || '';
+
+    // Try to get thumbnail from header, if not available use first track's thumbnail
+    let coverUrl = '';
+    const headerThumbnails = header?.thumbnails || [];
+    if (headerThumbnails && headerThumbnails.length > 0) {
+      coverUrl = headerThumbnails.sort((a, b) => (b.width || 0) - (a.width || 0))[0]?.url || '';
+    }
 
     const tracks: Track[] = [];
 
@@ -53,21 +61,26 @@ export default defineEventHandler(async (event) => {
       }
     }
 
+    interface YtAuthor {
+      name?: string;
+      channel_id?: string;
+    }
+
+    interface YtVideoItem {
+      id?: string;
+      title?: string | { text: string } | { toString: () => string };
+      thumbnails?: Array<{ url: string; width?: number; height?: number }>;
+      duration?: number | { seconds?: number };
+      authors?: YtAuthor[];
+      artists?: YtAuthor[];
+      author?:
+        | YtAuthor
+        | YtAuthor[]
+        | { toString: () => string; name?: string; channel_id?: string };
+    }
+
     for (const item of items) {
-      if (item.type !== 'PlaylistVideo' && item.type !== 'Video' && item.type !== 'MusicTrack')
-        continue;
-
-      interface YtVideoResult {
-        id?: string;
-        title?: { text: string } | string;
-        author?: { name: string };
-        artists?: { name: string }[];
-        duration?: { seconds: number };
-        thumbnails?: { url: string; width: number; height: number }[];
-      }
-
-      const video = item as unknown as YtVideoResult;
-
+      const video = item as unknown as YtVideoItem;
       if (!video.id) continue;
 
       const trackThumbnails = video.thumbnails || [];
@@ -75,25 +88,60 @@ export default defineEventHandler(async (event) => {
         ? trackThumbnails.sort((a, b) => (b.width || 0) - (a.width || 0))[0]?.url || ''
         : '';
 
-      let durationSeconds = 0;
-      if (video.duration && video.duration.seconds) {
-        durationSeconds = video.duration.seconds;
+      if (!coverUrl && bestThumbnail) {
+        coverUrl = bestThumbnail;
       }
 
-      let artist = 'Unknown Artist';
-      if (video.author && video.author.name) {
-        artist = video.author.name;
-      } else if (video.artists && video.artists.length > 0) {
-        artist = video.artists.map((a) => a.name).join(', ');
+      let durationSeconds = 0;
+      if (video.duration && typeof video.duration === 'object' && 'seconds' in video.duration) {
+        durationSeconds = video.duration.seconds || 0;
+      } else if (typeof video.duration === 'number') {
+        durationSeconds = video.duration;
+      }
+
+      let artistName = 'Unknown Artist';
+      if (video.authors && Array.isArray(video.authors) && video.authors.length > 0) {
+        artistName = video.authors.map((a) => a.name).join(', ');
+      } else if (video.artists && Array.isArray(video.artists) && video.artists.length > 0) {
+        artistName = video.artists.map((a) => a.name).join(', ');
+      } else if (video.author && typeof video.author === 'object' && 'name' in video.author) {
+        artistName = video.author.name || '';
+      } else if (
+        video.author &&
+        typeof video.author.toString === 'function' &&
+        video.author.toString() !== '[object Object]'
+      ) {
+        artistName = video.author.toString();
+      }
+
+      let artistId: string | undefined = undefined;
+      if (video.artists?.[0]?.channel_id) {
+        artistId = video.artists[0].channel_id;
+      } else if (video.authors?.[0]?.channel_id) {
+        artistId = video.authors[0].channel_id;
+      } else if (
+        video.author &&
+        typeof video.author === 'object' &&
+        'channel_id' in video.author &&
+        !Array.isArray(video.author)
+      ) {
+        artistId = video.author.channel_id;
+      }
+
+      let videoTitle = 'Unknown Title';
+      if (typeof video.title === 'string') {
+        videoTitle = video.title;
+      } else if (video.title && typeof video.title === 'object' && 'text' in video.title) {
+        videoTitle = video.title.text;
+      } else if (video.title && typeof video.title.toString === 'function') {
+        videoTitle = video.title.toString();
       }
 
       tracks.push({
         videoId: video.id,
-        title:
-          ((typeof video.title === 'object' && video.title !== null && 'text' in video.title
-            ? video.title.text
-            : video.title) as string) || 'Unknown Title',
-        artist: artist,
+        title: videoTitle,
+        artist: artistName || 'Unknown Artist',
+        artistId,
         thumbnailUrl: bestThumbnail,
         durationSeconds: durationSeconds
       });

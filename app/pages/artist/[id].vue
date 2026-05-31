@@ -156,10 +156,18 @@ onMounted(() => {
                 :key="song.id"
                 :track="song"
                 @click="onPlaySong(song)" />
-            </div>
 
-            <div v-if="isLoadingSongs" class="artist-page__songs-loading">
-              <AppSpinner />
+              <template v-if="isLoadingSongs">
+                <div v-for="i in 3" :key="`more-skel-${i}`" class="artist-page__track-skeleton">
+                  <div class="artist-page__track-info">
+                    <div class="artist-page__track-thumb skeleton-box"></div>
+                    <div class="artist-page__track-text">
+                      <div class="skeleton-line skeleton-line--track-title"></div>
+                      <div class="skeleton-line skeleton-line--artist"></div>
+                    </div>
+                  </div>
+                </div>
+              </template>
             </div>
           </div>
 

@@ -43,9 +43,12 @@ function onPlaylistImported(id: string): void {
 
       <div v-if="isAuthenticated" class="music-layout__library">
         <div class="music-layout__library-header">
-          <span class="music-layout__library-title app-sidebar__text">
-            {{ $t('playlists.title') }}
-          </span>
+          <div class="music-layout__library-title-wrapper" :title="$t('playlists.title')">
+            <AppIcon name="ph:books-duotone" class="music-layout__library-icon" />
+            <span class="music-layout__library-title app-sidebar__text">
+              {{ $t('playlists.title') }}
+            </span>
+          </div>
           <div class="music-layout__library-actions">
             <button
               class="music-layout__library-add"
@@ -226,27 +229,37 @@ function onPlaylistImported(id: string): void {
     height: 36px;
     opacity: 1;
     overflow: hidden;
-    transition:
-      opacity 0.2s,
-      height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-      padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  &__library-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--color-text-secondary);
+  }
+
+  &__library-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    transition: color var(--transition-fast);
   }
 
   :deep(.app-sidebar:not(:hover):not(.app-sidebar--pinned)) &__library-header {
-    height: 0;
-    padding-top: 0;
-    padding-bottom: 0;
+    padding: var(--space-2) 0 var(--space-2) 1.5rem;
+  }
+
+  :deep(.app-sidebar:not(:hover):not(.app-sidebar--pinned)) &__library-actions {
     opacity: 0;
-    transition:
-      opacity 0.15s,
-      height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-      padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    width: 0;
+    overflow: hidden;
   }
 
   &__library-title {
     font-size: var(--text-xs);
     font-weight: var(--font-weight-semibold);
-    color: var(--color-text-secondary);
+    color: inherit;
     text-transform: uppercase;
     letter-spacing: 0.08em;
   }

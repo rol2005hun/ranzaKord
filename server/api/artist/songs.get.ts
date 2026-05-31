@@ -26,6 +26,7 @@ export default defineEventHandler(async (event) => {
     item_type?: string;
     authors?: Array<{ name?: string; channel_id?: string }>;
     artists?: Array<{ name?: string; channel_id?: string }>;
+    author?: { name?: string; channel_id?: string } | string | { toString: () => string };
     thumbnails?: Array<{ url: string; width?: number }>;
     thumbnail?: { contents?: Array<{ url: string; width?: number }> };
     duration?: { seconds?: number } | number;
@@ -40,10 +41,24 @@ export default defineEventHandler(async (event) => {
     if (!title) return null;
 
     let artistName = '';
-    if (item.authors?.[0]?.name) {
-      artistName = item.authors[0].name;
-    } else if (item.artists?.[0]?.name) {
-      artistName = item.artists[0].name;
+    const extItem = item as unknown as {
+      author?: { name?: string; channel_id?: string } | string | { toString: () => string };
+    };
+    const authorObj = extItem.author;
+    if (item.authors && Array.isArray(item.authors) && item.authors.length > 0) {
+      artistName = item.authors.map((a) => a.name).join(', ');
+    } else if (item.artists && Array.isArray(item.artists) && item.artists.length > 0) {
+      artistName = item.artists.map((a) => a.name).join(', ');
+    } else if (authorObj && typeof authorObj === 'object' && 'name' in authorObj) {
+      artistName = authorObj.name || '';
+    } else if (
+      authorObj &&
+      typeof authorObj.toString === 'function' &&
+      authorObj.toString() !== '[object Object]'
+    ) {
+      artistName = authorObj.toString();
+    } else if (q) {
+      artistName = q;
     }
 
     let artistId: string | undefined = undefined;
