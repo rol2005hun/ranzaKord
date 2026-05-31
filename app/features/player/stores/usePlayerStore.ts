@@ -109,7 +109,7 @@ export const usePlayerStore = defineStore(
               const endTimestamp = startTimestamp + currentTrack.value.durationSeconds;
               await invoke('set_discord_presence', {
                 details: currentTrack.value.title,
-                stateStr: `${currentTrack.value.artist} on ranzaKord`,
+                stateStr: currentTrack.value.artist,
                 largeImage: currentTrack.value.thumbnailUrl,
                 trackId: currentTrack.value.videoId,
                 startTimestamp,
