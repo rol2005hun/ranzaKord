@@ -5,17 +5,7 @@ const { locale, setLocale } = useI18n();
 const { updateInfo } = useAppUpdate();
 
 const isDropdownOpen = ref(false);
-const isDesktopApp = ref(true);
 const showUpdateModal = ref(false);
-
-onMounted(async () => {
-  try {
-    const { isTauri } = await import('@tauri-apps/api/core');
-    isDesktopApp.value = isTauri();
-  } catch {
-    isDesktopApp.value = false;
-  }
-});
 
 watch(
   () => updateInfo.value.available,
@@ -61,7 +51,6 @@ function closeDropdown() {
       </button>
 
       <a
-        v-if="!isDesktopApp"
         href="https://github.com/rol2005hun/ranzaKord/releases/latest"
         target="_blank"
         class="app-navbar__download-btn">
@@ -438,7 +427,7 @@ function closeDropdown() {
 }
 
 @media (min-width: 769px) {
-  .app-navbar__download-btn {
+  :global(html:not(.is-tauri)) .app-navbar__download-btn {
     display: flex;
   }
 }

@@ -4,7 +4,7 @@ console.log('Generating YouTube OAuth2 Token...\n');
 
 try {
   const yt = await Innertube.create({ generate_session_locally: true });
-  
+
   yt.session.on('auth-pending', (data) => {
     console.log(`\n1. Go to this URL: ${data.verification_url}`);
     console.log(`2. Enter this code: ${data.user_code}`);
@@ -13,10 +13,22 @@ try {
 
   yt.session.on('auth', (data) => {
     console.log('\n✅ Authorization successful!\n');
-    console.log('Copy the following JSON string and paste it into your Netlify environment variables as NUXT_YOUTUBE_OAUTH_TOKEN (or add it to your local .env file):\n');
-    console.log('----------------------------------------------------');
-    console.log(JSON.stringify(data.credentials));
-    console.log('----------------------------------------------------\n');
+
+    const fs = require('fs');
+    const path = require('path');
+    const tokenPath = path.resolve(process.cwd(), 'youtube-oauth-token.json');
+    const tokenStr = JSON.stringify(data.credentials);
+
+    fs.writeFileSync(tokenPath, tokenStr, 'utf8');
+
+    console.log(`✅ Token successfully saved to: ${tokenPath}`);
+    console.log('\n⚠️ PLEASE OPEN THIS FILE in your editor and copy its entire contents.');
+    console.log(
+      'Do NOT copy it from the terminal directly, as terminals often insert hidden spaces or newlines that break the token!'
+    );
+    console.log(
+      '\nPaste the contents of that file into your Netlify environment variables as NUXT_YOUTUBE_OAUTH_TOKEN.\n'
+    );
     process.exit(0);
   });
 
@@ -26,7 +38,6 @@ try {
   });
 
   await yt.session.signIn();
-
 } catch (err) {
   console.error('\n❌ Error creating Innertube session:', err.message);
 }

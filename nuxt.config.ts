@@ -6,7 +6,22 @@ export default defineNuxtConfig({
       titleTemplate: '%s | ranzaKord',
       charset: 'utf-8',
       viewport: 'width=device-width, initial-scale=1',
-      link: [{ rel: 'icon', type: 'image/x-icon', href: '/logo.webp' }]
+      link: [{ rel: 'icon', type: 'image/x-icon', href: '/logo.webp' }],
+      script: [
+        {
+          innerHTML: `
+            (function() {
+              try {
+                var theme = document.cookie.match(/theme-id=([^;]+)/)?.[1] || 'dark';
+                document.documentElement.setAttribute('data-theme', theme);
+                if ('__TAURI_INTERNALS__' in window) {
+                  document.documentElement.classList.add('is-tauri');
+                }
+              } catch (e) {}
+            })();
+          `
+        }
+      ]
     }
   },
 
@@ -44,7 +59,7 @@ export default defineNuxtConfig({
     }
   },
 
-  ssr: !process.env.TAURI_ENV_PLATFORM,
+  // ssr: !process.env.TAURI_ENV_PLATFORM,
   nitro: {
     preset: process.env.TAURI_ENV_PLATFORM ? 'static' : 'netlify',
     experimental: {
