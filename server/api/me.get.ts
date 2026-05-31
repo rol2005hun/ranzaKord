@@ -8,14 +8,10 @@ export interface MeResponse {
 }
 
 export default defineEventHandler(async (event): Promise<MeResponse> => {
-  const config = useRuntimeConfig();
   const { t } = useServerTranslation(event);
   let session;
   try {
-    session = await useSession(event, {
-      password: config.sessionSecret as string,
-      maxAge: 60 * 60 * 24 * 30
-    });
+    session = await useAppSession(event);
   } catch {
     throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
   }

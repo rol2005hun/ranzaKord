@@ -19,10 +19,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: t('auth.errors.missingParams') });
   }
 
-  const session = await useSession(event, {
-    password: config.sessionSecret as string,
-    maxAge: 60 * 60 * 24 * 30
-  });
+  const session = await useAppSession(event);
 
   if (session.data['oauthState'] !== state) {
     throw createError({ statusCode: 400, statusMessage: t('auth.errors.invalidState') });

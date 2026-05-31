@@ -4,11 +4,7 @@ export default defineEventHandler(async (event) => {
   const path = event.path;
 
   if (path.startsWith('/api/') && path !== '/api/health') {
-    const config = useRuntimeConfig();
-    const session = await useSession(event, {
-      password: config.sessionSecret as string,
-      maxAge: 60 * 60 * 24 * 30
-    });
+    const session = await useAppSession(event);
     const sessionData = session.data as Partial<ServerSession>;
     const { t } = useServerTranslation(event);
 

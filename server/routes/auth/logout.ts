@@ -1,9 +1,5 @@
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig();
-  const session = await useSession(event, {
-    password: config.sessionSecret as string,
-    maxAge: 60 * 60 * 24 * 30
-  });
+  const session = await useAppSession(event);
   await session.clear();
   return sendRedirect(event, '/login', 302);
 });

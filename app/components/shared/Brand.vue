@@ -18,11 +18,13 @@
     height: 34px;
     width: auto;
     object-fit: contain;
-
-    :global([data-theme='light']) &,
-    :global([data-theme='rose']) & {
-      filter: invert(1) hue-rotate(180deg);
-    }
   }
+}
+</style>
+
+<style lang="scss">
+[data-theme='light'] .app-brand__logo,
+[data-theme='rose'] .app-brand__logo {
+  filter: invert(1) hue-rotate(180deg);
 }
 </style>

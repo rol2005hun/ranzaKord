@@ -62,7 +62,7 @@ export default defineNuxtConfig({
 
   ssr: process.env.NUXT_SSR === 'true',
   nitro: {
-    preset: process.env.NUXT_SSR === 'false' ? 'static' : 'netlify',
+    preset: process.env.NUXT_SSR === 'true' ? 'netlify' : 'static',
     experimental: {
       wasm: true
     },
@@ -102,6 +102,10 @@ export default defineNuxtConfig({
 
   ogImage: {
     enabled: false
+  },
+
+  schemaOrg: {
+    enabled: process.env.NUXT_SSR === 'true'
   },
 
   hints: {
@@ -150,7 +154,14 @@ export default defineNuxtConfig({
 
   vite: {
     optimizeDeps: {
-      include: ['pinia-orm', 'pinia-orm/decorators', '@tauri-apps/api/core']
+      include: [
+        'pinia-orm',
+        'pinia-orm/decorators',
+        '@tauri-apps/api/core',
+        '@tauri-apps/api/window',
+        '@tauri-apps/plugin-process',
+        '@tauri-apps/plugin-updater'
+      ]
     },
     esbuild: {
       tsconfigRaw: {

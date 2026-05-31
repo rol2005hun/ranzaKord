@@ -40,11 +40,13 @@ async function close() {
 </script>
 
 <template>
-  <div v-if="isTauriApp" data-tauri-drag-region class="titlebar">
+  <div v-if="isTauriApp" class="titlebar">
     <div class="titlebar-left" data-tauri-drag-region>
       <img src="/logo.webp" alt="Logo" class="titlebar-icon" />
       <span class="titlebar-title">{{ $t('core.appName') || 'ranzaKord' }}</span>
     </div>
+
+    <div class="titlebar-middle" data-tauri-drag-region></div>
 
     <div class="titlebar-right">
       <div class="titlebar-button" @click="minimize">
@@ -63,7 +65,8 @@ async function close() {
 <style scoped lang="scss">
 .titlebar {
   height: var(--titlebar-height, 32px);
-  background: transparent;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
   user-select: none;
   display: flex;
   justify-content: space-between;
@@ -80,7 +83,6 @@ async function close() {
   align-items: center;
   padding-left: var(--space-3);
   gap: var(--space-2);
-  flex: 1;
   height: 100%;
 }
 
@@ -95,6 +97,11 @@ async function close() {
   font-weight: 600;
   color: var(--color-text-secondary);
   pointer-events: none;
+}
+
+.titlebar-middle {
+  flex: 1;
+  height: 100%;
 }
 
 .titlebar-right {

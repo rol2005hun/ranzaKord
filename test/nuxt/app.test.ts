@@ -77,9 +77,12 @@ describe('app.vue', () => {
     vi.mocked(tauriCore.isTauri).mockReturnValue(true);
     mountApp();
 
-    // Wait for the component to mount and the setTimeout to trigger
-    await new Promise((r) => setTimeout(r, 60));
-
-    expect(mockGetCurrentWindow().show).toHaveBeenCalled();
+    // Wait for the component to mount, dynamic imports, and the setTimeout to trigger
+    await vi.waitFor(
+      () => {
+        expect(mockGetCurrentWindow().show).toHaveBeenCalled();
+      },
+      { timeout: 2000 }
+    );
   });
 });

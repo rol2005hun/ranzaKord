@@ -5,10 +5,7 @@ export default defineEventHandler(async (event) => {
 
   const state = randomBytes(16).toString('hex');
 
-  const session = await useSession(event, {
-    password: config.sessionSecret as string,
-    maxAge: 60 * 60 * 24 * 30
-  });
+  const session = await useAppSession(event);
   await session.update({ oauthState: state });
 
   const params = new URLSearchParams({
