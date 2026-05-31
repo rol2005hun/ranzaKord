@@ -67,11 +67,11 @@ function onResizeStart(event: MouseEvent | TouchEvent) {
   document.body.style.userSelect = 'none';
   document.body.style.cursor = 'ew-resize';
 
-  const startX = 'touches' in event ? event.touches[0]!.clientX : event.clientX;
+  const startX = 'touches' in event ? (event.touches[0]?.clientX ?? 0) : event.clientX;
   const startWidth = layoutStore.rightSidebarWidth;
 
   function onMove(e: MouseEvent | TouchEvent) {
-    const currentX = 'touches' in e ? e.touches[0]!.clientX : e.clientX;
+    const currentX = 'touches' in e ? (e.touches[0]?.clientX ?? 0) : e.clientX;
     const delta = startX - currentX;
     layoutStore.setRightSidebarWidth(startWidth + delta);
   }
