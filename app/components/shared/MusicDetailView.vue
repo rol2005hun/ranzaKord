@@ -221,7 +221,7 @@ onBeforeUnmount(() => {
                 <div v-if="showTrackThumbnails" class="music-detail__track-thumb">
                   <img
                     v-if="track.thumbnailUrl"
-                    :src="`/api/image?url=${encodeURIComponent(track.thumbnailUrl)}`"
+                    :src="useApiUrl(`/api/image?url=${encodeURIComponent(track.thumbnailUrl)}`)"
                     :alt="track.title" />
                   <AppIcon v-else name="ph:music-note" />
                 </div>

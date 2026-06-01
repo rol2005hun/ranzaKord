@@ -28,6 +28,7 @@ export function useAuth(): UseAuthReturn {
     store.clearSession();
 
     if (import.meta.client) {
+      localStorage.removeItem('auth_token');
       document.cookie.split(';').forEach((c) => {
         document.cookie = c
           .replace(/^ +/, '')

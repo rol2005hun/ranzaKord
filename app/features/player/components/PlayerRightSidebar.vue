@@ -169,7 +169,7 @@ const sidebarStyle = computed(() => ({
           <div class="right-sidebar__artwork-wrap">
             <img
               v-if="currentTrack.thumbnailUrl"
-              :src="`/api/image?url=${encodeURIComponent(currentTrack.thumbnailUrl)}`"
+              :src="useApiUrl(`/api/image?url=${encodeURIComponent(currentTrack.thumbnailUrl)}`)"
               :alt="currentTrack.title"
               class="right-sidebar__artwork" />
             <div v-else class="right-sidebar__artwork-placeholder">

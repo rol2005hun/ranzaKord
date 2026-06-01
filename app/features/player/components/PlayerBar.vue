@@ -141,7 +141,7 @@ function onVolumeInput(event: Event) {
         <div class="player-bar__artwork">
           <img
             v-if="displayTrack?.thumbnailUrl"
-            :src="`/api/image?url=${encodeURIComponent(displayTrack.thumbnailUrl)}`"
+            :src="useApiUrl(`/api/image?url=${encodeURIComponent(displayTrack.thumbnailUrl)}`)"
             :alt="displayTrack?.title"
             class="player-bar__img" />
           <AppSkeleton v-else-if="!isHydrated" width="100%" height="100%" />
@@ -316,7 +316,9 @@ function onVolumeInput(event: Event) {
               <div class="mobile-lyrics-overlay__artwork">
                 <img
                   v-if="displayTrack?.thumbnailUrl"
-                  :src="`/api/image?url=${encodeURIComponent(displayTrack.thumbnailUrl)}`"
+                  :src="
+                    useApiUrl(`/api/image?url=${encodeURIComponent(displayTrack.thumbnailUrl)}`)
+                  "
                   :alt="displayTrack?.title" />
                 <AppIcon v-else name="ph:music-notes-simple" />
               </div>

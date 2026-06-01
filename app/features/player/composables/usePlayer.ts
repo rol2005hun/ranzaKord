@@ -61,7 +61,7 @@ export function usePlayer() {
         isRestoring = true;
       }
 
-      el.src = `/api/stream?v=${store.currentTrack.videoId}`;
+      el.src = useApiUrl(`/api/stream?v=${store.currentTrack.videoId}`);
       el.load();
 
       el.addEventListener('loadedmetadata', function onLoaded() {
@@ -120,7 +120,7 @@ export function usePlayer() {
         return;
       }
 
-      audioRef.value.src = `/api/stream?v=${track.videoId}`;
+      audioRef.value.src = useApiUrl(`/api/stream?v=${track.videoId}`);
       audioRef.value.load();
 
       await audioRef.value.play();
