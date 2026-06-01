@@ -14,7 +14,8 @@
     "settings": "Settings",
     "playlists": "Playlists",
     "language": "Language",
-    "downloadApp": "Get Desktop App"
+    "downloadApp": "Get Desktop App",
+    "signOut": "Sign out"
   },
   "actions": {
     "cancel": "Cancel",

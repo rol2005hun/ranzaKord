@@ -11,6 +11,17 @@
   "startSomething": "Start playing some music",
   "shuffle": "Shuffle",
   "repeat": "Repeat",
+  "lyrics": "Dalszöveg",
+  "showLyrics": "Dalszöveg megjelenítése",
+  "hideLyrics": "Dalszöveg elrejtése",
+  "openInfoPanel": "Információs panel megnyitása",
+  "closeInfoPanel": "Információs panel bezárása",
+  "lyricsNotFound": "Nem található dalszöveg ehhez a számhoz",
+  "lyricsLoading": "Dalszöveg betöltése...",
+  "lyricsNotSynced": "A dalszöveg nincs szinkronizálva",
+  "nowPlaying": "Most játszott",
+  "moreFrom": "Továbbiak tőle: {artist}",
+  "noRecommendations": "Nincsenek elérhető ajánlások",
   "errors": {
     "playback": "Playback error. Please try again.",
     "stream": "Failed to load stream. Are you signed in?"
