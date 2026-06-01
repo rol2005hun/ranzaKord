@@ -25,7 +25,9 @@ export function useAuth() {
         : ($fetch as unknown as (req: string) => Promise<unknown>);
       const user = (await fetcher('/api/me')) as unknown;
       if (user && typeof user === 'object' && 'sub' in user) {
-        store.setUser(user as { sub: string; name: string; email: string; picture?: string });
+        store.setUser(
+          user as { sub: string; name: string; email: string; picture?: string; hasAccess: boolean }
+        );
       } else {
         store.setUser(null);
       }

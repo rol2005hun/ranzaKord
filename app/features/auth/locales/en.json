@@ -13,5 +13,11 @@
   "callback": {
     "loading": "Completing sign in…",
     "error": "Sign in failed. Please try again."
+  },
+  "unauthorized": {
+    "title": "Access Denied",
+    "message": "Due to strict legal restrictions, this application is for private circle use only.",
+    "opensource": "However, ranzaKord is completely open-source! You can clone the repository, run it locally, and modify it without any limitations.",
+    "github": "View Source on GitHub"
   }
 }

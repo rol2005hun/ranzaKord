@@ -1,31 +1,33 @@
 [data-theme='ocean'] {
   color-scheme: light;
 
-  --color-primary-h: 189;
-  --color-primary-s: 94%;
-  --color-primary-l: 38%;
+  --color-primary-h: 192;
+  --color-primary-s: 90%;
+  --color-primary-l: 36%;
 
   --color-primary: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l));
   --color-primary-hover: hsl(
-    var(--color-primary-h) var(--color-primary-s) calc(var(--color-primary-l) - 8%)
+    var(--color-primary-h) var(--color-primary-s) calc(var(--color-primary-l) - 6%)
   );
-  --color-primary-foreground: #000000;
-  --color-primary-subtle: hsl(var(--color-primary-h) 90% 93%);
+  --color-primary-foreground: #ffffff;
+  --color-primary-subtle: hsl(var(--color-primary-h) 75% 92%);
   --color-primary-glow: hsl(
     var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.2
   );
 
-  --color-bg: #f0f9ff;
+  --color-bg: #edf6fb;
   --color-surface: #ffffff;
-  --color-surface-hover: #e0f2fe;
-  --color-surface-raised: #ffffff;
+  --color-surface-hover: #dbeef7;
+  --color-surface-raised: #f4fafd;
+  --color-surface-glass: rgb(255 255 255 / 0.78);
 
-  --color-text-primary: #0c4a6e;
-  --color-text-secondary: #0369a1;
-  --color-text-disabled: #7dd3fc;
+  --color-text-primary: #082030;
+  --color-text-secondary: #2e6a88;
+  --color-text-tertiary: #6eaabf;
+  --color-text-disabled: #b0d8e8;
 
-  --color-border: #bae6fd;
-  --color-border-hover: #7dd3fc;
+  --color-border: #b8dced;
+  --color-border-hover: #84c4df;
   --color-border-focus: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l));
 
   --color-danger: #ef4444;
@@ -47,6 +49,16 @@
   --color-neutral-foreground: #ffffff;
   --color-neutral-light: #f9fafb;
 
-  --color-ring: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.3);
-  --color-overlay: rgb(0 0 0 / 0.4);
+  --color-ring: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.28);
+  --color-overlay: rgb(8 32 48 / 0.38);
+
+  --shadow-sm: 0 1px 3px 0 rgb(20 80 110 / 0.07);
+  --shadow-md: 0 4px 8px -1px rgb(20 80 110 / 0.1), 0 2px 4px -2px rgb(20 80 110 / 0.06);
+  --shadow-lg: 0 10px 20px -3px rgb(20 80 110 / 0.12), 0 4px 8px -4px rgb(20 80 110 / 0.07);
+  --shadow-xl: 0 20px 32px -5px rgb(20 80 110 / 0.14), 0 8px 12px -6px rgb(20 80 110 / 0.08);
+
+  --gradient-hero: linear-gradient(135deg, #dbeef7 0%, #edf6fb 100%);
+  --gradient-card: linear-gradient(transparent 40%, rgb(8 32 48 / 0.6) 100%);
+  --glow-primary: 0 0 20px
+    hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.28);
 }

@@ -5,6 +5,7 @@ export interface IUser extends Document {
   name: string;
   email: string;
   picture: string;
+  hasAccess: boolean;
   lastPlayback?: {
     videoId: string;
     currentTime: number;
@@ -20,6 +21,7 @@ const userSchema = new Schema<IUser>(
     name: { type: String, required: true },
     email: { type: String, required: true },
     picture: { type: String, default: '' },
+    hasAccess: { type: Boolean, default: false },
     lastPlayback: {
       videoId: { type: String },
       currentTime: { type: Number },

@@ -41,7 +41,7 @@ describe('auth.global.ts middleware', () => {
   it('redirects to / if authenticated and trying to access /login', () => {
     const fn = getMiddleware();
     const authStore = useAuthStore();
-    authStore.setUser({ sub: '1', name: 'Test', email: '' }); // authenticated
+    authStore.setUser({ sub: '1', name: 'Test', email: '', hasAccess: true }); // authenticated
 
     const result = fn({ path: '/login' });
     expect(result).toEqual({ path: '/' });
@@ -50,7 +50,7 @@ describe('auth.global.ts middleware', () => {
   it('allows other routes if authenticated', () => {
     const fn = getMiddleware();
     const authStore = useAuthStore();
-    authStore.setUser({ sub: '1', name: 'Test', email: '' }); // authenticated
+    authStore.setUser({ sub: '1', name: 'Test', email: '', hasAccess: true }); // authenticated
 
     expect(fn({ path: '/' })).toBeUndefined();
     expect(fn({ path: '/search' })).toBeUndefined();

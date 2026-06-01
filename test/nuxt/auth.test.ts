@@ -40,15 +40,15 @@ describe('Auth Module', () => {
 
     it('sets user correctly', () => {
       const store = useAuthStore();
-      store.setUser({ sub: '1', name: 'Test User', email: '' });
-      expect(store.user).toEqual({ sub: '1', name: 'Test User', email: '' });
+      store.setUser({ sub: '1', name: 'Test User', email: '', hasAccess: true });
+      expect(store.user).toEqual({ sub: '1', name: 'Test User', email: '', hasAccess: true });
       expect(store.isAuthenticated).toBe(true);
     });
 
     it('clears session', () => {
       document.cookie = 'session=123; other=456';
       const store = useAuthStore();
-      store.setUser({ sub: '1', name: 'Test', email: '' });
+      store.setUser({ sub: '1', name: 'Test', email: '', hasAccess: true });
       store.clearSession();
 
       expect(store.user).toBeNull();

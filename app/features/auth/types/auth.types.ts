@@ -3,6 +3,7 @@ export interface OAuthUser {
   name: string;
   email: string;
   picture?: string;
+  hasAccess: boolean;
 }
 
 export interface OAuthSession {

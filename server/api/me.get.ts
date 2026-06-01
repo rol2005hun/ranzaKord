@@ -1,10 +1,12 @@
 import type { ServerSession } from '../types/auth.server.types';
+import { UserModel } from '../models/User';
 
 export interface MeResponse {
   sub: string;
   name: string;
   email: string;
   picture: string;
+  hasAccess: boolean;
 }
 
 export default defineEventHandler(async (event): Promise<MeResponse> => {
@@ -26,10 +28,13 @@ export default defineEventHandler(async (event): Promise<MeResponse> => {
     throw createError({ statusCode: 401, statusMessage: t('auth.errors.sessionExpired') });
   }
 
+  const userDoc = await UserModel.findOne({ sub: sessionData.user.sub });
+
   return {
     sub: sessionData.user.sub,
     name: sessionData.user.name,
     email: sessionData.user.email,
-    picture: sessionData.user.picture ?? ''
+    picture: sessionData.user.picture ?? '',
+    hasAccess: userDoc?.hasAccess ?? false
   };
 });

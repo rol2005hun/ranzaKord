@@ -19,9 +19,11 @@
   --color-surface: #0d0d1e;
   --color-surface-hover: #121230;
   --color-surface-raised: #181838;
+  --color-surface-glass: rgb(13 13 30 / 0.78);
 
   --color-text-primary: #e8e8ff;
   --color-text-secondary: #9494c7;
+  --color-text-tertiary: #5a5a90;
   --color-text-disabled: #363660;
 
   --color-border: #1e1e40;
@@ -49,4 +51,9 @@
 
   --color-ring: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.4);
   --color-overlay: rgb(0 0 0 / 0.75);
+
+  --gradient-hero: linear-gradient(135deg, #121230 0%, #0d0d1e 100%);
+  --gradient-card: linear-gradient(transparent 40%, rgb(0 0 0 / 0.65) 100%);
+  --glow-primary: 0 0 24px
+    hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.35);
 }

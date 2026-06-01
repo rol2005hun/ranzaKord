@@ -1,31 +1,33 @@
 [data-theme='rose'] {
   color-scheme: light;
 
-  --color-primary-h: 343;
-  --color-primary-s: 80%;
-  --color-primary-l: 48%;
+  --color-primary-h: 340;
+  --color-primary-s: 82%;
+  --color-primary-l: 44%;
 
   --color-primary: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l));
   --color-primary-hover: hsl(
-    var(--color-primary-h) var(--color-primary-s) calc(var(--color-primary-l) - 8%)
+    var(--color-primary-h) var(--color-primary-s) calc(var(--color-primary-l) - 6%)
   );
-  --color-primary-foreground: #000000;
-  --color-primary-subtle: hsl(var(--color-primary-h) 80% 95%);
+  --color-primary-foreground: #ffffff;
+  --color-primary-subtle: hsl(var(--color-primary-h) 80% 94%);
   --color-primary-glow: hsl(
     var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.2
   );
 
-  --color-bg: #fff1f2;
+  --color-bg: #fdf0f2;
   --color-surface: #ffffff;
-  --color-surface-hover: #ffe4e6;
-  --color-surface-raised: #ffffff;
+  --color-surface-hover: #fce7ea;
+  --color-surface-raised: #fff7f8;
+  --color-surface-glass: rgb(255 255 255 / 0.78);
 
-  --color-text-primary: #1a0a0e;
-  --color-text-secondary: #6b2230;
-  --color-text-disabled: #fda4af;
+  --color-text-primary: #1e0a10;
+  --color-text-secondary: #7a3048;
+  --color-text-tertiary: #b87a8c;
+  --color-text-disabled: #e0b0bc;
 
-  --color-border: #fecdd3;
-  --color-border-hover: #fda4af;
+  --color-border: #f5c6cf;
+  --color-border-hover: #f0a0b0;
   --color-border-focus: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l));
 
   --color-danger: #dc2626;
@@ -47,6 +49,16 @@
   --color-neutral-foreground: #ffffff;
   --color-neutral-light: #f9fafb;
 
-  --color-ring: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.3);
-  --color-overlay: rgb(0 0 0 / 0.4);
+  --color-ring: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.28);
+  --color-overlay: rgb(30 10 16 / 0.38);
+
+  --shadow-sm: 0 1px 3px 0 rgb(180 60 80 / 0.07);
+  --shadow-md: 0 4px 8px -1px rgb(180 60 80 / 0.1), 0 2px 4px -2px rgb(180 60 80 / 0.06);
+  --shadow-lg: 0 10px 20px -3px rgb(180 60 80 / 0.12), 0 4px 8px -4px rgb(180 60 80 / 0.07);
+  --shadow-xl: 0 20px 32px -5px rgb(180 60 80 / 0.14), 0 8px 12px -6px rgb(180 60 80 / 0.08);
+
+  --gradient-hero: linear-gradient(135deg, #fce7ea 0%, #fdf0f2 100%);
+  --gradient-card: linear-gradient(transparent 40%, rgb(30 10 16 / 0.58) 100%);
+  --glow-primary: 0 0 20px
+    hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.28);
 }

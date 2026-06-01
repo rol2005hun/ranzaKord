@@ -13,5 +13,11 @@
   "callback": {
     "loading": "Bejelentkezés befejezése…",
     "error": "Sikertelen bejelentkezés. Kérjük próbáld újra."
+  },
+  "unauthorized": {
+    "title": "Hozzáférés megtagadva",
+    "message": "Szigorú jogi korlátozások miatt ez az alkalmazás csak zárt, baráti körök számára érhető el.",
+    "opensource": "A ranzaKord azonban teljesen nyílt forráskódú! Szabadon klónozhatod a repozitóriumot, futtathatod helyileg és kedvedre módosíthatod bármiféle korlátozás nélkül.",
+    "github": "Forráskód a GitHub-on"
   }
 }
