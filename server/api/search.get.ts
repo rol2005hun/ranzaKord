@@ -72,10 +72,24 @@ export default defineCachedEventHandler(
       }
 
       let artistName = '';
-      if (item.authors?.[0]?.name) {
-        artistName = item.authors[0].name;
-      } else if (item.artists?.[0]?.name) {
-        artistName = item.artists[0].name;
+      let artists: Array<{ name: string; id?: string }> = [];
+
+      if (
+        item.authors &&
+        Array.isArray(item.authors) &&
+        item.authors.length > 0 &&
+        item.authors[0]?.name
+      ) {
+        artists = item.authors.map((a) => ({ name: a.name || '', id: a.channel_id }));
+        artistName = artists.map((a) => a.name).join(', ');
+      } else if (
+        item.artists &&
+        Array.isArray(item.artists) &&
+        item.artists.length > 0 &&
+        item.artists[0]?.name
+      ) {
+        artists = item.artists.map((a) => ({ name: a.name || '', id: a.channel_id }));
+        artistName = artists.map((a) => a.name).join(', ');
       } else if (Array.isArray(item.author) && item.author[0]?.name) {
         artistName = item.author[0].name;
       } else if (
@@ -145,7 +159,12 @@ export default defineCachedEventHandler(
         type: parsedType,
         title,
         artist: artistName,
+        artists: artists.length > 0 ? artists : undefined,
         artistId,
+        albumId:
+          typeof item.endpoint?.payload?.browseId === 'string'
+            ? item.endpoint.payload.browseId
+            : undefined,
         thumbnailUrl: thumbnail,
         durationSeconds: duration
       };

@@ -41,15 +41,30 @@ export default defineEventHandler(async (event) => {
     if (!title) return null;
 
     let artistName = '';
+    let artists: Array<{ name: string; id?: string }> = [];
+
     const extItem = item as unknown as {
       author?: { name?: string; channel_id?: string } | string | { toString: () => string };
     };
     const authorObj = extItem.author;
-    if (item.authors && Array.isArray(item.authors) && item.authors.length > 0) {
-      artistName = item.authors.map((a) => a.name).join(', ');
-    } else if (item.artists && Array.isArray(item.artists) && item.artists.length > 0) {
-      artistName = item.artists.map((a) => a.name).join(', ');
-    } else if (authorObj && typeof authorObj === 'object' && 'name' in authorObj) {
+
+    if (
+      item.authors &&
+      Array.isArray(item.authors) &&
+      item.authors.length > 0 &&
+      item.authors[0]?.name
+    ) {
+      artists = item.authors.map((a) => ({ name: a.name || '', id: a.channel_id }));
+      artistName = artists.map((a) => a.name).join(', ');
+    } else if (
+      item.artists &&
+      Array.isArray(item.artists) &&
+      item.artists.length > 0 &&
+      item.artists[0]?.name
+    ) {
+      artists = item.artists.map((a) => ({ name: a.name || '', id: a.channel_id }));
+      artistName = artists.map((a) => a.name).join(', ');
+    } else if (typeof authorObj === 'object' && authorObj && 'name' in authorObj) {
       artistName = authorObj.name || '';
     } else if (
       authorObj &&
@@ -91,6 +106,7 @@ export default defineEventHandler(async (event) => {
       type: 'song',
       title,
       artist: artistName,
+      artists: artists.length > 0 ? artists : undefined,
       artistId,
       thumbnailUrl: thumbnail,
       durationSeconds: duration

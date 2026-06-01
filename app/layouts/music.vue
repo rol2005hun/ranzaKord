@@ -234,7 +234,7 @@ onMounted(() => {
     align-items: center;
     justify-content: space-between;
     margin-bottom: var(--space-2);
-    padding: var(--space-2) var(--space-3) var(--space-2) 1.3rem;
+    padding: var(--space-2) var(--space-3) var(--space-2) 1.5rem;
     height: 36px;
     opacity: 1;
     overflow: hidden;

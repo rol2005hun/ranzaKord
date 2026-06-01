@@ -7,16 +7,21 @@ export default defineNuxtPlugin(() => {
   globalThis.$fetch = $fetch.create({
     baseURL: isTauriProd ? defaultBaseUrl : undefined,
     onRequest({ request, options }) {
-      options.credentials = 'include';
-
       const requestUrl = request.toString();
-      const isInternalApi = requestUrl.startsWith('/api') || requestUrl.startsWith(defaultBaseUrl);
+      const isInternalApi =
+        requestUrl.startsWith('/api') ||
+        requestUrl.startsWith(defaultBaseUrl) ||
+        requestUrl.startsWith('http://localhost') ||
+        requestUrl.startsWith('http://127.0.0.1');
 
-      const token = localStorage.getItem('auth_token');
-      if (token && isInternalApi) {
-        const headers = new Headers(options.headers || {});
-        headers.set('Authorization', `Bearer ${token}`);
-        options.headers = headers;
+      if (isInternalApi) {
+        options.credentials = 'include';
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+          const headers = new Headers(options.headers || {});
+          headers.set('Authorization', `Bearer ${token}`);
+          options.headers = headers;
+        }
       }
     }
   });

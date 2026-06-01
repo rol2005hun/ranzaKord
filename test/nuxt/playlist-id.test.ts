@@ -25,7 +25,9 @@ mockNuxtImport('usePlaylistsStore', () => {
 mockNuxtImport('usePlayer', () => {
   return () => ({
     playQueue: mockPlayQueue,
-    currentTrack: ref(null)
+    currentTrack: ref(null),
+    isPlaying: ref(false),
+    togglePlay: vi.fn()
   });
 });
 
@@ -38,6 +40,13 @@ mockNuxtImport('useI18n', () => {
   return () => ({
     t: (key: string, params: Record<string, unknown>) =>
       key + (params ? JSON.stringify(params) : '')
+  });
+});
+
+mockNuxtImport('useAuth', () => {
+  return () => ({
+    fetchUser: vi.fn(),
+    isAuthenticated: ref(false)
   });
 });
 

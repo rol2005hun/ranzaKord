@@ -1,10 +1,16 @@
 export type SearchResultType = 'song' | 'artist' | 'album' | 'video';
 
+export interface SearchResultArtist {
+  name: string;
+  id?: string;
+}
+
 export interface SearchResult {
   id: string;
   type: SearchResultType;
   title: string;
   artist: string;
+  artists?: SearchResultArtist[];
   artistId?: string;
   albumId?: string;
   thumbnailUrl: string;

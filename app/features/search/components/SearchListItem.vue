@@ -81,26 +81,56 @@ function onClick() {
       <p class="search-list-item__subtitle">
         <span v-if="track.type === 'song'">
           {{ $t('search.list.song') }} •
-          <NuxtLink
-            v-if="track.artistId"
-            :to="`/artist/${track.artistId}`"
-            class="artist-link"
-            @click.stop>
-            {{ track.artist }}
-          </NuxtLink>
-          <span v-else>{{ track.artist }}</span>
+          <template v-if="track.artists && track.artists.length > 0">
+            <template v-for="(artist, index) in track.artists" :key="index">
+              <NuxtLink
+                v-if="artist.id"
+                :to="`/artist/${artist.id}`"
+                class="artist-link"
+                @click.stop>
+                {{ artist.name }}
+              </NuxtLink>
+              <span v-else>{{ artist.name }}</span>
+              <span v-if="index < track.artists.length - 1">,</span>
+            </template>
+          </template>
+          <template v-else>
+            <NuxtLink
+              v-if="track.artistId"
+              :to="`/artist/${track.artistId}`"
+              class="artist-link"
+              @click.stop>
+              {{ track.artist }}
+            </NuxtLink>
+            <span v-else>{{ track.artist }}</span>
+          </template>
         </span>
         <span v-else-if="track.type === 'artist'">{{ $t('search.list.artist') }}</span>
         <span v-else-if="track.type === 'album'">
           {{ $t('search.list.album') }} •
-          <NuxtLink
-            v-if="track.artistId"
-            :to="`/artist/${track.artistId}`"
-            class="artist-link"
-            @click.stop>
-            {{ track.artist }}
-          </NuxtLink>
-          <span v-else>{{ track.artist }}</span>
+          <template v-if="track.artists && track.artists.length > 0">
+            <template v-for="(artist, index) in track.artists" :key="index">
+              <NuxtLink
+                v-if="artist.id"
+                :to="`/artist/${artist.id}`"
+                class="artist-link"
+                @click.stop>
+                {{ artist.name }}
+              </NuxtLink>
+              <span v-else>{{ artist.name }}</span>
+              <span v-if="index < track.artists.length - 1">,</span>
+            </template>
+          </template>
+          <template v-else>
+            <NuxtLink
+              v-if="track.artistId"
+              :to="`/artist/${track.artistId}`"
+              class="artist-link"
+              @click.stop>
+              {{ track.artist }}
+            </NuxtLink>
+            <span v-else>{{ track.artist }}</span>
+          </template>
         </span>
       </p>
     </div>

@@ -17,6 +17,10 @@ export default defineEventHandler(async (event) => {
     scope: 'openid profile email'
   });
 
+  if (query.lang) {
+    params.set('lang', query.lang as string);
+  }
+
   return sendRedirect(
     event,
     `https://${config.ranzakonnectDomain}/oauth/authorize?${params.toString()}`,

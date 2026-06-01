@@ -80,8 +80,23 @@ useHead({
   title: computed(() => playlist.value?.name || 'Playlist')
 });
 
+const isCurrentPlaylistPlaying = computed(() => {
+  if (!playlist.value || playlist.value.tracks.length === 0) return false;
+  if (!player.isPlaying.value) return false;
+  return playlist.value.tracks.some((t) => t.videoId === player.currentTrack.value?.videoId);
+});
+
 function playAll(): void {
   if (!playlist.value || playlist.value.tracks.length === 0) return;
+
+  if (
+    isCurrentPlaylistPlaying.value ||
+    (player.currentTrack.value &&
+      playlist.value.tracks.some((t) => t.videoId === player.currentTrack.value?.videoId))
+  ) {
+    player.togglePlay();
+    return;
+  }
 
   const tracksToPlay = playlist.value.tracks.map((t) => ({
     videoId: t.videoId,
@@ -173,7 +188,8 @@ async function onDelete(): Promise<void> {
           :disabled="!playlist || playlist.tracks.length === 0"
           :aria-label="$t('player.play')"
           @click="playAll">
-          <AppIcon name="ph:play-fill" />
+          <AppIcon v-if="isCurrentPlaylistPlaying" name="ph:pause-fill" />
+          <AppIcon v-else name="ph:play-fill" />
         </button>
 
         <button

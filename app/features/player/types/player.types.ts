@@ -1,7 +1,13 @@
+export interface TrackArtist {
+  name: string;
+  id?: string;
+}
+
 export interface Track {
   videoId: string;
   title: string;
   artist: string;
+  artists?: TrackArtist[];
   artistId?: string;
   thumbnailUrl: string;
   durationSeconds: number;

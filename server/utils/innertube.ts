@@ -46,7 +46,9 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
 
   anonymousInstance = await Innertube.create({
     cache: new UniversalCache(false),
-    generate_session_locally: true
+    generate_session_locally: true,
+    lang: 'en',
+    location: 'US'
   });
 
   return anonymousInstance;

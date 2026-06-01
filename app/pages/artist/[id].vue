@@ -148,7 +148,7 @@ onMounted(() => {
         </template>
 
         <template v-else-if="artist">
-          <div v-if="allSongs.length > 0" class="artist-page__section">
+          <div v-if="allSongs.length > 0 || isLoadingSongs" class="artist-page__section">
             <h2 class="artist-page__section-title">{{ $t('search.artist.topSongs') }} (All)</h2>
             <div class="artist-page__songs-list">
               <SearchListItem
@@ -158,7 +158,10 @@ onMounted(() => {
                 @click="onPlaySong(song)" />
 
               <template v-if="isLoadingSongs">
-                <div v-for="i in 3" :key="`more-skel-${i}`" class="artist-page__track-skeleton">
+                <div
+                  v-for="i in allSongs.length === 0 ? 5 : 3"
+                  :key="`more-skel-${i}`"
+                  class="artist-page__track-skeleton">
                   <div class="artist-page__track-info">
                     <div class="artist-page__track-thumb skeleton-box"></div>
                     <div class="artist-page__track-text">
