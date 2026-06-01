@@ -16,7 +16,7 @@ export default defineNuxtPlugin(() => {
         requestUrl.startsWith('http://127.0.0.1');
 
       if (isInternalApi) {
-        options.credentials = 'include';
+        options.credentials = isTauri() ? 'omit' : 'include';
         const token = localStorage.getItem('auth_token');
         if (token) {
           const headers = new Headers(options.headers || {});

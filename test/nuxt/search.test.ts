@@ -5,6 +5,7 @@ import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 import { ref } from 'vue';
 import { createPinia, setActivePinia } from 'pinia';
 
+setActivePinia(createPinia());
 const mockSearch = vi.fn();
 const mockQuery = ref('');
 const mockResults = ref<Array<Record<string, unknown>>>([]);
@@ -33,7 +34,8 @@ const mockRouter = {
   afterEach: vi.fn(),
   beforeResolve: vi.fn(),
   beforeEach: vi.fn(),
-  push: vi.fn()
+  push: vi.fn(),
+  onError: vi.fn()
 };
 
 mockNuxtImport('useRoute', () => () => mockRoute);

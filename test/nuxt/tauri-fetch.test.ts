@@ -51,6 +51,6 @@ describe('tauri-fetch.client plugin', () => {
 
     const options: Record<string, unknown> = {};
     config.onRequest({ request: '/api/test', options });
-    expect(options.credentials).toBe('include');
+    expect(options.credentials).toBe('omit');
   });
 });
