@@ -80,9 +80,6 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // Use proxyRequest to stream the audio through the backend.
-  // This bypasses the YouTube IP 403 Forbidden error because the IP requesting
-  // the stream will be the same as the one that generated the URL (the backend).
   return proxyRequest(event, resolvedStreamUrl, {
     headers: {
       'User-Agent':

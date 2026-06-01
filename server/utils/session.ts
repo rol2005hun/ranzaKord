@@ -5,10 +5,10 @@ export async function useAppSession(event: H3Event) {
 
   return useSession(event, {
     password: config.sessionSecret as string,
-    maxAge: 60 * 60 * 24 * 30, // 30 days
+    maxAge: 60 * 60 * 24 * 365, // 365 days
     cookie: {
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none',
+      secure: true,
       httpOnly: true
     }
   });
