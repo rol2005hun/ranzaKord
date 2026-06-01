@@ -1,3 +1,5 @@
+import type { ComputedRef } from 'vue';
+
 export interface OAuthUser {
   sub: string;
   name: string;
@@ -24,4 +26,13 @@ export interface OAuthTokenResponse {
 export interface OAuthCallbackQuery {
   code: string;
   state: string;
+}
+
+export interface UseAuthReturn {
+  isAuthenticated: ComputedRef<boolean>;
+  currentUser: ComputedRef<OAuthUser | null>;
+  isTauri: ComputedRef<boolean>;
+  loginWithRanzaKonnect: () => Promise<void>;
+  logout: () => Promise<void>;
+  fetchUser: () => Promise<void>;
 }

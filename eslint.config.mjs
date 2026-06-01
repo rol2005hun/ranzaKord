@@ -4,7 +4,15 @@ import oxlint from 'eslint-plugin-oxlint';
 export default withNuxt(
   oxlint.configs['flat/recommended'],
   {
-    ignores: ['.nuxt', '.output', 'node_modules', 'dist', 'public', 'package-lock.json', 'src-tauri/**']
+    ignores: [
+      '.nuxt',
+      '.output',
+      'node_modules',
+      'dist',
+      'public',
+      'package-lock.json',
+      'src-tauri/**'
+    ]
   },
   {
     rules: {

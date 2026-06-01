@@ -2,7 +2,8 @@ import { isTauri } from '@tauri-apps/api/core';
 
 export default defineNuxtPlugin(() => {
   const isTauriProd = isTauri() && !import.meta.dev;
-  const defaultBaseUrl = 'https://kord.ranzak.dev';
+  const config = useRuntimeConfig();
+  const defaultBaseUrl = config.public.baseUrl;
 
   globalThis.$fetch = $fetch.create({
     baseURL: isTauriProd ? defaultBaseUrl : undefined,

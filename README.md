@@ -19,17 +19,17 @@
 
 ## 🛠 Tech Stack
 
-| Layer | Technology |
-|---|---|
-| **Framework** | [Nuxt 4](https://nuxt.com/) (`srcDir: app/`, `serverDir: server/`) |
-| **Desktop / Native** | [Tauri v2](https://tauri.app/) |
-| **Language** | TypeScript (strict mode) |
-| **State Management** | [Pinia](https://pinia.vuejs.org/) + [Pinia ORM](https://pinia-orm.vuejs.org/) |
-| **Async State** | [@pinia/colada](https://pinia-colada.esm.is/) |
-| **Styling** | SCSS + CSS Custom Properties (Design Tokens) |
-| **i18n** | `@nuxtjs/i18n` with auto-loading glob plugin |
-| **Testing** | Vitest (unit/integration) + Playwright (e2e) |
-| **Linting & Formatting** | ESLint + oxlint + Prettier |
+| Layer                    | Technology                                                                    |
+| ------------------------ | ----------------------------------------------------------------------------- |
+| **Framework**            | [Nuxt 4](https://nuxt.com/) (`srcDir: app/`, `serverDir: server/`)            |
+| **Desktop / Native**     | [Tauri v2](https://tauri.app/)                                                |
+| **Language**             | TypeScript (strict mode)                                                      |
+| **State Management**     | [Pinia](https://pinia.vuejs.org/) + [Pinia ORM](https://pinia-orm.vuejs.org/) |
+| **Async State**          | [@pinia/colada](https://pinia-colada.esm.is/)                                 |
+| **Styling**              | SCSS + CSS Custom Properties (Design Tokens)                                  |
+| **i18n**                 | `@nuxtjs/i18n` with auto-loading glob plugin                                  |
+| **Testing**              | Vitest (unit/integration) + Playwright (e2e)                                  |
+| **Linting & Formatting** | ESLint + oxlint + Prettier                                                    |
 
 ## 🚀 Getting Started
 
@@ -70,6 +70,7 @@ Start the development server for the web:
 ```bash
 pnpm dev
 ```
+
 Open [http://localhost:3000](http://localhost:3000)
 
 Start the desktop app development environment (Tauri):
@@ -103,21 +104,22 @@ app/
 
 ## 📜 Available Scripts
 
-| Command | Description |
-|---|---|
-| `pnpm dev` | Start the web development server |
-| `pnpm tauri dev` | Start the Tauri desktop app in dev mode |
-| `pnpm build` | Build the web application for production |
-| `pnpm tauri build` | Build the Tauri desktop executable |
-| `pnpm check` | Run typecheck, linting, and formatting checks |
-| `pnpm lint` / `lint:fix` | Run ESLint / auto-fix |
-| `pnpm format:fix` | Run Prettier auto-format |
-| `pnpm test` | Run all Vitest tests |
-| `pnpm test:e2e` | Run Playwright end-to-end tests |
+| Command                  | Description                                   |
+| ------------------------ | --------------------------------------------- |
+| `pnpm dev`               | Start the web development server              |
+| `pnpm tauri dev`         | Start the Tauri desktop app in dev mode       |
+| `pnpm build`             | Build the web application for production      |
+| `pnpm tauri build`       | Build the Tauri desktop executable            |
+| `pnpm check`             | Run typecheck, linting, and formatting checks |
+| `pnpm lint` / `lint:fix` | Run ESLint / auto-fix                         |
+| `pnpm format:fix`        | Run Prettier auto-format                      |
+| `pnpm test`              | Run all Vitest tests                          |
+| `pnpm test:e2e`          | Run Playwright end-to-end tests               |
 
 ## 🎨 Theme System
 
 ranzaKord features a powerful custom styling and theming engine:
+
 - Tokens live in `app/assets/scss/themes/`.
 - Utilizes `[data-theme='<name>']` with HSL component variables.
 - Themes strictly persist in `localStorage` and initialize before the first render to prevent flashing.

@@ -167,7 +167,9 @@ export default defineNuxtConfig({
         '@tauri-apps/api/core',
         '@tauri-apps/api/window',
         '@tauri-apps/plugin-process',
-        '@tauri-apps/plugin-updater'
+        '@tauri-apps/plugin-updater',
+        '@tauri-apps/plugin-deep-link',
+        '@tauri-apps/plugin-opener'
       ]
     },
     esbuild: {

@@ -15,6 +15,8 @@ export interface OAuthUser {
 
 export interface ServerSession {
   oauthState: string | null;
+  authSource: string | null;
+  desktopAuth: boolean;
   accessToken: string;
   expiresAt: number;
   user: OAuthUser;

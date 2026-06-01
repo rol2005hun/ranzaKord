@@ -17,9 +17,14 @@ describe('Auth Module', () => {
     });
 
     // Mock window.location
+    const assign = vi.fn();
     Object.defineProperty(window, 'location', {
       writable: true,
-      value: { href: 'http://localhost:3000/', origin: 'http://localhost:3000' }
+      value: {
+        href: 'http://localhost:3000/',
+        origin: 'http://localhost:3000',
+        assign
+      }
     });
 
     // Mock globalThis.$fetch
@@ -66,10 +71,12 @@ describe('Auth Module', () => {
       expect(isAuthenticated.value).toBe(false);
     });
 
-    it('login sets location href', async () => {
+    it('login opens the auth URL', async () => {
       const { loginWithRanzaKonnect } = useAuth();
-      loginWithRanzaKonnect();
-      expect(window.location.href).toContain('/auth/login');
+      await loginWithRanzaKonnect();
+      expect(window.location.assign).toHaveBeenCalledWith(
+        '/auth/login?source=http%3A%2F%2Flocalhost%3A3000&lang=en'
+      );
     });
 
     it('logout calls clearSession and fetches logout endpoint', async () => {

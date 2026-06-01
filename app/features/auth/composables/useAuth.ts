@@ -1,19 +1,26 @@
-export function useAuth() {
+import type { UseAuthReturn } from '../types/auth.types';
+
+export function useAuth(): UseAuthReturn {
   const store = useAuthStore();
   const router = useRouter();
+  const isTauri = computed(() => import.meta.client && '__TAURI_INTERNALS__' in window);
 
-  function loginWithRanzaKonnect() {
-    const isTauri = '__TAURI_INTERNALS__' in window;
+  async function loginWithRanzaKonnect(): Promise<void> {
     const origin = encodeURIComponent(window.location.origin);
     const nuxtApp = useNuxtApp();
     const lang = nuxtApp.$i18n?.locale?.value || 'en';
+    const desktopAuth = isTauri.value ? '&desktop=1' : '';
+    const config = useRuntimeConfig();
+    const baseUrl = config.public.baseUrl;
+    const loginUrl = isTauri.value
+      ? `${baseUrl}/auth/login?source=${origin}&lang=${lang}${desktopAuth}`
+      : `/auth/login?source=${origin}&lang=${lang}${desktopAuth}`;
 
-    if (isTauri && !import.meta.dev) {
-      void navigateTo(`https://kord.ranzak.dev/auth/login?source=${origin}&lang=${lang}`, {
-        external: true
-      });
+    if (isTauri.value) {
+      const { openUrl } = await import('@tauri-apps/plugin-opener');
+      await openUrl(loginUrl);
     } else {
-      void navigateTo(`/auth/login?source=${origin}&lang=${lang}`, { external: true });
+      window.location.assign(loginUrl);
     }
   }
 
@@ -53,6 +60,7 @@ export function useAuth() {
   return {
     isAuthenticated: computed(() => store.isAuthenticated),
     currentUser: computed(() => store.currentUser),
+    isTauri,
     loginWithRanzaKonnect,
     logout,
     fetchUser

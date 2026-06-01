@@ -4,6 +4,7 @@
     "subtitle": "Jelentkezz be a zenéid eléréséhez",
     "button": "Folytatás ranzaKonnect-el",
     "redirecting": "Átirányítás a ranzaKonnect-re...",
+    "openingInBrowser": "Megnyitás a böngészőben...",
     "footer": "Biztonságos bejelentkezés ranzaKonnect segítségével"
   },
   "logout": "Kijelentkezés",
@@ -12,7 +13,11 @@
   "sessionExpired": "A munkamenet lejárt. Kérjük jelentkezz be újra.",
   "callback": {
     "loading": "Bejelentkezés befejezése…",
-    "error": "Sikertelen bejelentkezés. Kérjük próbáld újra."
+    "error": "Sikertelen bejelentkezés. Kérjük próbáld újra.",
+    "successTitle": "Sikeres bejelentkezés",
+    "successMessage": "Sikeresen bejelentkeztél. Most már bezárhatod ezt az ablakot, és visszatérhetsz az alkalmazásba.",
+    "closeWindow": "Ablak bezárása",
+    "openAppManually": "Kattints ide, ha az alkalmazás nem nyílt meg automatikusan"
   },
   "unauthorized": {
     "title": "Hozzáférés megtagadva",

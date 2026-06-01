@@ -6,8 +6,12 @@ definePageMeta({
 const { t, locale, setLocale } = useI18n();
 useHead({ title: t('core.nav.signIn') });
 
-const { loginWithRanzaKonnect, isAuthenticated } = useAuth();
+const { loginWithRanzaKonnect, isAuthenticated, isTauri } = useAuth();
 const isRedirecting = ref(false);
+
+const redirectingText = computed(() =>
+  isTauri.value ? t('auth.login.openingInBrowser') : t('auth.login.redirecting')
+);
 
 const handleLogin = () => {
   isRedirecting.value = true;
@@ -43,7 +47,7 @@ if (isAuthenticated.value) {
         @click="handleLogin">
         <template v-if="isRedirecting">
           <AppSpinner size="sm" class="login-page__spinner" />
-          {{ $t('auth.login.redirecting') }}
+          {{ redirectingText }}
         </template>
         <template v-else>
           <AppIcon name="ph:key-fill" />

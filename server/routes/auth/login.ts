@@ -5,9 +5,15 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event);
 
   const state = randomBytes(16).toString('hex');
+  const desktopAuth = query.desktop === '1';
 
   const session = await useAppSession(event);
-  await session.update({ oauthState: state, authSource: query.source || null });
+  await session.update({
+    oauthState: state,
+    authSource: query.source || null,
+    desktopAuth,
+    lang: query.lang || 'en'
+  });
 
   const params = new URLSearchParams({
     response_type: 'code',

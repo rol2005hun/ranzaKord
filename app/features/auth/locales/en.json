@@ -4,6 +4,7 @@
     "subtitle": "Sign in to access your music",
     "button": "Continue with ranzaKonnect",
     "redirecting": "Redirecting to ranzaKonnect...",
+    "openingInBrowser": "Opening in browser...",
     "footer": "Secure authentication powered by ranzaKonnect"
   },
   "logout": "Sign out",
@@ -12,7 +13,11 @@
   "sessionExpired": "Your session has expired. Please sign in again.",
   "callback": {
     "loading": "Completing sign in…",
-    "error": "Sign in failed. Please try again."
+    "error": "Sign in failed. Please try again.",
+    "successTitle": "Authentication Successful",
+    "successMessage": "You have successfully signed in. You can now close this window and return to the application.",
+    "closeWindow": "Close Window",
+    "openAppManually": "Click here if the app didn't open automatically"
   },
   "unauthorized": {
     "title": "Access Denied",

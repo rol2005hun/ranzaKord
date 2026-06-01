@@ -14,7 +14,8 @@ const mockIsAuthenticated = ref(false);
 mockNuxtImport('useAuth', () => {
   return () => ({
     loginWithRanzaKonnect: mockLoginWithRanzaKonnect,
-    isAuthenticated: mockIsAuthenticated
+    isAuthenticated: mockIsAuthenticated,
+    isTauri: ref(false)
   });
 });
 

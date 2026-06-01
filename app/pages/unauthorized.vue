@@ -6,8 +6,12 @@ definePageMeta({
 const { t } = useI18n();
 useHead({ title: t('auth.unauthorized.title') });
 
-const { logout } = useAuth();
+const { logout, isTauri } = useAuth();
 const isLoggingOut = ref(false);
+
+const redirectingText = computed(() =>
+  isTauri.value ? t('auth.login.openingInBrowser') : t('auth.login.redirecting')
+);
 
 const handleLogout = async () => {
   isLoggingOut.value = true;
@@ -49,7 +53,7 @@ const handleLogout = async () => {
         @click="handleLogout">
         <template v-if="isLoggingOut">
           <AppSpinner size="sm" class="login-page__spinner" />
-          {{ $t('auth.login.redirecting') }}
+          {{ redirectingText }}
         </template>
         <template v-else>
           <AppIcon name="ph:sign-out-fill" />
