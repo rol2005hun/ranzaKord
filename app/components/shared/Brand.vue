@@ -2,7 +2,7 @@
 
 <template>
   <div class="app-brand">
-    <NuxtImg src="/logo.webp" alt="ranzaKonnect" height="34" class="app-brand__logo" />
+    <img src="/logo.webp" alt="ranzaKonnect" height="34" class="app-brand__logo" />
   </div>
 </template>
 
