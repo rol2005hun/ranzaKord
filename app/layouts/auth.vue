@@ -6,8 +6,11 @@
 
 <style lang="scss" scoped>
 .auth-layout {
-  min-height: calc(100dvh - var(--titlebar-height, 0px));
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - var(--titlebar-height, 0px));
   margin-top: var(--titlebar-height, 0px);
   background: var(--color-bg, #09090f);
+  overflow: hidden;
 }
 </style>

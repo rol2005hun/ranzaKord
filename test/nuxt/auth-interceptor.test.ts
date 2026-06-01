@@ -21,7 +21,7 @@ describe('auth-interceptor.client plugin', () => {
 
     Object.defineProperty(window, 'location', {
       writable: true,
-      value: { href: '' }
+      value: { href: 'http://localhost:3000/test', pathname: '/test' }
     });
   });
 

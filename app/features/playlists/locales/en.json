@@ -37,5 +37,6 @@
     "create": "Failed to create playlist",
     "update": "Failed to update playlist",
     "delete": "Failed to delete playlist"
-  }
+  },
+  "myPlaylist": "My Playlist"
 }

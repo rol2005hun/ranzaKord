@@ -15,17 +15,17 @@ export default defineEventHandler(async (event): Promise<MeResponse> => {
   try {
     session = await useAppSession(event);
   } catch {
-    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
+    throw createError({ statusCode: 401, message: t('core.errors.unauthorized') });
   }
   const sessionData = session.data as Partial<ServerSession>;
 
   if (!sessionData.accessToken || !sessionData.user) {
-    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
+    throw createError({ statusCode: 401, message: t('core.errors.unauthorized') });
   }
 
   if (sessionData.expiresAt && Date.now() > sessionData.expiresAt) {
     await session.clear();
-    throw createError({ statusCode: 401, statusMessage: t('auth.errors.sessionExpired') });
+    throw createError({ statusCode: 401, message: t('auth.errors.sessionExpired') });
   }
 
   const userDoc = await UserModel.findOne({ sub: sessionData.user.sub });

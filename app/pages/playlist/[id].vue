@@ -140,7 +140,7 @@ async function onDelete(): Promise<void> {
       :is-loading="isLoading"
       :is-error="!playlist && !isLoading"
       :title="playlist?.name"
-      :badge="$t('playlists.title').slice(0, -1)"
+      :badge="$t('playlists.myPlaylist')"
       :image-url="playlist?.imageUrl"
       :tracks="mappedTracks"
       :has-more-tracks="hasMoreTracks"

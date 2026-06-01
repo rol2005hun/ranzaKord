@@ -22,7 +22,9 @@ mockNuxtImport('navigateTo', () => mockNavigateTo);
 
 mockNuxtImport('useI18n', () => {
   return () => ({
-    t: (key: string) => key
+    t: (key: string) => key,
+    locale: ref('en'),
+    setLocale: vi.fn()
   });
 });
 
@@ -44,7 +46,7 @@ describe('login.vue', () => {
       {
         global: {
           mocks: { $t: (k: string) => k },
-          stubs: { AppIcon: true, AppSpinner: true, Suspense: false }
+          stubs: { AppIcon: true, AppSpinner: true, Suspense: false, AppButton: false }
         }
       }
     );
@@ -55,13 +57,13 @@ describe('login.vue', () => {
     await new Promise((r) => setTimeout(r, 0));
     expect(wrapper.text()).toContain('auth.login.title');
     expect(wrapper.text()).toContain('auth.login.subtitle');
-    expect(wrapper.find('button').text()).toContain('auth.login.button');
+    expect(wrapper.find('#login-with-ranzakonnect').text()).toContain('auth.login.button');
   });
 
   it('handles login button click', async () => {
     const wrapper = mountLogin();
     await new Promise((r) => setTimeout(r, 0));
-    const btn = wrapper.find('button');
+    const btn = wrapper.find('#login-with-ranzakonnect');
 
     await btn.trigger('click');
     expect(mockLoginWithRanzaKonnect).toHaveBeenCalled();

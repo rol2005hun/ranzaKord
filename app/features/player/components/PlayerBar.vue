@@ -41,7 +41,8 @@ const volumeIcon = computed(() => {
 });
 
 const isLyricsActive = computed(
-  () => layoutStore.isRightSidebarOpen && layoutStore.rightSidebarMode === 'lyrics'
+  () =>
+    isHydrated.value && layoutStore.isRightSidebarOpen && layoutStore.rightSidebarMode === 'lyrics'
 );
 
 watch(
@@ -235,7 +236,10 @@ function onVolumeInput(event: Event) {
             :disabled="!displayTrack"
             :aria-label="$t('player.repeat') || 'Repeat'"
             @click="player.toggleRepeat()">
-            <AppIcon :name="player.repeatMode.value === 'one' ? 'ph:repeat-once' : 'ph:repeat'" />
+            <AppIcon
+              :name="
+                isHydrated && player.repeatMode.value === 'one' ? 'ph:repeat-once' : 'ph:repeat'
+              " />
           </button>
         </div>
 

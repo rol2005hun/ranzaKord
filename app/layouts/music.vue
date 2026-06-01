@@ -30,6 +30,10 @@ function onPlaylistImported(id: string): void {
   showImportModal.value = false;
   navigateTo(`/playlist/${id}`);
 }
+const isHydrated = ref(false);
+onMounted(() => {
+  isHydrated.value = true;
+});
 </script>
 
 <template>
@@ -65,7 +69,7 @@ function onPlaylistImported(id: string): void {
           </div>
         </div>
 
-        <div v-if="playlistsStore.isLoading" class="music-layout__library-skeletons">
+        <div v-if="!isHydrated || playlistsStore.isLoading" class="music-layout__library-skeletons">
           <div
             v-for="i in 5"
             :key="`skeleton-${i}`"
@@ -78,38 +82,42 @@ function onPlaylistImported(id: string): void {
           </div>
         </div>
 
-        <div
-          v-else-if="playlistsStore.playlists.length === 0"
-          class="music-layout__library-empty app-sidebar__text">
-          <div class="music-layout__library-empty-content">
-            <AppIcon name="ph:music-notes-plus-duotone" class="music-layout__library-empty-icon" />
-            <p class="music-layout__library-empty-title">{{ $t('playlists.noPlaylists') }}</p>
-            <p class="music-layout__library-empty-desc">{{ $t('playlists.createFirst') }}</p>
-            <button class="music-layout__library-empty-btn" @click="showCreateModal = true">
-              {{ $t('playlists.newPlaylist') }}
-            </button>
+        <template v-else>
+          <div
+            v-if="playlistsStore.playlists.length === 0"
+            class="music-layout__library-empty app-sidebar__text">
+            <div class="music-layout__library-empty-content">
+              <AppIcon
+                name="ph:music-notes-plus-duotone"
+                class="music-layout__library-empty-icon" />
+              <p class="music-layout__library-empty-title">{{ $t('playlists.noPlaylists') }}</p>
+              <p class="music-layout__library-empty-desc">{{ $t('playlists.createFirst') }}</p>
+              <button class="music-layout__library-empty-btn" @click="showCreateModal = true">
+                {{ $t('playlists.newPlaylist') }}
+              </button>
+            </div>
           </div>
-        </div>
 
-        <NuxtLink
-          v-for="playlist in playlistsStore.playlists"
-          :key="playlist.id"
-          :to="`/playlist/${playlist.id}`"
-          class="app-sidebar-item music-layout__playlist-item"
-          :class="{
-            'app-sidebar-item--active': route.path === `/playlist/${playlist.id}`
-          }">
-          <div class="music-layout__playlist-cover">
-            <img v-if="playlist.imageUrl" :src="playlist.imageUrl" :alt="playlist.name" />
-            <AppIcon v-else name="ph:music-notes-fill" />
-          </div>
-          <div class="music-layout__playlist-info app-sidebar__text">
-            <span class="music-layout__playlist-name">{{ playlist.name }}</span>
-            <span class="music-layout__playlist-count">
-              {{ $t('playlists.trackCount', { count: playlist.trackCount }) }}
-            </span>
-          </div>
-        </NuxtLink>
+          <NuxtLink
+            v-for="playlist in playlistsStore.playlists"
+            :key="playlist.id"
+            :to="`/playlist/${playlist.id}`"
+            class="app-sidebar-item music-layout__playlist-item"
+            :class="{
+              'app-sidebar-item--active': route.path === `/playlist/${playlist.id}`
+            }">
+            <div class="music-layout__playlist-cover">
+              <img v-if="playlist.imageUrl" :src="playlist.imageUrl" :alt="playlist.name" />
+              <AppIcon v-else name="ph:music-notes-fill" />
+            </div>
+            <div class="music-layout__playlist-info app-sidebar__text">
+              <span class="music-layout__playlist-name">{{ playlist.name }}</span>
+              <span class="music-layout__playlist-count">
+                {{ $t('playlists.trackCount', { count: playlist.trackCount }) }}
+              </span>
+            </div>
+          </NuxtLink>
+        </template>
       </div>
     </AppSidebar>
 

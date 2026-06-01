@@ -19,7 +19,7 @@ describe('Auth Module', () => {
     // Mock window.location
     Object.defineProperty(window, 'location', {
       writable: true,
-      value: { href: '' }
+      value: { href: 'http://localhost:3000/', origin: 'http://localhost:3000' }
     });
 
     // Mock globalThis.$fetch

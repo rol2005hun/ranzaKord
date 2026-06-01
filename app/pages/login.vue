@@ -3,7 +3,7 @@ definePageMeta({
   layout: 'auth'
 });
 
-const { t } = useI18n();
+const { t, locale, setLocale } = useI18n();
 useHead({ title: t('core.nav.signIn') });
 
 const { loginWithRanzaKonnect, isAuthenticated } = useAuth();
@@ -21,6 +21,11 @@ if (isAuthenticated.value) {
 
 <template>
   <div id="main-content" class="login-page">
+    <div class="login-page__lang-toggle">
+      <button :class="{ active: locale === 'en' }" @click="setLocale('en')">EN</button>
+      <button :class="{ active: locale === 'hu' }" @click="setLocale('hu')">HU</button>
+    </div>
+
     <div class="login-page__card">
       <div class="login-page__logo">
         <AppIcon name="ph:music-note-fill" class="login-page__logo-icon" />
@@ -60,7 +65,7 @@ if (isAuthenticated.value) {
 <style lang="scss" scoped>
 .login-page {
   position: relative;
-  min-height: 100dvh;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -167,6 +172,41 @@ if (isAuthenticated.value) {
       background: radial-gradient(circle, hsl(265 75% 50% / 0.08) 0%, transparent 60%);
       bottom: 20%;
       left: 30%;
+    }
+  }
+  &__lang-toggle {
+    position: absolute;
+    top: var(--space-6);
+    right: var(--space-6);
+    display: flex;
+    gap: var(--space-1);
+    z-index: 10;
+    background: var(--color-surface-glass);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    padding: var(--space-1);
+    backdrop-filter: blur(12px);
+
+    button {
+      padding: var(--space-1) var(--space-3);
+      font-size: var(--text-xs);
+      font-weight: var(--font-weight-bold);
+      color: var(--color-text-secondary);
+      border-radius: var(--radius-full);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: all var(--transition-base);
+
+      &:hover {
+        color: var(--color-text-primary);
+      }
+
+      &.active {
+        color: var(--color-text-primary);
+        background: var(--color-surface-hover);
+        box-shadow: var(--shadow-sm);
+      }
     }
   }
 }

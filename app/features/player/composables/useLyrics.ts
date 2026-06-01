@@ -48,9 +48,12 @@ export function useLyrics() {
       const durationSeconds = Math.round(track.durationSeconds);
       const params = new URLSearchParams({
         artist_name: track.artist,
-        track_name: track.title,
-        duration: String(durationSeconds)
+        track_name: track.title
       });
+
+      if (durationSeconds <= 3600) {
+        params.append('duration', String(durationSeconds));
+      }
 
       const response = await $fetch<LrclibResponse>(
         `https://lrclib.net/api/get?${params.toString()}`

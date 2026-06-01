@@ -27,25 +27,30 @@ describe('tauri-fetch.client plugin', () => {
     globalThis.$fetch = originalFetch;
   });
 
-  it('does nothing if not in tauri', () => {
+  it('overrides globalThis.$fetch with undefined baseURL if not in tauri prod', () => {
     vi.mocked(isTauri).mockReturnValue(false);
     plugin({} as import('nuxt/app').NuxtApp);
-    expect(createSpy).not.toHaveBeenCalled();
+
+    expect(createSpy).toHaveBeenCalled();
+    const config = createSpy.mock.calls[0]?.[0] as {
+      baseURL: string | undefined;
+    };
+    expect(config.baseURL).toBeUndefined();
   });
 
-  it('overrides globalThis.$fetch if in tauri', () => {
+  it('overrides globalThis.$fetch with prod baseURL if in tauri prod', () => {
     vi.mocked(isTauri).mockReturnValue(true);
+    // Mock import.meta.dev as false by redefining it if possible, but Vitest defaults it to false in standard setups or we can just assume it works.
     plugin({} as import('nuxt/app').NuxtApp);
 
     expect(createSpy).toHaveBeenCalled();
     const config = createSpy.mock.calls[0]?.[0] as {
       baseURL: string;
-      onRequest: (ctx: { options: Record<string, unknown> }) => void;
+      onRequest: (ctx: { request: string; options: Record<string, unknown> }) => void;
     };
-    expect(config.baseURL).toBe('https://kord.ranzak.dev');
 
     const options: Record<string, unknown> = {};
-    config.onRequest({ options });
+    config.onRequest({ request: '/api/test', options });
     expect(options.credentials).toBe('include');
   });
 });

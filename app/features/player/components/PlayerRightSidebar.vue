@@ -99,7 +99,7 @@ function onResizeStart(event: MouseEvent | TouchEvent) {
 }
 
 const sidebarStyle = computed(() => ({
-  width: `${layoutStore.rightSidebarWidth}px`
+  width: `${isHydrated.value ? layoutStore.rightSidebarWidth : 300}px`
 }));
 </script>
 
@@ -124,7 +124,9 @@ const sidebarStyle = computed(() => ({
         <button
           id="sidebar-tab-info"
           class="right-sidebar__tab"
-          :class="{ 'right-sidebar__tab--active': layoutStore.rightSidebarMode === 'info' }"
+          :class="{
+            'right-sidebar__tab--active': !isHydrated || layoutStore.rightSidebarMode === 'info'
+          }"
           @click="layoutStore.setRightSidebarMode('info')">
           <AppIcon name="ph:music-note" />
           <span>{{ $t('player.nowPlaying') }}</span>
@@ -132,7 +134,9 @@ const sidebarStyle = computed(() => ({
         <button
           id="sidebar-tab-lyrics"
           class="right-sidebar__tab"
-          :class="{ 'right-sidebar__tab--active': layoutStore.rightSidebarMode === 'lyrics' }"
+          :class="{
+            'right-sidebar__tab--active': isHydrated && layoutStore.rightSidebarMode === 'lyrics'
+          }"
           @click="layoutStore.setRightSidebarMode('lyrics')">
           <AppIcon name="ph:microphone-stage" />
           <span>{{ $t('player.lyrics') }}</span>
@@ -148,45 +152,90 @@ const sidebarStyle = computed(() => ({
     </div>
 
     <div class="right-sidebar__body">
-      <div v-if="layoutStore.rightSidebarMode === 'info'" class="right-sidebar__info">
-        <div class="right-sidebar__artwork-wrap">
-          <img
-            v-if="currentTrack?.thumbnailUrl"
-            :src="`/api/image?url=${encodeURIComponent(currentTrack.thumbnailUrl)}`"
-            :alt="currentTrack.title"
-            class="right-sidebar__artwork" />
-          <div v-else class="right-sidebar__artwork-placeholder">
-            <AppIcon name="ph:music-notes-simple" />
+      <div
+        v-if="!isHydrated || layoutStore.rightSidebarMode === 'info'"
+        class="right-sidebar__info">
+        <template v-if="!isHydrated">
+          <div class="right-sidebar__artwork-wrap">
+            <AppSkeleton width="100%" height="100%" border-radius="var(--radius-lg)" />
           </div>
-        </div>
+          <div class="right-sidebar__track-meta" style="gap: 12px; margin-top: 24px">
+            <AppSkeleton width="80%" height="24px" border-radius="var(--radius-sm)" />
+            <AppSkeleton width="50%" height="18px" border-radius="var(--radius-sm)" />
+          </div>
+        </template>
 
-        <div v-if="currentTrack" class="right-sidebar__track-meta">
-          <p class="right-sidebar__track-title">{{ currentTrack.title }}</p>
-          <NuxtLink
-            v-if="currentTrack.artistId"
-            :to="`/artist/${currentTrack.artistId}`"
-            class="right-sidebar__track-artist right-sidebar__track-artist--link">
-            {{ currentTrack.artist }}
-          </NuxtLink>
-          <span v-else class="right-sidebar__track-artist">{{ currentTrack.artist }}</span>
-        </div>
+        <template v-else-if="currentTrack">
+          <div class="right-sidebar__artwork-wrap">
+            <img
+              v-if="currentTrack.thumbnailUrl"
+              :src="`/api/image?url=${encodeURIComponent(currentTrack.thumbnailUrl)}`"
+              :alt="currentTrack.title"
+              class="right-sidebar__artwork" />
+            <div v-else class="right-sidebar__artwork-placeholder">
+              <AppIcon name="ph:music-notes-simple" />
+            </div>
+          </div>
 
-        <div v-else class="right-sidebar__empty-state">
-          <AppIcon name="ph:music-notes-duotone" class="right-sidebar__empty-icon" />
-          <p class="right-sidebar__empty-text">{{ $t('player.noTrack') }}</p>
-          <p class="right-sidebar__empty-hint">{{ $t('player.startSomething') }}</p>
-        </div>
+          <div class="right-sidebar__track-meta">
+            <p class="right-sidebar__track-title">{{ currentTrack.title }}</p>
+            <NuxtLink
+              v-if="currentTrack.artistId"
+              :to="`/artist/${currentTrack.artistId}`"
+              class="right-sidebar__track-artist right-sidebar__track-artist--link">
+              {{ currentTrack.artist }}
+            </NuxtLink>
+            <span v-else class="right-sidebar__track-artist">{{ currentTrack.artist }}</span>
+          </div>
+        </template>
+
+        <template v-else>
+          <div class="right-sidebar__empty-state">
+            <AppIcon name="ph:music-notes-duotone" class="right-sidebar__empty-icon" />
+            <p class="right-sidebar__empty-text">{{ $t('player.noTrack') }}</p>
+            <p class="right-sidebar__empty-hint">{{ $t('player.startSomething') }}</p>
+          </div>
+        </template>
       </div>
 
-      <div v-else class="right-sidebar__lyrics">
-        <div v-if="lyricsLoading" class="right-sidebar__lyrics-loading">
-          <AppSpinner size="sm" />
-          <span>{{ $t('player.lyricsLoading') }}</span>
+      <div
+        v-else-if="isHydrated && layoutStore.rightSidebarMode === 'lyrics'"
+        class="right-sidebar__lyrics">
+        <div
+          v-if="lyricsLoading || (currentTrack && lyricsData?.trackId !== currentTrack.videoId)"
+          class="right-sidebar__lyrics-loading-skeleton">
+          <AppSkeleton
+            v-for="(width, index) in [
+              '60%',
+              '85%',
+              '45%',
+              '70%',
+              '90%',
+              '55%',
+              '75%',
+              '40%',
+              '80%',
+              '65%',
+              '50%',
+              '85%',
+              '70%',
+              '45%',
+              '60%',
+              '75%',
+              '55%',
+              '80%'
+            ]"
+            :key="index"
+            :width="width"
+            height="24px"
+            border-radius="var(--radius-sm)"
+            :style="{ opacity: Math.max(0.05, 1 - index * 0.05) }" />
         </div>
 
         <div v-else-if="!currentTrack" class="right-sidebar__empty-state">
-          <AppIcon name="ph:microphone-stage-duotone" class="right-sidebar__empty-icon" />
+          <AppIcon name="ph:music-notes-duotone" class="right-sidebar__empty-icon" />
           <p class="right-sidebar__empty-text">{{ $t('player.noTrack') }}</p>
+          <p class="right-sidebar__empty-hint">{{ $t('player.startSomething') }}</p>
         </div>
 
         <div v-else-if="!hasAnyLyrics" class="right-sidebar__empty-state">
@@ -303,8 +352,8 @@ const sidebarStyle = computed(() => ({
     }
 
     &--active {
-      color: var(--color-primary);
-      background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+      color: var(--color-text-primary);
+      background: color-mix(in srgb, var(--color-primary) 20%, transparent);
     }
   }
 
@@ -442,15 +491,12 @@ const sidebarStyle = computed(() => ({
     flex-direction: column;
   }
 
-  &__lyrics-loading {
+  &__lyrics-loading-skeleton {
     flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-3);
-    color: var(--color-text-secondary);
-    font-size: var(--text-sm);
+    padding: var(--space-6) var(--space-4);
+    gap: var(--space-4);
   }
 
   &__lyrics-list {

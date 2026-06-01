@@ -24,7 +24,12 @@ export default defineNuxtPlugin({
           const authStore = useAuthStore();
           authStore.clearSession();
 
-          window.location.href = '/login';
+          if (
+            window.location.pathname !== '/login' &&
+            !window.location.pathname.startsWith('/auth/save-token')
+          ) {
+            window.location.href = '/login';
+          }
         }
         throw error;
       }

@@ -274,7 +274,7 @@ const isInAnyPlaylist = computed(() => playlistsStore.isTrackInAnyPlaylist(props
 
   &__duration {
     font-size: var(--text-xs);
-    color: var(--color-text-tertiary);
+    color: var(--color-text-secondary);
     margin-top: 4px;
     font-variant-numeric: tabular-nums;
   }

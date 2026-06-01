@@ -35,7 +35,7 @@ describe('auth.global.ts middleware', () => {
     authStore.setUser(null); // not authenticated
 
     expect(fn({ path: '/login' })).toBeUndefined();
-    expect(fn({ path: '/auth/callback' })).toBeUndefined();
+    expect(fn({ path: '/auth/save-token' })).toBeUndefined();
   });
 
   it('redirects to / if authenticated and trying to access /login', () => {

@@ -16,13 +16,13 @@ export default defineEventHandler(async (event) => {
   const { t } = useServerTranslation(event);
 
   if (!code || !state) {
-    throw createError({ statusCode: 400, statusMessage: t('auth.errors.missingParams') });
+    throw createError({ statusCode: 400, message: t('auth.errors.missingParams') });
   }
 
   const session = await useAppSession(event);
 
   if (session.data['oauthState'] !== state) {
-    throw createError({ statusCode: 400, statusMessage: t('auth.errors.invalidState') });
+    throw createError({ statusCode: 400, message: t('auth.errors.invalidState') });
   }
 
   const tokenResponse = await $fetch<OAuthTokenResponse>(
@@ -73,6 +73,20 @@ export default defineEventHandler(async (event) => {
     }
   });
 
-  const redirectUrl = authSource ? `${authSource}/` : '/';
+  const setCookieHeaders = getResponseHeader(event, 'set-cookie');
+  let sessionToken = '';
+  if (setCookieHeaders) {
+    const cookies = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
+    for (const cookie of cookies) {
+      if (typeof cookie === 'string' && cookie.startsWith('h3=')) {
+        sessionToken = (cookie.split(';')[0] || '').substring(3);
+        break;
+      }
+    }
+  }
+
+  const redirectUrl = authSource
+    ? `${authSource}/auth/save-token?token=${encodeURIComponent(sessionToken)}`
+    : `/auth/save-token?token=${encodeURIComponent(sessionToken)}`;
   return sendRedirect(event, redirectUrl, 302);
 });

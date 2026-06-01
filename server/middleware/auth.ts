@@ -3,7 +3,12 @@ import type { ServerSession } from '../types/auth.server.types';
 export default defineEventHandler(async (event) => {
   const path = event.path;
 
-  if (path.startsWith('/api/') && path !== '/api/health') {
+  if (
+    path.startsWith('/api/') &&
+    !path.startsWith('/api/health') &&
+    !path.startsWith('/api/image') &&
+    !path.startsWith('/api/stream')
+  ) {
     const session = await useAppSession(event);
     const sessionData = session.data as Partial<ServerSession>;
     const { t } = useServerTranslation(event);

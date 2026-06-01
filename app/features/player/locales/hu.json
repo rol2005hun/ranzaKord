@@ -1,16 +1,16 @@
 {
-  "play": "Play",
-  "pause": "Pause",
-  "next": "Next track",
-  "prev": "Previous track",
-  "seek": "Seek",
-  "volume": "Volume",
-  "mute": "Toggle mute",
-  "playerBar": "Music player",
-  "noTrack": "Nothing is playing",
-  "startSomething": "Start playing some music",
-  "shuffle": "Shuffle",
-  "repeat": "Repeat",
+  "play": "Lejátszás",
+  "pause": "Szünet",
+  "next": "Következő",
+  "prev": "Előző",
+  "seek": "Tekerés",
+  "volume": "Hangerő",
+  "mute": "Némítás ki/be",
+  "playerBar": "Zenelejátszó",
+  "noTrack": "Nincs lejátszott dal",
+  "startSomething": "Indíts el egy zenét",
+  "shuffle": "Keverés",
+  "repeat": "Ismétlés",
   "lyrics": "Dalszöveg",
   "showLyrics": "Dalszöveg megjelenítése",
   "hideLyrics": "Dalszöveg elrejtése",
@@ -23,7 +23,7 @@
   "moreFrom": "Továbbiak tőle: {artist}",
   "noRecommendations": "Nincsenek elérhető ajánlások",
   "errors": {
-    "playback": "Playback error. Please try again.",
-    "stream": "Failed to load stream. Are you signed in?"
+    "playback": "Lejátszási hiba. Kérlek próbáld újra.",
+    "stream": "A stream betöltése sikertelen. Be vagy jelentkezve?"
   }
 }

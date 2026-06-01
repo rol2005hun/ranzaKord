@@ -1,5 +1,5 @@
 export default defineEventHandler(async (event) => {
   const session = await useAppSession(event);
   await session.clear();
-  return sendRedirect(event, '/login', 302);
+  return { success: true };
 });
