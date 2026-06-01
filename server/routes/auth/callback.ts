@@ -108,12 +108,14 @@ export default defineEventHandler(async (event) => {
         <title>${tl('successTitle')}</title>
         <style>
           :root {
-            --color-bg: #09090f;
+            --color-bg: #0b0b12;
+            --color-card: #12121c;
             --color-text-primary: #e8e8f0;
-            --color-text-secondary: #9090b0;
-            --radius-xl: 24px;
-            --radius-lg: 12px;
-            --radius-full: 9999px;
+            --color-text-secondary: #8b8b9e;
+            --color-brand: #7c3aed;
+            --color-brand-light: #9353d3;
+            --radius-xl: 16px;
+            --radius-lg: 8px;
             --transition-base: all 0.2s ease;
           }
           body { 
@@ -127,38 +129,16 @@ export default defineEventHandler(async (event) => {
             color: var(--color-text-primary); 
             overflow: hidden;
           }
-          .bg {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            z-index: 0;
-          }
-          .orb {
-            position: absolute;
-            border-radius: var(--radius-full);
-          }
-          .orb-1 {
-            width: 500px; height: 500px;
-            background: radial-gradient(circle, hsla(265, 75%, 40%, 0.15) 0%, transparent 60%);
-            top: -150px; left: -150px;
-          }
-          .orb-2 {
-            width: 400px; height: 400px;
-            background: radial-gradient(circle, hsla(195, 80%, 40%, 0.12) 0%, transparent 60%);
-            bottom: -100px; right: -100px;
-          }
           .container { 
             position: relative;
             z-index: 1;
             text-align: center; 
-            padding: 3rem 2.5rem; 
-            background: rgba(255, 255, 255, 0.03); 
+            padding: 3.5rem 2.5rem; 
+            background: var(--color-card); 
             border-radius: var(--radius-xl); 
-            border: 1px solid rgba(255, 255, 255, 0.08); 
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            box-shadow: 0 0 80px rgba(0, 0, 0, 0.4); 
-            max-width: 420px; 
+            border: 1px solid rgba(255, 255, 255, 0.03); 
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); 
+            max-width: 380px; 
             width: 90%; 
             animation: fadeIn 0.5s ease-out;
           }
@@ -166,24 +146,28 @@ export default defineEventHandler(async (event) => {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
           }
-          .icon-wrapper {
-            display: inline-flex;
+          .logo {
+            display: flex;
             align-items: center;
             justify-content: center;
-            width: 80px;
-            height: 80px;
-            border-radius: var(--radius-full);
-            background: hsla(142, 70%, 50%, 0.1);
-            margin-bottom: 1.5rem;
+            gap: 0.5rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 2.5rem;
           }
-          .icon-wrapper svg {
-            width: 40px;
-            height: 40px;
-            color: #4ade80;
+          .logo .note {
+            color: var(--color-brand);
+            font-size: 1.25rem;
+          }
+          .logo .ranza {
+            color: var(--color-brand-light);
+          }
+          .logo .kord {
+            color: var(--color-text-primary);
           }
           h1 { 
             margin: 0 0 1rem 0; 
-            font-size: 1.75rem; 
+            font-size: 1.5rem; 
             font-weight: 700;
             color: var(--color-text-primary);
           }
@@ -191,63 +175,74 @@ export default defineEventHandler(async (event) => {
             margin: 0 0 2.5rem 0; 
             color: var(--color-text-secondary); 
             line-height: 1.6; 
-            font-size: 1rem;
+            font-size: 0.95rem;
           }
           button { 
-            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); 
-            color: white; 
+            background: #3b1480; 
+            color: #d8b4fe; 
             border: none; 
-            padding: 1rem 1.5rem; 
+            padding: 0.875rem 1.5rem; 
             border-radius: var(--radius-lg); 
-            font-size: 1rem; 
+            font-size: 0.95rem; 
             cursor: pointer; 
             transition: var(--transition-base); 
             width: 100%; 
             font-weight: 600; 
-            box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
           }
           button:hover { 
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); 
-          }
-          button:active {
-            transform: translateY(0);
+            background: #4c1d95; 
+            color: #e9d5ff;
           }
           .manual-link { 
             display: inline-block; 
-            margin-top: 1.5rem; 
-            font-size: 0.875rem; 
-            color: var(--color-text-secondary); 
+            margin-top: 2rem; 
+            font-size: 0.75rem; 
+            color: rgba(255,255,255,0.3); 
             text-decoration: none; 
             transition: var(--transition-base); 
           }
           .manual-link:hover { 
-            color: var(--color-text-primary); 
+            color: rgba(255,255,255,0.6); 
+          }
+          .spinner {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(216, 180, 254, 0.3);
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+          }
+          @keyframes spin {
+            to { transform: rotate(360deg); }
           }
         </style>
       </head>
       <body>
-        <div class="bg">
-          <div class="orb orb-1"></div>
-          <div class="orb orb-2"></div>
-        </div>
         <div class="container">
-          <div class="icon-wrapper">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
+          <div class="logo">
+            <span class="note">♪</span>
+            <div><span class="ranza">ranza</span><span class="kord">Kord</span></div>
           </div>
           <h1>${tl('successTitle')}</h1>
           <p>${tl('successMessage')}</p>
-          <button onclick="window.close()">${tl('closeWindow')}</button>
-          <br />
+          <button onclick="window.close()">
+            <div class="spinner"></div>
+            ${tl('closeWindow')}
+          </button>
           <a class="manual-link" href="${deepLinkUrl}">${tl('openAppManually')}</a>
         </div>
         <script>
           window.onload = function() {
             window.location.href = "${deepLinkUrl}";
-            setTimeout(() => { window.close(); }, 3000);
+            document.addEventListener("visibilitychange", function() {
+              if (document.visibilityState === "hidden") {
+                window.close();
+              }
+            });
           }
         </script>
       </body>

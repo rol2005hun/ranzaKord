@@ -74,6 +74,8 @@ export default defineNuxtConfig({
   },
 
   routeRules: {
+    '/api/**': { cors: true },
+    '/auth/**': { cors: true },
     '/_nuxt/**': { headers: { 'Cache-Control': 'public, max-age=31536000, immutable' } },
     '/logo.webp': { headers: { 'Cache-Control': 'public, max-age=31536000, immutable' } }
   },
