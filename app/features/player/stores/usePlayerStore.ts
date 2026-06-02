@@ -178,7 +178,8 @@ export const usePlayerStore = defineStore(
           'durationSeconds',
           'isShuffle',
           'repeatMode',
-          'queue'
+          'queue',
+          'isPlaying'
         ],
         storage: piniaPluginPersistedstate.localStorage()
       }

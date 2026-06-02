@@ -26,6 +26,8 @@ export default defineEventHandler(async (event): Promise<AlbumDetail> => {
       year?: string;
       thumbnails?: Array<{ url: string; width?: number }>;
       thumbnail?: { contents?: Array<{ url: string; width?: number }> };
+      subtitle?: { toString: () => string };
+      strapline_text_one?: { toString: () => string };
     };
 
     type YTItem = {
@@ -36,6 +38,13 @@ export default defineEventHandler(async (event): Promise<AlbumDetail> => {
       authors?: Array<{ name?: string; channel_id?: string }>;
       thumbnails?: Array<{ url: string }>;
       duration?: { seconds?: number };
+      flex_columns?: Array<{
+        title?: {
+          runs?: Array<{
+            endpoint?: { payload?: { videoId?: string } };
+          }>;
+        };
+      }>;
     };
 
     const header = album.header as YTHeader | undefined;
@@ -45,10 +54,19 @@ export default defineEventHandler(async (event): Promise<AlbumDetail> => {
       firstNonEmptyString(
         header?.author?.name,
         header?.artists?.[0]?.name,
+        header?.strapline_text_one?.toString(),
         album.contents?.[0] ? (album.contents[0] as YTItem).authors?.[0]?.name : undefined
       ) || 'Unknown Artist';
+
     const albumArtistId = header?.author?.channel_id || '';
-    const year = header?.year || '';
+
+    // Attempt to extract year from subtitle if not provided
+    let year = header?.year || '';
+    if (!year && header?.subtitle) {
+      const sub = header.subtitle.toString();
+      const match = sub.match(/\b(19|20)\d{2}\b/);
+      if (match) year = match[0];
+    }
 
     let thumbnailUrl = '';
     const thumbs = header?.thumbnails || header?.thumbnail?.contents;
@@ -61,7 +79,10 @@ export default defineEventHandler(async (event): Promise<AlbumDetail> => {
     if (album.contents) {
       for (const rawItem of album.contents) {
         const item = rawItem as YTItem;
-        const videoId = item.id || item.endpoint?.payload?.videoId;
+        const videoId =
+          item.id ||
+          item.endpoint?.payload?.videoId ||
+          item.flex_columns?.[0]?.title?.runs?.[0]?.endpoint?.payload?.videoId;
         if (!videoId) continue;
 
         const trackTitle = item.title?.toString() || item.name?.toString() || '';

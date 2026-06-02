@@ -91,6 +91,7 @@ describe('playlist/[id].vue', () => {
           },
           stubs: {
             AppMusicDetailView: {
+              name: 'AppMusicDetailView',
               template: `
               <div class="mock-detail">
                 <slot name="meta" />
@@ -117,14 +118,14 @@ describe('playlist/[id].vue', () => {
     await new Promise((r) => setTimeout(r, 0));
 
     expect(wrapper.text()).toContain('Desc');
-    expect(wrapper.find('.playlist-page__play-btn').exists()).toBe(true);
+    expect(wrapper.findComponent({ name: 'AppMusicDetailView' }).exists()).toBe(true);
   });
 
   it('handles play all', async () => {
     const wrapper = mountPage();
     await new Promise((r) => setTimeout(r, 0));
 
-    await wrapper.find('.playlist-page__play-btn').trigger('click');
+    wrapper.findComponent({ name: 'AppMusicDetailView' }).vm.$emit('play-all');
     expect(mockPlayQueue).toHaveBeenCalled();
   });
 

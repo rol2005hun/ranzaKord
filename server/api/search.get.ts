@@ -39,6 +39,17 @@ export default defineCachedEventHandler(
       thumbnails?: Array<{ url: string; width?: number }>;
       thumbnail?: { contents?: Array<{ url: string; width?: number }> };
       duration?: { seconds?: number } | number;
+      flex_columns?: Array<{
+        title?: {
+          runs?: Array<{
+            text?: string;
+            endpoint?: {
+              payload?: { videoId?: string; browseId?: string };
+              metadata?: { pageType?: string };
+            };
+          }>;
+        };
+      }>;
     };
 
     const parseItem = (rawItem: unknown, forceType?: SearchResultType): SearchResult | null => {
@@ -47,7 +58,8 @@ export default defineCachedEventHandler(
         item.id ||
         item.browse_id ||
         item.endpoint?.payload?.videoId ||
-        item.endpoint?.payload?.browseId;
+        item.endpoint?.payload?.browseId ||
+        item.flex_columns?.[0]?.title?.runs?.[0]?.endpoint?.payload?.videoId;
       if (!id || typeof id !== 'string') return null;
 
       const title = item.title?.toString() || item.name?.toString() || '';
@@ -58,16 +70,23 @@ export default defineCachedEventHandler(
         const isArtist =
           item.type === 'MusicArtist' ||
           item.item_type === 'artist' ||
-          item.endpoint?.metadata?.pageType === 'MUSIC_PAGE_TYPE_ARTIST';
+          item.endpoint?.metadata?.pageType === 'MUSIC_PAGE_TYPE_ARTIST' ||
+          item.endpoint?.metadata?.pageType === 'MUSIC_PAGE_TYPE_USER_CHANNEL';
         const isAlbum =
           item.type === 'MusicAlbum' ||
           item.item_type === 'album' ||
           item.endpoint?.metadata?.pageType === 'MUSIC_PAGE_TYPE_ALBUM';
+        const isPlaylist =
+          item.type === 'MusicPlaylist' ||
+          item.item_type === 'playlist' ||
+          item.endpoint?.metadata?.pageType === 'MUSIC_PAGE_TYPE_PLAYLIST' ||
+          item.endpoint?.metadata?.pageType === 'MUSIC_PAGE_TYPE_PODCAST_SHOW_DETAIL_PAGE';
         const isSong =
           item.type === 'MusicSong' || item.item_type === 'song' || item.endpoint?.payload?.videoId;
 
         if (isArtist) parsedType = 'artist';
         else if (isAlbum) parsedType = 'album';
+        else if (isPlaylist) parsedType = 'playlist';
         else if (isSong) parsedType = 'song';
       }
 
@@ -122,6 +141,11 @@ export default defineCachedEventHandler(
         artistName = item.subtitle.toString();
       }
 
+      // Ensure space after commas in artistName if YouTube returned it without space
+      if (artistName) {
+        artistName = artistName.replace(/,([^\s])/g, ', $1');
+      }
+
       let artistId: string | undefined = undefined;
       if (item.artists?.[0]?.channel_id) {
         artistId = item.artists[0].channel_id;
@@ -134,6 +158,25 @@ export default defineCachedEventHandler(
         !Array.isArray(item.author)
       ) {
         artistId = item.author.channel_id;
+      } else if (item.flex_columns?.[1]?.title?.runs) {
+        for (const run of item.flex_columns[1].title.runs) {
+          const pageType = run.endpoint?.metadata?.pageType;
+          if (
+            pageType === 'MUSIC_PAGE_TYPE_ARTIST' ||
+            pageType === 'MUSIC_PAGE_TYPE_USER_CHANNEL'
+          ) {
+            if (!artistId) artistId = run.endpoint?.payload?.browseId;
+            if (run.text && run.endpoint?.payload?.browseId) {
+              const id = run.endpoint?.payload?.browseId;
+              if (id && !artists.find((a) => a.id === id)) {
+                artists.push({ name: run.text, id });
+              }
+            }
+          }
+        }
+        if (artists.length > 0 && !artistName) {
+          artistName = artists.map((a) => a.name).join(', ');
+        }
       }
 
       let thumbnail = '';
@@ -208,6 +251,8 @@ export default defineCachedEventHandler(
             forcedType = 'artist';
           else if (sectionTitle.includes('album') || sectionTitle.includes('albumok'))
             forcedType = 'album';
+          else if (sectionTitle.includes('playlist') || sectionTitle.includes('lejátszási lista'))
+            forcedType = 'playlist';
 
           const parsed = parseItem(item, forcedType);
           if (parsed) {
@@ -218,6 +263,9 @@ export default defineCachedEventHandler(
             } else if (parsed.type === 'artist') {
               response.artists.push(parsed);
             } else if (parsed.type === 'album') {
+              response.albums.push(parsed);
+            } else if (parsed.type === 'playlist') {
+              // Store playlists in albums for now, since UI doesn't have a dedicated playlist shelf
               response.albums.push(parsed);
             }
           }
@@ -244,7 +292,7 @@ export default defineCachedEventHandler(
         .trim()
         .toLowerCase();
       const type = String(query['type'] || 'all');
-      return `${q}-${type}-v2`;
+      return `${q}-${type}-v3`;
     }
   }
 );

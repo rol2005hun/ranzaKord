@@ -39,6 +39,8 @@ function onClick() {
     router.push(`/artist/${props.track.id}`);
   } else if (props.track.type === 'album') {
     router.push(`/album/${props.track.id}`);
+  } else if (props.track.type === 'playlist') {
+    router.push(`/playlist/${props.track.id}`);
   }
 }
 </script>
@@ -131,6 +133,15 @@ function onClick() {
             </NuxtLink>
             <span v-else>{{ track.artist }}</span>
           </template>
+        </span>
+        <span v-else-if="track.type === 'playlist'">
+          Playlist •
+          <template v-if="track.artistId">
+            <NuxtLink :to="`/artist/${track.artistId}`" class="artist-link" @click.stop>
+              {{ track.artist }}
+            </NuxtLink>
+          </template>
+          <span v-else>{{ track.artist }}</span>
         </span>
       </p>
     </div>

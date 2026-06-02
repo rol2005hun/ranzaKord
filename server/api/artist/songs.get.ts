@@ -30,11 +30,26 @@ export default defineEventHandler(async (event) => {
     thumbnails?: Array<{ url: string; width?: number }>;
     thumbnail?: { contents?: Array<{ url: string; width?: number }> };
     duration?: { seconds?: number } | number;
+    flex_columns?: Array<{
+      title?: {
+        runs?: Array<{
+          text?: string;
+          endpoint?: {
+            payload?: { videoId?: string; browseId?: string };
+            metadata?: { pageType?: string };
+          };
+        }>;
+      };
+    }>;
   };
 
   const parseItem = (rawItem: unknown): SearchResult | null => {
     const item = rawItem as YTItem;
-    const id = item.id || item.browse_id || item.endpoint?.payload?.videoId;
+    const id =
+      item.id ||
+      item.browse_id ||
+      item.endpoint?.payload?.videoId ||
+      item.flex_columns?.[0]?.title?.runs?.[0]?.endpoint?.payload?.videoId;
     if (!id || typeof id !== 'string') return null;
 
     const title = item.title?.toString() || item.name?.toString() || '';
@@ -81,6 +96,19 @@ export default defineEventHandler(async (event) => {
       artistId = item.artists[0].channel_id;
     } else if (item.authors?.[0]?.channel_id) {
       artistId = item.authors[0].channel_id;
+    } else if (item.flex_columns?.[1]?.title?.runs) {
+      for (const run of item.flex_columns[1].title.runs) {
+        const pageType = run.endpoint?.metadata?.pageType;
+        if (pageType === 'MUSIC_PAGE_TYPE_ARTIST' || pageType === 'MUSIC_PAGE_TYPE_USER_CHANNEL') {
+          if (!artistId) artistId = run.endpoint?.payload?.browseId;
+          if (run.text && run.endpoint?.payload?.browseId) {
+            artists.push({ name: run.text, id: run.endpoint?.payload?.browseId });
+          }
+        }
+      }
+      if (artists.length > 0 && !artistName) {
+        artistName = artists.map((a) => a.name).join(', ');
+      }
     }
 
     let thumbnail = '';
@@ -118,8 +146,9 @@ export default defineEventHandler(async (event) => {
 
   try {
     if (continuation) {
+      const decodedContinuation = decodeURIComponent(continuation);
       const response = await innertube.actions.execute('/search', {
-        continuation,
+        continuation: decodedContinuation,
         client: 'YTMUSIC'
       });
 
@@ -134,9 +163,6 @@ export default defineEventHandler(async (event) => {
         for (const item of contents.contents) {
           const s = parseItem(item);
           if (s) {
-            if (q && s.artist && !s.artist.toLowerCase().includes(q.toLowerCase())) {
-              continue;
-            }
             items.push(s);
           }
         }
@@ -158,9 +184,6 @@ export default defineEventHandler(async (event) => {
         for (const item of shelf.contents) {
           const s = parseItem(item);
           if (s) {
-            if (q && s.artist && !s.artist.toLowerCase().includes(q.toLowerCase())) {
-              continue;
-            }
             items.push(s);
           }
         }

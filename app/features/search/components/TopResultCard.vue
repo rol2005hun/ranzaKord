@@ -10,6 +10,7 @@ const isArtist = computed(() => props.result.type === 'artist');
 const routeTo = computed(() => {
   if (props.result.type === 'artist') return `/artist/${props.result.id}`;
   if (props.result.type === 'album') return `/album/${props.result.id}`;
+  if (props.result.type === 'playlist') return `/playlist/${props.result.id}`;
   return undefined;
 });
 

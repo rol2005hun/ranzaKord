@@ -45,7 +45,7 @@ describe('deep-link.client plugin', () => {
     await plugin({} as unknown as import('nuxt/app').NuxtApp);
     expect(mockOnOpenUrl).toHaveBeenCalled();
 
-    const callback = mockOnOpenUrl.mock.calls[0]![0] as (urls: string[]) => void;
+    const callback = mockOnOpenUrl.mock.calls[0]?.[0] as (urls: string[]) => void;
 
     callback(['http://example.com/foo']);
 
@@ -56,7 +56,7 @@ describe('deep-link.client plugin', () => {
   it('ignores valid protocol but missing token', async () => {
     vi.stubGlobal('__TAURI_INTERNALS__', true);
     await plugin({} as unknown as import('nuxt/app').NuxtApp);
-    const callback = mockOnOpenUrl.mock.calls[0]![0] as (urls: string[]) => void;
+    const callback = mockOnOpenUrl.mock.calls[0]?.[0] as (urls: string[]) => void;
 
     callback(['ranzakord://auth?other=123']);
 
@@ -67,7 +67,7 @@ describe('deep-link.client plugin', () => {
   it('saves token and redirects on valid deep link', async () => {
     vi.stubGlobal('__TAURI_INTERNALS__', true);
     await plugin({} as unknown as import('nuxt/app').NuxtApp);
-    const callback = mockOnOpenUrl.mock.calls[0]![0] as (urls: string[]) => void;
+    const callback = mockOnOpenUrl.mock.calls[0]?.[0] as (urls: string[]) => void;
 
     callback(['ranzakord://auth?token=my-secret-token']);
 

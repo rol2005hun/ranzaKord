@@ -161,8 +161,11 @@ async function onDelete(): Promise<void> {
       :has-more-tracks="hasMoreTracks"
       :is-loading-more="isLoadingMore"
       :empty-text="$t('playlists.emptyPlaylist')"
+      :is-list-playing="isCurrentPlaylistPlaying"
+      :disable-play-button="!playlist || playlist.tracks.length === 0"
       @play="onPlaySong"
-      @load-more="loadMoreTracks">
+      @load-more="loadMoreTracks"
+      @play-all="playAll">
       <template #meta>
         <span v-if="playlist?.description" class="playlist-page__description">
           {{ playlist.description }}
@@ -183,15 +186,6 @@ async function onDelete(): Promise<void> {
       </template>
 
       <template #actions>
-        <button
-          class="playlist-page__play-btn"
-          :disabled="!playlist || playlist.tracks.length === 0"
-          :aria-label="$t('player.play')"
-          @click="playAll">
-          <AppIcon v-if="isCurrentPlaylistPlaying" name="ph:pause-fill" />
-          <AppIcon v-else name="ph:play-fill" />
-        </button>
-
         <button
           class="playlist-page__action-btn"
           :title="$t('playlists.editPlaylist')"
@@ -268,32 +262,6 @@ async function onDelete(): Promise<void> {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  &__play-btn {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background-color: var(--color-primary);
-    color: #000;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2rem;
-    cursor: pointer;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-    transition: all var(--transition-fast);
-
-    &:hover:not(:disabled) {
-      transform: scale(1.05);
-      background-color: var(--color-primary-hover);
-    }
-
-    &:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
   }
 
   &__action-btn {

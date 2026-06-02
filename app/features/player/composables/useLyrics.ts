@@ -33,13 +33,15 @@ function parseLrc(lrc: string): LyricLine[] {
 const lyricsData = ref<LyricsData | null>(null);
 const isLoading = ref(false);
 const error = ref<string | null>(null);
+const currentFetchTrackId = ref<string | null>(null);
 
 export function useLyrics() {
   async function fetchLyrics(track: Track): Promise<void> {
     const trackId = track.videoId;
 
-    if (lyricsData.value?.trackId === trackId) return;
+    if (lyricsData.value?.trackId === trackId || currentFetchTrackId.value === trackId) return;
 
+    currentFetchTrackId.value = trackId;
     isLoading.value = true;
     error.value = null;
     lyricsData.value = null;
@@ -69,6 +71,9 @@ export function useLyrics() {
       lyricsData.value = { trackId, synced: null, plain: null };
     } finally {
       isLoading.value = false;
+      if (currentFetchTrackId.value === trackId) {
+        currentFetchTrackId.value = null;
+      }
     }
   }
 

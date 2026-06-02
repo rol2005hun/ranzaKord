@@ -25,7 +25,13 @@ const {
 });
 
 const playerStore = usePlayerStore();
-const { playTrack } = usePlayer();
+const { playTrack, togglePlay, isPlaying, currentTrack } = usePlayer();
+
+const isArtistPlaying = computed(() => {
+  if (!artist.value || artist.value.topSongs.length === 0) return false;
+  if (!isPlaying.value) return false;
+  return artist.value.topSongs.some((t: SearchResult) => t.id === currentTrack.value?.videoId);
+});
 
 function onPlaySong(track: SearchResult): void {
   playTrack({
@@ -40,6 +46,15 @@ function onPlaySong(track: SearchResult): void {
 
 function onPlayArtist(): void {
   if (!artist.value || artist.value.topSongs.length === 0) return;
+
+  if (
+    isArtistPlaying.value ||
+    (currentTrack.value &&
+      artist.value.topSongs.some((t: SearchResult) => t.id === currentTrack.value?.videoId))
+  ) {
+    togglePlay();
+    return;
+  }
 
   const queue: Track[] = artist.value.topSongs.map((t: SearchResult) => ({
     videoId: t.id,
@@ -115,210 +130,56 @@ onMounted(() => {
       :badge="$t('search.artist.badge')"
       :image-url="artist?.thumbnailUrl"
       :rounded-image="true"
-      :show-tracks="false">
+      :show-tracks="false"
+      :is-list-playing="isArtistPlaying"
+      :disable-play-button="!artist || artist.topSongs.length === 0"
+      @play-all="onPlayArtist">
       <template #fallback-icon>
         <AppIcon name="ph:user" />
       </template>
 
-      <template #actions>
-        <button
-          class="artist-page__play-btn"
-          :disabled="!artist || artist.topSongs.length === 0"
-          @click="onPlayArtist">
-          <AppIcon name="ph:play-fill" />
-        </button>
-      </template>
-
       <template #content>
         <template v-if="status === 'pending'">
-          <div class="artist-page__section">
-            <div class="skeleton-line skeleton-line--section-title"></div>
-            <div class="artist-page__songs-list">
-              <div v-for="i in 5" :key="`track-skel-${i}`" class="artist-page__track-skeleton">
-                <div class="artist-page__track-info">
-                  <div class="artist-page__track-thumb skeleton-box"></div>
-                  <div class="artist-page__track-text">
-                    <div class="skeleton-line skeleton-line--track-title"></div>
-                    <div class="skeleton-line skeleton-line--artist"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <AppMusicSection
+            :title="$t('search.artist.topSongs') + ' (All)'"
+            layout="list"
+            :is-loading="true"
+            :skeleton-count="5" />
         </template>
 
         <template v-else-if="artist">
-          <div v-if="allSongs.length > 0 || isLoadingSongs" class="artist-page__section">
-            <h2 class="artist-page__section-title">{{ $t('search.artist.topSongs') }} (All)</h2>
-            <div class="artist-page__songs-list">
-              <SearchListItem
-                v-for="song in allSongs"
-                :key="song.id"
-                :track="song"
-                @click="onPlaySong(song)" />
+          <AppMusicSection
+            v-if="allSongs.length > 0 || isLoadingSongs"
+            :title="$t('search.artist.topSongs') + ' (All)'"
+            layout="list">
+            <SearchListItem
+              v-for="song in allSongs"
+              :key="song.id"
+              :track="song"
+              @click="onPlaySong(song)" />
 
-              <template v-if="isLoadingSongs">
-                <div
-                  v-for="i in allSongs.length === 0 ? 5 : 3"
-                  :key="`more-skel-${i}`"
-                  class="artist-page__track-skeleton">
-                  <div class="artist-page__track-info">
-                    <div class="artist-page__track-thumb skeleton-box"></div>
-                    <div class="artist-page__track-text">
-                      <div class="skeleton-line skeleton-line--track-title"></div>
-                      <div class="skeleton-line skeleton-line--artist"></div>
-                    </div>
-                  </div>
-                </div>
-              </template>
-            </div>
-          </div>
+            <AppMusicSection
+              v-if="isLoadingSongs"
+              title=""
+              layout="list"
+              :is-loading="true"
+              :skeleton-count="allSongs.length === 0 ? 5 : 3" />
+          </AppMusicSection>
 
-          <div v-if="artist.albums.length > 0" class="artist-page__section">
-            <h2 class="artist-page__section-title">{{ $t('search.artist.albums') }}</h2>
-            <div class="artist-page__albums-grid">
-              <TopResultCard
-                v-for="album in artist.albums"
-                :key="album.id"
-                :result="album"
-                @play="onPlaySong" />
-            </div>
-          </div>
+          <AppMusicSection
+            v-if="artist.albums.length > 0"
+            :title="$t('search.artist.albums')"
+            layout="grid">
+            <TopResultCard
+              v-for="album in artist.albums"
+              :key="album.id"
+              :result="album"
+              @play="onPlaySong" />
+          </AppMusicSection>
         </template>
       </template>
     </AppMusicDetailView>
   </div>
 </template>
 
-<style lang="scss" scoped>
-.artist-page {
-  &__play-btn {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background-color: var(--color-primary);
-    color: var(--color-text-inverse);
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2rem;
-    cursor: pointer;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-    transition: all var(--transition-fast);
-
-    &:hover:not(:disabled) {
-      transform: scale(1.05);
-      background-color: var(--color-primary-hover);
-    }
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  }
-
-  &__section {
-    display: flex;
-    flex-direction: column;
-  }
-
-  &__section-title {
-    font-size: var(--text-2xl);
-    font-weight: var(--font-weight-bold);
-    margin-bottom: var(--space-6);
-    color: var(--color-text-primary);
-  }
-
-  &__songs-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-  }
-
-  &__songs-loading {
-    display: flex;
-    justify-content: center;
-    padding: var(--space-6);
-  }
-
-  &__track-skeleton {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius-md);
-  }
-
-  &__track-info {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    min-width: 0;
-  }
-
-  &__track-thumb {
-    width: 40px;
-    height: 40px;
-    border-radius: var(--radius-sm);
-    background: var(--color-surface-hover);
-    flex-shrink: 0;
-  }
-
-  &__track-text {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-  }
-
-  &__albums-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: var(--space-4);
-
-    @media (min-width: 1024px) {
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    }
-  }
-
-  .skeleton-box {
-    background: var(--color-surface-raised);
-    animation: pulse 1.5s infinite ease-in-out;
-  }
-
-  .skeleton-line {
-    background: var(--color-surface-raised);
-    height: 12px;
-    border-radius: var(--radius-sm);
-    animation: pulse 1.5s infinite ease-in-out;
-    margin-bottom: var(--space-2);
-
-    &--section-title {
-      width: 180px;
-      height: 28px;
-      margin-bottom: var(--space-6);
-    }
-    &--track-title {
-      width: 140px;
-      margin-bottom: 4px;
-    }
-    &--artist {
-      width: 90px;
-      height: 10px;
-    }
-  }
-
-  @keyframes pulse {
-    0% {
-      opacity: 0.5;
-    }
-    50% {
-      opacity: 0.8;
-    }
-    100% {
-      opacity: 0.5;
-    }
-  }
-}
-</style>
+<style lang="scss" scoped></style>

@@ -16,6 +16,9 @@ interface Props {
   emptyText?: string;
   hasMoreTracks?: boolean;
   isLoadingMore?: boolean;
+  showPlayButton?: boolean;
+  isListPlaying?: boolean;
+  disablePlayButton?: boolean;
 }
 
 withDefaults(defineProps<Props>(), {
@@ -32,12 +35,15 @@ withDefaults(defineProps<Props>(), {
   skeletonTrackCount: 5,
   emptyText: '',
   hasMoreTracks: false,
-  isLoadingMore: false
+  isLoadingMore: false,
+  showPlayButton: true,
+  isListPlaying: false,
+  disablePlayButton: false
 });
 
 const emit = defineEmits<{
   (e: 'play', track: MusicTrack, index: number): void;
-  (e: 'load-more'): void;
+  (e: 'load-more' | 'play-all'): void;
 }>();
 
 const loadMoreTrigger = ref<HTMLElement | null>(null);
@@ -96,7 +102,7 @@ onBeforeUnmount(() => {
             :class="{ 'music-detail__cover--rounded': roundedImage }"></div>
           <div class="music-detail__info">
             <div class="skeleton-line skeleton-line--badge"></div>
-            <div class="skeleton-line skeleton-line--title"></div>
+            <h1 class="skeleton-line skeleton-line--title"></h1>
             <div class="skeleton-line skeleton-line--meta"></div>
           </div>
         </div>
@@ -152,7 +158,15 @@ onBeforeUnmount(() => {
           <div
             class="music-detail__cover"
             :class="{ 'music-detail__cover--rounded': roundedImage }">
-            <img v-if="imageUrl" :src="imageUrl" :alt="title" />
+            <NuxtImg
+              v-if="imageUrl"
+              :src="imageUrl"
+              :alt="title || 'Cover image'"
+              width="160"
+              height="160"
+              format="webp"
+              fetchpriority="high"
+              preload />
             <slot v-else name="fallback-icon">
               <AppIcon name="ph:music-notes" />
             </slot>
@@ -169,6 +183,15 @@ onBeforeUnmount(() => {
 
       <div class="music-detail__content">
         <div class="music-detail__actions">
+          <button
+            v-if="showPlayButton"
+            class="music-detail__play-btn"
+            :disabled="disablePlayButton"
+            :aria-label="$t('player.play')"
+            @click="emit('play-all')">
+            <AppIcon v-if="isListPlaying" name="ph:pause-fill" />
+            <AppIcon v-else name="ph:play-fill" />
+          </button>
           <slot name="actions"></slot>
         </div>
 
@@ -460,6 +483,32 @@ onBeforeUnmount(() => {
     align-items: center;
     gap: var(--space-4);
     padding: var(--space-2) 0;
+  }
+
+  &__play-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background-color: var(--color-primary);
+    color: #000;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    cursor: pointer;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    transition: all var(--transition-fast);
+
+    &:hover:not(:disabled) {
+      transform: scale(1.05);
+      background-color: var(--color-primary-hover);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
   }
 
   &__empty {
