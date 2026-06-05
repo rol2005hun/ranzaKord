@@ -53,7 +53,7 @@ export function useLyrics() {
         track_name: track.title
       });
 
-      if (durationSeconds <= 3600) {
+      if (durationSeconds > 0 && durationSeconds <= 3600) {
         params.append('duration', String(durationSeconds));
       }
 

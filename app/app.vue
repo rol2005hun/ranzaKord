@@ -26,9 +26,13 @@ onMounted(async () => {
     const { isTauri } = await import('@tauri-apps/api/core');
     isTauriApp.value = isTauri();
     if (isTauriApp.value) {
-      const { getCurrentWindow } = await import('@tauri-apps/api/window');
-      setTimeout(() => {
-        getCurrentWindow().show();
+      const { Window, getCurrentWindow } = await import('@tauri-apps/api/window');
+      setTimeout(async () => {
+        const splashscreen = await Window.getByLabel('splashscreen');
+        if (splashscreen) {
+          await splashscreen.close();
+        }
+        await getCurrentWindow().show();
       }, 50);
     }
   } catch (err) {

@@ -106,7 +106,10 @@ export const usePlayerStore = defineStore(
             if (isPlaying.value && currentTrack.value) {
               const startTimestamp =
                 Math.floor(Date.now() / 1000) - Math.floor(currentTimeSeconds.value);
-              const endTimestamp = startTimestamp + currentTrack.value.durationSeconds;
+              const endTimestamp =
+                currentTrack.value.durationSeconds > 0
+                  ? startTimestamp + currentTrack.value.durationSeconds
+                  : null;
               await invoke('set_discord_presence', {
                 details: currentTrack.value.title,
                 stateStr: currentTrack.value.artist,

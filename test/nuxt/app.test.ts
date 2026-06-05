@@ -12,7 +12,10 @@ vi.mock('@tauri-apps/api/core', () => ({
 
 const mockGetCurrentWindow = vi.fn().mockReturnValue({ show: vi.fn() });
 vi.mock('@tauri-apps/api/window', () => ({
-  getCurrentWindow: () => mockGetCurrentWindow()
+  getCurrentWindow: () => mockGetCurrentWindow(),
+  Window: {
+    getByLabel: vi.fn().mockResolvedValue({ close: vi.fn() })
+  }
 }));
 
 const mockThemeId = ref('dark');

@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "ranzakord",
-  "version": "0.0.0-alpha.1",
+  "version": "0.0.1",
   "identifier": "dev.ranzak.kord",
   "build": {
     "frontendDist": "../.output/public",
@@ -13,12 +13,26 @@
     "windows": [
       {
         "title": "ranzaKord",
+        "label": "main",
         "visible": false,
         "width": 800,
         "height": 600,
         "resizable": true,
         "fullscreen": false,
         "decorations": false
+      },
+      {
+        "title": "ranzaKord Loading",
+        "label": "splashscreen",
+        "url": "/splashscreen.html",
+        "visible": true,
+        "width": 400,
+        "height": 300,
+        "resizable": false,
+        "fullscreen": false,
+        "decorations": false,
+        "center": true,
+        "transparent": true
       }
     ],
     "security": {
