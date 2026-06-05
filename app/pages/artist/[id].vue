@@ -38,6 +38,7 @@ function onPlaySong(track: SearchResult): void {
     videoId: track.id,
     title: track.title,
     artist: track.artist,
+    artists: track.artists,
     artistId: track.artistId,
     thumbnailUrl: track.thumbnailUrl,
     durationSeconds: track.durationSeconds || 0
@@ -60,6 +61,7 @@ function onPlayArtist(): void {
     videoId: t.id,
     title: t.title,
     artist: t.artist,
+    artists: t.artists,
     artistId: t.artistId,
     thumbnailUrl: t.thumbnailUrl,
     durationSeconds: t.durationSeconds || 0

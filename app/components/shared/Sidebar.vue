@@ -1,33 +1,67 @@
 <script setup lang="ts">
-const isPinned = useCookie<boolean>('app-sidebar-pinned', {
-  default: () => false
+const sidebarWidth = useCookie<number>('app-sidebar-width', {
+  default: () => 72
 });
-const isHovered = ref(false);
+
+const isDragging = ref(false);
+
+const MIN_WIDTH = 72; // 4.5rem
+const EXPANDED_MIN_WIDTH = 240; // 15rem
+const MAX_WIDTH = 600;
+
+function startDrag() {
+  isDragging.value = true;
+  document.body.style.cursor = 'ew-resize';
+  document.body.style.userSelect = 'none';
+  window.addEventListener('mousemove', onDrag);
+  window.addEventListener('mouseup', stopDrag);
+}
+
+function onDrag(e: MouseEvent) {
+  if (!isDragging.value) return;
+
+  const newWidth = e.clientX;
+
+  if (newWidth < 120) {
+    sidebarWidth.value = MIN_WIDTH;
+  } else if (newWidth >= 120 && newWidth < EXPANDED_MIN_WIDTH) {
+    sidebarWidth.value = EXPANDED_MIN_WIDTH;
+  } else if (newWidth > MAX_WIDTH) {
+    sidebarWidth.value = MAX_WIDTH;
+  } else {
+    sidebarWidth.value = newWidth;
+  }
+}
+
+function stopDrag() {
+  isDragging.value = false;
+  document.body.style.cursor = '';
+  document.body.style.userSelect = '';
+  window.removeEventListener('mousemove', onDrag);
+  window.removeEventListener('mouseup', stopDrag);
+}
+
+const isExpanded = computed(() => sidebarWidth.value > MIN_WIDTH);
+provide('sidebarExpanded', isExpanded);
 </script>
 
 <template>
   <aside
     class="app-sidebar"
-    :class="{ 'app-sidebar--pinned': isPinned }"
-    @mouseenter="isHovered = true"
-    @mouseleave="isHovered = false">
+    :class="{ 'app-sidebar--expanded': isExpanded, 'app-sidebar--dragging': isDragging }"
+    :style="{ width: `${sidebarWidth}px`, maxWidth: `${sidebarWidth}px` }">
     <div class="app-sidebar__header">
       <div class="app-sidebar__header-top">
-        <slot name="header-top" />
-        <button
-          class="app-sidebar__pin"
-          :class="{ 'app-sidebar__pin--active': isPinned }"
-          title="Pin sidebar"
-          @click="isPinned = !isPinned">
-          <AppIcon :name="isPinned ? 'ph:push-pin-slash' : 'ph:push-pin'" />
-        </button>
+        <slot name="header-top" :is-expanded="isExpanded" />
       </div>
-      <slot name="header-bottom" />
+      <slot name="header-bottom" :is-expanded="isExpanded" />
     </div>
 
     <nav class="app-sidebar__nav">
-      <slot name="default" />
+      <slot name="default" :is-expanded="isExpanded" />
     </nav>
+
+    <div class="app-sidebar__resizer" @mousedown.prevent="startDrag"></div>
   </aside>
 </template>
 
@@ -46,8 +80,16 @@ const isHovered = ref(false);
   overflow-y: auto;
   overflow-x: hidden;
   transition:
-    width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-    max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    width 0s,
+    max-width 0s;
+
+  &--expanded {
+    transition: none;
+  }
+
+  &--dragging {
+    transition: none;
+  }
 
   &__text,
   &__user-info,
@@ -82,11 +124,7 @@ const isHovered = ref(false);
       border 0s 0.35s;
   }
 
-  &:hover,
-  &--pinned {
-    width: 15rem;
-    max-width: 15rem;
-
+  &--expanded {
     .app-sidebar__text,
     .app-sidebar__user-info {
       opacity: 1;
@@ -105,7 +143,7 @@ const isHovered = ref(false);
     }
 
     .app-sidebar-item {
-      width: 13.5rem;
+      width: calc(100% - 1.5rem);
     }
 
     .app-sidebar__mode-badge {
@@ -117,8 +155,26 @@ const isHovered = ref(false);
     }
   }
 
+  &__resizer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 6px;
+    cursor: ew-resize;
+    z-index: 10;
+    background: transparent;
+    transition: background-color var(--transition-fast);
+
+    &:hover,
+    &:active,
+    .app-sidebar--dragging & {
+      background: color-mix(in srgb, var(--color-primary) 50%, transparent);
+    }
+  }
+
   &__header {
-    width: 15rem;
+    width: 100%;
     height: 4.5rem;
     padding: 0 0 0 1.18rem;
     border-bottom: 1px solid var(--color-border);
@@ -133,27 +189,6 @@ const isHovered = ref(false);
     width: 100%;
     justify-content: space-between;
     padding-right: var(--space-4);
-  }
-
-  &__pin {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: none;
-    color: var(--color-text-secondary);
-    cursor: pointer;
-    font-size: 1.6rem;
-    padding: var(--space-1);
-    transition: color 0.3s;
-
-    &:hover {
-      color: var(--color-primary);
-    }
-
-    &--active {
-      color: var(--color-primary);
-    }
   }
 
   &__brand {
@@ -199,7 +234,7 @@ const isHovered = ref(false);
   }
 
   &__nav {
-    width: 15rem;
+    width: 100%;
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -243,7 +278,7 @@ const isHovered = ref(false);
       padding: 0;
     }
 
-    &__pin {
+    .app-sidebar__resizer {
       display: none;
     }
   }
@@ -268,7 +303,6 @@ const isHovered = ref(false);
   white-space: nowrap;
   overflow: hidden;
   transition:
-    width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     background-color var(--transition-fast),
     color var(--transition-fast);
 

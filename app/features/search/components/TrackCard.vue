@@ -76,7 +76,7 @@ const isInAnyPlaylist = computed(() => playlistsStore.isTrackInAnyPlaylist(props
         <template v-if="track.artists && track.artists.length > 0">
           <template v-for="(artist, index) in track.artists" :key="index">
             {{ artist.name }}
-            <span v-if="index < track.artists.length - 1">,</span>
+            <span v-if="index < track.artists.length - 1">,&nbsp;</span>
           </template>
         </template>
         <template v-else>

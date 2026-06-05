@@ -32,6 +32,8 @@ function onClick() {
       videoId: props.track.id,
       title: props.track.title,
       artist: props.track.artist,
+      artists: props.track.artists,
+      artistId: props.track.artistId,
       thumbnailUrl: props.track.thumbnailUrl,
       durationSeconds: props.track.durationSeconds || 0
     });
@@ -93,7 +95,7 @@ function onClick() {
                 {{ artist.name }}
               </NuxtLink>
               <span v-else>{{ artist.name }}</span>
-              <span v-if="index < track.artists.length - 1">,</span>
+              <span v-if="index < track.artists.length - 1">,&nbsp;</span>
             </template>
           </template>
           <template v-else>
@@ -120,7 +122,7 @@ function onClick() {
                 {{ artist.name }}
               </NuxtLink>
               <span v-else>{{ artist.name }}</span>
-              <span v-if="index < track.artists.length - 1">,</span>
+              <span v-if="index < track.artists.length - 1">,&nbsp;</span>
             </template>
           </template>
           <template v-else>

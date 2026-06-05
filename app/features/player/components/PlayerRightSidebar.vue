@@ -36,6 +36,8 @@ const hasAnyLyrics = computed(() => hasSyncedLyrics.value || !!plainLyrics.value
 
 let autoScrollEnabled = true;
 let scrollResumeTimer: ReturnType<typeof setTimeout> | null = null;
+let isProgrammaticScroll = false;
+let programmaticScrollTimer: ReturnType<typeof setTimeout> | null = null;
 
 function scrollToActiveLine() {
   const idx = activeLineIndex.value;
@@ -49,6 +51,13 @@ function scrollToActiveLine() {
       const relativeTop = elRect.top - containerRect.top;
       const scrollPosition =
         container.scrollTop + relativeTop - containerRect.height / 2 + elRect.height / 2;
+
+      isProgrammaticScroll = true;
+      if (programmaticScrollTimer) clearTimeout(programmaticScrollTimer);
+      programmaticScrollTimer = setTimeout(() => {
+        isProgrammaticScroll = false;
+      }, 800);
+
       container.scrollTo({ top: scrollPosition, behavior: 'smooth' });
     }
   });
@@ -60,6 +69,8 @@ watch(activeLineIndex, () => {
 });
 
 function onLyricsScroll() {
+  if (isProgrammaticScroll) return;
+
   autoScrollEnabled = false;
   if (scrollResumeTimer) clearTimeout(scrollResumeTimer);
   scrollResumeTimer = setTimeout(() => {

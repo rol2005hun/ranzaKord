@@ -62,6 +62,8 @@ const hasAnyLyrics = computed(() => hasSyncedLyrics.value || !!plainLyrics.value
 
 let mobileAutoScroll = true;
 let mobileScrollTimer: ReturnType<typeof setTimeout> | null = null;
+let isMobileProgrammaticScroll = false;
+let mobileProgrammaticScrollTimer: ReturnType<typeof setTimeout> | null = null;
 
 function scrollMobileToActiveLine() {
   const idx = mobileActiveLine.value;
@@ -75,6 +77,13 @@ function scrollMobileToActiveLine() {
       const relativeTop = elRect.top - containerRect.top;
       const scrollPosition =
         container.scrollTop + relativeTop - containerRect.height / 2 + elRect.height / 2;
+
+      isMobileProgrammaticScroll = true;
+      if (mobileProgrammaticScrollTimer) clearTimeout(mobileProgrammaticScrollTimer);
+      mobileProgrammaticScrollTimer = setTimeout(() => {
+        isMobileProgrammaticScroll = false;
+      }, 800);
+
       container.scrollTo({ top: scrollPosition, behavior: 'smooth' });
     }
   });
@@ -86,6 +95,8 @@ watch(mobileActiveLine, () => {
 });
 
 function onMobileLyricsScroll() {
+  if (isMobileProgrammaticScroll) return;
+
   mobileAutoScroll = false;
   if (mobileScrollTimer) clearTimeout(mobileScrollTimer);
   mobileScrollTimer = setTimeout(() => {
@@ -149,14 +160,27 @@ function onVolumeInput(event: Event) {
         </div>
         <div v-if="displayTrack" class="player-bar__info">
           <span class="player-bar__title">{{ displayTrack.title }}</span>
-          <NuxtLink
-            v-if="displayTrack.artistId"
-            :to="`/artist/${displayTrack.artistId}`"
-            class="player-bar__artist artist-link"
-            @click.stop>
-            {{ displayTrack.artist }}
-          </NuxtLink>
-          <span v-else class="player-bar__artist">{{ displayTrack.artist }}</span>
+          <template v-if="displayTrack.artists && displayTrack.artists.length > 0">
+            <span class="player-bar__artist">
+              <template v-for="(art, idx) in displayTrack.artists" :key="idx">
+                <NuxtLink v-if="art.id" :to="`/artist/${art.id}`" class="artist-link" @click.stop>
+                  {{ art.name }}
+                </NuxtLink>
+                <span v-else>{{ art.name }}</span>
+                <span v-if="idx < displayTrack.artists.length - 1">,&nbsp;</span>
+              </template>
+            </span>
+          </template>
+          <template v-else>
+            <NuxtLink
+              v-if="displayTrack.artistId"
+              :to="`/artist/${displayTrack.artistId}`"
+              class="player-bar__artist artist-link"
+              @click.stop>
+              {{ displayTrack.artist }}
+            </NuxtLink>
+            <span v-else class="player-bar__artist">{{ displayTrack.artist }}</span>
+          </template>
         </div>
         <div v-else-if="!isHydrated" class="player-bar__info player-bar__info--skeleton">
           <AppSkeleton height="12px" width="120px" border-radius="var(--radius-sm)" />

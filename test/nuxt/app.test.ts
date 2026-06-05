@@ -51,6 +51,9 @@ describe('app.vue', () => {
     mockThemeId.value = 'dark';
     mockCustomColor.value = null;
     vi.mocked(tauriCore.isTauri).mockReturnValue(false);
+    if (typeof window !== 'undefined') {
+      delete (window as unknown as Window & Record<string, unknown>).__TAURI_INTERNALS__;
+    }
   });
 
   const mountApp = () => {
@@ -78,6 +81,10 @@ describe('app.vue', () => {
 
   it('calls getCurrentWindow.show() if in Tauri', async () => {
     vi.mocked(tauriCore.isTauri).mockReturnValue(true);
+    Object.defineProperty(window, '__TAURI_INTERNALS__', {
+      value: true,
+      configurable: true
+    });
     mountApp();
 
     // Wait for the component to mount, dynamic imports, and the setTimeout to trigger

@@ -86,6 +86,7 @@ function onPlay(track: SearchResult) {
     videoId: r.id,
     title: r.title,
     artist: r.artist,
+    artists: r.artists,
     artistId: r.artistId,
     thumbnailUrl: r.thumbnailUrl,
     durationSeconds: r.durationSeconds || 0
@@ -98,6 +99,7 @@ function onPlay(track: SearchResult) {
       videoId: track.id,
       title: track.title,
       artist: track.artist,
+      artists: track.artists,
       artistId: track.artistId,
       thumbnailUrl: track.thumbnailUrl,
       durationSeconds: track.durationSeconds || 0

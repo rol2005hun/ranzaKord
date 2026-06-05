@@ -1,15 +1,17 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 
-const isTauriApp = ref(false);
+const isTauriApp = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 const isMaximized = ref(false);
 
 onMounted(async () => {
-  try {
-    const { isTauri } = await import('@tauri-apps/api/core');
-    isTauriApp.value = isTauri();
+  if (typeof window !== 'undefined') {
+    const staticTb = document.getElementById('static-tauri-titlebar');
+    if (staticTb) staticTb.remove();
+  }
 
-    if (isTauriApp.value) {
+  try {
+    if (isTauriApp) {
       const { getCurrentWindow } = await import('@tauri-apps/api/window');
       const appWindow = getCurrentWindow();
       isMaximized.value = await appWindow.isMaximized();

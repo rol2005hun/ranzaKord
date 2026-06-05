@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { computed, onMounted } from 'vue';
 
 const { themeId, customColor } = useTheme();
 
@@ -11,7 +11,7 @@ const customColorStyle = computed(() => {
 const { locale } = useI18n();
 const { showUpdateModal } = useAppUpdate();
 
-const isTauriApp = ref(false);
+const isTauriApp = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
 useHead({
   htmlAttrs: {
@@ -23,9 +23,7 @@ useHead({
 
 onMounted(async () => {
   try {
-    const { isTauri } = await import('@tauri-apps/api/core');
-    isTauriApp.value = isTauri();
-    if (isTauriApp.value) {
+    if (isTauriApp) {
       const { Window, getCurrentWindow } = await import('@tauri-apps/api/window');
       setTimeout(async () => {
         const splashscreen = await Window.getByLabel('splashscreen');
@@ -87,9 +85,7 @@ onMounted(async () => {
     </template>
 
     <div :class="{ 'is-tauri': isTauriApp }">
-      <ClientOnly>
-        <AppTitlebar v-if="isTauriApp" />
-      </ClientOnly>
+      <AppTitlebar v-if="isTauriApp" />
       <NuxtRouteAnnouncer />
       <NuxtLayout>
         <NuxtPage />

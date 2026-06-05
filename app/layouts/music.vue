@@ -45,80 +45,88 @@ onMounted(() => {
         </NuxtLink>
       </template>
 
-      <div v-if="isAuthenticated" class="music-layout__library">
-        <div class="music-layout__library-header">
-          <div class="music-layout__library-title-wrapper" :title="$t('playlists.title')">
-            <AppIcon name="ph:books-duotone" class="music-layout__library-icon" />
-            <span class="music-layout__library-title app-sidebar__text">
-              {{ $t('playlists.title') }}
-            </span>
-          </div>
-          <div class="music-layout__library-actions">
-            <button
-              class="music-layout__library-add"
-              :title="$t('playlists.importPlaylist')"
-              @click="showImportModal = true">
-              <AppIcon name="ph:download-simple-bold" />
-            </button>
-            <button
-              class="music-layout__library-add"
-              :title="$t('playlists.newPlaylist')"
-              @click="showCreateModal = true">
-              <AppIcon name="ph:plus-bold" />
-            </button>
-          </div>
-        </div>
-
-        <div v-if="!isHydrated || playlistsStore.isLoading" class="music-layout__library-skeletons">
+      <template #default="{ isExpanded }">
+        <div v-if="isAuthenticated" class="music-layout__library">
           <div
-            v-for="i in 5"
-            :key="`skeleton-${i}`"
-            class="app-sidebar-item music-layout__playlist-item music-layout__playlist-skeleton">
-            <div class="music-layout__playlist-cover skeleton-box"></div>
-            <div class="music-layout__playlist-info app-sidebar__text">
-              <div class="skeleton-line skeleton-line--name"></div>
-              <div class="skeleton-line skeleton-line--count"></div>
+            class="music-layout__library-header"
+            :class="{ 'music-layout__library-header--expanded': isExpanded }">
+            <div class="music-layout__library-title-wrapper" :title="$t('playlists.title')">
+              <AppIcon name="ph:books-duotone" class="music-layout__library-icon" />
+              <span class="music-layout__library-title app-sidebar__text">
+                {{ $t('playlists.title') }}
+              </span>
             </div>
-          </div>
-        </div>
-
-        <template v-else>
-          <div
-            v-if="playlistsStore.playlists.length === 0"
-            class="music-layout__library-empty app-sidebar__text">
-            <div class="music-layout__library-empty-content">
-              <AppIcon
-                name="ph:music-notes-plus-duotone"
-                class="music-layout__library-empty-icon" />
-              <p class="music-layout__library-empty-title">{{ $t('playlists.noPlaylists') }}</p>
-              <p class="music-layout__library-empty-desc">{{ $t('playlists.createFirst') }}</p>
-              <button class="music-layout__library-empty-btn" @click="showCreateModal = true">
-                {{ $t('playlists.newPlaylist') }}
+            <div
+              class="music-layout__library-actions"
+              :class="{ 'music-layout__library-actions--expanded': isExpanded }">
+              <button
+                class="music-layout__library-add"
+                :title="$t('playlists.importPlaylist')"
+                @click="showImportModal = true">
+                <AppIcon name="ph:download-simple-bold" />
+              </button>
+              <button
+                class="music-layout__library-add"
+                :title="$t('playlists.newPlaylist')"
+                @click="showCreateModal = true">
+                <AppIcon name="ph:plus-bold" />
               </button>
             </div>
           </div>
 
-          <NuxtLink
-            v-for="playlist in playlistsStore.playlists"
-            :key="playlist.id"
-            :to="`/playlist/${playlist.id}`"
-            class="app-sidebar-item music-layout__playlist-item"
-            :class="{
-              'app-sidebar-item--active': route.path === `/playlist/${playlist.id}`
-            }">
-            <div class="music-layout__playlist-cover">
-              <img v-if="playlist.imageUrl" :src="playlist.imageUrl" :alt="playlist.name" />
-              <AppIcon v-else name="ph:music-notes-fill" />
+          <div
+            v-if="!isHydrated || playlistsStore.isLoading"
+            class="music-layout__library-skeletons">
+            <div
+              v-for="i in 5"
+              :key="`skeleton-${i}`"
+              class="app-sidebar-item music-layout__playlist-item music-layout__playlist-skeleton">
+              <div class="music-layout__playlist-cover skeleton-box"></div>
+              <div class="music-layout__playlist-info app-sidebar__text">
+                <div class="skeleton-line skeleton-line--name"></div>
+                <div class="skeleton-line skeleton-line--count"></div>
+              </div>
             </div>
-            <div class="music-layout__playlist-info app-sidebar__text">
-              <span class="music-layout__playlist-name">{{ playlist.name }}</span>
-              <span class="music-layout__playlist-count">
-                {{ $t('playlists.trackCount', { count: playlist.trackCount }) }}
-              </span>
+          </div>
+
+          <template v-else>
+            <div
+              v-if="playlistsStore.playlists.length === 0"
+              class="music-layout__library-empty app-sidebar__text">
+              <div class="music-layout__library-empty-content">
+                <AppIcon
+                  name="ph:music-notes-plus-duotone"
+                  class="music-layout__library-empty-icon" />
+                <p class="music-layout__library-empty-title">{{ $t('playlists.noPlaylists') }}</p>
+                <p class="music-layout__library-empty-desc">{{ $t('playlists.createFirst') }}</p>
+                <button class="music-layout__library-empty-btn" @click="showCreateModal = true">
+                  {{ $t('playlists.newPlaylist') }}
+                </button>
+              </div>
             </div>
-          </NuxtLink>
-        </template>
-      </div>
+
+            <NuxtLink
+              v-for="playlist in playlistsStore.playlists"
+              :key="playlist.id"
+              :to="`/playlist/${playlist.id}`"
+              class="app-sidebar-item music-layout__playlist-item"
+              :class="{
+                'app-sidebar-item--active': route.path === `/playlist/${playlist.id}`
+              }">
+              <div class="music-layout__playlist-cover">
+                <img v-if="playlist.imageUrl" :src="playlist.imageUrl" :alt="playlist.name" />
+                <AppIcon v-else name="ph:music-notes-fill" />
+              </div>
+              <div class="music-layout__playlist-info app-sidebar__text">
+                <span class="music-layout__playlist-name">{{ playlist.name }}</span>
+                <span class="music-layout__playlist-count">
+                  {{ $t('playlists.trackCount', { count: playlist.trackCount }) }}
+                </span>
+              </div>
+            </NuxtLink>
+          </template>
+        </div>
+      </template>
     </AppSidebar>
 
     <div class="music-layout__content">
@@ -231,14 +239,21 @@ onMounted(() => {
 
   &__library-header {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     margin-bottom: var(--space-2);
-    padding: var(--space-2) var(--space-3) var(--space-2) 1.5rem;
-    height: 36px;
+    padding: var(--space-2) 0;
     opacity: 1;
     overflow: hidden;
-    transition: padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    gap: var(--space-2);
+
+    &--expanded {
+      flex-direction: row;
+      justify-content: space-between;
+      padding: var(--space-2) var(--space-3) var(--space-2) 1.5rem;
+      height: 36px;
+    }
   }
 
   &__library-title-wrapper {
@@ -254,17 +269,6 @@ onMounted(() => {
     transition: color var(--transition-fast);
   }
 
-  :deep(.app-sidebar:not(:hover):not(.app-sidebar--pinned)) &__library-header {
-    padding: var(--space-2) 0 var(--space-2) 1.5rem;
-  }
-
-  :deep(.app-sidebar:not(:hover):not(.app-sidebar--pinned)) &__library-actions {
-    opacity: 0;
-    pointer-events: none;
-    width: 0;
-    overflow: hidden;
-  }
-
   &__library-title {
     font-size: var(--text-xs);
     font-weight: var(--font-weight-semibold);
@@ -275,8 +279,14 @@ onMounted(() => {
 
   &__library-actions {
     display: flex;
-    gap: var(--space-1);
+    flex-direction: column;
+    gap: var(--space-2);
     flex-shrink: 0;
+
+    &--expanded {
+      flex-direction: row;
+      gap: var(--space-1);
+    }
   }
 
   &__library-add {
@@ -429,8 +439,7 @@ onMounted(() => {
     gap: 2px;
   }
 
-  :deep(.app-sidebar:hover) &__playlist-info,
-  :deep(.app-sidebar--pinned) &__playlist-info {
+  :deep(.app-sidebar--expanded) &__playlist-info {
     margin-left: 0.5rem;
   }
 
