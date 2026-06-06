@@ -90,13 +90,13 @@ describe('playlist/[id].vue', () => {
             $t: (k: string, p: Record<string, unknown>) => k + (p ? JSON.stringify(p) : '')
           },
           stubs: {
-            AppMusicDetailView: {
-              name: 'AppMusicDetailView',
+            AppMusicPage: {
+              name: 'AppMusicPage',
               template: `
               <div class="mock-detail">
                 <slot name="meta" />
                 <slot name="actions" />
-                <slot name="track-actions" :track="{ id: 't1' }" />
+                <slot name="tracks" />
               </div>
             `
             },
@@ -118,14 +118,14 @@ describe('playlist/[id].vue', () => {
     await new Promise((r) => setTimeout(r, 0));
 
     expect(wrapper.text()).toContain('Desc');
-    expect(wrapper.findComponent({ name: 'AppMusicDetailView' }).exists()).toBe(true);
+    expect(wrapper.findComponent({ name: 'AppMusicPage' }).exists()).toBe(true);
   });
 
   it('handles play all', async () => {
     const wrapper = mountPage();
     await new Promise((r) => setTimeout(r, 0));
 
-    wrapper.findComponent({ name: 'AppMusicDetailView' }).vm.$emit('play-all');
+    wrapper.findComponent({ name: 'AppMusicPage' }).vm.$emit('play-all');
     expect(mockPlayQueue).toHaveBeenCalled();
   });
 
@@ -133,7 +133,7 @@ describe('playlist/[id].vue', () => {
     const wrapper = mountPage();
     await new Promise((r) => setTimeout(r, 0));
 
-    await wrapper.find('.playlist-page__track-remove').trigger('click');
+    await wrapper.find('.app-track-list__action-btn').trigger('click');
     expect(mockRemoveTrack).toHaveBeenCalledWith('p1', 't1');
   });
 

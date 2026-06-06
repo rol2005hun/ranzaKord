@@ -10,6 +10,7 @@
   "uploadImage": "Upload Image",
   "changeImage": "Change Image",
   "trackCount": "{count} songs",
+  "addedAt": "Date added",
   "emptyPlaylist": "This playlist is empty",
   "addToPlaylist": "Add to Playlist",
   "removeFromPlaylist": "Remove from Playlist",

@@ -83,18 +83,15 @@ function onPlayAlbum(): void {
 
 <template>
   <div class="album-page">
-    <AppMusicDetailView
+    <AppMusicPage
       :is-loading="status === 'pending'"
       :is-error="!!error || (!album && status !== 'pending')"
       :error-text="$t('search.album.loadError')"
       :title="album?.title"
       :badge="$t('search.album.badge')"
       :image-url="album?.thumbnailUrl"
-      :tracks="mappedTracks"
-      :show-track-thumbnails="false"
       :is-list-playing="isAlbumPlaying"
       :disable-play-button="!album || album.tracks.length === 0"
-      @play="onPlaySong"
       @play-all="onPlayAlbum">
       <template #meta>
         <span class="album-page__artist">{{ album?.artist }}</span>
@@ -103,14 +100,64 @@ function onPlayAlbum(): void {
           {{ $t('search.album.trackCount', { count: album?.tracks.length || 0 }) }}
         </span>
       </template>
-    </AppMusicDetailView>
+
+      <template #tracks>
+        <div v-if="mappedTracks.length === 0 && status !== 'pending'" class="music-page__empty">
+          <AppIcon name="ph:music-notes-plus" class="music-page__empty-icon" />
+          <p>{{ $t('core.musicDetail.empty') }}</p>
+          <NuxtLink to="/" class="music-page__empty-btn">
+            {{ $t('playlists.discover') }}
+          </NuxtLink>
+        </div>
+
+        <div v-else-if="mappedTracks.length > 0" class="album-page__tracks">
+          <AppTrackList
+            :tracks="mappedTracks"
+            :columns="['index', 'title', 'time']"
+            :show-thumbnails="false"
+            @play="onPlaySong" />
+        </div>
+      </template>
+    </AppMusicPage>
   </div>
 </template>
 
 <style lang="scss" scoped>
 .album-page {
+  height: 100%;
+
   &__artist {
     font-weight: var(--font-weight-bold);
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-12) 0;
+    gap: var(--space-3);
+    color: var(--color-text-secondary);
+  }
+
+  &__empty-icon {
+    font-size: 3rem;
+    opacity: 0.5;
+  }
+
+  &__tracks {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.artist-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+
+  &:hover {
+    text-decoration: underline;
+    color: var(--color-text-primary);
   }
 }
 </style>

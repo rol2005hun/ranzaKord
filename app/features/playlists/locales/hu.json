@@ -10,6 +10,8 @@
   "uploadImage": "Kép feltöltése",
   "changeImage": "Kép módosítása",
   "trackCount": "{count} dal",
+  "addedAt": "Hozzáadás dátuma",
+  "discover": "Fedezz fel dalokat",
   "emptyPlaylist": "Ez a lejátszási lista üres",
   "addToPlaylist": "Hozzáadás lejátszási listához",
   "removeFromPlaylist": "Eltávolítás a listából",

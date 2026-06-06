@@ -98,12 +98,7 @@ provide('sidebarExpanded', isExpanded);
     max-width: 0;
     overflow: hidden;
     white-space: nowrap;
-    transition:
-      opacity 0.15s linear 0.2s,
-      max-width 0s 0.35s,
-      margin 0s 0.35s,
-      padding 0s 0.35s,
-      border 0s 0.35s;
+    transition: none;
   }
 
   &__text {
@@ -116,12 +111,7 @@ provide('sidebarExpanded', isExpanded);
     border: 0;
     transition:
       background-color var(--transition-fast),
-      color var(--transition-fast),
-      opacity 0.15s linear 0.2s,
-      max-width 0s 0.35s,
-      margin 0s 0.35s,
-      padding 0s 0.35s,
-      border 0s 0.35s;
+      color var(--transition-fast);
   }
 
   &--expanded {
@@ -129,7 +119,7 @@ provide('sidebarExpanded', isExpanded);
     .app-sidebar__user-info {
       opacity: 1;
       max-width: 15rem;
-      transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: none;
     }
 
     .app-sidebar__logout {
@@ -137,7 +127,6 @@ provide('sidebarExpanded', isExpanded);
       max-width: 15rem;
       padding: var(--space-2);
       transition:
-        opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
         background-color var(--transition-fast),
         color var(--transition-fast);
     }

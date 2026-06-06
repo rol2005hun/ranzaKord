@@ -6,8 +6,8 @@ export default defineNitroPlugin((nitroApp) => {
       #static-tauri-titlebar {
         display: none;
         height: 32px;
-        background: #1a1a1a;
-        border-bottom: 1px solid #333;
+        background: var(--color-surface, #0d0d1e);
+        border-bottom: 1px solid var(--color-border, #1e1e40);
         user-select: none;
         justify-content: space-between;
         align-items: center;
@@ -33,7 +33,7 @@ export default defineNitroPlugin((nitroApp) => {
       #static-tauri-titlebar .left span {
         font-size: 12px;
         font-weight: 600;
-        color: #999;
+        color: var(--color-primary, hsl(262, 80%, 55%));
         pointer-events: none;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       }
@@ -41,6 +41,13 @@ export default defineNitroPlugin((nitroApp) => {
         flex: 1;
         height: 100%;
         -webkit-app-region: drag;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--color-text-secondary, #9494c7);
       }
       #static-tauri-titlebar .right {
         display: flex;
@@ -52,7 +59,15 @@ export default defineNitroPlugin((nitroApp) => {
         align-items: center;
         width: 46px;
         height: 100%;
-        color: #999;
+        color: var(--color-text-primary, #e8e8ff);
+        transition: background 0.1s;
+      }
+      #static-tauri-titlebar .button:hover {
+        background: var(--color-surface-hover, #121230);
+      }
+      #static-tauri-titlebar .button.close:hover {
+        background: #e81123;
+        color: white;
       }
     </style>
     `);
@@ -64,12 +79,12 @@ export default defineNitroPlugin((nitroApp) => {
         <img src="/logo.webp" alt="Logo" />
         <span>ranzaKord</span>
       </div>
-      <div class="middle" data-tauri-drag-region></div>
+      <div class="middle" data-tauri-drag-region id="static-tauri-titlebar-title"></div>
       <div class="right">
         <!-- Static placeholders for buttons -->
-        <div class="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg></div>
-        <div class="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg></div>
-        <div class="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div>
+        <div class="button"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M 0 5 h 10" stroke="currentColor" stroke-width="1.5"/></svg></div>
+        <div class="button"><svg width="10" height="10" viewBox="0 0 10 10"><rect x="0.5" y="0.5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1"/></svg></div>
+        <div class="button close"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M 1 1 l 8 8 M 9 1 l -8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
       </div>
     </div>
     <script id="static-tauri-titlebar-script">

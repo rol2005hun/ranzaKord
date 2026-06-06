@@ -10,6 +10,8 @@ definePageMeta({
   layout: 'music'
 });
 
+const { t } = useI18n();
+
 const route = useRoute();
 const id = route.params.id as string;
 
@@ -26,6 +28,10 @@ const {
 
 const playerStore = usePlayerStore();
 const { playTrack, togglePlay, isPlaying, currentTrack } = usePlayer();
+
+useHead({
+  title: computed(() => artist.value?.name || t('search.artist.badge'))
+});
 
 const isArtistPlaying = computed(() => {
   if (!artist.value || artist.value.topSongs.length === 0) return false;
@@ -124,7 +130,7 @@ onMounted(() => {
 
 <template>
   <div class="artist-page">
-    <AppMusicDetailView
+    <AppMusicPage
       :is-loading="status === 'pending'"
       :is-error="!!error || (!artist && status !== 'pending')"
       :error-text="$t('search.artist.loadError')"
@@ -132,7 +138,6 @@ onMounted(() => {
       :badge="$t('search.artist.badge')"
       :image-url="artist?.thumbnailUrl"
       :rounded-image="true"
-      :show-tracks="false"
       :is-list-playing="isArtistPlaying"
       :disable-play-button="!artist || artist.topSongs.length === 0"
       @play-all="onPlayArtist">
@@ -140,7 +145,7 @@ onMounted(() => {
         <AppIcon name="ph:user" />
       </template>
 
-      <template #content>
+      <template #tracks>
         <template v-if="status === 'pending'">
           <AppMusicSection
             :title="$t('search.artist.topSongs') + ' (All)'"
@@ -150,38 +155,53 @@ onMounted(() => {
         </template>
 
         <template v-else-if="artist">
-          <AppMusicSection
-            v-if="allSongs.length > 0 || isLoadingSongs"
-            :title="$t('search.artist.topSongs') + ' (All)'"
-            layout="list">
-            <SearchListItem
-              v-for="song in allSongs"
-              :key="song.id"
-              :track="song"
-              @click="onPlaySong(song)" />
+          <div
+            v-if="allSongs.length === 0 && !isLoadingSongs && artist.albums.length === 0"
+            class="music-page__empty">
+            <AppIcon name="ph:music-notes-plus" class="music-page__empty-icon" />
+            <p>{{ $t('core.musicDetail.empty') }}</p>
+            <NuxtLink to="/" class="music-page__empty-btn">
+              {{ $t('playlists.discover') }}
+            </NuxtLink>
+          </div>
+          <template v-else>
+            <AppMusicSection
+              v-if="allSongs.length > 0 || isLoadingSongs"
+              :title="$t('search.artist.topSongs') + ' (All)'"
+              layout="list">
+              <SearchListItem
+                v-for="song in allSongs"
+                :key="song.id"
+                :track="song"
+                @click="onPlaySong(song)" />
+
+              <AppMusicSection
+                v-if="isLoadingSongs"
+                title=""
+                layout="list"
+                :is-loading="true"
+                :skeleton-count="allSongs.length === 0 ? 5 : 3" />
+            </AppMusicSection>
 
             <AppMusicSection
-              v-if="isLoadingSongs"
-              title=""
-              layout="list"
-              :is-loading="true"
-              :skeleton-count="allSongs.length === 0 ? 5 : 3" />
-          </AppMusicSection>
-
-          <AppMusicSection
-            v-if="artist.albums.length > 0"
-            :title="$t('search.artist.albums')"
-            layout="grid">
-            <TopResultCard
-              v-for="album in artist.albums"
-              :key="album.id"
-              :result="album"
-              @play="onPlaySong" />
-          </AppMusicSection>
+              v-if="artist.albums.length > 0"
+              :title="$t('search.artist.albums')"
+              layout="grid">
+              <TopResultCard
+                v-for="album in artist.albums"
+                :key="album.id"
+                :result="album"
+                @play="onPlaySong" />
+            </AppMusicSection>
+          </template>
         </template>
       </template>
-    </AppMusicDetailView>
+    </AppMusicPage>
   </div>
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.artist-page {
+  height: 100%;
+}
+</style>

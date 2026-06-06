@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import type { PlaylistDetail, MusicTrack } from '@/features/playlists/types/playlists.types';
+import { computed, ref, watch } from 'vue';
+import type { ComponentPublicInstance } from 'vue';
+import type { PlaylistDetail, PlaylistTrack } from '@/features/playlists/types/playlists.types';
+import type { TrackListItem } from '@/components/shared/AppTrackList.vue';
 
 definePageMeta({
   layout: 'music'
 });
 
-const PAGE_SIZE = 50;
+const CHUNK_SIZE = 50;
+const ITEM_HEIGHT = 57;
 
 const route = useRoute();
 const id = computed(() => route.params.id as string);
@@ -15,16 +19,15 @@ const player = usePlayer();
 
 const playlist = ref<PlaylistDetail | null>(null);
 const isLoading = ref(true);
-const isLoadingMore = ref(false);
 const isDeleting = ref(false);
 const showEditModal = ref(false);
 const showDeleteConfirm = ref(false);
 
-const { data, status } = await useAsyncData<PlaylistDetail | null>(
+const { data, status, refresh } = await useAsyncData<PlaylistDetail | null>(
   () => `playlist-${id.value}`,
   async () => {
     if (!id.value) return null;
-    return await store.fetchDetail(id.value, { limit: PAGE_SIZE, offset: 0 });
+    return await store.fetchDetail(id.value, { limit: CHUNK_SIZE, offset: 0 });
   },
   {
     lazy: true,
@@ -33,47 +36,47 @@ const { data, status } = await useAsyncData<PlaylistDetail | null>(
 );
 
 watchEffect(() => {
-  playlist.value = data.value ?? null;
+  if (data.value) {
+    playlist.value = data.value;
+  }
   isLoading.value = status.value === 'pending';
 });
 
-const hasMoreTracks = computed(() => {
-  if (!playlist.value) return false;
-  return playlist.value.tracks.length < playlist.value.trackCount;
-});
+const trackCount = computed(() => playlist.value?.trackCount ?? 0);
 
-const mappedTracks = computed<MusicTrack[]>(() => {
-  if (!playlist.value) return [];
-  return playlist.value.tracks.map((t) => ({
-    id: t.videoId,
-    title: t.title,
-    artist: t.artist,
-    artistId: t.artistId,
-    thumbnailUrl: t.thumbnailUrl,
-    durationSeconds: Math.round(t.durationMs / 1000),
-    isPlaying: player.currentTrack.value?.videoId === t.videoId
-  }));
-});
+async function fetchChunk(offset: number, limit: number): Promise<PlaylistTrack[]> {
+  if (!id.value) return [];
+  const result = await store.fetchDetail(id.value, { limit, offset });
+  return result?.tracks ?? [];
+}
 
-async function loadMoreTracks(): Promise<void> {
-  if (!playlist.value || isLoadingMore.value || !hasMoreTracks.value) return;
+const { virtualTracks, visibleItems, totalHeight, offsetY, onScroll, containerRef } =
+  useVirtualPlaylist({
+    trackCount,
+    fetchChunk,
+    chunkSize: CHUNK_SIZE,
+    itemHeight: ITEM_HEIGHT,
+    debounceMs: 200
+  });
 
-  isLoadingMore.value = true;
-  try {
-    const nextPage = await store.fetchDetail(id.value, {
-      limit: PAGE_SIZE,
-      offset: playlist.value.tracks.length
-    });
+watch(
+  () => data.value,
+  (newData) => {
+    if (!newData) return;
+    const count = newData.trackCount;
+    const firstChunk = newData.tracks;
+    playlist.value = newData;
 
-    if (!nextPage || nextPage.tracks.length === 0) return;
+    virtualTracks.value = new Array(count).fill(null);
+    for (let i = 0; i < firstChunk.length; i++) {
+      virtualTracks.value[i] = firstChunk[i] ?? null;
+    }
+  },
+  { immediate: true }
+);
 
-    playlist.value = {
-      ...nextPage,
-      tracks: [...playlist.value.tracks, ...nextPage.tracks]
-    };
-  } finally {
-    isLoadingMore.value = false;
-  }
+function setContainerRef(el: Element | ComponentPublicInstance | null) {
+  containerRef.value = el as HTMLElement | null;
 }
 
 useHead({
@@ -81,24 +84,23 @@ useHead({
 });
 
 const isCurrentPlaylistPlaying = computed(() => {
-  if (!playlist.value || playlist.value.tracks.length === 0) return false;
+  if (!playlist.value || virtualTracks.value.length === 0) return false;
   if (!player.isPlaying.value) return false;
-  return playlist.value.tracks.some((t) => t.videoId === player.currentTrack.value?.videoId);
+  return virtualTracks.value.some(
+    (t) => t !== null && t.videoId === player.currentTrack.value?.videoId
+  );
 });
 
 function playAll(): void {
-  if (!playlist.value || playlist.value.tracks.length === 0) return;
+  const loadedTracks = virtualTracks.value.filter((t): t is PlaylistTrack => t !== null);
+  if (loadedTracks.length === 0) return;
 
-  if (
-    isCurrentPlaylistPlaying.value ||
-    (player.currentTrack.value &&
-      playlist.value.tracks.some((t) => t.videoId === player.currentTrack.value?.videoId))
-  ) {
+  if (isCurrentPlaylistPlaying.value) {
     player.togglePlay();
     return;
   }
 
-  const tracksToPlay = playlist.value.tracks.map((t) => ({
+  const tracksToPlay = loadedTracks.map((t) => ({
     videoId: t.videoId,
     title: t.title,
     artist: t.artist,
@@ -110,32 +112,58 @@ function playAll(): void {
   player.playQueue(tracksToPlay, 0);
 }
 
-function onPlaySong(track: MusicTrack, index: number): void {
-  if (!playlist.value) return;
-
-  const tracksToPlay = playlist.value.tracks.map((t) => ({
+function onPlaySong(track: TrackListItem, index: number): void {
+  const loadedTracks = virtualTracks.value.filter((t): t is PlaylistTrack => t !== null);
+  const tracksToPlay = loadedTracks.map((t) => ({
     videoId: t.videoId,
     title: t.title,
     artist: t.artist,
+    artists: [],
     artistId: t.artistId,
     thumbnailUrl: t.thumbnailUrl,
     durationSeconds: Math.round(t.durationMs / 1000)
   }));
 
-  const resolvedIndex = playlist.value.tracks.findIndex((item) => item.videoId === track.id);
+  const resolvedIndex = loadedTracks.findIndex((t) => t.videoId === track.id);
   player.playQueue(tracksToPlay, resolvedIndex >= 0 ? resolvedIndex : index);
 }
 
 async function removeTrack(videoId: string): Promise<void> {
   await store.removeTrack(id.value, videoId);
-  if (playlist.value) {
-    playlist.value.tracks = playlist.value.tracks.filter((t) => t.videoId !== videoId);
+  const idx = virtualTracks.value.findIndex((t) => t?.videoId === videoId);
+  if (idx >= 0) {
+    virtualTracks.value.splice(idx, 1);
+    if (playlist.value) {
+      playlist.value.trackCount = Math.max(0, playlist.value.trackCount - 1);
+    }
   }
 }
 
+function removeTrackWrapper(track: TrackListItem): void {
+  removeTrack(track.id);
+}
+
+const mappedVisibleItems = computed(() => {
+  return visibleItems.value.map((item) => ({
+    index: item.index,
+    data: item.track
+      ? {
+          id: item.track.videoId,
+          title: item.track.title,
+          artist: item.track.artist,
+          artistId: item.track.artistId,
+          thumbnailUrl: item.track.thumbnailUrl,
+          durationSeconds: Math.round(item.track.durationMs / 1000),
+          addedAt: item.track.addedAt,
+          isPlaying:
+            player.isPlaying.value && player.currentTrack.value?.videoId === item.track.videoId
+        }
+      : null
+  }));
+});
+
 async function onDelete(): Promise<void> {
   if (isDeleting.value) return;
-
   isDeleting.value = true;
   try {
     const deleted = await store.remove(id.value);
@@ -151,48 +179,39 @@ async function onDelete(): Promise<void> {
 
 <template>
   <div class="playlist-page">
-    <AppMusicDetailView
+    <AppMusicPage
       :is-loading="isLoading"
       :is-error="!playlist && !isLoading"
       :title="playlist?.name"
       :badge="$t('playlists.myPlaylist')"
       :image-url="playlist?.imageUrl"
-      :tracks="mappedTracks"
-      :has-more-tracks="hasMoreTracks"
-      :is-loading-more="isLoadingMore"
-      :empty-text="$t('playlists.emptyPlaylist')"
       :is-list-playing="isCurrentPlaylistPlaying"
-      :disable-play-button="!playlist || playlist.tracks.length === 0"
-      @play="onPlaySong"
-      @load-more="loadMoreTracks"
-      @play-all="playAll">
+      :disable-play-button="trackCount === 0"
+      @play-all="playAll"
+      @scroll="onScroll">
       <template #meta>
-        <span v-if="playlist?.description" class="playlist-page__description">
+        <span
+          v-if="playlist?.description && typeof playlist.description === 'string'"
+          class="playlist-page__description">
           {{ playlist.description }}
         </span>
-        <span v-if="playlist?.description">•</span>
+        <span v-if="playlist?.description && typeof playlist.description === 'string'">•</span>
         <span class="playlist-page__count">
-          {{
-            $t('playlists.trackCount', {
-              count: playlist?.trackCount || playlist?.tracks.length || 0
-            })
-          }}
+          {{ $t('playlists.trackCount', { count: playlist?.trackCount ?? 0 }) }}
         </span>
       </template>
 
-      <template #skeleton-actions>
-        <div class="skeleton-btn"></div>
-        <div class="skeleton-btn"></div>
+      <template #sticky-subtitle>
+        {{ $t('playlists.trackCount', { count: playlist?.trackCount ?? 0 }) }}
       </template>
 
-      <template #actions>
+      <template #sticky-actions>
         <button
           class="playlist-page__action-btn"
           :title="$t('playlists.editPlaylist')"
           @click="showEditModal = true">
           <AppIcon name="ph:pencil-simple" />
         </button>
-
         <button
           class="playlist-page__action-btn playlist-page__action-btn--danger"
           :title="$t('playlists.deletePlaylist')"
@@ -202,15 +221,47 @@ async function onDelete(): Promise<void> {
         </button>
       </template>
 
-      <template #track-actions="{ track }">
+      <template #actions>
         <button
-          class="playlist-page__track-remove"
-          :title="$t('playlists.removeFromPlaylist')"
-          @click.stop="removeTrack(track.id)">
-          <AppIcon name="ph:x-bold" />
+          class="playlist-page__action-btn"
+          :title="$t('playlists.editPlaylist')"
+          @click="showEditModal = true">
+          <AppIcon name="ph:pencil-simple" />
+        </button>
+        <button
+          class="playlist-page__action-btn playlist-page__action-btn--danger"
+          :title="$t('playlists.deletePlaylist')"
+          :disabled="isDeleting"
+          @click="showDeleteConfirm = true">
+          <AppIcon name="ph:trash" />
         </button>
       </template>
-    </AppMusicDetailView>
+
+      <template #tracks>
+        <template v-if="trackCount === 0 && !isLoading">
+          <div class="music-page__empty">
+            <AppIcon name="ph:music-notes-simple-duotone" class="music-page__empty-icon" />
+            <p>{{ $t('playlists.emptyPlaylist') }}</p>
+            <NuxtLink to="/" class="music-page__empty-btn">
+              {{ $t('playlists.discover') }}
+            </NuxtLink>
+          </div>
+        </template>
+        <template v-else>
+          <div :ref="setContainerRef">
+            <AppTrackList
+              :virtual="true"
+              :visible-items="mappedVisibleItems"
+              :offset-y="offsetY"
+              :total-height="totalHeight"
+              :columns="['index', 'title', 'date', 'time', 'action']"
+              :show-thumbnails="true"
+              @play="onPlaySong"
+              @remove="removeTrackWrapper" />
+          </div>
+        </template>
+      </template>
+    </AppMusicPage>
 
     <PlaylistModal
       v-if="playlist"
@@ -219,6 +270,7 @@ async function onDelete(): Promise<void> {
       :initial-name="playlist.name"
       :initial-description="playlist.description"
       :initial-image-url="playlist.imageUrl"
+      @saved="refresh()"
       @close="showEditModal = false"
       @created="showEditModal = false" />
 
@@ -257,6 +309,7 @@ async function onDelete(): Promise<void> {
 
 <style scoped lang="scss">
 .playlist-page {
+  height: 100%;
   &__description {
     max-width: 500px;
     white-space: nowrap;
@@ -289,50 +342,6 @@ async function onDelete(): Promise<void> {
 
     &--danger:hover {
       color: hsl(0, 65%, 55%);
-    }
-  }
-
-  &__track-remove {
-    opacity: 0;
-    background: none;
-    border: none;
-    color: var(--color-text-secondary);
-    cursor: pointer;
-    font-size: var(--text-base);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition:
-      opacity var(--transition-fast),
-      color var(--transition-fast);
-    padding: 0;
-
-    &:hover {
-      color: hsl(0, 65%, 55%);
-    }
-  }
-
-  :deep(.music-detail__track:hover) .playlist-page__track-remove {
-    opacity: 1;
-  }
-
-  .skeleton-btn {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: var(--color-surface-raised);
-    animation: pulse 1.5s infinite ease-in-out;
-  }
-
-  @keyframes pulse {
-    0% {
-      opacity: 0.5;
-    }
-    50% {
-      opacity: 0.8;
-    }
-    100% {
-      opacity: 0.5;
     }
   }
 
@@ -403,11 +412,23 @@ async function onDelete(): Promise<void> {
     &--danger {
       background: hsl(0, 65%, 50%);
       color: #fff;
+      --spinner-color: inherit;
 
       &:hover {
         background: hsl(0, 65%, 60%);
       }
     }
+  }
+}
+
+.artist-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+
+  &:hover {
+    text-decoration: underline;
+    color: var(--color-text-primary);
   }
 }
 

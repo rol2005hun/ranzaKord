@@ -27,11 +27,12 @@ defineProps<Props>();
 .app-sidebar-item {
   display: flex;
   align-items: center;
+  gap: var(--space-2);
   width: 3rem;
   height: 3rem;
   margin: 0 0.75rem 4px 0.75rem;
   padding: 0;
-  padding-left: 0.85rem;
+  padding-left: 0.75rem;
   border-radius: var(--radius-lg);
   color: var(--color-text-secondary);
   text-decoration: none;
@@ -61,7 +62,6 @@ defineProps<Props>();
   &__icon {
     font-size: 1.5rem;
     flex-shrink: 0;
-    margin-right: var(--space-2);
   }
 
   @media (max-width: 768px) {

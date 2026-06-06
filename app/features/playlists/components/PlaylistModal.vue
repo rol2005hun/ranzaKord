@@ -19,6 +19,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   close: [];
   created: [id: string];
+  saved: [];
 }>();
 
 const store = usePlaylistsStore();
@@ -79,6 +80,7 @@ async function submit(): Promise<void> {
 
     if (props.editId) {
       await store.update(props.editId, payload);
+      emit('saved');
       emit('close');
     } else {
       const created = await store.create(payload);
@@ -112,7 +114,7 @@ async function submit(): Promise<void> {
           </div>
           <div
             class="playlist-modal__image-overlay"
-            :style="isUploading ? 'pointer-events: none' : ''">
+            :class="{ 'playlist-modal__image-overlay--uploading': isUploading }">
             <AppSpinner v-if="isUploading" size="sm" />
             <AppIcon v-else name="ph:pencil-simple-fill" />
             <span class="playlist-modal__upload-text">
@@ -164,13 +166,16 @@ async function submit(): Promise<void> {
         class="playlist-modal__btn playlist-modal__btn--primary"
         :disabled="!name.trim() || isSaving || isUploading"
         @click="submit">
-        {{
-          isSaving
-            ? $t('playlists.saving')
-            : editId
-              ? $t('core.actions.save')
-              : $t('playlists.createPlaylist')
-        }}
+        <AppSpinner v-if="isSaving" size="sm" />
+        <span>
+          {{
+            isSaving
+              ? $t('playlists.saving')
+              : editId
+                ? $t('core.actions.save')
+                : $t('playlists.createPlaylist')
+          }}
+        </span>
       </button>
     </template>
   </AppModal>
@@ -262,6 +267,11 @@ async function submit(): Promise<void> {
       font-size: var(--text-xs);
       font-weight: var(--font-weight-medium);
     }
+
+    &--uploading {
+      opacity: 1;
+      pointer-events: none;
+    }
   }
 
   &__fields {
@@ -311,6 +321,10 @@ async function submit(): Promise<void> {
     cursor: pointer;
     border: none;
     transition: all var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
 
     &--ghost {
       background: transparent;
@@ -324,6 +338,7 @@ async function submit(): Promise<void> {
     &--primary {
       background: var(--color-text-primary);
       color: var(--color-bg);
+      --spinner-color: inherit;
 
       &:hover:not(:disabled) {
         transform: scale(1.03);

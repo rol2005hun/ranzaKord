@@ -137,7 +137,7 @@ onMounted(() => {
     </div>
 
     <Transition name="right-sidebar">
-      <PlayerRightSidebar v-if="layoutStore.isRightSidebarOpen" />
+      <PlayerRightSidebar v-if="isHydrated && layoutStore.isRightSidebarOpen" />
     </Transition>
 
     <PlayerBar />
@@ -230,7 +230,12 @@ onMounted(() => {
 
   &__main {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
   }
 
   &__library {
@@ -251,15 +256,17 @@ onMounted(() => {
     &--expanded {
       flex-direction: row;
       justify-content: space-between;
-      padding: var(--space-2) var(--space-3) var(--space-2) 1.5rem;
-      height: 36px;
+      padding: var(--space-2) var(--space-3);
+
+      .music-layout__library-title {
+        margin-left: var(--space-2);
+      }
     }
   }
 
   &__library-title-wrapper {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
     color: var(--color-text-secondary);
   }
 
@@ -460,7 +467,7 @@ onMounted(() => {
     flex-direction: column;
 
     &__main {
-      padding-bottom: 60px;
+      // Removed unnecessary padding-bottom: 60px;
     }
 
     &__library {
