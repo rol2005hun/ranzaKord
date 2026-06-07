@@ -10,8 +10,9 @@
 
 ## ✨ Features
 
-- **Cross-Platform**: Available as a native desktop app via Tauri and accessible via the web.
+- **Cross-Platform**: Available as a native desktop app (Windows, macOS, Linux) and mobile app (Android, iOS) via Tauri, plus accessible via the web.
 - **Premium UI/UX**: Sleek, modern interface with smooth micro-animations and a dynamic design system.
+- **Advanced Playlists**: Import playlists from YouTube and Spotify, with built-in duplicate checking and virtualized track lists for high performance.
 - **Multi-Theme Support**: Built-in themes (`default`, `dark`, `ocean`) with runtime custom primary color adjustments.
 - **Robust State Management**: Powered by Pinia and Pinia ORM for complex entity relationships.
 - **Internationalization (i18n)**: Fully supported multi-language interface (`en`, `hu`).
@@ -22,7 +23,7 @@
 | Layer                    | Technology                                                                    |
 | ------------------------ | ----------------------------------------------------------------------------- |
 | **Framework**            | [Nuxt 4](https://nuxt.com/) (`srcDir: app/`, `serverDir: server/`)            |
-| **Desktop / Native**     | [Tauri v2](https://tauri.app/)                                                |
+| **Desktop & Mobile**     | [Tauri v2](https://tauri.app/) (Windows, macOS, Linux, Android, iOS)          |
 | **Language**             | TypeScript (strict mode)                                                      |
 | **State Management**     | [Pinia](https://pinia.vuejs.org/) + [Pinia ORM](https://pinia-orm.vuejs.org/) |
 | **Async State**          | [@pinia/colada](https://pinia-colada.esm.is/)                                 |
