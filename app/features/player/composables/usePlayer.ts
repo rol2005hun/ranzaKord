@@ -5,6 +5,15 @@ const audioRef = ref<HTMLAudioElement | null>(null);
 export function usePlayer() {
   const store = usePlayerStore();
   const { t } = useI18n();
+  const config = useRuntimeConfig();
+
+  function getApiUrl(path: string) {
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+    const isTauriProd = import.meta.client && '__TAURI_INTERNALS__' in window && !import.meta.dev;
+    if (isTauriProd) return `${config.public.baseUrl}${normalizedPath}`;
+    return normalizedPath;
+  }
 
   let isRestoring = false;
 
@@ -61,7 +70,7 @@ export function usePlayer() {
         isRestoring = true;
       }
 
-      el.src = useApiUrl(`/api/stream?v=${store.currentTrack.videoId}`);
+      el.src = getApiUrl(`/api/stream?v=${store.currentTrack.videoId}`);
       el.load();
 
       el.addEventListener('loadedmetadata', function onLoaded() {
@@ -120,7 +129,7 @@ export function usePlayer() {
         return;
       }
 
-      audioRef.value.src = useApiUrl(`/api/stream?v=${track.videoId}`);
+      audioRef.value.src = getApiUrl(`/api/stream?v=${track.videoId}`);
       audioRef.value.load();
 
       await audioRef.value.play();

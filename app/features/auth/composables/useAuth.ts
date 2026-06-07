@@ -5,12 +5,17 @@ export function useAuth(): UseAuthReturn {
   const router = useRouter();
   const isTauri = computed(() => import.meta.client && '__TAURI_INTERNALS__' in window);
 
+  const nuxtApp = useNuxtApp();
+  const config = useRuntimeConfig();
+  const requestFetch = import.meta.server
+    ? (useRequestFetch() as unknown as (req: string) => Promise<unknown>)
+    : null;
+  const globalFetch = $fetch as unknown as (req: string) => Promise<unknown>;
+
   async function loginWithRanzaKonnect(): Promise<void> {
     const origin = encodeURIComponent(window.location.origin);
-    const nuxtApp = useNuxtApp();
     const lang = nuxtApp.$i18n?.locale?.value || 'en';
     const desktopAuth = isTauri.value ? '&desktop=1' : '';
-    const config = useRuntimeConfig();
     const baseUrl = config.public.baseUrl;
     const loginUrl = isTauri.value
       ? `${baseUrl}/auth/login?source=${origin}&lang=${lang}${desktopAuth}`
@@ -42,9 +47,7 @@ export function useAuth(): UseAuthReturn {
 
   async function fetchUser() {
     try {
-      const fetcher = import.meta.server
-        ? (useRequestFetch() as unknown as (req: string) => Promise<unknown>)
-        : ($fetch as unknown as (req: string) => Promise<unknown>);
+      const fetcher = import.meta.server && requestFetch ? requestFetch : globalFetch;
       const user = (await fetcher('/api/me')) as unknown;
       if (user && typeof user === 'object' && 'sub' in user) {
         store.setUser(
