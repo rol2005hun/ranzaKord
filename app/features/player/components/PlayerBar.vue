@@ -713,6 +713,10 @@ function onVolumeInput(event: Event) {
     }
   }
 
+  &__mobile-actions {
+    display: none;
+  }
+
   @media (max-width: 800px) {
     grid-template-areas:
       'left controls right'
@@ -776,7 +780,86 @@ function onVolumeInput(event: Event) {
     }
   }
 
-  @media (max-width: 400px) {
+  @media (max-width: 600px) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    align-content: space-evenly;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    padding-bottom: env(safe-area-inset-bottom, 12px);
+    height: 140px !important;
+    min-height: 140px !important;
+
+    &__left {
+      width: auto;
+      flex: 1;
+      position: relative;
+      order: 1;
+      min-width: 0; /* Important for flex child truncation */
+    }
+
+    &__info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    &__center {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      order: 3;
+      margin-top: var(--space-1);
+    }
+
+    &__controls {
+      width: 100%;
+      justify-content: center;
+      gap: var(--space-4);
+    }
+
+    &__right {
+      width: auto;
+      gap: var(--space-1);
+      order: 2;
+    }
+
+    &__progress {
+      position: absolute;
+      top: -1px; /* Align to absolute top edge */
+      left: 0;
+      width: 100%;
+      margin: 0;
+      grid-area: auto;
+
+      .player-bar__time {
+        display: none;
+      }
+
+      input[type='range'] {
+        height: 2px;
+        &::-webkit-slider-thumb {
+          width: 0;
+          height: 0;
+        }
+        &::-webkit-slider-runnable-track {
+          height: 2px;
+          border-radius: 0;
+        }
+      }
+    }
+
+    .player-bar__btn {
+      width: 26px;
+      height: 26px;
+      font-size: var(--text-lg);
+    }
+    .player-bar__btn--play {
+      width: 32px;
+      height: 32px;
+      font-size: var(--text-xl);
+    }
     &__slider--volume {
       width: 50px;
     }
