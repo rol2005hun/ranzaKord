@@ -66,15 +66,27 @@ describe('ImportPlaylistModal', () => {
 
   it('handles import correctly', async () => {
     const store = usePlaylistsStore();
-    const importSpy = vi.spyOn(store, 'importPlaylist').mockResolvedValue({
-      id: 'new-id',
-      name: 'Test',
-      description: '',
-      imageUrl: '',
-      trackCount: 0,
-      trackIds: [],
-      createdAt: '',
-      updatedAt: ''
+    const importSpy = vi.spyOn(store, 'importPlaylist').mockImplementation(async () => {
+      store.importResult = {
+        success: 1,
+        failed: 0,
+        skipped: 0,
+        alreadyExists: 0,
+        successTracks: [],
+        failedTracks: [],
+        skippedTracks: [],
+        alreadyExistsTracks: []
+      };
+      return {
+        id: 'new-id',
+        name: 'Test',
+        description: '',
+        imageUrl: '',
+        trackCount: 0,
+        trackIds: [],
+        createdAt: '',
+        updatedAt: ''
+      };
     });
 
     const wrapper = mountModal();
@@ -88,6 +100,10 @@ describe('ImportPlaylistModal', () => {
     expect(importSpy).toHaveBeenCalledWith('https://youtube.com/playlist?list=123', 'youtube');
 
     await nextTick();
+    expect(wrapper.emitted('imported')).toBeFalsy(); // Doesn't emit until closed
+
+    // Now close the modal
+    await wrapper.find('.import-modal__button--primary').trigger('click'); // The 'Close' button is primary on the results view
     expect(wrapper.emitted('imported')?.[0]).toEqual(['new-id']);
   });
 

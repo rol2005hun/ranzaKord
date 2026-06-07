@@ -49,9 +49,19 @@ async function mountPlaylistStore() {
 describe('ImportPlaylistModal', () => {
   it('validates the URL and calls importPlaylist for a Spotify playlist', async () => {
     const store = await mountPlaylistStore();
-    const importPlaylist = vi
-      .spyOn(store, 'importPlaylist')
-      .mockResolvedValue(createPlaylistSummary({ id: 'imported-playlist' }));
+    const importPlaylist = vi.spyOn(store, 'importPlaylist').mockImplementation(async () => {
+      store.importResult = {
+        success: 1,
+        failed: 0,
+        skipped: 0,
+        alreadyExists: 0,
+        successTracks: [],
+        failedTracks: [],
+        skippedTracks: [],
+        alreadyExistsTracks: []
+      };
+      return createPlaylistSummary({ id: 'imported-playlist' });
+    });
 
     const wrapper = await mountSuspended(ImportPlaylistModal, {
       props: { open: true },
@@ -77,8 +87,16 @@ describe('ImportPlaylistModal', () => {
       'https://open.spotify.com/playlist/abc123',
       'spotify'
     );
+    await nextTick();
+    expect(wrapper.emitted('imported')).toBeFalsy();
+
+    const closeBtn = wrapper.find('button.import-modal__button--primary');
+    await closeBtn.trigger('click');
+    await nextTick();
+
     expect(wrapper.emitted('imported')?.[0]).toEqual(['imported-playlist']);
-    expect((input.element as HTMLInputElement).value).toBe('');
+    const newInput = wrapper.find('input[type="url"]');
+    expect((newInput.element as HTMLInputElement).value).toBe('');
   });
 
   it('shows import progress when the store is importing', async () => {
@@ -105,8 +123,23 @@ describe('ImportPlaylistModal', () => {
     expect(wrapper.text()).toContain('Importing');
     expect(wrapper.text()).toContain('2/5');
 
+    store.importResult = {
+      success: 1,
+      failed: 0,
+      skipped: 0,
+      alreadyExists: 0,
+      successTracks: [],
+      failedTracks: [],
+      skippedTracks: [],
+      alreadyExistsTracks: []
+    };
     resolveImport(createPlaylistSummary({ id: 'imported-youtube' }));
     await flushPromises();
+
+    expect(wrapper.emitted('imported')).toBeFalsy();
+
+    const closeBtn2 = wrapper.find('button.import-modal__button--primary');
+    await closeBtn2.trigger('click');
 
     expect(wrapper.emitted('imported')?.[0]).toEqual(['imported-youtube']);
   });

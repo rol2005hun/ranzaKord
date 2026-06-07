@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
 import HomeHero from '../../app/features/home/components/HomeHero.vue';
 import { createPinia, setActivePinia } from 'pinia';
@@ -15,7 +15,8 @@ mockNuxtImport('useI18n', () => {
 mockNuxtImport('useAuth', () => {
   return () => ({
     currentUser: ref({ name: 'Roland' }),
-    isAuthenticated: ref(true)
+    isAuthenticated: ref(true),
+    fetchUser: vi.fn()
   });
 });
 

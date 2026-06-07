@@ -39,9 +39,11 @@ watch(
     if (isOpen) {
       document.addEventListener('keydown', handleKeydown);
       document.body.style.overflow = 'hidden';
+      document.body.classList.add('has-open-modal');
     } else {
       document.removeEventListener('keydown', handleKeydown);
       document.body.style.overflow = '';
+      document.body.classList.remove('has-open-modal');
     }
   },
   { immediate: true }
@@ -51,6 +53,7 @@ onUnmounted(() => {
   if (!import.meta.client) return;
   document.removeEventListener('keydown', handleKeydown);
   document.body.style.overflow = '';
+  document.body.classList.remove('has-open-modal');
 });
 </script>
 

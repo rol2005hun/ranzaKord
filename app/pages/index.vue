@@ -4,7 +4,7 @@ definePageMeta({
 });
 
 const { t } = useI18n();
-useHead({ title: t('core.nav.home') });
+useHead({ title: () => t('core.nav.home') });
 </script>
 
 <template>

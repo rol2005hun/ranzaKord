@@ -31,7 +31,7 @@ mockNuxtImport('usePlayer', () => {
   });
 });
 
-const mockRoute = { params: { id: 'p1' } };
+const mockRoute = { params: { id: 'p1' }, meta: {} };
 
 mockNuxtImport('useRoute', () => () => mockRoute);
 mockNuxtImport('navigateTo', () => mockNavigateTo);

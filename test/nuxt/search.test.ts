@@ -27,7 +27,8 @@ mockNuxtImport('useSearch', () => {
 });
 
 const mockRoute = {
-  query: { q: '', type: '' }
+  query: { q: '', type: '' },
+  meta: {}
 };
 const mockRouter = {
   replace: vi.fn(),

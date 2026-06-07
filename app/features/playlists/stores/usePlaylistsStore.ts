@@ -2,7 +2,10 @@ import type {
   PlaylistSummary,
   PlaylistDetail,
   CreatePlaylistPayload,
-  PlaylistDetailQuery
+  PlaylistDetailQuery,
+  ImportResult,
+  FailedTrack,
+  SkippedTrackEntry
 } from '../types/playlists.types';
 import type { Track } from '../../player/types/player.types';
 import type { SearchResult } from '@/features/search/types/search.types';
@@ -14,6 +17,9 @@ export const usePlaylistsStore = defineStore('playlists', () => {
   const error = ref<string | null>(null);
   const importProgress = ref<{ current: number; total: number } | null>(null);
   const importCancelled = ref(false);
+  const importResult = ref<ImportResult | null>(null);
+  const importingUrl = ref<string | null>(null);
+  const importingPlatform = ref<'youtube' | 'spotify' | null>(null);
   const { t } = useI18n();
 
   function isTrackInPlaylist(playlistId: string, videoId: string): boolean {
@@ -162,12 +168,29 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     return parts.map((name) => ({ name }));
   }
 
+  function clearImportResult(): void {
+    importResult.value = null;
+  }
+
   async function importPlaylist(
     url: string,
     platform: 'youtube' | 'spotify'
   ): Promise<PlaylistSummary | null> {
     try {
       importProgress.value = { current: 0, total: 0 };
+      importResult.value = null;
+      importingUrl.value = url;
+      importingPlatform.value = platform;
+
+      let successCount = 0;
+      let failedCount = 0;
+      let skippedCount = 0;
+      let alreadyExistsCount = 0;
+      const successTracks: import('../types/playlists.types').SuccessTrack[] = [];
+      const failedTracks: FailedTrack[] = [];
+      const skippedTracks: SkippedTrackEntry[] = [];
+      const alreadyExistsTracks: SkippedTrackEntry[] = [];
+
       const result = await $fetch<{
         name: string;
         description: string;
@@ -202,23 +225,93 @@ export const usePlaylistsStore = defineStore('playlists', () => {
           .trim();
       };
 
+      const primaryArtist = (artist: string): string => {
+        return normalizeString(artist.split(/\s+feat\.\s+|\s+ft\.\s+|\s+&\s+|,\s*/i)[0] ?? artist);
+      };
+
+      const trackKey = (title: string, artist: string): string =>
+        `${normalizeString(title)}|${primaryArtist(artist)}`;
+
       const playlistDetail = await fetchDetail(targetPlaylist.id);
       const existingTrackIds = new Set(
         playlistDetail?.tracks.map((t) => t.videoId) || targetPlaylist.trackIds || []
       );
-      const existingTrackKeys = new Set(
-        playlistDetail?.tracks.map(
-          (t) => `${normalizeString(t.title)}|${normalizeString(t.artist)}`
-        ) || []
+      const existingKeyToTrack = new Map(
+        (playlistDetail?.tracks ?? []).map((t) => [
+          trackKey(t.title, t.artist),
+          { title: t.title, artist: t.artist, thumbnailUrl: t.thumbnailUrl, videoId: t.videoId }
+        ])
       );
+      const initialTrackKeys = new Set(existingKeyToTrack.keys());
+      const importedTrackKeys = new Set<string>();
+      const processedIncomingKeys = new Set<string>();
 
       for (let i = 0; i < result.tracks.length; i++) {
         if (importCancelled.value) break;
         importProgress.value = { current: i + 1, total: result.tracks.length };
         let track = result.tracks[i] as Track;
+        const originalTitle = track.title;
+        const originalArtist = track.artist;
 
-        const incomingKey = `${normalizeString(track.title)}|${normalizeString(track.artist)}`;
-        if (existingTrackKeys.has(incomingKey)) {
+        const incomingKey = trackKey(track.title, track.artist);
+
+        if (processedIncomingKeys.has(incomingKey)) {
+          skippedCount++;
+          skippedTracks.push({
+            incoming: {
+              title: track.title,
+              artist: track.artist,
+              thumbnailUrl: track.thumbnailUrl,
+              videoId: track.videoId
+            },
+            existing: existingKeyToTrack.get(incomingKey) || {
+              title: track.title,
+              artist: track.artist,
+              thumbnailUrl: track.thumbnailUrl,
+              videoId: track.videoId
+            }
+          });
+          continue;
+        }
+        processedIncomingKeys.add(incomingKey);
+
+        if (initialTrackKeys.has(incomingKey)) {
+          alreadyExistsCount++;
+          const existingTrack = existingKeyToTrack.get(incomingKey) || {
+            title: track.title,
+            artist: track.artist,
+            thumbnailUrl: track.thumbnailUrl,
+            videoId: track.videoId
+          };
+          alreadyExistsTracks.push({
+            incoming: {
+              title: track.title,
+              artist: track.artist,
+              thumbnailUrl: track.thumbnailUrl,
+              videoId: track.videoId
+            },
+            existing: existingTrack
+          });
+          continue;
+        }
+
+        if (importedTrackKeys.has(incomingKey)) {
+          // This should technically never be hit now due to processedIncomingKeys, but keeping it for safety
+          skippedCount++;
+          skippedTracks.push({
+            incoming: {
+              title: track.title,
+              artist: track.artist,
+              thumbnailUrl: track.thumbnailUrl,
+              videoId: track.videoId
+            },
+            existing: {
+              title: track.title,
+              artist: track.artist,
+              thumbnailUrl: track.thumbnailUrl,
+              videoId: track.videoId
+            }
+          });
           continue;
         }
 
@@ -231,6 +324,8 @@ export const usePlaylistsStore = defineStore('playlists', () => {
             if (searchRes && searchRes.length > 0) {
               const ytTrack = searchRes[0];
               if (!ytTrack) {
+                failedCount++;
+                failedTracks.push({ title: originalTitle, artist: originalArtist });
                 continue;
               }
               const resolvedArtist = ytTrack.artist || track.artist;
@@ -249,40 +344,75 @@ export const usePlaylistsStore = defineStore('playlists', () => {
                 durationSeconds: ytTrack.durationSeconds ?? 0
               };
             } else {
+              failedCount++;
+              failedTracks.push({ title: originalTitle, artist: originalArtist });
               continue;
             }
           } catch (e) {
             console.error(`Search failed for ${searchQuery}`, e);
+            failedCount++;
+            failedTracks.push({ title: originalTitle, artist: originalArtist });
             continue;
           }
         }
 
-        const resolvedKey = `${normalizeString(track.title)}|${normalizeString(track.artist)}`;
+        const resolvedKey = trackKey(track.title, track.artist);
         if (
           track.videoId &&
           !existingTrackIds.has(track.videoId) &&
-          !existingTrackKeys.has(resolvedKey)
+          !initialTrackKeys.has(resolvedKey) &&
+          !importedTrackKeys.has(resolvedKey)
         ) {
-          await addTrack(targetPlaylist.id, {
-            videoId: track.videoId,
-            title: track.title,
-            artist: track.artist,
-            artistId: track.artistId,
-            artists: track.artists ?? [],
-            thumbnailUrl: track.thumbnailUrl,
-            durationMs: track.durationSeconds * 1000
-          });
-          existingTrackIds.add(track.videoId);
-          existingTrackKeys.add(resolvedKey);
+          try {
+            await addTrack(targetPlaylist.id, {
+              videoId: track.videoId,
+              title: track.title,
+              artist: track.artist,
+              artistId: track.artistId,
+              artists: track.artists ?? [],
+              thumbnailUrl: track.thumbnailUrl,
+              durationMs: track.durationSeconds * 1000
+            });
+            existingTrackIds.add(track.videoId);
+            importedTrackKeys.add(resolvedKey);
+            successCount++;
+            successTracks.push({
+              title: track.title,
+              artist: track.artist,
+              thumbnailUrl: track.thumbnailUrl
+            });
+          } catch {
+            failedCount++;
+            failedTracks.push({ title: originalTitle, artist: originalArtist });
+          }
+        } else if (!track.videoId) {
+          failedCount++;
+          failedTracks.push({ title: originalTitle, artist: originalArtist });
+        } else {
+          skippedCount++;
         }
       }
 
       importCancelled.value = false;
       importProgress.value = null;
+      importingUrl.value = null;
+      importingPlatform.value = null;
+      importResult.value = {
+        success: successCount,
+        failed: failedCount,
+        skipped: skippedCount,
+        alreadyExists: alreadyExistsCount,
+        successTracks,
+        failedTracks,
+        skippedTracks,
+        alreadyExistsTracks
+      };
       return targetPlaylist;
     } catch {
       importCancelled.value = false;
       importProgress.value = null;
+      importingUrl.value = null;
+      importingPlatform.value = null;
       error.value = t('playlists.errors.import') || 'Failed to import playlist';
       return null;
     }
@@ -298,6 +428,9 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     error,
     importProgress,
     importCancelled,
+    importResult,
+    importingUrl,
+    importingPlatform,
     isTrackInPlaylist,
     isTrackInAnyPlaylist,
     fetchAll,
@@ -306,6 +439,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     remove,
     addTrack,
     cancelImport,
+    clearImportResult,
     removeTrack,
     fetchDetail,
     importPlaylist

@@ -94,6 +94,22 @@ onMounted(async () => {
       <ClientOnly>
         <AppUpdateModal v-model="showUpdateModal" />
       </ClientOnly>
+
+      <div class="app-version-overlay">v{{ useRuntimeConfig().public.appVersion }}</div>
     </div>
   </NuxtErrorBoundary>
 </template>
+
+<style scoped>
+.app-version-overlay {
+  position: fixed;
+  bottom: 8px;
+  right: 8px;
+  z-index: 9999;
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  opacity: 0.4;
+  pointer-events: none;
+  font-family: monospace;
+}
+</style>

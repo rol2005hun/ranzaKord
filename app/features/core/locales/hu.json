@@ -20,7 +20,9 @@
   "actions": {
     "cancel": "Mégsem",
     "stop": "Leállít",
-    "save": "Mentés"
+    "save": "Mentés",
+    "close": "Bezárás",
+    "back": "Vissza"
   },
   "musicDetail": {
     "titleColumn": "Cím",

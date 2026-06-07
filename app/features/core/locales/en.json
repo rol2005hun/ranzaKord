@@ -20,7 +20,9 @@
   "actions": {
     "cancel": "Cancel",
     "stop": "Stop",
-    "save": "Save"
+    "save": "Save",
+    "close": "Close",
+    "back": "Back"
   },
   "musicDetail": {
     "titleColumn": "Title",

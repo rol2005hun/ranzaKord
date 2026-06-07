@@ -52,3 +52,30 @@ export interface CreatePlaylistPayload {
   description: string;
   imageUrl: string;
 }
+
+export interface FailedTrack {
+  title: string;
+  artist: string;
+}
+
+export interface SkippedTrackEntry {
+  incoming: { title: string; artist: string; thumbnailUrl?: string; videoId?: string };
+  existing: { title: string; artist: string; thumbnailUrl?: string; videoId?: string };
+}
+
+export interface SuccessTrack {
+  title: string;
+  artist: string;
+  thumbnailUrl?: string;
+}
+
+export interface ImportResult {
+  success: number;
+  failed: number;
+  skipped: number;
+  alreadyExists: number;
+  successTracks: SuccessTrack[];
+  failedTracks: FailedTrack[];
+  skippedTracks: SkippedTrackEntry[];
+  alreadyExistsTracks: SkippedTrackEntry[];
+}

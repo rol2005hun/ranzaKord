@@ -17,6 +17,15 @@
   }
 }
 
+body.has-open-modal {
+  overflow: hidden;
+
+  .music-layout__main,
+  .layout__main {
+    overflow: hidden !important;
+  }
+}
+
 .music-page__empty {
   display: flex;
   flex-direction: column;

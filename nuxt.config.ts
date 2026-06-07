@@ -1,3 +1,5 @@
+import pkg from './package.json' with { type: 'json' };
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
 
@@ -53,10 +55,10 @@ export default defineNuxtConfig({
     ranzakonnectDomain: '',
     ranzakonnectClientId: '',
     ranzakonnectClientSecret: '',
-    youtubeOauthToken: '',
     imgurClientId: '',
     public: {
-      baseUrl: ''
+      baseUrl: '',
+      appVersion: pkg.version
     }
   },
 

@@ -15,7 +15,8 @@ mockNuxtImport('useAuth', () => {
   return () => ({
     loginWithRanzaKonnect: mockLoginWithRanzaKonnect,
     isAuthenticated: mockIsAuthenticated,
-    isTauri: ref(false)
+    isTauri: ref(false),
+    fetchUser: vi.fn()
   });
 });
 
