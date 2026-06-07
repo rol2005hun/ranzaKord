@@ -274,9 +274,7 @@ function onPlay(track: SearchResult) {
 
 <style lang="scss" scoped>
 .search-page {
-  padding: var(--space-6) var(--space-8);
-  max-width: 1600px;
-  margin: 0 auto;
+  padding: var(--space-8);
 
   &__header {
     margin-bottom: var(--space-6);

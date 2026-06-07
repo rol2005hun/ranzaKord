@@ -27,7 +27,10 @@ try {
       'Do NOT copy it from the terminal directly, as terminals often insert hidden spaces or newlines that break the token!'
     );
     console.log(
-      '\nPaste the contents of that file into your Netlify environment variables as NUXT_YOUTUBE_OAUTH_TOKEN.\n'
+      '\nPaste the contents of that file into your Netlify environment variables as NUXT_YOUTUBE_OAUTH_TOKEN.'
+    );
+    console.log(
+      '🎉 Good news: Because of MongoDB integration, you only ever have to do this ONCE. The app will auto-refresh and save the token to the database before it expires!\n'
     );
     process.exit(0);
   });

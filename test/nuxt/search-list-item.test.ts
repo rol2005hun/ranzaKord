@@ -41,7 +41,7 @@ describe('SearchListItem', () => {
     global: {
       plugins: [createTestingPinia({ createSpy: vi.fn })],
       stubs: {
-        NuxtLink: true,
+        NuxtLink: { template: '<a><slot /></a>' },
         AppIcon: true,
         AddToPlaylistPopup: true
       },

@@ -19,6 +19,7 @@
   },
   "actions": {
     "cancel": "Cancel",
+    "stop": "Stop",
     "save": "Save"
   },
   "musicDetail": {

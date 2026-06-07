@@ -39,5 +39,14 @@
     "update": "Failed to update playlist",
     "delete": "Failed to delete playlist"
   },
-  "myPlaylist": "My Playlist"
+  "myPlaylist": "My Playlist",
+  "sort": {
+    "default": "Default Order",
+    "titleAsc": "Title (A-Z)",
+    "titleDesc": "Title (Z-A)",
+    "durationAsc": "Duration (Shortest)",
+    "durationDesc": "Duration (Longest)",
+    "dateDesc": "Date Added (Newest)",
+    "dateAsc": "Date Added (Oldest)"
+  }
 }

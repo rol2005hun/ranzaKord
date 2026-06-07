@@ -19,11 +19,17 @@ export interface MusicTrack {
   isPlaying?: boolean;
 }
 
+export interface PlaylistTrackArtist {
+  name: string;
+  channelId?: string;
+}
+
 export interface PlaylistTrack {
   videoId: string;
   title: string;
   artist: string;
   artistId?: string;
+  artists?: PlaylistTrackArtist[];
   thumbnailUrl: string;
   durationMs: number;
   addedAt: string;
@@ -36,6 +42,9 @@ export interface PlaylistDetail extends PlaylistSummary {
 export interface PlaylistDetailQuery {
   limit?: number;
   offset?: number;
+  sortBy?: string;
+  sortOrder?: string;
+  search?: string;
 }
 
 export interface CreatePlaylistPayload {

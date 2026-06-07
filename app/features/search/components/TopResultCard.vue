@@ -23,6 +23,18 @@ const isPlaying = computed(() => isCurrentlyPlaying.value && playerStore.isPlayi
 const emit = defineEmits<{
   (e: 'play', result: SearchResult): void;
 }>();
+
+function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
+  if (result.artists && result.artists.length > 0) return result.artists;
+  if (!result.artist) return [];
+  const separatorRe = /,\s*|\s+feat\.\s+|\s+ft\.\s+|\s+&\s+/i;
+  const parts = result.artist
+    .split(separatorRe)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (parts.length <= 1) return [];
+  return parts.map((name) => ({ name }));
+}
 </script>
 
 <template>
@@ -63,14 +75,37 @@ const emit = defineEmits<{
         </h2>
         <div class="top-result-card__meta">
           <span v-if="props.result.type !== 'artist'" class="top-result-card__artist">
-            <NuxtLink
-              v-if="props.result.artistId"
-              :to="`/artist/${props.result.artistId}`"
-              class="artist-link"
-              @click.stop>
-              {{ props.result.artist }}
-            </NuxtLink>
-            <span v-else>{{ props.result.artist }}</span>
+            <template v-if="resolveArtists(props.result).length > 0">
+              <template v-for="(artist, index) in resolveArtists(props.result)" :key="index">
+                <NuxtLink
+                  :to="
+                    artist.id
+                      ? `/artist/${artist.id}`
+                      : `/search?q=${encodeURIComponent(artist.name)}&type=artist`
+                  "
+                  class="artist-link"
+                  @click.stop>
+                  {{ artist.name }}
+                </NuxtLink>
+                <span v-if="index < resolveArtists(props.result).length - 1">,&nbsp;</span>
+              </template>
+            </template>
+            <template v-else>
+              <NuxtLink
+                v-if="props.result.artistId"
+                :to="`/artist/${props.result.artistId}`"
+                class="artist-link"
+                @click.stop>
+                {{ props.result.artist }}
+              </NuxtLink>
+              <NuxtLink
+                v-else-if="props.result.artist"
+                :to="`/search?q=${encodeURIComponent(props.result.artist)}&type=artist`"
+                class="artist-link"
+                @click.stop>
+                {{ props.result.artist }}
+              </NuxtLink>
+            </template>
           </span>
           <span class="top-result-card__badge">{{ props.result.type }}</span>
         </div>
@@ -113,14 +148,37 @@ const emit = defineEmits<{
         </h2>
         <div class="top-result-card__meta">
           <span v-if="props.result.type !== 'artist'" class="top-result-card__artist">
-            <NuxtLink
-              v-if="props.result.artistId"
-              :to="`/artist/${props.result.artistId}`"
-              class="artist-link"
-              @click.stop>
-              {{ props.result.artist }}
-            </NuxtLink>
-            <span v-else>{{ props.result.artist }}</span>
+            <template v-if="resolveArtists(props.result).length > 0">
+              <template v-for="(artist, index) in resolveArtists(props.result)" :key="index">
+                <NuxtLink
+                  :to="
+                    artist.id
+                      ? `/artist/${artist.id}`
+                      : `/search?q=${encodeURIComponent(artist.name)}&type=artist`
+                  "
+                  class="artist-link"
+                  @click.stop>
+                  {{ artist.name }}
+                </NuxtLink>
+                <span v-if="index < resolveArtists(props.result).length - 1">,&nbsp;</span>
+              </template>
+            </template>
+            <template v-else>
+              <NuxtLink
+                v-if="props.result.artistId"
+                :to="`/artist/${props.result.artistId}`"
+                class="artist-link"
+                @click.stop>
+                {{ props.result.artist }}
+              </NuxtLink>
+              <NuxtLink
+                v-else-if="props.result.artist"
+                :to="`/search?q=${encodeURIComponent(props.result.artist)}&type=artist`"
+                class="artist-link"
+                @click.stop>
+                {{ props.result.artist }}
+              </NuxtLink>
+            </template>
           </span>
           <span class="top-result-card__badge">{{ props.result.type }}</span>
         </div>

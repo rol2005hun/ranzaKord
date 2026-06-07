@@ -1,11 +1,17 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
+export interface TrackItemArtist {
+  name: string;
+  channelId?: string;
+}
+
 export interface TrackListItem {
   id: string;
   title: string;
   artist: string;
   artistId?: string;
+  artists?: TrackItemArtist[];
   thumbnailUrl?: string | null;
   durationSeconds: number;
   addedAt?: string;
@@ -28,6 +34,9 @@ interface Props {
   columns?: TrackListColumn[];
   showThumbnails?: boolean;
   itemHeight?: number;
+  isLoading?: boolean;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -38,12 +47,52 @@ const props = withDefaults(defineProps<Props>(), {
   columns: () => ['index', 'title', 'time'],
   showThumbnails: false,
   virtual: false,
-  itemHeight: 56
+  itemHeight: 56,
+  isLoading: false,
+  sortBy: '',
+  sortOrder: 'asc'
 });
 
 const emit = defineEmits<{
   (e: 'play' | 'remove', track: TrackListItem, index: number): void;
+  (e: 'sort', by: string, order: 'asc' | 'desc'): void;
 }>();
+
+function handleSort(column: string): void {
+  if (props.sortBy === column) {
+    if (props.sortOrder === 'asc') {
+      emit('sort', column, 'desc');
+    } else {
+      emit('sort', '', 'asc');
+    }
+  } else {
+    emit('sort', column, 'asc');
+  }
+}
+
+function resolveArtists(track: TrackListItem): TrackItemArtist[] {
+  const separatorRe = /,\s*|\s+feat\.\s+|\s+ft\.\s+|\s+&\s+/i;
+  const parts = (track.artist || '')
+    .split(separatorRe)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  if (track.artists && track.artists.length > 0) {
+    if (parts.length > track.artists.length) {
+      const merged = [...track.artists];
+      for (const part of parts) {
+        if (!merged.find((a) => a.name.toLowerCase() === part.toLowerCase())) {
+          merged.push({ name: part });
+        }
+      }
+      return merged;
+    }
+    return track.artists;
+  }
+
+  if (parts.length <= 1) return [];
+  return parts.map((name) => ({ name }));
+}
 
 const hasDateColumn = computed(() => props.columns.includes('date'));
 const hasActionColumn = computed(() => props.columns.includes('action'));
@@ -79,12 +128,33 @@ function formatDate(dateStr?: string): string {
   <div class="app-track-list">
     <div class="app-track-list__header" :style="{ gridTemplateColumns: gridColumns }">
       <div class="app-track-list__col-index">#</div>
-      <div class="app-track-list__col-title">{{ $t('core.musicDetail.titleColumn', 'CÍM') }}</div>
-      <div v-if="hasDateColumn" class="app-track-list__col-date">
-        {{ $t('playlists.addedAt', 'Dátum') }}
+      <div
+        class="app-track-list__col-title app-track-list__col-sortable"
+        @click="handleSort('title')">
+        {{ $t('core.musicDetail.titleColumn', 'CÍM') }}
+        <AppIcon
+          v-if="sortBy === 'title'"
+          :name="sortOrder === 'asc' ? 'ph:arrow-up' : 'ph:arrow-down'"
+          class="app-track-list__sort-icon" />
       </div>
-      <div class="app-track-list__col-time">
+      <div
+        v-if="hasDateColumn"
+        class="app-track-list__col-date app-track-list__col-sortable"
+        @click="handleSort('date')">
+        {{ $t('playlists.addedAt', 'Dátum') }}
+        <AppIcon
+          v-if="sortBy === 'date'"
+          :name="sortOrder === 'asc' ? 'ph:arrow-up' : 'ph:arrow-down'"
+          class="app-track-list__sort-icon" />
+      </div>
+      <div
+        class="app-track-list__col-time app-track-list__col-sortable"
+        @click="handleSort('duration')">
         <AppIcon name="ph:clock" />
+        <AppIcon
+          v-if="sortBy === 'duration'"
+          :name="sortOrder === 'asc' ? 'ph:arrow-up' : 'ph:arrow-down'"
+          class="app-track-list__sort-icon" />
       </div>
       <div v-if="hasActionColumn" class="app-track-list__col-action"></div>
     </div>
@@ -166,14 +236,26 @@ function formatDate(dateStr?: string): string {
                     {{ track.title }}
                   </span>
                   <div class="app-track-list__track-artist">
-                    <NuxtLink
-                      v-if="track.artistId"
-                      :to="`/artist/${track.artistId}`"
-                      class="artist-link"
-                      @click.stop>
-                      {{ track.artist }}
-                    </NuxtLink>
-                    <span v-else>{{ track.artist }}</span>
+                    <template v-if="resolveArtists(track).length > 0">
+                      <!-- prettier-ignore -->
+                      <span class="artists-list"><template v-for="(a, i) in resolveArtists(track)" :key="a.name"><NuxtLink :to="a.channelId ? `/artist/${a.channelId}` : `/search?q=${encodeURIComponent(a.name)}&type=artist`" class="artist-link" @click.stop>{{ a.name }}</NuxtLink><template v-if="i < resolveArtists(track).length - 1">, </template></template></span>
+                    </template>
+                    <template v-else>
+                      <NuxtLink
+                        v-if="track.artistId"
+                        :to="`/artist/${track.artistId}`"
+                        class="artist-link"
+                        @click.stop>
+                        {{ track.artist }}
+                      </NuxtLink>
+                      <NuxtLink
+                        v-else-if="track.artist"
+                        :to="`/search?q=${encodeURIComponent(track.artist)}&type=artist`"
+                        class="artist-link"
+                        @click.stop>
+                        {{ track.artist }}
+                      </NuxtLink>
+                    </template>
                   </div>
                 </div>
               </div>
@@ -244,14 +326,26 @@ function formatDate(dateStr?: string): string {
               {{ track.title }}
             </span>
             <div class="app-track-list__track-artist">
-              <NuxtLink
-                v-if="track.artistId"
-                :to="`/artist/${track.artistId}`"
-                class="artist-link"
-                @click.stop>
-                {{ track.artist }}
-              </NuxtLink>
-              <span v-else>{{ track.artist }}</span>
+              <template v-if="resolveArtists(track).length > 0">
+                <!-- prettier-ignore -->
+                <span class="artists-list"><template v-for="(a, i) in resolveArtists(track)" :key="a.name"><NuxtLink :to="a.channelId ? `/artist/${a.channelId}` : `/search?q=${encodeURIComponent(a.name)}&type=artist`" class="artist-link" @click.stop>{{ a.name }}</NuxtLink><template v-if="i < resolveArtists(track).length - 1">, </template></template></span>
+              </template>
+              <template v-else>
+                <NuxtLink
+                  v-if="track.artistId"
+                  :to="`/artist/${track.artistId}`"
+                  class="artist-link"
+                  @click.stop>
+                  {{ track.artist }}
+                </NuxtLink>
+                <NuxtLink
+                  v-else-if="track.artist"
+                  :to="`/search?q=${encodeURIComponent(track.artist)}&type=artist`"
+                  class="artist-link"
+                  @click.stop>
+                  {{ track.artist }}
+                </NuxtLink>
+              </template>
             </div>
           </div>
         </div>
@@ -273,6 +367,27 @@ function formatDate(dateStr?: string): string {
           </button>
         </div>
       </div>
+      <template v-if="isLoading">
+        <div
+          v-for="i in 3"
+          :key="`normal-skel-${i}`"
+          class="app-track-list__track app-track-list__track--skeleton"
+          :style="{ height: `${itemHeight}px`, gridTemplateColumns: gridColumns }">
+          <div class="app-track-list__track-num-wrapper">
+            <div class="skeleton-box" style="height: 14px; width: 16px"></div>
+          </div>
+          <div class="app-track-list__track-info">
+            <div v-if="showThumbnails" class="app-track-list__track-thumb skeleton-box"></div>
+            <div class="app-track-list__track-text">
+              <div class="skeleton-box" style="height: 16px; width: 60%"></div>
+              <div class="skeleton-box" style="height: 12px; width: 40%; margin-top: 4px"></div>
+            </div>
+          </div>
+          <div v-if="hasDateColumn" class="skeleton-box" style="height: 14px; width: 80px"></div>
+          <div class="skeleton-box" style="height: 14px; width: 40px"></div>
+          <div v-if="hasActionColumn"></div>
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -307,12 +422,28 @@ function formatDate(dateStr?: string): string {
     text-align: center;
   }
 
-  &__col-title {
-    margin-left: 52px;
+  &__col-sortable {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    cursor: pointer;
+    user-select: none;
+    transition: color var(--transition-fast);
+
+    &:hover {
+      color: var(--color-text-primary);
+    }
+  }
+
+  &__sort-icon {
+    font-size: 0.8em;
+    flex-shrink: 0;
   }
 
   &__col-time {
     display: flex;
+    align-items: center;
+    gap: var(--space-1);
   }
 
   &__virtual-container {
@@ -321,8 +452,8 @@ function formatDate(dateStr?: string): string {
     height: 100%;
     z-index: 1;
     overflow-y: auto;
-    /* Make scrollbar hidden if needed, or let it scroll naturally */
     scrollbar-width: none;
+
     &::-webkit-scrollbar {
       display: none;
     }

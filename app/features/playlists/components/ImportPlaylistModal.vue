@@ -42,13 +42,23 @@ async function handleImport() {
     isImporting.value = false;
   }
 }
+
+function handleClose(): void {
+  emit('close');
+}
+
+function handleCancel(): void {
+  store.cancelImport();
+  isImporting.value = false;
+  emit('close');
+}
 </script>
 
 <template>
   <AppModal
     :model-value="open"
     :title="$t('playlists.importPlaylist')"
-    @update:model-value="!isImporting && emit('close')">
+    @update:model-value="handleClose">
     <div class="import-modal__content">
       <div class="import-modal__fields">
         <div class="import-modal__field">
@@ -70,9 +80,8 @@ async function handleImport() {
       <div class="import-modal__actions">
         <button
           class="import-modal__button import-modal__button--secondary"
-          :disabled="isImporting"
-          @click="emit('close')">
-          {{ $t('core.actions.cancel') }}
+          @click="isImporting ? handleCancel() : handleClose()">
+          {{ isImporting ? $t('core.actions.stop') : $t('core.actions.cancel') }}
         </button>
         <button
           class="import-modal__button import-modal__button--primary"

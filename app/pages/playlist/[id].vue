@@ -23,15 +23,48 @@ const isDeleting = ref(false);
 const showEditModal = ref(false);
 const showDeleteConfirm = ref(false);
 
+const searchQuery = ref('');
+const debouncedSearch = ref('');
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+watch(searchQuery, (newVal) => {
+  if (searchTimeout) clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    debouncedSearch.value = newVal;
+  }, 300);
+});
+
+onBeforeUnmount(() => {
+  if (searchTimeout) clearTimeout(searchTimeout);
+});
+
+onUnmounted(() => {
+  clearNuxtData(`playlist-${id.value}`);
+});
+
+const sortBy = ref<string>('');
+const sortOrder = ref<'asc' | 'desc'>('asc');
+
+function onSort(by: string, order: 'asc' | 'desc'): void {
+  sortBy.value = by;
+  sortOrder.value = order;
+}
+
 const { data, status, refresh } = await useAsyncData<PlaylistDetail | null>(
-  () => `playlist-${id.value}`,
+  `playlist-${id.value}`,
   async () => {
     if (!id.value) return null;
-    return await store.fetchDetail(id.value, { limit: CHUNK_SIZE, offset: 0 });
+    return await store.fetchDetail(id.value, {
+      limit: CHUNK_SIZE,
+      offset: 0,
+      sortBy: sortBy.value || undefined,
+      sortOrder: sortOrder.value,
+      search: debouncedSearch.value || undefined
+    });
   },
   {
     lazy: true,
-    watch: [id]
+    watch: [id, sortBy, sortOrder, debouncedSearch]
   }
 );
 
@@ -39,14 +72,20 @@ watchEffect(() => {
   if (data.value) {
     playlist.value = data.value;
   }
-  isLoading.value = status.value === 'pending';
+  isLoading.value = status.value === 'pending' && !playlist.value;
 });
 
 const trackCount = computed(() => playlist.value?.trackCount ?? 0);
 
 async function fetchChunk(offset: number, limit: number): Promise<PlaylistTrack[]> {
   if (!id.value) return [];
-  const result = await store.fetchDetail(id.value, { limit, offset });
+  const result = await store.fetchDetail(id.value, {
+    limit,
+    offset,
+    sortBy: sortBy.value || undefined,
+    sortOrder: sortOrder.value,
+    search: debouncedSearch.value || undefined
+  });
   return result?.tracks ?? [];
 }
 
@@ -79,6 +118,32 @@ function setContainerRef(el: Element | ComponentPublicInstance | null) {
   containerRef.value = el as HTMLElement | null;
 }
 
+watch(debouncedSearch, () => {
+  if (containerRef.value) {
+    const scrollArea = containerRef.value.closest('.music-page__scroll-area');
+    if (scrollArea) {
+      scrollArea.scrollTop = 0;
+    }
+  }
+});
+
+function focusSearch() {
+  if (containerRef.value) {
+    const scrollArea = containerRef.value.closest('.music-page__scroll-area');
+    if (scrollArea) {
+      scrollArea.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+  setTimeout(() => {
+    const searchInput = document.querySelector(
+      '.playlist-page__search-input'
+    ) as HTMLInputElement | null;
+    if (searchInput) {
+      searchInput.focus();
+    }
+  }, 100);
+}
+
 useHead({
   title: computed(() => playlist.value?.name || 'Playlist')
 });
@@ -105,6 +170,12 @@ function playAll(): void {
     title: t.title,
     artist: t.artist,
     artistId: t.artistId,
+    artists: t.artists?.length
+      ? t.artists.map((a) => ({ name: a.name, id: a.channelId }))
+      : t.artist
+          .split(/,\s*|\s+feat\.\s+|\s+ft\.\s+|\s+&\s+/i)
+          .map((s) => ({ name: s.trim() }))
+          .filter((a) => a.name),
     thumbnailUrl: t.thumbnailUrl,
     durationSeconds: Math.round(t.durationMs / 1000)
   }));
@@ -118,8 +189,13 @@ function onPlaySong(track: TrackListItem, index: number): void {
     videoId: t.videoId,
     title: t.title,
     artist: t.artist,
-    artists: [],
     artistId: t.artistId,
+    artists: t.artists?.length
+      ? t.artists.map((a) => ({ name: a.name, id: a.channelId }))
+      : t.artist
+          .split(/,\s*|\s+feat\.\s+|\s+ft\.\s+|\s+&\s+/i)
+          .map((s) => ({ name: s.trim() }))
+          .filter((a) => a.name),
     thumbnailUrl: t.thumbnailUrl,
     durationSeconds: Math.round(t.durationMs / 1000)
   }));
@@ -152,6 +228,7 @@ const mappedVisibleItems = computed(() => {
           title: item.track.title,
           artist: item.track.artist,
           artistId: item.track.artistId,
+          artists: item.track.artists ?? [],
           thumbnailUrl: item.track.thumbnailUrl,
           durationSeconds: Math.round(item.track.durationMs / 1000),
           addedAt: item.track.addedAt,
@@ -190,15 +267,39 @@ async function onDelete(): Promise<void> {
       @play-all="playAll"
       @scroll="onScroll">
       <template #meta>
-        <span
-          v-if="playlist?.description && typeof playlist.description === 'string'"
-          class="playlist-page__description">
+        <span v-if="playlist?.description" class="playlist-page__description">
           {{ playlist.description }}
         </span>
-        <span v-if="playlist?.description && typeof playlist.description === 'string'">•</span>
+        <span v-if="playlist?.description">•</span>
         <span class="playlist-page__count">
           {{ $t('playlists.trackCount', { count: playlist?.trackCount ?? 0 }) }}
         </span>
+      </template>
+
+      <template #center-header>
+        <div
+          v-if="(playlist?.trackCount ?? 0) > 0 || debouncedSearch"
+          class="playlist-page__search-bar">
+          <AppIcon name="ph:magnifying-glass" class="playlist-page__search-icon" />
+          <input
+            v-model="searchQuery"
+            type="text"
+            :placeholder="$t('search.placeholder')"
+            class="playlist-page__search-input" />
+
+          <div class="playlist-page__search-actions">
+            <div v-if="status === 'pending' && playlist" class="playlist-page__inline-loader">
+              <AppIcon name="ph:spinner-gap" class="spin" />
+            </div>
+            <button
+              v-if="searchQuery"
+              class="playlist-page__search-clear"
+              :aria-label="$t('search.clear')"
+              @click="searchQuery = ''">
+              <AppIcon name="ph:x" />
+            </button>
+          </div>
+        </div>
       </template>
 
       <template #sticky-subtitle>
@@ -206,6 +307,12 @@ async function onDelete(): Promise<void> {
       </template>
 
       <template #sticky-actions>
+        <button
+          class="playlist-page__action-btn"
+          :title="$t('search.placeholder')"
+          @click="focusSearch">
+          <AppIcon name="ph:magnifying-glass" />
+        </button>
         <button
           class="playlist-page__action-btn"
           :title="$t('playlists.editPlaylist')"
@@ -238,9 +345,12 @@ async function onDelete(): Promise<void> {
       </template>
 
       <template #tracks>
-        <template v-if="trackCount === 0 && !isLoading">
+        <template v-if="trackCount === 0 && !isLoading && !debouncedSearch">
           <div class="music-page__empty">
-            <AppIcon name="ph:music-notes-simple-duotone" class="music-page__empty-icon" />
+            <AppIcon
+              name="ph:music-notes-simple-duotone"
+              class="music-page__empty-icon"
+              size="4rem" />
             <p>{{ $t('playlists.emptyPlaylist') }}</p>
             <NuxtLink to="/" class="music-page__empty-btn">
               {{ $t('playlists.discover') }}
@@ -248,7 +358,12 @@ async function onDelete(): Promise<void> {
           </div>
         </template>
         <template v-else>
-          <div :ref="setContainerRef">
+          <div v-if="trackCount === 0 && debouncedSearch" class="music-page__empty">
+            <AppIcon name="ph:magnifying-glass" class="music-page__empty-icon" size="4rem" />
+            <p>{{ $t('search.page.noResultsQuery', { query: debouncedSearch }) }}</p>
+          </div>
+
+          <div v-else :ref="setContainerRef">
             <AppTrackList
               :virtual="true"
               :visible-items="mappedVisibleItems"
@@ -256,8 +371,11 @@ async function onDelete(): Promise<void> {
               :total-height="totalHeight"
               :columns="['index', 'title', 'date', 'time', 'action']"
               :show-thumbnails="true"
+              :sort-by="sortBy"
+              :sort-order="sortOrder"
               @play="onPlaySong"
-              @remove="removeTrackWrapper" />
+              @remove="removeTrackWrapper"
+              @sort="onSort" />
           </div>
         </template>
       </template>
@@ -310,6 +428,7 @@ async function onDelete(): Promise<void> {
 <style scoped lang="scss">
 .playlist-page {
   height: 100%;
+
   &__description {
     max-width: 500px;
     white-space: nowrap;
@@ -412,12 +531,113 @@ async function onDelete(): Promise<void> {
     &--danger {
       background: hsl(0, 65%, 50%);
       color: #fff;
-      --spinner-color: inherit;
+      --spinner-color: currentColor;
 
       &:hover {
         background: hsl(0, 65%, 60%);
       }
     }
+  }
+
+  &__search-bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 400px;
+    z-index: 10;
+  }
+
+  &__search-icon {
+    position: absolute;
+    left: var(--space-4);
+    color: var(--color-text-secondary);
+    font-size: var(--text-lg);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  &__search-input {
+    width: 100%;
+    padding: var(--space-3) calc(var(--space-4) * 2 + 3rem) var(--space-3)
+      calc(var(--space-4) + 1.5rem + var(--space-2));
+    background: color-mix(in srgb, var(--color-surface-raised) 80%, transparent);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    color: var(--color-text-primary);
+    font-size: var(--text-base);
+    font-family: var(--font-sans);
+    outline: none;
+    transition:
+      border-color var(--transition-fast),
+      box-shadow var(--transition-fast),
+      background-color var(--transition-fast);
+
+    &::placeholder {
+      color: var(--color-text-secondary);
+    }
+
+    &:focus {
+      border-color: var(--color-border-focus);
+      box-shadow: 0 0 0 3px var(--color-ring);
+      background: var(--color-surface);
+    }
+
+    &::-webkit-search-cancel-button {
+      display: none;
+    }
+  }
+
+  &__search-actions {
+    position: absolute;
+    right: var(--space-2);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    z-index: 2;
+  }
+
+  &__search-clear {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: var(--color-surface-hover);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    transition:
+      color var(--transition-fast),
+      background var(--transition-fast);
+
+    &:hover {
+      color: var(--color-text-primary);
+      background: var(--color-surface-raised);
+    }
+  }
+
+  &__inline-loader {
+    font-size: 1.5rem;
+    color: var(--color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 

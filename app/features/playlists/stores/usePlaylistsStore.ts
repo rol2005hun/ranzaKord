@@ -13,6 +13,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
   const hasLoaded = ref(false);
   const error = ref<string | null>(null);
   const importProgress = ref<{ current: number; total: number } | null>(null);
+  const importCancelled = ref(false);
   const { t } = useI18n();
 
   function isTrackInPlaylist(playlistId: string, videoId: string): boolean {
@@ -89,6 +90,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
       title: string;
       artist: string;
       artistId?: string;
+      artists?: { name: string; channelId?: string }[];
       thumbnailUrl: string;
       durationMs: number;
     }
@@ -132,12 +134,32 @@ export const usePlaylistsStore = defineStore('playlists', () => {
       if (typeof query?.offset === 'number') {
         searchParams.set('offset', String(query.offset));
       }
+      if (query?.sortBy) {
+        searchParams.set('sortBy', query.sortBy);
+      }
+      if (query?.sortOrder) {
+        searchParams.set('sortOrder', query.sortOrder);
+      }
+      if (query?.search) {
+        searchParams.set('search', query.search);
+      }
 
       const suffix = searchParams.toString() ? `?${searchParams.toString()}` : '';
       return await $fetch<PlaylistDetail>(`/api/playlists/${id}${suffix}`, fetchOptions);
     } catch {
       return null;
     }
+  }
+
+  function splitArtistString(artistStr: string): { name: string; channelId?: string }[] {
+    if (!artistStr) return [];
+    const separatorRe = /,\s*|\s+feat\.\s+|\s+ft\.\s+|\s+&\s+/i;
+    const parts = artistStr
+      .split(separatorRe)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (parts.length <= 1) return [];
+    return parts.map((name) => ({ name }));
   }
 
   async function importPlaylist(
@@ -171,14 +193,34 @@ export const usePlaylistsStore = defineStore('playlists', () => {
         return null;
       }
 
+      const normalizeString = (str: string): string => {
+        return str
+          .toLowerCase()
+          .replace(/\s+/g, ' ')
+          .replace(/[()[\]]/g, '')
+          .replace(/official\s+video|official\s+audio|lyric\s+video|lyrics|video|audio/gi, '')
+          .trim();
+      };
+
       const playlistDetail = await fetchDetail(targetPlaylist.id);
       const existingTrackIds = new Set(
         playlistDetail?.tracks.map((t) => t.videoId) || targetPlaylist.trackIds || []
       );
+      const existingTrackKeys = new Set(
+        playlistDetail?.tracks.map(
+          (t) => `${normalizeString(t.title)}|${normalizeString(t.artist)}`
+        ) || []
+      );
 
       for (let i = 0; i < result.tracks.length; i++) {
+        if (importCancelled.value) break;
         importProgress.value = { current: i + 1, total: result.tracks.length };
         let track = result.tracks[i] as Track;
+
+        const incomingKey = `${normalizeString(track.title)}|${normalizeString(track.artist)}`;
+        if (existingTrackKeys.has(incomingKey)) {
+          continue;
+        }
 
         if (platform === 'spotify') {
           const searchQuery = `${track.title} ${track.artist}`;
@@ -191,12 +233,18 @@ export const usePlaylistsStore = defineStore('playlists', () => {
               if (!ytTrack) {
                 continue;
               }
+              const resolvedArtist = ytTrack.artist || track.artist;
+              const resolvedArtists =
+                ytTrack.artists && ytTrack.artists.length > 0
+                  ? ytTrack.artists.map((a) => ({ name: a.name, channelId: a.id }))
+                  : splitArtistString(resolvedArtist);
               track = {
                 ...track,
                 videoId: ytTrack.id,
                 title: ytTrack.title,
-                artist: ytTrack.artist,
+                artist: resolvedArtist,
                 artistId: ytTrack.artistId,
+                artists: resolvedArtists,
                 thumbnailUrl: ytTrack.thumbnailUrl,
                 durationSeconds: ytTrack.durationSeconds ?? 0
               };
@@ -209,26 +257,39 @@ export const usePlaylistsStore = defineStore('playlists', () => {
           }
         }
 
-        if (track.videoId && !existingTrackIds.has(track.videoId)) {
+        const resolvedKey = `${normalizeString(track.title)}|${normalizeString(track.artist)}`;
+        if (
+          track.videoId &&
+          !existingTrackIds.has(track.videoId) &&
+          !existingTrackKeys.has(resolvedKey)
+        ) {
           await addTrack(targetPlaylist.id, {
             videoId: track.videoId,
             title: track.title,
             artist: track.artist,
             artistId: track.artistId,
+            artists: track.artists ?? [],
             thumbnailUrl: track.thumbnailUrl,
             durationMs: track.durationSeconds * 1000
           });
           existingTrackIds.add(track.videoId);
+          existingTrackKeys.add(resolvedKey);
         }
       }
 
+      importCancelled.value = false;
       importProgress.value = null;
       return targetPlaylist;
     } catch {
+      importCancelled.value = false;
       importProgress.value = null;
       error.value = t('playlists.errors.import') || 'Failed to import playlist';
       return null;
     }
+  }
+
+  function cancelImport(): void {
+    importCancelled.value = true;
   }
 
   return {
@@ -236,6 +297,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     isLoading,
     error,
     importProgress,
+    importCancelled,
     isTrackInPlaylist,
     isTrackInAnyPlaylist,
     fetchAll,
@@ -243,6 +305,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     update,
     remove,
     addTrack,
+    cancelImport,
     removeTrack,
     fetchDetail,
     importPlaylist

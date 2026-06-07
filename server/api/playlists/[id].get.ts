@@ -1,13 +1,19 @@
 import type { H3Event } from 'h3';
 import type { ServerSession } from '../../types/auth.server.types';
 import mongoose from 'mongoose';
-import { PlaylistModel } from '../../models/Playlist';
+import { PlaylistModel, type IPlaylistItem } from '../../models/Playlist';
+
+export interface PlaylistTrackArtist {
+  name: string;
+  channelId?: string;
+}
 
 export interface PlaylistTrackResponse {
   videoId: string;
   title: string;
   artist: string;
   artistId?: string;
+  artists?: PlaylistTrackArtist[];
   thumbnailUrl: string;
   durationMs: number;
   addedAt: string;
@@ -80,25 +86,65 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
   const limitValue = query.limit as unknown;
   const offset = parseNonNegativeInteger(offsetValue) ?? 0;
   const limit = parseNonNegativeInteger(limitValue);
+
+  const sortBy = query.sortBy as string;
+  const sortOrder = (query.sortOrder as string) || 'asc';
+  const search = query.search as string;
+
+  let filteredItems = playlist.items;
+
+  function normalizeText(text: string): string {
+    return text
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+  }
+
+  if (search) {
+    const searchLower = normalizeText(search);
+    filteredItems = playlist.items.filter((item: IPlaylistItem) => {
+      const matchTitle = item.title && normalizeText(item.title).includes(searchLower);
+      const matchArtist = item.artist && normalizeText(item.artist).includes(searchLower);
+      return matchTitle || matchArtist;
+    });
+  }
+
+  if (sortBy) {
+    filteredItems.sort((a: IPlaylistItem, b: IPlaylistItem) => {
+      let comparison = 0;
+      if (sortBy === 'title') {
+        comparison = a.title.localeCompare(b.title, 'hu-HU');
+      } else if (sortBy === 'duration') {
+        comparison = a.durationMs - b.durationMs;
+      } else if (sortBy === 'date') {
+        const timeA = new Date(a.addedAt).getTime();
+        const timeB = new Date(b.addedAt).getTime();
+        comparison = timeA - timeB;
+      }
+      return sortOrder === 'desc' ? -comparison : comparison;
+    });
+  }
+
   const tracks =
-    typeof limit === 'number' ? playlist.items.slice(offset, offset + limit) : playlist.items;
+    typeof limit === 'number' ? filteredItems.slice(offset, offset + limit) : filteredItems;
 
   return {
     id: (playlist._id as { toString(): string }).toString(),
     name: playlist.name,
     description: playlist.description || '',
     imageUrl: playlist.imageUrl || '',
-    tracks: tracks.map((item) => ({
+    tracks: tracks.map((item: IPlaylistItem) => ({
       videoId: item.videoId,
       title: item.title,
       artist: item.artist,
       artistId: item.artistId,
+      artists: item.artists ?? [],
       thumbnailUrl: item.thumbnailUrl,
       durationMs: item.durationMs,
       addedAt: item.addedAt.toISOString()
     })),
-    trackCount: playlist.items.length,
-    trackIds: playlist.items.map((i: { videoId: string }) => i.videoId),
+    trackCount: filteredItems.length,
+    trackIds: filteredItems.map((i: IPlaylistItem) => i.videoId),
     createdAt: playlist.createdAt.toISOString(),
     updatedAt: playlist.updatedAt.toISOString()
   };

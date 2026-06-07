@@ -1,10 +1,16 @@
 import mongoose, { Schema, type Document, type Model } from 'mongoose';
 
+export interface IPlaylistItemArtist {
+  name: string;
+  channelId?: string;
+}
+
 export interface IPlaylistItem {
   videoId: string;
   title: string;
   artist: string;
   artistId?: string;
+  artists?: IPlaylistItemArtist[];
   thumbnailUrl: string;
   durationMs: number;
   addedAt: Date;
@@ -26,6 +32,10 @@ const playlistItemSchema = new Schema<IPlaylistItem>(
     title: { type: String, required: true },
     artist: { type: String, default: '' },
     artistId: { type: String, default: '' },
+    artists: {
+      type: [{ name: String, channelId: String }],
+      default: []
+    },
     thumbnailUrl: { type: String, default: '' },
     durationMs: { type: Number, default: 0 },
     addedAt: { type: Date, default: Date.now }

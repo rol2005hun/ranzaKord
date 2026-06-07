@@ -5,6 +5,7 @@ import type {
   PaginatedSongs
 } from '@/features/search/types/search.types';
 import type { Track } from '@/features/player/types/player.types';
+import type { TrackListItem } from '@/components/shared/AppTrackList.vue';
 
 definePageMeta({
   layout: 'music'
@@ -34,36 +35,51 @@ useHead({
 });
 
 const isArtistPlaying = computed(() => {
-  if (!artist.value || artist.value.topSongs.length === 0) return false;
+  if (allSongs.value.length === 0) return false;
   if (!isPlaying.value) return false;
-  return artist.value.topSongs.some((t: SearchResult) => t.id === currentTrack.value?.videoId);
+  return allSongs.value.some((t: SearchResult) => t.id === currentTrack.value?.videoId);
 });
 
-function onPlaySong(track: SearchResult): void {
+function onPlaySong(track: TrackListItem, index: number): void {
+  const tracksToPlay: Track[] = allSongs.value.map((t: SearchResult) => ({
+    videoId: t.id,
+    title: t.title,
+    artist: t.artist,
+    artists: t.artists,
+    artistId: t.artistId,
+    thumbnailUrl: t.thumbnailUrl,
+    durationSeconds: t.durationSeconds || 0
+  }));
+
+  const resolvedIndex = allSongs.value.findIndex((t) => t.id === track.id);
+  usePlayer().playQueue(tracksToPlay, resolvedIndex >= 0 ? resolvedIndex : index);
+}
+
+function onPlayAlbumSong(result: SearchResult): void {
   playTrack({
-    videoId: track.id,
-    title: track.title,
-    artist: track.artist,
-    artists: track.artists,
-    artistId: track.artistId,
-    thumbnailUrl: track.thumbnailUrl,
-    durationSeconds: track.durationSeconds || 0
+    videoId: result.id,
+    title: result.title,
+    artist: result.artist,
+    artists: result.artists,
+    artistId: result.artistId,
+    thumbnailUrl: result.thumbnailUrl,
+    durationSeconds: result.durationSeconds || 0
   });
 }
 
 function onPlayArtist(): void {
-  if (!artist.value || artist.value.topSongs.length === 0) return;
+  if (!artist.value || allSongs.value.length === 0) return;
 
   if (
     isArtistPlaying.value ||
     (currentTrack.value &&
-      artist.value.topSongs.some((t: SearchResult) => t.id === currentTrack.value?.videoId))
+      allSongs.value.some((t: SearchResult) => t.id === currentTrack.value?.videoId))
   ) {
     togglePlay();
     return;
   }
 
-  const queue: Track[] = artist.value.topSongs.map((t: SearchResult) => ({
+  const queue: Track[] = allSongs.value.map((t: SearchResult) => ({
     videoId: t.id,
     title: t.title,
     artist: t.artist,
@@ -92,10 +108,22 @@ async function loadSongs() {
       }
     });
     if (data.items) {
+      const currentArtistName = artist.value?.name?.toLowerCase() || '';
       const newItems = data.items.filter(
-        (item) => !allSongs.value.some((existing) => existing.id === item.id)
+        (item) =>
+          !allSongs.value.some((existing) => existing.id === item.id) &&
+          (item.artist?.toLowerCase().includes(currentArtistName) ||
+            item.artists?.some((a) => a.name.toLowerCase().includes(currentArtistName)))
       );
       allSongs.value.push(...newItems);
+
+      if (newItems.length === 0 && data.continuation) {
+        continuation.value = data.continuation;
+        setTimeout(() => {
+          loadSongs();
+        }, 50);
+        return;
+      }
     }
     continuation.value = data.continuation || null;
   } catch (e) {
@@ -104,6 +132,18 @@ async function loadSongs() {
     isLoadingSongs.value = false;
   }
 }
+
+const mappedSongs = computed<TrackListItem[]>(() => {
+  return allSongs.value.map((song) => ({
+    id: song.id,
+    title: song.title,
+    artist: song.artist,
+    artistId: song.artistId,
+    thumbnailUrl: song.thumbnailUrl,
+    durationSeconds: song.durationSeconds || 0,
+    isPlaying: isPlaying.value && currentTrack.value?.videoId === song.id
+  }));
+});
 
 watch(
   artist,
@@ -115,17 +155,14 @@ watch(
   { immediate: true }
 );
 
-onMounted(() => {
-  useInfiniteScroll(
-    window,
-    () => {
-      if (continuation.value && !isLoadingSongs.value) {
-        loadSongs();
-      }
-    },
-    { distance: 200 }
-  );
-});
+function onScroll(event: Event): void {
+  const el = event.target as HTMLElement;
+  if (el.scrollHeight - el.scrollTop - el.clientHeight < 200) {
+    if (continuation.value && !isLoadingSongs.value) {
+      loadSongs();
+    }
+  }
+}
 </script>
 
 <template>
@@ -139,22 +176,15 @@ onMounted(() => {
       :image-url="artist?.thumbnailUrl"
       :rounded-image="true"
       :is-list-playing="isArtistPlaying"
-      :disable-play-button="!artist || artist.topSongs.length === 0"
-      @play-all="onPlayArtist">
+      :disable-play-button="!artist || allSongs.length === 0"
+      @play-all="onPlayArtist"
+      @scroll="onScroll">
       <template #fallback-icon>
         <AppIcon name="ph:user" />
       </template>
 
       <template #tracks>
-        <template v-if="status === 'pending'">
-          <AppMusicSection
-            :title="$t('search.artist.topSongs') + ' (All)'"
-            layout="list"
-            :is-loading="true"
-            :skeleton-count="5" />
-        </template>
-
-        <template v-else-if="artist">
+        <template v-if="artist">
           <div
             v-if="allSongs.length === 0 && !isLoadingSongs && artist.albums.length === 0"
             class="music-page__empty">
@@ -165,23 +195,13 @@ onMounted(() => {
             </NuxtLink>
           </div>
           <template v-else>
-            <AppMusicSection
+            <AppTrackList
               v-if="allSongs.length > 0 || isLoadingSongs"
-              :title="$t('search.artist.topSongs') + ' (All)'"
-              layout="list">
-              <SearchListItem
-                v-for="song in allSongs"
-                :key="song.id"
-                :track="song"
-                @click="onPlaySong(song)" />
-
-              <AppMusicSection
-                v-if="isLoadingSongs"
-                title=""
-                layout="list"
-                :is-loading="true"
-                :skeleton-count="allSongs.length === 0 ? 5 : 3" />
-            </AppMusicSection>
+              :tracks="mappedSongs"
+              :is-loading="isLoadingSongs"
+              :columns="['index', 'title', 'time']"
+              :show-thumbnails="true"
+              @play="onPlaySong" />
 
             <AppMusicSection
               v-if="artist.albums.length > 0"
@@ -191,7 +211,7 @@ onMounted(() => {
                 v-for="album in artist.albums"
                 :key="album.id"
                 :result="album"
-                @play="onPlaySong" />
+                @play="onPlayAlbumSong" />
             </AppMusicSection>
           </template>
         </template>

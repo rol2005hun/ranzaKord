@@ -1,11 +1,17 @@
 import type { ServerSession } from '../../../types/auth.server.types';
 import { PlaylistModel } from '../../../models/Playlist';
 
+interface AddTrackArtist {
+  name: string;
+  channelId?: string;
+}
+
 interface AddTrackBody {
   videoId: string;
   title: string;
   artist: string;
   artistId?: string;
+  artists?: AddTrackArtist[];
   thumbnailUrl: string;
   durationMs: number;
 }
@@ -42,6 +48,7 @@ export default defineEventHandler(async (event): Promise<{ success: boolean }> =
       title: body.title,
       artist: body.artist || '',
       artistId: body.artistId,
+      artists: body.artists ?? [],
       thumbnailUrl: body.thumbnailUrl || '',
       durationMs: body.durationMs || 0,
       addedAt: new Date()

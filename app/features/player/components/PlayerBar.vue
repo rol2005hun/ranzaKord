@@ -161,14 +161,9 @@ function onVolumeInput(event: Event) {
         <div v-if="displayTrack" class="player-bar__info">
           <span class="player-bar__title">{{ displayTrack.title }}</span>
           <template v-if="displayTrack.artists && displayTrack.artists.length > 0">
+            <!-- prettier-ignore -->
             <span class="player-bar__artist">
-              <template v-for="(art, idx) in displayTrack.artists" :key="idx">
-                <NuxtLink v-if="art.id" :to="`/artist/${art.id}`" class="artist-link" @click.stop>
-                  {{ art.name }}
-                </NuxtLink>
-                <span v-else>{{ art.name }}</span>
-                <span v-if="idx < displayTrack.artists.length - 1">,&nbsp;</span>
-              </template>
+              <template v-for="(art, idx) in displayTrack.artists" :key="idx"><NuxtLink v-if="art.id" :to="`/artist/${art.id}`" class="artist-link" @click.stop>{{ art.name }}</NuxtLink><span v-else>{{ art.name }}</span><template v-if="idx < displayTrack.artists.length - 1">, </template></template>
             </span>
           </template>
           <template v-else>

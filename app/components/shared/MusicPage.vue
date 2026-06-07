@@ -138,6 +138,10 @@ function onContentScroll(event: Event): void {
               </div>
             </div>
 
+            <div class="music-page__center-header">
+              <slot name="center-header" />
+            </div>
+
             <div class="music-page__actions">
               <button
                 v-if="showPlayButton"
@@ -451,6 +455,14 @@ function onContentScroll(event: Event): void {
     @media (max-width: 768px) {
       justify-content: center;
     }
+  }
+
+  &__center-header {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 0;
   }
 
   &__actions {

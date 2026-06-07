@@ -34,13 +34,27 @@ export default defineEventHandler(async (event) => {
 
     interface YtHeader {
       title?: { toString: () => string };
-      description?: { toString: () => string };
+      description?: unknown;
       thumbnails?: Array<{ url: string; width?: number; height?: number }>;
     }
 
     const header = playlist.header as unknown as YtHeader | undefined;
     const title = header?.title?.toString() || 'Imported Playlist';
-    const description = header?.description?.toString() || '';
+
+    let description = '';
+    const rawDesc = header?.description as
+      | { description?: { text?: string }; toString?: () => string }
+      | undefined;
+    if (rawDesc) {
+      if (rawDesc.description?.text) {
+        description = rawDesc.description.text;
+      } else if (
+        typeof rawDesc.toString === 'function' &&
+        rawDesc.toString() !== '[object Object]'
+      ) {
+        description = rawDesc.toString();
+      }
+    }
 
     // Try to get thumbnail from header, if not available use first track's thumbnail
     let coverUrl = '';
@@ -99,11 +113,18 @@ export default defineEventHandler(async (event) => {
         durationSeconds = video.duration;
       }
 
+      function buildArtistName(authors: { name?: string }[]): string {
+        const names = authors.map((a) => a.name || '').filter(Boolean);
+        if (names.length === 0) return 'Unknown Artist';
+        if (names.length === 1) return names[0] as string;
+        return `${names[0]} feat. ${names.slice(1).join(', ')}`;
+      }
+
       let artistName = 'Unknown Artist';
       if (video.authors && Array.isArray(video.authors) && video.authors.length > 0) {
-        artistName = video.authors.map((a) => a.name).join(', ');
+        artistName = buildArtistName(video.authors);
       } else if (video.artists && Array.isArray(video.artists) && video.artists.length > 0) {
-        artistName = video.artists.map((a) => a.name).join(', ');
+        artistName = buildArtistName(video.artists);
       } else if (video.author && typeof video.author === 'object' && 'name' in video.author) {
         artistName = video.author.name || '';
       } else if (
@@ -137,11 +158,24 @@ export default defineEventHandler(async (event) => {
         videoTitle = video.title.toString();
       }
 
+      const rawAuthors =
+        video.authors && Array.isArray(video.authors) && video.authors.length > 0
+          ? video.authors
+          : video.artists && Array.isArray(video.artists) && video.artists.length > 0
+            ? video.artists
+            : [];
+
+      const artistsList = rawAuthors.map((a) => ({
+        name: a.name || 'Unknown Artist',
+        channelId: a.channel_id
+      }));
+
       tracks.push({
         videoId: video.id,
         title: videoTitle,
         artist: artistName || 'Unknown Artist',
         artistId,
+        artists: artistsList,
         thumbnailUrl: bestThumbnail,
         durationSeconds: durationSeconds
       });

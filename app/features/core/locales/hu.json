@@ -19,6 +19,7 @@
   },
   "actions": {
     "cancel": "Mégsem",
+    "stop": "Leállít",
     "save": "Mentés"
   },
   "musicDetail": {
