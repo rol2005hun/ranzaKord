@@ -26,9 +26,8 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  (e: 'play-all'): void;
+  (e: 'play-all' | 'image-error'): void;
   (e: 'scroll', event: Event): void;
-  (e: 'image-error'): void;
 }>();
 
 const headerRef = ref<HTMLElement | null>(null);
