@@ -30,9 +30,13 @@ function onPlayFromList(track: SearchResult) {
   <div class="home-dashboard">
     <section class="home-dashboard__hero">
       <div class="home-dashboard__hero-content">
-        <p class="home-dashboard__greeting">
-          {{ $t('home.greeting', { name: currentUser?.name ?? $t('home.guest') }) }}
-        </p>
+        <i18n-t keypath="home.greeting" tag="p" class="home-dashboard__greeting">
+          <template #name>
+            <span class="home-dashboard__greeting-name">
+              {{ currentUser?.name ?? $t('home.guest') }}
+            </span>
+          </template>
+        </i18n-t>
         <h1 class="home-dashboard__title">{{ $t('home.title') }}</h1>
         <p class="home-dashboard__subtitle">{{ $t('home.subtitle') }}</p>
       </div>

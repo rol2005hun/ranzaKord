@@ -27,4 +27,7 @@
 [data-theme='rose'] .app-brand__logo {
   filter: invert(1) hue-rotate(180deg);
 }
+[data-theme='walker'] .app-brand img {
+  filter: grayscale(1) sepia(1) saturate(1200%) hue-rotate(0deg) brightness(1.8) contrast(0.7);
+}
 </style>
