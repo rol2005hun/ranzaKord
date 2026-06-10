@@ -252,6 +252,13 @@ async function onDelete(): Promise<void> {
     isDeleting.value = false;
   }
 }
+
+async function onImageError(): Promise<void> {
+  const firstTrackThumb = virtualTracks.value.find((t) => t !== null && t.thumbnailUrl)?.thumbnailUrl;
+  if (!firstTrackThumb || !playlist.value) return;
+  await store.update(id.value, { imageUrl: firstTrackThumb });
+  await refresh();
+}
 </script>
 
 <template>
@@ -265,7 +272,8 @@ async function onDelete(): Promise<void> {
       :is-list-playing="isCurrentPlaylistPlaying"
       :disable-play-button="trackCount === 0"
       @play-all="playAll"
-      @scroll="onScroll">
+      @scroll="onScroll"
+      @image-error="onImageError">
       <template #meta>
         <span v-if="playlist?.description" class="playlist-page__description">
           {{ playlist.description }}

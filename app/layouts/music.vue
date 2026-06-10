@@ -51,7 +51,10 @@ onMounted(() => {
             class="music-layout__library-header"
             :class="{ 'music-layout__library-header--expanded': isExpanded }">
             <div class="music-layout__library-title-wrapper" :title="$t('playlists.title')">
-              <AppIcon name="ph:books-duotone" class="music-layout__library-icon" />
+              <AppIcon
+                v-if="isExpanded"
+                name="ph:books-duotone"
+                class="music-layout__library-icon" />
               <span class="music-layout__library-title app-sidebar__text">
                 {{ $t('playlists.title') }}
               </span>
