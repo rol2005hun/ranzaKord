@@ -114,5 +114,3 @@ jobs:
             src-tauri/gen/android/app/build/outputs/bundle/**/*.aab
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-

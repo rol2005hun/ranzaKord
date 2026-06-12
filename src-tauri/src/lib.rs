@@ -83,12 +83,19 @@ pub fn run() {
     let mut client = DiscordIpcClient::new("1510265493443973140");
     let _ = client.connect();
 
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_single_instance::init(|_app, _args, _cwd| {}))
-        .plugin(tauri_plugin_process::init())
-        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init());
+
+    #[cfg(desktop)]
+    {
+        builder = builder
+            .plugin(tauri_plugin_single_instance::init(|_app, _args, _cwd| {}))
+            .plugin(tauri_plugin_updater::Builder::new().build());
+    }
+
+    builder
         .manage(DiscordState(Mutex::new(Some(client))))
         .invoke_handler(tauri::generate_handler![
             set_discord_presence,
