@@ -9,29 +9,17 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const response = await fetch(url, {
+    return proxyRequest(event, url, {
       headers: {
         'User-Agent':
           'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         Accept: 'image/webp,image/apng,image/*,*/*;q=0.8',
         Referer: 'https://music.youtube.com/'
+      },
+      onResponse(event) {
+        setHeader(event, 'Cache-Control', 'public, max-age=604800, immutable');
       }
     });
-
-    if (!response.ok) {
-      throw createError({
-        statusCode: response.status,
-        message: t('core.errors.proxyStatus', { statusText: response.statusText })
-      });
-    }
-
-    const arrayBuffer = await response.arrayBuffer();
-    const contentType = response.headers.get('content-type') || 'image/jpeg';
-
-    setHeader(event, 'Content-Type', contentType);
-    setHeader(event, 'Cache-Control', 'public, max-age=604800, immutable');
-
-    return Buffer.from(arrayBuffer);
   } catch {
     throw createError({ statusCode: 500, message: t('core.errors.proxyFailed') });
   }

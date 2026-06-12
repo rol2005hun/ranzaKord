@@ -1,10 +1,10 @@
 type ClientType = 'TV' | 'WEB' | 'YTMUSIC' | 'ANDROID' | 'IOS' | 'TV_EMBEDDED' | 'WEB_CREATOR';
 const workingClients: ClientType[] = [
-  'TV',
-  'WEB',
-  'YTMUSIC',
-  'ANDROID',
   'IOS',
+  'ANDROID',
+  'YTMUSIC',
+  'WEB',
+  'TV',
   'TV_EMBEDDED',
   'WEB_CREATOR'
 ];
