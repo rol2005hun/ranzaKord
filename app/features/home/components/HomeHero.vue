@@ -45,11 +45,11 @@ function onPlayFromList(track: SearchResult) {
           </template>
         </i18n-t>
         <h1 v-if="themeStore.themeId === 'wc2026'" class="home-dashboard__title">
-          WC 2026 Anthems
+          {{ $t('home.wcTitle') }}
         </h1>
         <h1 v-else class="home-dashboard__title">{{ $t('home.title') }}</h1>
         <p v-if="themeStore.themeId === 'wc2026'" class="home-dashboard__subtitle">
-          Get ready for the tournament with the best hits!
+          {{ $t('home.wcSubtitle') }}
         </p>
         <p v-else class="home-dashboard__subtitle">{{ $t('home.subtitle') }}</p>
       </div>
