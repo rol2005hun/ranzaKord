@@ -28,3 +28,13 @@ export interface StreamResponse {
   mimeType: string;
   durationMs: number;
 }
+
+export interface TrackStatPayload {
+  trackId: string;
+  title: string;
+  artist: string;
+  thumbnailUrl: string;
+  durationSeconds: number;
+  listeningSeconds: number;
+  skipped: boolean;
+}

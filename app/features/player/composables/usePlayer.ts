@@ -1,4 +1,4 @@
-import type { Track } from '../types/player.types';
+import type { Track, TrackStatPayload } from '../types/player.types';
 
 const audioRef = ref<HTMLAudioElement | null>(null);
 
@@ -41,6 +41,9 @@ export function usePlayer() {
 
     el.addEventListener('ended', () => {
       store.isPlaying = false;
+      if (store.currentTrack) {
+        recordTrackStat(store.currentTrack, Math.floor(el.currentTime), false);
+      }
       if (store.repeatMode === 'one') {
         seek(0);
         resume();
@@ -98,10 +101,31 @@ export function usePlayer() {
     }
   }
 
+  function recordTrackStat(track: Track, listeningSeconds: number, skipped: boolean) {
+    const payload: TrackStatPayload = {
+      trackId: track.videoId,
+      title: track.title,
+      artist: track.artist,
+      thumbnailUrl: track.thumbnailUrl,
+      durationSeconds: track.durationSeconds,
+      listeningSeconds,
+      skipped
+    };
+    $fetch('/api/player/track-stat', {
+      method: 'POST',
+      body: payload
+    }).catch(() => {});
+  }
+
   async function playTrack(track: Track) {
     if (store.currentTrack?.videoId === track.videoId) {
       togglePlay();
       return;
+    }
+
+    if (store.currentTrack && store.currentTimeSeconds > 0) {
+      const skipped = store.currentTimeSeconds < store.durationSeconds * 0.9;
+      recordTrackStat(store.currentTrack, Math.floor(store.currentTimeSeconds), skipped);
     }
 
     store.setTrack(track);
