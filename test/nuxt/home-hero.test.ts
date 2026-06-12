@@ -46,6 +46,9 @@ describe('HomeHero', () => {
       global: {
         mocks: { $t: (k: string, p: Record<string, unknown>) => k + (p ? JSON.stringify(p) : '') },
         stubs: {
+          'i18n-t': {
+            template: '<span><slot name="name"/></span>'
+          },
           TopResultCard: true,
           TrackCard: true,
           ClientOnly: { template: '<div><slot/></div>' }

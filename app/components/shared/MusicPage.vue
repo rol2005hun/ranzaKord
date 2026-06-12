@@ -26,7 +26,7 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<{
-  (e: 'play-all'): void;
+  (e: 'play-all' | 'image-error'): void;
   (e: 'scroll', event: Event): void;
 }>();
 
@@ -125,7 +125,8 @@ function onContentScroll(event: Event): void {
                 height="120"
                 format="webp"
                 fetchpriority="high"
-                preload />
+                preload
+                @error="emit('image-error')" />
               <slot v-else name="fallback-icon">
                 <AppIcon name="ph:music-notes" />
               </slot>
