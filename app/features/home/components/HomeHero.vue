@@ -1,16 +1,51 @@
 <script setup lang="ts">
+import type { Ref } from 'vue';
+
 import type { SearchResult } from '@/features/search/types/search.types';
 
 const { currentUser } = useAuth();
 const themeStore = useThemeStore();
 
+const isWalker = computed(() => themeStore.themeId === 'walker');
+
 const searchQuery = computed(() =>
   themeStore.themeId === 'wc2026' ? 'fifa world cup official songs' : 'top hits 2024'
 );
 
-const { data: featuredTracks, pending } = useLazyFetch<SearchResult[]>('/api/search', {
-  query: { q: searchQuery, type: 'song' }
+const {
+  data: searchTracks,
+  pending: searchPending,
+  execute: executeSearch
+} = useLazyFetch<SearchResult[]>('/api/search', {
+  query: { q: searchQuery, type: 'song' },
+  immediate: false
 });
+
+const {
+  data: topTracks,
+  pending: topTracksPending,
+  execute: executeTopTracks
+} = useLazyFetch<SearchResult[]>('/api/home/top-tracks', {
+  immediate: false
+});
+
+watch(
+  isWalker,
+  (walker) => {
+    if (walker) {
+      executeTopTracks();
+    } else {
+      executeSearch();
+    }
+  },
+  { immediate: true }
+);
+
+const featuredTracks: Ref<SearchResult[] | null> = computed(
+  () => (isWalker.value ? topTracks.value : searchTracks.value) ?? null
+);
+
+const pending = computed(() => (isWalker.value ? topTracksPending.value : searchPending.value));
 
 const recommendedTrack = computed(() => featuredTracks.value?.[0]);
 const otherFeaturedTracks = computed(() => featuredTracks.value?.slice(1));
@@ -19,7 +54,7 @@ const { playQueue } = usePlayer();
 
 function onPlayFromList(track: SearchResult) {
   if (!featuredTracks.value) return;
-  const tracksToPlay = featuredTracks.value.map((t) => ({
+  const tracksToPlay = featuredTracks.value.map((t: SearchResult) => ({
     videoId: t.id,
     title: t.title,
     artist: t.artist,
