@@ -251,7 +251,9 @@ describe('Shared Components', () => {
         props: { modelValue: '1', options }
       });
       expect(wrapper.text()).toContain('Option 1');
-      await wrapper.find('select').setValue('2');
+      await wrapper.find('.select-container').trigger('click');
+      const optionsNodes = wrapper.findAll('.select-option');
+      await optionsNodes[1]?.trigger('click');
       expect(wrapper.emitted('update:modelValue')?.[0]).toEqual(['2']);
     });
 
@@ -259,18 +261,16 @@ describe('Shared Components', () => {
       const wrapper = await mountSuspended(AppSelect, {
         props: { disabled: true, modelValue: '1', options }
       });
-      await wrapper.find('select').setValue('2');
-      expect(wrapper.emitted('update:modelValue')).toBeUndefined();
+      await wrapper.find('.select-container').trigger('click');
+      expect(wrapper.find('.select-dropdown').exists()).toBe(false);
     });
 
-    it('emits change event', async () => {
+    it('opens dropdown on click', async () => {
       const wrapper = await mountSuspended(AppSelect, {
         props: { modelValue: '1', options }
       });
-      const select = wrapper.find('select');
-      (select.element as HTMLSelectElement).value = '2';
-      await select.trigger('change');
-      expect(wrapper.emitted('update:modelValue')?.[0]).toEqual(['2']);
+      await wrapper.find('.select-container').trigger('click');
+      expect(wrapper.find('.select-dropdown').exists()).toBe(true);
     });
 
     it('renders placeholder', async () => {
@@ -285,7 +285,7 @@ describe('Shared Components', () => {
         props: { error: 'Select error', modelValue: '1', options, id: 'test-select' }
       });
       expect(wrapper.text()).toContain('Select error');
-      expect(wrapper.find('select').classes()).toContain('select--error');
+      expect(wrapper.find('.select-container').classes()).toContain('select-container--error');
     });
 
     it('handles error state without id', async () => {

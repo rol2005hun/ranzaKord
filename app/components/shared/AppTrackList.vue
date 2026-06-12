@@ -70,30 +70,6 @@ function handleSort(column: string): void {
   }
 }
 
-function resolveArtists(track: TrackListItem): TrackItemArtist[] {
-  const separatorRe = /,\s*|\s+feat\.\s+|\s+ft\.\s+|\s+&\s+/i;
-  const parts = (track.artist || '')
-    .split(separatorRe)
-    .map((s) => s.trim())
-    .filter(Boolean);
-
-  if (track.artists && track.artists.length > 0) {
-    if (parts.length > track.artists.length) {
-      const merged = [...track.artists];
-      for (const part of parts) {
-        if (!merged.find((a) => a.name.toLowerCase() === part.toLowerCase())) {
-          merged.push({ name: part });
-        }
-      }
-      return merged;
-    }
-    return track.artists;
-  }
-
-  if (parts.length <= 1) return [];
-  return parts.map((name) => ({ name }));
-}
-
 const hasDateColumn = computed(() => props.columns.includes('date'));
 const hasActionColumn = computed(() => props.columns.includes('action'));
 
@@ -182,8 +158,12 @@ function formatDate(dateStr?: string): string {
               <div class="app-track-list__track-info">
                 <div v-if="showThumbnails" class="app-track-list__track-thumb skeleton-box"></div>
                 <div class="app-track-list__track-text">
-                  <div class="skeleton-box" style="height: 16px; width: 60%"></div>
-                  <div class="skeleton-box" style="height: 12px; width: 40%; margin-top: 4px"></div>
+                  <div
+                    class="skeleton-box"
+                    style="height: 16px; width: 220px; max-width: 70%"></div>
+                  <div
+                    class="skeleton-box"
+                    style="height: 12px; width: 140px; max-width: 50%; margin-top: 4px"></div>
                 </div>
               </div>
               <div
@@ -236,26 +216,7 @@ function formatDate(dateStr?: string): string {
                     {{ track.title }}
                   </span>
                   <div class="app-track-list__track-artist">
-                    <template v-if="resolveArtists(track).length > 0">
-                      <!-- prettier-ignore -->
-                      <span class="artists-list"><template v-for="(a, i) in resolveArtists(track)" :key="a.name"><NuxtLink :to="a.channelId ? `/artist/${a.channelId}` : `/search?q=${encodeURIComponent(a.name)}&type=artist`" class="artist-link" @click.stop>{{ a.name }}</NuxtLink><template v-if="i < resolveArtists(track).length - 1">, </template></template></span>
-                    </template>
-                    <template v-else>
-                      <NuxtLink
-                        v-if="track.artistId"
-                        :to="`/artist/${track.artistId}`"
-                        class="artist-link"
-                        @click.stop>
-                        {{ track.artist }}
-                      </NuxtLink>
-                      <NuxtLink
-                        v-else-if="track.artist"
-                        :to="`/search?q=${encodeURIComponent(track.artist)}&type=artist`"
-                        class="artist-link"
-                        @click.stop>
-                        {{ track.artist }}
-                      </NuxtLink>
-                    </template>
+                    <AppTrackArtists :track="track" class="artists-list" />
                   </div>
                 </div>
               </div>
@@ -326,26 +287,7 @@ function formatDate(dateStr?: string): string {
               {{ track.title }}
             </span>
             <div class="app-track-list__track-artist">
-              <template v-if="resolveArtists(track).length > 0">
-                <!-- prettier-ignore -->
-                <span class="artists-list"><template v-for="(a, i) in resolveArtists(track)" :key="a.name"><NuxtLink :to="a.channelId ? `/artist/${a.channelId}` : `/search?q=${encodeURIComponent(a.name)}&type=artist`" class="artist-link" @click.stop>{{ a.name }}</NuxtLink><template v-if="i < resolveArtists(track).length - 1">, </template></template></span>
-              </template>
-              <template v-else>
-                <NuxtLink
-                  v-if="track.artistId"
-                  :to="`/artist/${track.artistId}`"
-                  class="artist-link"
-                  @click.stop>
-                  {{ track.artist }}
-                </NuxtLink>
-                <NuxtLink
-                  v-else-if="track.artist"
-                  :to="`/search?q=${encodeURIComponent(track.artist)}&type=artist`"
-                  class="artist-link"
-                  @click.stop>
-                  {{ track.artist }}
-                </NuxtLink>
-              </template>
+              <AppTrackArtists :track="track" class="artists-list" />
             </div>
           </div>
         </div>
@@ -369,7 +311,7 @@ function formatDate(dateStr?: string): string {
       </div>
       <template v-if="isLoading">
         <div
-          v-for="i in 3"
+          v-for="i in 15"
           :key="`normal-skel-${i}`"
           class="app-track-list__track app-track-list__track--skeleton"
           :style="{ height: `${itemHeight}px`, gridTemplateColumns: gridColumns }">
@@ -379,8 +321,10 @@ function formatDate(dateStr?: string): string {
           <div class="app-track-list__track-info">
             <div v-if="showThumbnails" class="app-track-list__track-thumb skeleton-box"></div>
             <div class="app-track-list__track-text">
-              <div class="skeleton-box" style="height: 16px; width: 60%"></div>
-              <div class="skeleton-box" style="height: 12px; width: 40%; margin-top: 4px"></div>
+              <div class="skeleton-box" style="height: 16px; width: 220px; max-width: 70%"></div>
+              <div
+                class="skeleton-box"
+                style="height: 12px; width: 140px; max-width: 50%; margin-top: 4px"></div>
             </div>
           </div>
           <div v-if="hasDateColumn" class="skeleton-box" style="height: 14px; width: 80px"></div>
@@ -573,6 +517,7 @@ function formatDate(dateStr?: string): string {
     justify-content: center;
     gap: 2px;
     min-width: 0;
+    flex: 1;
   }
 
   &__track-title {

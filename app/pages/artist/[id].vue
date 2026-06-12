@@ -183,6 +183,13 @@ function onScroll(event: Event): void {
         <AppIcon name="ph:user" />
       </template>
 
+      <template #skeleton-tracks>
+        <AppTrackList
+          :is-loading="true"
+          :columns="['index', 'title', 'time']"
+          :show-thumbnails="true" />
+      </template>
+
       <template #tracks>
         <template v-if="artist">
           <div

@@ -101,6 +101,13 @@ function onPlayAlbum(): void {
         </span>
       </template>
 
+      <template #skeleton-tracks>
+        <AppTrackList
+          :is-loading="true"
+          :columns="['index', 'title', 'time']"
+          :show-thumbnails="false" />
+      </template>
+
       <template #tracks>
         <div v-if="mappedTracks.length === 0 && status !== 'pending'" class="music-page__empty">
           <AppIcon name="ph:music-notes-plus" class="music-page__empty-icon" />

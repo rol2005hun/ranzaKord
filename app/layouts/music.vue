@@ -242,7 +242,7 @@ onMounted(() => {
   }
 
   &__library {
-    padding: var(--space-2) 0;
+    padding: var(--space-1) 0;
   }
 
   &__library-header {
@@ -250,16 +250,21 @@ onMounted(() => {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    margin-bottom: var(--space-2);
-    padding: var(--space-2) 0;
+    margin-bottom: var(--space-1);
+    padding: var(--space-1) 0;
     opacity: 1;
     overflow: hidden;
-    gap: var(--space-2);
+    gap: var(--space-1);
 
     &--expanded {
       flex-direction: row;
       justify-content: space-between;
+      margin-bottom: var(--space-2);
       padding: var(--space-2) var(--space-3);
+
+      .music-layout__library-title-wrapper {
+        display: flex;
+      }
 
       .music-layout__library-title {
         margin-left: var(--space-2);
@@ -268,7 +273,7 @@ onMounted(() => {
   }
 
   &__library-title-wrapper {
-    display: flex;
+    display: none; /* hidden when collapsed */
     align-items: center;
     color: var(--color-text-secondary);
   }
@@ -290,7 +295,7 @@ onMounted(() => {
   &__library-actions {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
+    gap: var(--space-1);
     flex-shrink: 0;
 
     &--expanded {
@@ -468,10 +473,6 @@ onMounted(() => {
 
   @media (max-width: 768px) {
     flex-direction: column;
-
-    &__main {
-      // Removed unnecessary padding-bottom: 60px;
-    }
 
     &__library {
       display: none;

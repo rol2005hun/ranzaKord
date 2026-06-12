@@ -53,25 +53,34 @@ function onContentScroll(event: Event): void {
           <div class="skeleton-line skeleton-line--title"></div>
           <div class="skeleton-line skeleton-line--meta"></div>
         </div>
-      </div>
-      <div class="music-page__skeleton-actions">
-        <div class="skeleton-btn skeleton-btn--play"></div>
-        <slot name="skeleton-actions" />
+        <div class="music-page__skeleton-center-header">
+          <slot name="skeleton-center-header" />
+        </div>
+        <div class="music-page__skeleton-actions">
+          <div class="skeleton-btn skeleton-btn--play"></div>
+          <div class="skeleton-btn" style="width: 48px; height: 48px; opacity: 0.5"></div>
+          <div class="skeleton-btn" style="width: 48px; height: 48px; opacity: 0.5"></div>
+        </div>
       </div>
       <div class="music-page__skeleton-tracks">
-        <div v-for="i in 6" :key="`sk-${i}`" class="music-page__track music-page__track--skeleton">
-          <div class="music-page__track-num-wrapper">
-            <div class="skeleton-line" style="width: 1rem; margin: 0"></div>
+        <slot name="skeleton-tracks">
+          <div
+            v-for="i in 6"
+            :key="`sk-${i}`"
+            class="music-page__track music-page__track--skeleton">
+            <div class="music-page__track-num-wrapper">
+              <div class="skeleton-line" style="width: 1rem; margin: 0"></div>
+            </div>
+            <div class="music-page__track-thumb skeleton-box"></div>
+            <div class="music-page__track-text">
+              <div class="skeleton-line skeleton-line--track-title"></div>
+              <div class="skeleton-line skeleton-line--artist" style="margin-bottom: 0"></div>
+            </div>
+            <div class="music-page__track-duration">
+              <div class="skeleton-line" style="width: 2rem; margin: 0"></div>
+            </div>
           </div>
-          <div class="music-page__track-thumb skeleton-box"></div>
-          <div class="music-page__track-text">
-            <div class="skeleton-line skeleton-line--track-title"></div>
-            <div class="skeleton-line skeleton-line--artist" style="margin-bottom: 0"></div>
-          </div>
-          <div class="music-page__track-duration">
-            <div class="skeleton-line" style="width: 2rem; margin: 0"></div>
-          </div>
-        </div>
+        </slot>
       </div>
     </div>
 
@@ -178,8 +187,6 @@ function onContentScroll(event: Event): void {
   &__skeleton {
     display: flex;
     flex-direction: column;
-    gap: var(--space-6);
-    padding: var(--space-6);
   }
 
   &__skeleton-header {
@@ -206,6 +213,14 @@ function onContentScroll(event: Event): void {
     flex-direction: column;
     gap: var(--space-3);
     flex: 1;
+  }
+
+  &__skeleton-center-header {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-width: 0;
   }
 
   &__skeleton-actions {

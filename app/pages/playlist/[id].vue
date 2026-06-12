@@ -254,7 +254,9 @@ async function onDelete(): Promise<void> {
 }
 
 async function onImageError(): Promise<void> {
-  const firstTrackThumb = virtualTracks.value.find((t) => t !== null && t.thumbnailUrl)?.thumbnailUrl;
+  const firstTrackThumb = virtualTracks.value.find(
+    (t) => t !== null && t.thumbnailUrl
+  )?.thumbnailUrl;
   if (!firstTrackThumb || !playlist.value) return;
   await store.update(id.value, { imageUrl: firstTrackThumb });
   await refresh();
@@ -350,6 +352,19 @@ async function onImageError(): Promise<void> {
           @click="showDeleteConfirm = true">
           <AppIcon name="ph:trash" />
         </button>
+      </template>
+
+      <template #skeleton-center-header>
+        <div style="width: 100%; max-width: 400px; display: flex">
+          <AppSkeleton width="100%" height="44px" border-radius="var(--radius-full)" />
+        </div>
+      </template>
+
+      <template #skeleton-tracks>
+        <AppTrackList
+          :is-loading="true"
+          :columns="['index', 'title', 'date', 'time', 'action']"
+          :show-thumbnails="true" />
       </template>
 
       <template #tracks>
