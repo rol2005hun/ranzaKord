@@ -2,9 +2,14 @@
 import type { SearchResult } from '@/features/search/types/search.types';
 
 const { currentUser } = useAuth();
+const themeStore = useThemeStore();
+
+const searchQuery = computed(() =>
+  themeStore.themeId === 'wc2026' ? 'fifa world cup official songs' : 'top hits 2024'
+);
 
 const { data: featuredTracks, pending } = useLazyFetch<SearchResult[]>('/api/search', {
-  query: { q: 'top hits 2024', type: 'song' }
+  query: { q: searchQuery, type: 'song' }
 });
 
 const recommendedTrack = computed(() => featuredTracks.value?.[0]);
@@ -28,7 +33,9 @@ function onPlayFromList(track: SearchResult) {
 
 <template>
   <div class="home-dashboard">
-    <section class="home-dashboard__hero">
+    <section
+      class="home-dashboard__hero"
+      :class="{ 'home-dashboard__hero--wc2026': themeStore.themeId === 'wc2026' }">
       <div class="home-dashboard__hero-content">
         <i18n-t keypath="home.greeting" tag="p" class="home-dashboard__greeting">
           <template #name>
@@ -37,8 +44,14 @@ function onPlayFromList(track: SearchResult) {
             </span>
           </template>
         </i18n-t>
-        <h1 class="home-dashboard__title">{{ $t('home.title') }}</h1>
-        <p class="home-dashboard__subtitle">{{ $t('home.subtitle') }}</p>
+        <h1 v-if="themeStore.themeId === 'wc2026'" class="home-dashboard__title">
+          WC 2026 Anthems
+        </h1>
+        <h1 v-else class="home-dashboard__title">{{ $t('home.title') }}</h1>
+        <p v-if="themeStore.themeId === 'wc2026'" class="home-dashboard__subtitle">
+          Get ready for the tournament with the best hits!
+        </p>
+        <p v-else class="home-dashboard__subtitle">{{ $t('home.subtitle') }}</p>
       </div>
       <div class="home-dashboard__hero-visual">
         <div v-if="pending || !recommendedTrack" class="home-dashboard__skeleton-visual">
@@ -108,6 +121,15 @@ function onPlayFromList(track: SearchResult) {
     border: 1px solid var(--color-border);
     overflow: hidden;
     margin-bottom: var(--space-10);
+
+    &--wc2026 {
+      background:
+        linear-gradient(135deg, rgba(3, 20, 14, 0.9) 0%, rgba(10, 33, 25, 0.8) 100%),
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="%23ffffff22" stroke-width="2"/><line x1="50" y1="0" x2="50" y2="100" stroke="%23ffffff22" stroke-width="2"/><rect x="0" y="25" width="20" height="50" fill="none" stroke="%23ffffff22" stroke-width="2"/><rect x="80" y="25" width="20" height="50" fill="none" stroke="%23ffffff22" stroke-width="2"/></svg>')
+          center/150px;
+      border: 1px solid var(--color-primary);
+      box-shadow: 0 0 20px rgba(74, 222, 128, 0.2);
+    }
   }
 
   &__hero-content {
