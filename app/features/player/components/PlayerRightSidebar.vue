@@ -190,13 +190,7 @@ const sidebarStyle = computed(() => ({
 
           <div class="right-sidebar__track-meta">
             <p class="right-sidebar__track-title">{{ currentTrack.title }}</p>
-            <NuxtLink
-              v-if="currentTrack.artistId"
-              :to="`/artist/${currentTrack.artistId}`"
-              class="right-sidebar__track-artist right-sidebar__track-artist--link">
-              {{ currentTrack.artist }}
-            </NuxtLink>
-            <span v-else class="right-sidebar__track-artist">{{ currentTrack.artist }}</span>
+            <AppTrackArtists :track="currentTrack" class="right-sidebar__track-artist" />
           </div>
         </template>
 
@@ -234,13 +228,25 @@ const sidebarStyle = computed(() => ({
               '60%',
               '75%',
               '55%',
-              '80%'
+              '80%',
+              '40%',
+              '90%',
+              '65%',
+              '75%',
+              '45%',
+              '85%',
+              '50%',
+              '70%',
+              '80%',
+              '60%',
+              '90%',
+              '55%'
             ]"
             :key="index"
             :width="width"
             height="24px"
             border-radius="var(--radius-sm)"
-            :style="{ opacity: Math.max(0.05, 1 - index * 0.05) }" />
+            :style="{ opacity: Math.max(0.05, 1 - index * 0.035) }" />
         </div>
 
         <div v-else-if="!currentTrack" class="right-sidebar__empty-state">

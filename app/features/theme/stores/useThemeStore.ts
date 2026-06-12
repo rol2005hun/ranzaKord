@@ -4,7 +4,10 @@ import { hexToHsl, getContrastColor } from '~/utils/color';
 import type { ThemeId, CustomColor } from '../types/theme.types';
 
 export const useThemeStore = defineStore('theme', () => {
-  const cookieThemeId = useCookie<ThemeId>('theme-id', { default: () => 'dark', maxAge: 31536000 });
+  const cookieThemeId = useCookie<ThemeId>('theme-id', {
+    default: () => 'wc2026',
+    maxAge: 31536000
+  });
   const cookieCustomColor = useCookie<string | null>('theme-custom-color', {
     default: () => null,
     maxAge: 31536000

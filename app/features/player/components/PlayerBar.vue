@@ -160,22 +160,7 @@ function onVolumeInput(event: Event) {
         </div>
         <div v-if="displayTrack" class="player-bar__info">
           <span class="player-bar__title">{{ displayTrack.title }}</span>
-          <template v-if="displayTrack.artists && displayTrack.artists.length > 0">
-            <!-- prettier-ignore -->
-            <span class="player-bar__artist">
-              <template v-for="(art, idx) in displayTrack.artists" :key="idx"><NuxtLink v-if="art.id" :to="`/artist/${art.id}`" class="artist-link" @click.stop>{{ art.name }}</NuxtLink><span v-else>{{ art.name }}</span><template v-if="idx < displayTrack.artists.length - 1">, </template></template>
-            </span>
-          </template>
-          <template v-else>
-            <NuxtLink
-              v-if="displayTrack.artistId"
-              :to="`/artist/${displayTrack.artistId}`"
-              class="player-bar__artist artist-link"
-              @click.stop>
-              {{ displayTrack.artist }}
-            </NuxtLink>
-            <span v-else class="player-bar__artist">{{ displayTrack.artist }}</span>
-          </template>
+          <AppTrackArtists :track="displayTrack" class="player-bar__artist" />
         </div>
         <div v-else-if="!isHydrated" class="player-bar__info player-bar__info--skeleton">
           <AppSkeleton height="12px" width="120px" border-radius="var(--radius-sm)" />

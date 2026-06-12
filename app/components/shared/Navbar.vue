@@ -81,27 +81,23 @@ function closeDropdown() {
         <div v-if="isDropdownOpen" class="app-navbar__dropdown">
           <div class="app-navbar__dropdown-row">
             <span class="app-navbar__dropdown-row-label">{{ $t('core.nav.language') }}</span>
-            <div class="app-navbar__dropdown-toggle">
-              <button :class="{ active: (locale as any) === 'en' }" @click="setLocale('en' as any)">
-                EN
-              </button>
-              <button :class="{ active: (locale as any) === 'hu' }" @click="setLocale('hu' as any)">
-                HU
-              </button>
-            </div>
+            <AppSelect
+              :model-value="locale as string"
+              :options="[
+                { label: 'English', value: 'en', icon: 'flag:gb-1x1' },
+                { label: 'Magyar', value: 'hu', icon: 'flag:hu-1x1' }
+              ]"
+              class="app-navbar__select"
+              @update:model-value="setLocale($event as any)" />
           </div>
 
           <div class="app-navbar__dropdown-row">
             <span class="app-navbar__dropdown-row-label">{{ $t('core.nav.theme') }}</span>
-            <div class="app-navbar__dropdown-toggle">
-              <button
-                v-for="theme in themes"
-                :key="theme.id"
-                :class="{ active: themeId === theme.id }"
-                @click="setTheme(theme.id)">
-                <AppIcon :name="theme.icon" />
-              </button>
-            </div>
+            <AppSelect
+              :model-value="themeId"
+              :options="themes.map((t) => ({ label: t.label, value: t.id, icon: t.icon }))"
+              class="app-navbar__select"
+              @update:model-value="setTheme($event as any)" />
           </div>
 
           <div
@@ -285,7 +281,7 @@ function closeDropdown() {
     z-index: 100;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow: visible;
     padding: var(--space-2) 0;
     animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
@@ -303,41 +299,14 @@ function closeDropdown() {
     color: var(--color-text-secondary);
   }
 
-  &__dropdown-toggle {
-    display: flex;
-    background: var(--color-surface-hover);
-    border-radius: var(--radius-md);
-    padding: 2px;
+  &__select {
+    width: 140px;
+    flex-shrink: 0;
 
-    button {
-      background: none;
-      border: none;
-      color: var(--color-text-secondary);
-      padding: var(--space-1) var(--space-3);
-      border-radius: var(--radius-sm);
-      font-size: var(--text-xs);
-      font-weight: var(--font-weight-medium);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition:
-        background var(--transition-fast),
-        color var(--transition-fast);
-
-      &.active {
-        background: var(--color-surface);
-        color: var(--color-primary);
-        box-shadow: var(--shadow-sm);
-      }
-
-      &:hover:not(.active) {
-        color: var(--color-text-primary);
-      }
-
-      .app-icon {
-        font-size: var(--text-lg);
-      }
+    :deep(.select) {
+      padding-top: var(--space-2);
+      padding-bottom: var(--space-2);
+      font-size: var(--text-sm);
     }
   }
 

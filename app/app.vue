@@ -103,7 +103,7 @@ onMounted(async () => {
 <style scoped>
 .app-version-overlay {
   position: fixed;
-  bottom: 8px;
+  bottom: 0;
   right: 8px;
   z-index: 9999;
   font-size: 10px;
