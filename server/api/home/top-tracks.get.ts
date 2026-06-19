@@ -28,17 +28,18 @@ export default defineEventHandler(async (event) => {
 
   const trackMap = new Map(tracks.map((t) => [t.trackId, t]));
 
-  return stats
-    .filter((s) => trackMap.has(s.trackId))
-    .map((s) => {
-      const track = trackMap.get(s.trackId)!;
-      return {
+  return stats.flatMap((s) => {
+    const track = trackMap.get(s.trackId);
+    if (!track) return [];
+    return [
+      {
         id: track.trackId,
         type: 'song' as const,
         title: track.title,
         artist: track.artist,
         thumbnailUrl: track.thumbnailUrl,
         durationSeconds: track.durationSeconds
-      };
-    });
+      }
+    ];
+  });
 });

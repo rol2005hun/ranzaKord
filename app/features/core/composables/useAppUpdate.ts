@@ -1,118 +1,118 @@
 import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 
-export interface AppUpdateInfo {
-  available: boolean;
-  version: string;
-  body: string;
-  date?: string;
-  isMandatory: boolean;
-  downloading: boolean;
-  progress: number;
-  total: number;
-  error: string | null;
+import type { GithubRelease } from '@/features/updater/types/updater.types';
+
+const GITHUB_REPO = 'rrol2/ranzaKord';
+const APK_ASSET_SUFFIX = '.apk';
+
+function parseVersion(v: string): [number, number, number] {
+  const [maj = 0, min = 0, pat = 0] = v.replace(/^v/, '').split('.').map(Number);
+  return [maj, min, pat];
+}
+
+function isNewerVersion(latest: string, current: string): boolean {
+  const [lMaj, lMin, lPat] = parseVersion(latest);
+  const [cMaj, cMin, cPat] = parseVersion(current);
+  if (lMaj !== cMaj) return lMaj > cMaj;
+  if (lMin !== cMin) return lMin > cMin;
+  return lPat > cPat;
 }
 
 export function useAppUpdate() {
+  const store = useUpdaterStore();
+  const { info, showModal } = storeToRefs(store);
+  const config = useRuntimeConfig();
   const isTauri = import.meta.client && '__TAURI_INTERNALS__' in window;
 
-  const updateInfo = ref<AppUpdateInfo>({
-    available: false,
-    version: '',
-    body: '',
-    date: '',
-    isMandatory: false,
-    downloading: false,
-    progress: 0,
-    total: 0,
-    error: null
-  });
+  async function checkViaGithub() {
+    try {
+      const currentVersion = config.public.appVersion as string;
+      const release = await $fetch<GithubRelease>(
+        `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`
+      );
 
-  const showUpdateModal = ref(false);
+      const latestVersion = release.tag_name.replace(/^v/, '');
+      if (!isNewerVersion(latestVersion, currentVersion)) return;
 
-  async function checkForUpdates(manual = false) {
-    if (!isTauri) return;
+      const isMandatory = release.body?.includes('[MANDATORY]') ?? false;
+      const apkAsset = release.assets.find((a) => a.name.endsWith(APK_ASSET_SUFFIX));
+
+      store.patch({
+        available: true,
+        version: latestVersion,
+        body: release.body?.replace('[MANDATORY]', '').trim() ?? '',
+        date: release.published_at,
+        isMandatory,
+        apkDownloadUrl: apkAsset?.browser_download_url ?? null
+      });
+      showModal.value = true;
+    } catch {
+      // silently ignore — no network or no releases yet
+    }
+  }
+
+  async function checkForUpdates() {
+    if (!isTauri || store.hasChecked) return;
+    store.hasChecked = true;
+    store.patch({ error: null });
 
     try {
-      updateInfo.value.error = null;
       const update = await check();
-
       if (update) {
-        const isMandatory = update.body?.includes('[MANDATORY]') || false;
-
-        updateInfo.value = {
+        const isMandatory = update.body?.includes('[MANDATORY]') ?? false;
+        store.patch({
           available: true,
           version: update.version,
-          body: update.body?.replace('[MANDATORY]', '').trim() || '',
+          body: update.body?.replace('[MANDATORY]', '').trim() ?? '',
           date: update.date,
           isMandatory,
-          downloading: false,
-          progress: 0,
-          total: 0,
-          error: null
-        };
-      } else if (manual) {
-        // You could hook up a toast here to say "You're up to date!"
+          apkDownloadUrl: null
+        });
+        showModal.value = true;
       }
-    } catch (e) {
-      console.error('Failed to check for updates', e);
-      updateInfo.value.error = String(e);
+    } catch {
+      await checkViaGithub();
     }
   }
 
   async function installUpdate() {
-    if (!isTauri || !updateInfo.value.available) return;
-
+    if (!isTauri || !store.info.available || store.info.apkDownloadUrl) return;
     try {
-      updateInfo.value.downloading = true;
-      updateInfo.value.error = null;
-
+      store.patch({ downloading: true, error: null });
       const update = await check();
       if (!update) return;
 
       let downloaded = 0;
-      let contentLength = 0;
-
       await update.downloadAndInstall((event) => {
         switch (event.event) {
           case 'Started':
-            contentLength = event.data.contentLength || 0;
-            updateInfo.value.total = contentLength;
+            store.patch({ total: event.data.contentLength ?? 0 });
             break;
           case 'Progress':
             downloaded += event.data.chunkLength;
-            updateInfo.value.progress = downloaded;
+            store.patch({ progress: downloaded });
             break;
           case 'Finished':
-            updateInfo.value.downloading = false;
+            store.patch({ downloading: false });
             break;
         }
       });
-
       await relaunch();
     } catch (e) {
-      console.error('Failed to install update', e);
-      updateInfo.value.error = String(e);
-      updateInfo.value.downloading = false;
+      store.patch({ error: String(e), downloading: false });
     }
   }
 
-  function dismissUpdate() {
-    if (!updateInfo.value.isMandatory) {
-      updateInfo.value.available = false;
-    }
-  }
-
-  // Automatically check on mount
   onMounted(() => {
     checkForUpdates();
   });
 
   return {
-    updateInfo,
-    showUpdateModal,
+    updateInfo: info,
+    showUpdateModal: showModal,
     checkForUpdates,
     installUpdate,
-    dismissUpdate
+    dismissUpdate: store.dismiss
   };
 }

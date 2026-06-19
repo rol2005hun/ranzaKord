@@ -173,7 +173,8 @@ export default defineNuxtConfig({
         '@tauri-apps/plugin-process',
         '@tauri-apps/plugin-updater',
         '@tauri-apps/plugin-deep-link',
-        '@tauri-apps/plugin-opener'
+        '@tauri-apps/plugin-opener',
+        '@unhead/schema-org/vue'
       ]
     },
     esbuild: {

@@ -7,5 +7,6 @@
   "downloading": "Downloading",
   "skip": "Skip for Now",
   "installing": "Installing...",
-  "installAndRestart": "Install & Restart"
+  "installAndRestart": "Install & Restart",
+  "downloadApk": "Download Update"
 }

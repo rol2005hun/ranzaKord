@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { openUrl } from '@tauri-apps/plugin-opener';
+
 const { updateInfo, installUpdate, dismissUpdate } = useAppUpdate();
 
 const props = defineProps<{
@@ -9,10 +11,22 @@ const emit = defineEmits<{
   'update:modelValue': [value: boolean];
 }>();
 
+const isMobileUpdate = computed(() => !!updateInfo.value.apkDownloadUrl);
+
 function close() {
   if (!updateInfo.value.isMandatory && !updateInfo.value.downloading) {
     emit('update:modelValue', false);
     dismissUpdate();
+  }
+}
+
+async function downloadApk() {
+  const url = updateInfo.value.apkDownloadUrl;
+  if (!url) return;
+  try {
+    await openUrl(url);
+  } catch {
+    window.open(url, '_blank');
   }
 }
 </script>
@@ -72,7 +86,13 @@ function close() {
         {{ $t('updater.skip') }}
       </AppButton>
 
+      <AppButton v-if="isMobileUpdate" variant="primary" @click="downloadApk">
+        <AppIcon name="ph:download-simple" />
+        {{ $t('updater.downloadApk') }}
+      </AppButton>
+
       <AppButton
+        v-else
         variant="primary"
         :loading="updateInfo.downloading"
         :disabled="updateInfo.downloading"
