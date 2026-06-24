@@ -1,21 +1,40 @@
 <script setup lang="ts">
 const themeStore = useThemeStore();
+
+defineProps<{
+  collapsed?: boolean;
+}>();
 </script>
 
 <template>
-  <div class="app-brand">
-    <div v-if="themeStore.themeId === 'wc2026'" class="wc-decorations wc-decorations--left">
+  <div class="app-brand" :class="{ 'app-brand--collapsed': collapsed }">
+    <div
+      v-if="themeStore.themeId === 'wc2026'"
+      v-show="!collapsed"
+      class="wc-decorations wc-decorations--left">
       <AppIcon name="ph:flag-pennant-fill" class="wc-flag" />
     </div>
 
-    <div class="app-brand__logo-wrapper">
+    <div v-show="!collapsed" class="app-brand__logo-wrapper">
       <img src="/logo.webp" alt="ranzaKonnect" height="34" class="app-brand__logo" />
       <div v-if="themeStore.themeId === 'wc2026'" class="wc-ball-wrapper">
         <AppIcon name="ph:soccer-ball-fill" class="wc-ball" />
       </div>
     </div>
 
-    <div v-if="themeStore.themeId === 'wc2026'" class="wc-decorations wc-decorations--right">
+    <div v-show="collapsed" class="app-brand__logo-collapsed">
+      <img src="/logo.webp" alt="ranzaKonnect" height="34" class="app-brand__logo" />
+      <div
+        v-if="themeStore.themeId === 'wc2026'"
+        class="wc-ball-wrapper wc-ball-wrapper--collapsed">
+        <AppIcon name="ph:soccer-ball-fill" class="wc-ball" />
+      </div>
+    </div>
+
+    <div
+      v-if="themeStore.themeId === 'wc2026'"
+      v-show="!collapsed"
+      class="wc-decorations wc-decorations--right">
       <AppIcon name="ph:flag-pennant-fill" class="wc-flag wc-flag--right" />
     </div>
   </div>
@@ -29,10 +48,23 @@ const themeStore = useThemeStore();
   filter: drop-shadow(0 0 6px var(--color-primary-glow));
   position: relative;
 
+  &--collapsed {
+    gap: var(--space-1);
+  }
+
   &__logo-wrapper {
     position: relative;
     display: flex;
     align-items: center;
+  }
+
+  &__logo-collapsed {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
   }
 
   &__logo {
@@ -79,6 +111,12 @@ const themeStore = useThemeStore();
   color: var(--color-text-primary);
   font-size: 1.2rem;
   animation: bounce 1s infinite cubic-bezier(0.28, 0.84, 0.42, 1);
+
+  &--collapsed {
+    top: -6px;
+    right: -4px;
+    font-size: 0.9rem;
+  }
 }
 
 .wc-ball {
@@ -132,5 +170,8 @@ const themeStore = useThemeStore();
 }
 [data-theme='walker'] .app-brand img {
   filter: grayscale(1) sepia(1) saturate(1200%) hue-rotate(0deg) brightness(1.8) contrast(0.7);
+}
+[data-theme='wc2026'] .app-brand__logo {
+  filter: hue-rotate(-112deg) saturate(1.4) brightness(1.1);
 }
 </style>

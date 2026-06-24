@@ -4,18 +4,177 @@ import type { LyricLine } from '../types/sidebar.types';
 const player = usePlayer();
 const layoutStore = useLayoutStore();
 const { lyricsData, isLoading: lyricsLoading, fetchLyrics, getActiveLine } = useLyrics();
+const { connect: connectVisualizer } = useAudioVisualizer();
 
 const lyricsListRef = ref<HTMLElement | null>(null);
 const isResizing = ref(false);
+const canvasRef = ref<HTMLCanvasElement | null>(null);
+const vizWrapRef = ref<HTMLElement | null>(null);
 
 const isHydrated = ref(false);
 
+let animId: number | null = null;
+let dataArray = new Uint8Array(128);
+let primaryH = '250';
+let primaryS = '80%';
+
+function readColorVars() {
+  const s = getComputedStyle(document.documentElement);
+  primaryH = s.getPropertyValue('--color-primary-h').trim() || '250';
+  primaryS = s.getPropertyValue('--color-primary-s').trim() || '80%';
+}
+
+function resizeCanvas() {
+  const canvas = canvasRef.value;
+  const wrap = vizWrapRef.value;
+  if (!canvas || !wrap) return;
+  const { width, height } = wrap.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  canvas.style.width = `${width}px`;
+  canvas.style.height = `${height}px`;
+}
+
+function drawFrame() {
+  animId = requestAnimationFrame(drawFrame);
+  const canvas = canvasRef.value;
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const audio = player.audioElement.value;
+  if (audio) {
+    const analyser = connectVisualizer(audio, player.volume.value);
+    if (analyser) {
+      if (dataArray.length !== analyser.frequencyBinCount) {
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+      }
+      analyser.getByteFrequencyData(dataArray);
+    }
+  }
+
+  const W = canvas.width;
+  const H = canvas.height;
+  const cx = W / 2;
+  const cy = H * 0.42; // Offset slightly upwards
+  const dpr = window.devicePixelRatio || 1;
+
+  // Calculate bass energy for pulsing effects
+  let bassSum = 0;
+  const bassBins = Math.min(10, Math.max(1, Math.floor(dataArray.length / 8)));
+  for (let i = 0; i < bassBins; i++) {
+    bassSum += dataArray[i] ?? 0;
+  }
+  const bassEnergy = bassBins > 0 ? bassSum / (bassBins * 255) : 0;
+  // Steep curve for a sharp "kick" effect on the beat, increased multiplier for a stronger pulse
+  const bassScale = 1 + Math.pow(bassEnergy, 3) * 0.35;
+
+  if (vizWrapRef.value) {
+    vizWrapRef.value.style.setProperty('--bass-scale', bassScale.toString());
+  }
+
+  const innerR = Math.min(W, H) * 0.31 * bassScale;
+  const maxBarH = Math.min(W, H) * (0.18 + Math.pow(bassEnergy, 2) * 0.15);
+  const BARS = 90;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Slow continuous rotation for the visualizer lines
+  const time = performance.now() * 0.0002;
+
+  // Calculate symmetrical, smoothed amplitudes
+  const rawAmplitudes = new Float32Array(BARS);
+  const halfBars = BARS / 2;
+  const maxIdx = Math.floor(dataArray.length * 0.6);
+
+  for (let i = 0; i < halfBars; i++) {
+    const startP = i / halfBars;
+    const endP = (i + 1) / halfBars;
+
+    // Logarithmic curve to emphasize bass/mids
+    const startIdx = Math.floor(Math.pow(startP, 1.2) * maxIdx);
+    const endIdx = Math.max(startIdx + 1, Math.floor(Math.pow(endP, 1.2) * maxIdx));
+
+    let sum = 0;
+    for (let j = startIdx; j < endIdx; j++) {
+      sum += dataArray[j] ?? 0;
+    }
+    const val = sum / (endIdx - startIdx) / 255;
+
+    rawAmplitudes[i] = val;
+    rawAmplitudes[BARS - 1 - i] = val; // Mirror
+  }
+
+  // Moving average to smooth out "steps"
+  const smoothedAmplitudes = new Float32Array(BARS);
+  for (let i = 0; i < BARS; i++) {
+    const prev = rawAmplitudes[(i - 1 + BARS) % BARS] ?? 0;
+    const curr = rawAmplitudes[i] ?? 0;
+    const next = rawAmplitudes[(i + 1) % BARS] ?? 0;
+    smoothedAmplitudes[i] = prev * 0.25 + curr * 0.5 + next * 0.25;
+  }
+
+  for (let i = 0; i < BARS; i++) {
+    const amplitude = smoothedAmplitudes[i] ?? 0;
+
+    // Smoother visual bar height with a minimum bump
+    const barH = amplitude * amplitude * maxBarH + 2 * dpr;
+
+    // Distribute around the circle + add the continuous rotation
+    // Math.PI / 2 puts the bass (i=0) at the bottom
+    const angle = (i / BARS) * Math.PI * 2 + Math.PI / 2 + time;
+
+    const x1 = cx + Math.cos(angle) * innerR;
+    const y1 = cy + Math.sin(angle) * innerR;
+    const x2 = cx + Math.cos(angle) * (innerR + barH);
+    const y2 = cy + Math.sin(angle) * (innerR + barH);
+
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    // Slightly more vibrant color
+    ctx.strokeStyle = `hsla(${primaryH}, ${primaryS}, ${55 + amplitude * 25}%, ${0.4 + amplitude * 0.6})`;
+    ctx.lineWidth = ((2 * Math.PI * innerR) / BARS) * 0.4;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  }
+}
+
+let ro: ResizeObserver | null = null;
+
 onMounted(() => {
   isHydrated.value = true;
+  readColorVars();
+
+  ro = new ResizeObserver(resizeCanvas);
+  if (vizWrapRef.value) ro.observe(vizWrapRef.value);
+  nextTick(() => {
+    resizeCanvas();
+    drawFrame();
+  });
+
+  onUnmounted(() => {
+    if (animId) cancelAnimationFrame(animId);
+    if (ro) ro.disconnect();
+  });
+});
+
+watch(vizWrapRef, (el) => {
+  if (ro) {
+    if (el) {
+      ro.observe(el);
+      // Give DOM a tick to layout
+      nextTick(() => resizeCanvas());
+    } else {
+      ro.disconnect();
+    }
+  }
 });
 
 const currentTrack = computed(() => (isHydrated.value ? player.currentTrack.value : null));
 const currentTime = computed(() => (isHydrated.value ? player.currentTimeSeconds.value : 0));
+const isPlaying = computed(() => (isHydrated.value ? player.isPlaying.value : false));
 
 watch(
   currentTrack,
@@ -39,7 +198,7 @@ let scrollResumeTimer: ReturnType<typeof setTimeout> | null = null;
 let isProgrammaticScroll = false;
 let programmaticScrollTimer: ReturnType<typeof setTimeout> | null = null;
 
-function scrollToActiveLine() {
+function scrollToActiveLine(instant = false) {
   const idx = activeLineIndex.value;
   if (idx < 0) return;
   nextTick(() => {
@@ -58,7 +217,7 @@ function scrollToActiveLine() {
         isProgrammaticScroll = false;
       }, 800);
 
-      container.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+      container.scrollTo({ top: scrollPosition, behavior: instant ? 'auto' : 'smooth' });
     }
   });
 }
@@ -67,6 +226,18 @@ watch(activeLineIndex, () => {
   if (!autoScrollEnabled) return;
   scrollToActiveLine();
 });
+
+watch(
+  () => layoutStore.rightSidebarMode,
+  (newMode) => {
+    if (newMode === 'lyrics') {
+      autoScrollEnabled = true;
+      if (scrollResumeTimer) clearTimeout(scrollResumeTimer);
+      // Use instant scroll when the tab is first rendered
+      nextTick(() => scrollToActiveLine(true));
+    }
+  }
+);
 
 function onLyricsScroll() {
   if (isProgrammaticScroll) return;
@@ -177,19 +348,34 @@ const sidebarStyle = computed(() => ({
         </template>
 
         <template v-else-if="currentTrack">
-          <div class="right-sidebar__artwork-wrap">
-            <iframe
-              :key="currentTrack.videoId"
-              class="right-sidebar__video"
-              :src="`https://www.youtube.com/embed/${currentTrack.videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${currentTrack.videoId}&modestbranding=1&rel=0&disablekb=1&iv_load_policy=3&fs=0`"
-              allow="autoplay; encrypted-media"
-              allowfullscreen="false"
-              frameborder="0" />
-          </div>
+          <div ref="vizWrapRef" class="right-sidebar__artwork-wrap">
+            <img
+              v-if="currentTrack.thumbnailUrl"
+              :src="currentTrack.thumbnailUrl"
+              :alt="currentTrack.title"
+              class="right-sidebar__artwork-bg" />
+            <div v-else class="right-sidebar__artwork-placeholder">
+              <AppIcon name="ph:music-notes-simple" />
+            </div>
+            <canvas ref="canvasRef" class="right-sidebar__canvas" />
+            <div
+              class="right-sidebar__artwork-center"
+              :class="{ 'right-sidebar__artwork-center--spinning': isPlaying }">
+              <img
+                v-if="currentTrack.thumbnailUrl"
+                :src="currentTrack.thumbnailUrl"
+                :alt="currentTrack.title"
+                class="right-sidebar__artwork-thumb" />
+              <div v-else class="right-sidebar__artwork-placeholder-sm">
+                <AppIcon name="ph:music-notes-simple" />
+              </div>
+            </div>
 
-          <div class="right-sidebar__track-meta">
-            <p class="right-sidebar__track-title">{{ currentTrack.title }}</p>
-            <AppTrackArtists :track="currentTrack" class="right-sidebar__track-artist" />
+            <div class="right-sidebar__artwork-overlay" />
+            <div class="right-sidebar__track-meta">
+              <p class="right-sidebar__track-title">{{ currentTrack.title }}</p>
+              <AppTrackArtists :track="currentTrack" class="right-sidebar__track-artist" />
+            </div>
           </div>
         </template>
 
@@ -405,26 +591,80 @@ const sidebarStyle = computed(() => ({
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: var(--space-4) var(--space-3);
     gap: var(--space-3);
     overflow-y: auto;
+    flex: 1; /* Make it fill the body */
   }
 
   &__artwork-wrap {
+    position: relative;
     width: 100%;
-    aspect-ratio: 1;
-    border-radius: var(--radius-lg);
+    flex: 1; /* Expand to fill the entire info area */
     overflow: hidden;
     background: var(--color-surface-hover);
     box-shadow: var(--shadow-xl);
+    flex-shrink: 0;
   }
 
-  &__video {
+  &__artwork-bg {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
-    border: none;
+    object-fit: cover;
+    filter: blur(18px) brightness(0.35) saturate(1.6);
+    transform: scale(1.1);
     display: block;
+  }
+
+  &__canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
+  }
+
+  &__artwork-center {
+    position: absolute;
+    top: 42%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(var(--bass-scale, 1));
+    /* The transition helps smooth out rapid changes but isn't strictly necessary if raf is smooth */
+    width: 60%;
+    aspect-ratio: 1 / 1; /* Ensure it stays a perfect circle */
+    height: auto;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--color-primary) 40%, transparent),
+      0 0 24px 6px color-mix(in srgb, var(--color-primary) 20%, transparent),
+      var(--shadow-xl);
+  }
+
+  &__artwork-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    animation: artwork-spin 24s linear infinite;
+    animation-play-state: paused;
+
+    .right-sidebar__artwork-center--spinning & {
+      animation-play-state: running;
+    }
+  }
+
+  &__artwork-placeholder-sm {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: var(--color-text-secondary);
+    background: var(--color-surface-hover);
+    opacity: 0.5;
   }
 
   &__artwork-placeholder {
@@ -438,32 +678,51 @@ const sidebarStyle = computed(() => ({
     opacity: 0.4;
   }
 
+  &__artwork-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgb(0 0 0 / 0.85) 0%,
+      rgb(0 0 0 / 0.4) 40%,
+      transparent 80%
+    );
+    pointer-events: none;
+  }
+
   &__track-meta {
+    position: absolute;
+    bottom: 0;
+    left: 0;
     width: 100%;
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
+    padding: var(--space-6) var(--space-4) var(--space-4);
+    z-index: 10;
   }
 
   &__track-title {
-    font-size: var(--text-base);
+    font-size: var(--text-lg);
     font-weight: var(--font-weight-bold);
-    color: var(--color-text-primary);
+    color: #ffffff;
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    text-shadow: 0 2px 4px rgb(0 0 0 / 0.5);
   }
 
   &__track-artist {
     font-size: var(--text-sm);
-    color: var(--color-text-secondary);
+    color: rgb(255 255 255 / 0.7);
     margin: 0;
     text-decoration: none;
+    text-shadow: 0 1px 3px rgb(0 0 0 / 0.5);
 
     &--link {
       &:hover {
-        color: var(--color-primary);
+        color: #ffffff;
         text-decoration: underline;
       }
     }
@@ -523,7 +782,6 @@ const sidebarStyle = computed(() => ({
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
-    scroll-behavior: smooth;
 
     &::-webkit-scrollbar {
       width: 4px;
@@ -603,6 +861,15 @@ const sidebarStyle = computed(() => ({
 
   @media (max-width: 768px) {
     display: none;
+  }
+}
+
+@keyframes artwork-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>

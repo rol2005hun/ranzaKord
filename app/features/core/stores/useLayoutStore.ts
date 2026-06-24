@@ -48,7 +48,16 @@ export const useLayoutStore = defineStore(
     persist: [
       {
         pick: ['isRightSidebarOpen', 'rightSidebarWidth', 'rightSidebarMode'],
-        storage: piniaPluginPersistedstate.localStorage()
+        storage: {
+          getItem: (key) => {
+            const cookie = useCookie<string | null>(key);
+            return cookie.value;
+          },
+          setItem: (key, value) => {
+            const cookie = useCookie<string | null>(key, { maxAge: 31536000 });
+            cookie.value = value;
+          }
+        }
       }
     ]
   }

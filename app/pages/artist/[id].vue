@@ -28,7 +28,7 @@ const {
 });
 
 const playerStore = usePlayerStore();
-const { playTrack, togglePlay, isPlaying, currentTrack } = usePlayer();
+const { playTrack, togglePlay, isPlaying, currentTrack, playQueue } = usePlayer();
 
 useHead({
   title: computed(() => artist.value?.name || t('search.artist.badge'))
@@ -52,7 +52,7 @@ function onPlaySong(track: TrackListItem, index: number): void {
   }));
 
   const resolvedIndex = allSongs.value.findIndex((t) => t.id === track.id);
-  usePlayer().playQueue(tracksToPlay, resolvedIndex >= 0 ? resolvedIndex : index);
+  playQueue(tracksToPlay, resolvedIndex >= 0 ? resolvedIndex : index);
 }
 
 function onPlayAlbumSong(result: SearchResult): void {

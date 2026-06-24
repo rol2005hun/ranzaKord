@@ -59,7 +59,8 @@ export function usePlayer() {
       store.error = t('player.errors.playback');
     });
 
-    el.volume = Math.pow(store.volume, 3);
+    const { setGain } = useAudioVisualizer();
+    setGain(store.volume, el);
 
     if (store.currentTrack) {
       const savedTime = store.currentTimeSeconds;
@@ -199,9 +200,8 @@ export function usePlayer() {
 
   function setVolume(value: number) {
     store.volume = value;
-    if (audioRef.value) {
-      audioRef.value.volume = Math.pow(value, 3);
-    }
+    const { setGain } = useAudioVisualizer();
+    setGain(value, audioRef.value);
   }
 
   function playNext() {
@@ -256,6 +256,7 @@ export function usePlayer() {
     repeatMode: computed(() => store.repeatMode),
     hasNext: computed(() => store.hasNext),
     hasPrev: computed(() => store.hasPrev),
+    audioElement: computed(() => audioRef.value),
     bindAudio,
     playTrack,
     addToQueue,
