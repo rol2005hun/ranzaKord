@@ -22,7 +22,8 @@
     "stop": "Stop",
     "save": "Save",
     "close": "Close",
-    "back": "Back"
+    "back": "Back",
+    "settings": "Settings"
   },
   "musicDetail": {
     "titleColumn": "Title",
@@ -39,5 +40,12 @@
     "skip": "Skip for now",
     "installing": "Installing...",
     "installAndRestart": "Install & Restart"
+  },
+  "settings": {
+    "crossfade": {
+      "title": "Crossfade",
+      "description": "Smooth transition between tracks",
+      "duration": "Duration"
+    }
   }
 }

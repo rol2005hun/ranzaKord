@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const player = usePlayer();
-const audioEl = ref<HTMLAudioElement | null>(null);
+const audioEl1 = ref<HTMLAudioElement | null>(null);
+const audioEl2 = ref<HTMLAudioElement | null>(null);
 const layoutStore = useLayoutStore();
 const { lyricsData, isLoading: lyricsLoading, fetchLyrics, getActiveLine } = useLyrics();
 
@@ -15,8 +16,8 @@ const displayDuration = computed(() => (isHydrated.value ? player.durationSecond
 onMounted(() => {
   isHydrated.value = true;
   onNuxtReady(() => {
-    if (audioEl.value) {
-      player.bindAudio(audioEl.value);
+    if (audioEl1.value && audioEl2.value) {
+      player.bindAudio(audioEl1.value, audioEl2.value);
     }
   });
 });
@@ -146,7 +147,8 @@ function onVolumeInput(event: Event) {
 
 <template>
   <div>
-    <audio ref="audioEl" preload="metadata" playsinline />
+    <audio ref="audioEl1" preload="metadata" playsinline />
+    <audio ref="audioEl2" preload="metadata" playsinline />
     <aside class="player-bar" :aria-label="$t('player.playerBar')">
       <div class="player-bar__left">
         <div class="player-bar__artwork">

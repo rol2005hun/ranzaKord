@@ -22,12 +22,7 @@ export default defineEventHandler(async (event) => {
     skipped?: boolean;
   }>(event);
 
-  if (
-    !body ||
-    typeof body.trackId !== 'string' ||
-    typeof body.listeningSeconds !== 'number' ||
-    typeof body.durationSeconds !== 'number'
-  ) {
+  if (!body || typeof body.trackId !== 'string' || typeof body.listeningSeconds !== 'number') {
     throw createError({ statusCode: 400, statusMessage: t('player.errors.invalidPayload') });
   }
 
@@ -36,7 +31,7 @@ export default defineEventHandler(async (event) => {
     title = '',
     artist = '',
     thumbnailUrl = '',
-    durationSeconds,
+    durationSeconds = 0,
     listeningSeconds,
     skipped = false
   } = body;

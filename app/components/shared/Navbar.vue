@@ -1,8 +1,7 @@
 <script setup lang="ts">
 const { currentUser, logout, isAuthenticated } = useAuth();
-const { themeId, themes, setTheme } = useTheme();
-const { locale, setLocale } = useI18n();
 const { updateInfo, showUpdateModal } = useAppUpdate();
+const layoutStore = useLayoutStore();
 
 const isDropdownOpen = ref(false);
 const isTauriApp = ref(false);
@@ -79,30 +78,21 @@ function closeDropdown() {
           @click="closeDropdown"></div>
 
         <div v-if="isDropdownOpen" class="app-navbar__dropdown">
-          <div class="app-navbar__dropdown-row">
-            <span class="app-navbar__dropdown-row-label">{{ $t('core.nav.language') }}</span>
-            <AppSelect
-              :model-value="locale as string"
-              :options="[
-                { label: 'English', value: 'en', icon: 'flag:gb-1x1' },
-                { label: 'Magyar', value: 'hu', icon: 'flag:hu-1x1' }
-              ]"
-              class="app-navbar__select"
-              @update:model-value="setLocale($event as any)" />
-          </div>
+          <button
+            class="app-navbar__dropdown-item"
+            @click="
+              () => {
+                layoutStore.openSettings();
+                closeDropdown();
+              }
+            ">
+            <AppIcon name="ph:gear" class="app-navbar__dropdown-icon" />
+            <span class="app-navbar__dropdown-label">
+              {{ $t('core.actions.settings') || 'Settings' }}
+            </span>
+          </button>
 
-          <div class="app-navbar__dropdown-row">
-            <span class="app-navbar__dropdown-row-label">{{ $t('core.nav.theme') }}</span>
-            <AppSelect
-              :model-value="themeId"
-              :options="themes.map((t) => ({ label: t.label, value: t.id, icon: t.icon }))"
-              class="app-navbar__select"
-              @update:model-value="setTheme($event as any)" />
-          </div>
-
-          <div
-            class="app-navbar__dropdown-divider"
-            style="margin: var(--space-2) var(--space-4)"></div>
+          <div class="app-navbar__dropdown-divider" style="margin: var(--space-2) 0"></div>
 
           <button
             class="app-navbar__dropdown-item app-navbar__dropdown-item--danger"
@@ -118,6 +108,8 @@ function closeDropdown() {
         </div>
       </div>
     </div>
+
+    <SettingsModal />
   </header>
 </template>
 

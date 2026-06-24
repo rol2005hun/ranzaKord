@@ -13,6 +13,8 @@ export const usePlayerStore = defineStore(
     const error = ref<string | null>(null);
     const isShuffle = ref(false);
     const repeatMode = ref<'off' | 'all' | 'one'>('off');
+    const crossfadeEnabled = ref(false);
+    const crossfadeDuration = ref(5);
 
     const hasNext = computed(() => {
       const track = currentTrack.value;
@@ -163,6 +165,8 @@ export const usePlayerStore = defineStore(
       repeatMode,
       hasNext,
       hasPrev,
+      crossfadeEnabled,
+      crossfadeDuration,
       setTrack,
       setQueue,
       addToQueue,
@@ -182,7 +186,9 @@ export const usePlayerStore = defineStore(
           'isShuffle',
           'repeatMode',
           'queue',
-          'isPlaying'
+          'isPlaying',
+          'crossfadeEnabled',
+          'crossfadeDuration'
         ],
         storage: piniaPluginPersistedstate.localStorage()
       }

@@ -1,11 +1,18 @@
 let audioCtx: AudioContext | null = null;
 let analyserNode: AnalyserNode | null = null;
-let sourceNode: MediaElementAudioSourceNode | null = null;
-let gainNode: GainNode | null = null;
+let sourceNode1: MediaElementAudioSourceNode | null = null;
+let sourceNode2: MediaElementAudioSourceNode | null = null;
+let crossfadeGain1: GainNode | null = null;
+let crossfadeGain2: GainNode | null = null;
+let masterGainNode: GainNode | null = null;
 let isConnected = false;
 
 export function useAudioVisualizer() {
-  function connect(audioEl: HTMLAudioElement, currentVolume: number): AnalyserNode | null {
+  function connect(
+    audioEl1: HTMLAudioElement,
+    audioEl2: HTMLAudioElement,
+    currentVolume: number
+  ): AnalyserNode | null {
     if (!import.meta.client) return null;
 
     try {
@@ -17,26 +24,31 @@ export function useAudioVisualizer() {
         void audioCtx.resume();
       }
 
-      if (!sourceNode) {
-        sourceNode = audioCtx.createMediaElementSource(audioEl);
+      if (!sourceNode1 && !sourceNode2) {
+        sourceNode1 = audioCtx.createMediaElementSource(audioEl1);
+        sourceNode2 = audioCtx.createMediaElementSource(audioEl2);
         analyserNode = audioCtx.createAnalyser();
-        gainNode = audioCtx.createGain();
+
+        crossfadeGain1 = audioCtx.createGain();
+        crossfadeGain2 = audioCtx.createGain();
+        masterGainNode = audioCtx.createGain();
 
         analyserNode.fftSize = 512;
         analyserNode.smoothingTimeConstant = 0.85;
 
-        sourceNode.connect(analyserNode);
-        analyserNode.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
+        sourceNode1.connect(crossfadeGain1);
+        crossfadeGain1.connect(analyserNode);
+
+        sourceNode2.connect(crossfadeGain2);
+        crossfadeGain2.connect(analyserNode);
+
+        analyserNode.connect(masterGainNode);
+        masterGainNode.connect(audioCtx.destination);
 
         isConnected = true;
       }
 
-      // Ensure audio element is at max volume, and gain node handles the actual volume
-      if (gainNode) {
-        gainNode.gain.value = Math.pow(currentVolume, 3);
-        audioEl.volume = 1.0;
-      }
+      setGains(1, 0, currentVolume, audioEl1, audioEl2);
     } catch {
       // Audio element already connected or Web Audio not available
     }
@@ -44,18 +56,24 @@ export function useAudioVisualizer() {
     return analyserNode;
   }
 
-  function setGain(vol: number, audioEl: HTMLAudioElement | null) {
-    if (isConnected && gainNode) {
-      // Web Audio handles volume
-      gainNode.gain.value = Math.pow(vol, 3);
-      if (audioEl && audioEl.volume !== 1.0) {
-        audioEl.volume = 1.0;
-      }
-    } else if (audioEl) {
-      // Standard HTML5 audio handles volume
-      audioEl.volume = Math.pow(vol, 3);
+  function setGains(
+    cf1: number,
+    cf2: number,
+    masterVol: number,
+    audioEl1: HTMLAudioElement | null,
+    audioEl2: HTMLAudioElement | null
+  ) {
+    if (isConnected && audioCtx && masterGainNode && crossfadeGain1 && crossfadeGain2) {
+      masterGainNode.gain.value = Math.pow(masterVol, 3);
+      crossfadeGain1.gain.value = cf1;
+      crossfadeGain2.gain.value = cf2;
+      if (audioEl1 && audioEl1.volume !== 1.0) audioEl1.volume = 1.0;
+      if (audioEl2 && audioEl2.volume !== 1.0) audioEl2.volume = 1.0;
+    } else {
+      if (audioEl1) audioEl1.volume = cf1 * Math.pow(masterVol, 3);
+      if (audioEl2) audioEl2.volume = cf2 * Math.pow(masterVol, 3);
     }
   }
 
-  return { connect, setGain, isConnected };
+  return { connect, setGains, isConnected };
 }

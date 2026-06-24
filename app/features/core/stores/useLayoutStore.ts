@@ -10,6 +10,7 @@ export const useLayoutStore = defineStore(
     const isRightSidebarOpen = ref(true);
     const rightSidebarMode = ref<SidebarMode>('info');
     const rightSidebarWidth = ref(RIGHT_SIDEBAR_DEFAULT_WIDTH);
+    const isSettingsOpen = ref(false);
 
     function toggleRightSidebar() {
       isRightSidebarOpen.value = !isRightSidebarOpen.value;
@@ -33,15 +34,31 @@ export const useLayoutStore = defineStore(
       rightSidebarWidth.value = Math.max(RIGHT_SIDEBAR_MIN_WIDTH, Math.min(width, maxWidth));
     }
 
+    function toggleSettings() {
+      isSettingsOpen.value = !isSettingsOpen.value;
+    }
+
+    function openSettings() {
+      isSettingsOpen.value = true;
+    }
+
+    function closeSettings() {
+      isSettingsOpen.value = false;
+    }
+
     return {
       isRightSidebarOpen,
       rightSidebarMode,
       rightSidebarWidth,
+      isSettingsOpen,
       toggleRightSidebar,
       openRightSidebar,
       closeRightSidebar,
       setRightSidebarMode,
-      setRightSidebarWidth
+      setRightSidebarWidth,
+      toggleSettings,
+      openSettings,
+      closeSettings
     };
   },
   {

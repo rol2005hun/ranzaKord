@@ -1,6 +1,17 @@
 import type { Track, TrackStatPayload } from '../types/player.types';
 
-const audioRef = ref<HTMLAudioElement | null>(null);
+const audio1Ref = ref<HTMLAudioElement | null>(null);
+const audio2Ref = ref<HTMLAudioElement | null>(null);
+const activeAudioIndex = ref(0);
+
+const activeAudio = computed(() =>
+  activeAudioIndex.value === 0 ? audio1Ref.value : audio2Ref.value
+);
+
+let crossfadeGain1 = 1.0;
+let crossfadeGain2 = 0.0;
+let isCrossfading = false;
+let crossfadeTriggered = false;
 
 export function usePlayer() {
   const store = usePlayerStore();
@@ -17,63 +28,98 @@ export function usePlayer() {
 
   let isRestoring = false;
 
-  function bindAudio(el: HTMLAudioElement) {
-    audioRef.value = el;
+  function applyVolumes() {
+    const { setGains } = useAudioVisualizer();
+    setGains(crossfadeGain1, crossfadeGain2, store.volume, audio1Ref.value, audio2Ref.value);
+  }
 
-    el.addEventListener('timeupdate', () => {
-      if (isRestoring) return;
-      store.currentTimeSeconds = el.currentTime;
+  function bindAudio(el1: HTMLAudioElement, el2: HTMLAudioElement) {
+    audio1Ref.value = el1;
+    audio2Ref.value = el2;
+    activeAudioIndex.value = 0;
+    crossfadeGain1 = 1.0;
+    crossfadeGain2 = 0.0;
+    isCrossfading = false;
+    crossfadeTriggered = false;
+
+    const els = [el1, el2];
+
+    els.forEach((el, index) => {
+      el.addEventListener('timeupdate', () => {
+        if (isRestoring) return;
+        if (index === activeAudioIndex.value) {
+          store.currentTimeSeconds = el.currentTime;
+
+          const actualDuration = store.currentTrack?.durationSeconds || 0;
+          if (
+            store.crossfadeEnabled &&
+            store.crossfadeDuration > 0 &&
+            actualDuration > 0 &&
+            store.hasNext &&
+            !isCrossfading &&
+            !crossfadeTriggered
+          ) {
+            const timeLeft = actualDuration - el.currentTime;
+            if (timeLeft <= store.crossfadeDuration) {
+              crossfadeTriggered = true;
+              startCrossfade();
+            }
+          }
+        }
+      });
+
+      el.addEventListener('durationchange', () => {
+        if (index === activeAudioIndex.value && isFinite(el.duration)) {
+          store.durationSeconds = el.duration;
+        }
+      });
+
+      el.addEventListener('play', () => {
+        if (index === activeAudioIndex.value) store.isPlaying = true;
+      });
+
+      el.addEventListener('pause', () => {
+        if (index === activeAudioIndex.value && !isCrossfading) {
+          store.isPlaying = false;
+        }
+      });
+
+      el.addEventListener('ended', () => {
+        if (index !== activeAudioIndex.value) return;
+        store.isPlaying = false;
+        if (store.currentTrack) {
+          recordTrackStat(store.currentTrack, Math.floor(el.currentTime), false);
+        }
+        if (store.repeatMode === 'one') {
+          seek(0);
+          resume();
+        } else {
+          if (!isCrossfading) {
+            const next = store.nextTrack();
+            if (next) playTrack(next);
+          }
+        }
+      });
+
+      el.addEventListener('error', () => {
+        if (index === activeAudioIndex.value) {
+          store.isLoading = false;
+          store.isPlaying = false;
+          store.error = t('player.errors.playback');
+        }
+      });
     });
 
-    el.addEventListener('durationchange', () => {
-      if (isFinite(el.duration)) {
-        store.durationSeconds = el.duration;
-      }
-    });
-
-    el.addEventListener('play', () => {
-      store.isPlaying = true;
-    });
-
-    el.addEventListener('pause', () => {
-      store.isPlaying = false;
-    });
-
-    el.addEventListener('ended', () => {
-      store.isPlaying = false;
-      if (store.currentTrack) {
-        recordTrackStat(store.currentTrack, Math.floor(el.currentTime), false);
-      }
-      if (store.repeatMode === 'one') {
-        seek(0);
-        resume();
-      } else {
-        const next = store.nextTrack();
-        if (next) playTrack(next);
-      }
-    });
-
-    el.addEventListener('error', () => {
-      store.isLoading = false;
-      store.isPlaying = false;
-      store.error = t('player.errors.playback');
-    });
-
-    const { setGain } = useAudioVisualizer();
-    setGain(store.volume, el);
+    applyVolumes();
 
     if (store.currentTrack) {
       const savedTime = store.currentTimeSeconds;
       const wasPlaying = store.isPlaying;
 
-      if (wasPlaying) {
-        store.isLoading = true;
-      }
+      if (wasPlaying) store.isLoading = true;
+      if (savedTime > 0) isRestoring = true;
 
-      if (savedTime > 0) {
-        isRestoring = true;
-      }
-
+      const el = el1;
       el.src = getApiUrl(`/api/stream?v=${store.currentTrack.videoId}`);
       el.load();
 
@@ -102,6 +148,58 @@ export function usePlayer() {
     }
   }
 
+  function startCrossfade() {
+    const nextTrack = store.nextTrack();
+    if (!nextTrack) return;
+
+    const outAudio = activeAudio.value;
+    const outIndex = activeAudioIndex.value;
+
+    activeAudioIndex.value = activeAudioIndex.value === 0 ? 1 : 0;
+    const inAudio = activeAudio.value;
+
+    if (!outAudio || !inAudio) return;
+
+    isCrossfading = true;
+
+    inAudio.src = getApiUrl(`/api/stream?v=${nextTrack.videoId}`);
+    inAudio.load();
+    inAudio.play().catch(() => {});
+
+    store.setTrack(nextTrack);
+    store.isPlaying = true;
+
+    const durationMs = store.crossfadeDuration * 1000;
+    const startTime = performance.now();
+
+    function step(now: number) {
+      const elapsed = now - startTime;
+      const progress = Math.min(1, Math.max(0, elapsed / durationMs));
+
+      const fadeOut = 1 - progress;
+      const fadeIn = progress;
+
+      if (outIndex === 0) {
+        crossfadeGain1 = fadeOut;
+        crossfadeGain2 = fadeIn;
+      } else {
+        crossfadeGain2 = fadeOut;
+        crossfadeGain1 = fadeIn;
+      }
+      applyVolumes();
+
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      } else {
+        isCrossfading = false;
+        crossfadeTriggered = false;
+        outAudio?.pause();
+        if (outAudio) outAudio.currentTime = 0;
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
   function recordTrackStat(track: Track, listeningSeconds: number, skipped: boolean) {
     const payload: TrackStatPayload = {
       trackId: track.videoId,
@@ -123,6 +221,9 @@ export function usePlayer() {
       togglePlay();
       return;
     }
+
+    isCrossfading = false;
+    crossfadeTriggered = false;
 
     if (store.currentTrack && store.currentTimeSeconds > 0) {
       const skipped = store.currentTimeSeconds < store.durationSeconds * 0.9;
@@ -148,16 +249,26 @@ export function usePlayer() {
 
     try {
       await nextTick();
-
-      if (!audioRef.value) {
+      const el = activeAudio.value;
+      if (!el) {
         store.isLoading = false;
         return;
       }
 
-      audioRef.value.src = getApiUrl(`/api/stream?v=${track.videoId}`);
-      audioRef.value.load();
+      crossfadeGain1 = activeAudioIndex.value === 0 ? 1.0 : 0.0;
+      crossfadeGain2 = activeAudioIndex.value === 1 ? 1.0 : 0.0;
+      applyVolumes();
 
-      await audioRef.value.play();
+      const otherEl = activeAudioIndex.value === 0 ? audio2Ref.value : audio1Ref.value;
+      if (otherEl) {
+        otherEl.pause();
+        otherEl.currentTime = 0;
+      }
+
+      el.src = getApiUrl(`/api/stream?v=${track.videoId}`);
+      el.load();
+
+      await el.play();
       store.isPlaying = true;
     } catch {
       store.error = t('player.errors.stream');
@@ -167,12 +278,12 @@ export function usePlayer() {
   }
 
   function pause() {
-    audioRef.value?.pause();
+    activeAudio.value?.pause();
     store.isPlaying = false;
   }
 
   function resume() {
-    audioRef.value
+    activeAudio.value
       ?.play()
       .then(() => {
         store.isPlaying = true;
@@ -191,8 +302,8 @@ export function usePlayer() {
   }
 
   function seek(seconds: number) {
-    if (audioRef.value) {
-      audioRef.value.currentTime = seconds;
+    if (activeAudio.value) {
+      activeAudio.value.currentTime = seconds;
       store.currentTimeSeconds = seconds;
       store.syncDiscordPresence();
     }
@@ -200,8 +311,7 @@ export function usePlayer() {
 
   function setVolume(value: number) {
     store.volume = value;
-    const { setGain } = useAudioVisualizer();
-    setGain(value, audioRef.value);
+    applyVolumes();
   }
 
   function playNext() {
@@ -256,7 +366,9 @@ export function usePlayer() {
     repeatMode: computed(() => store.repeatMode),
     hasNext: computed(() => store.hasNext),
     hasPrev: computed(() => store.hasPrev),
-    audioElement: computed(() => audioRef.value),
+    audioElement: activeAudio,
+    audioElement1: computed(() => audio1Ref.value),
+    audioElement2: computed(() => audio2Ref.value),
     bindAudio,
     playTrack,
     addToQueue,

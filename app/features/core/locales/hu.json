@@ -22,11 +22,19 @@
     "stop": "Leállít",
     "save": "Mentés",
     "close": "Bezárás",
-    "back": "Vissza"
+    "back": "Vissza",
+    "settings": "Beállítások"
   },
   "musicDetail": {
     "titleColumn": "Cím",
     "empty": "Nincsenek zenék",
     "error": "Valami hiba történt."
+  },
+  "settings": {
+    "crossfade": {
+      "title": "Keresztúszás (Crossfade)",
+      "description": "Finom átmenet a zeneszámok között",
+      "duration": "Időtartam"
+    }
   }
 }

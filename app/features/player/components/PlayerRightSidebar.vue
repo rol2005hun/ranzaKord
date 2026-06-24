@@ -43,9 +43,10 @@ function drawFrame() {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
-  const audio = player.audioElement.value;
-  if (audio) {
-    const analyser = connectVisualizer(audio, player.volume.value);
+  const audio1 = player.audioElement1.value;
+  const audio2 = player.audioElement2.value;
+  if (audio1 && audio2) {
+    const analyser = connectVisualizer(audio1, audio2, player.volume.value);
     if (analyser) {
       if (dataArray.length !== analyser.frequencyBinCount) {
         dataArray = new Uint8Array(analyser.frequencyBinCount);
