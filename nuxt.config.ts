@@ -9,7 +9,7 @@ export default defineNuxtConfig({
       titleTemplate: '%s | ranzaKord',
       charset: 'utf-8',
       viewport: 'width=device-width, initial-scale=1',
-      link: [{ rel: 'icon', type: 'image/x-icon', href: '/logo.webp' }],
+      link: [{ rel: 'icon', type: 'image/webp', href: '/logo.webp' }],
       script: [
         {
           innerHTML: `

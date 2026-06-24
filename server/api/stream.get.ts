@@ -1,3 +1,5 @@
+import dns from 'node:dns';
+
 type ClientType = 'TV' | 'WEB' | 'YTMUSIC' | 'ANDROID' | 'IOS' | 'TV_EMBEDDED' | 'WEB_CREATOR';
 const workingClients: ClientType[] = [
   'IOS',
@@ -8,6 +10,11 @@ const workingClients: ClientType[] = [
   'TV_EMBEDDED',
   'WEB_CREATOR'
 ];
+
+// Force Node.js to always use IPv4. This solves the YouTube IP mismatch 403 Forbidden!
+// Since youtubei.js and Node fetch might resolve DNS differently (IPv6 vs IPv4),
+// YouTube detects the IP difference and blocks the stream.
+dns.setDefaultResultOrder('ipv4first');
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
@@ -21,6 +28,7 @@ export default defineEventHandler(async (event) => {
   const innertube = await createInnertube(true);
   const debugInfo: Record<string, string> = {};
 
+  let successfulClient: ClientType | undefined;
   let resolvedStreamUrl: string | undefined;
 
   for (let attempt = 1; attempt <= 2; attempt++) {
@@ -60,6 +68,7 @@ export default defineEventHandler(async (event) => {
           );
         }
 
+        successfulClient = client;
         resolvedStreamUrl = candidateUrl;
         break;
       } catch (e) {
@@ -67,12 +76,12 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    if (resolvedStreamUrl) {
+    if (successfulClient && resolvedStreamUrl) {
       break;
     }
   }
 
-  if (!resolvedStreamUrl) {
+  if (!successfulClient || !resolvedStreamUrl) {
     throw createError({
       statusCode: 500,
       statusMessage: t('player.errors.extractFailed', { msg: 'All clients failed' }),
@@ -80,10 +89,26 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  return proxyRequest(event, resolvedStreamUrl, {
-    headers: {
-      'User-Agent':
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+  const reqHeaders = getRequestHeaders(event);
+
+  // Forward everything except the headers that leak localhost
+  const proxyHeaders = new Headers();
+  Object.entries(reqHeaders).forEach(([key, value]) => {
+    if (value && !['host', 'referer', 'origin'].includes(key.toLowerCase())) {
+      proxyHeaders.set(key, value);
     }
+  });
+
+  // Set a safe referer (mimic production)
+  proxyHeaders.set('referer', 'https://kord.ranzak.dev/');
+
+  // Always set a standard web user-agent to avoid mobile client tracking mismatches
+  proxyHeaders.set(
+    'user-agent',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+  );
+
+  return proxyRequest(event, resolvedStreamUrl, {
+    headers: Object.fromEntries(proxyHeaders.entries())
   });
 });

@@ -180,7 +180,7 @@ const sidebarStyle = computed(() => ({
           <div class="right-sidebar__artwork-wrap">
             <img
               v-if="currentTrack.thumbnailUrl"
-              :src="useApiUrl(`/api/image?url=${encodeURIComponent(currentTrack.thumbnailUrl)}`)"
+              :src="currentTrack.thumbnailUrl"
               :alt="currentTrack.title"
               class="right-sidebar__artwork" />
             <div v-else class="right-sidebar__artwork-placeholder">
@@ -347,8 +347,8 @@ const sidebarStyle = computed(() => ({
     gap: var(--space-1);
     padding: var(--space-1) var(--space-2);
     border: none;
-    background: transparent;
-    color: var(--color-text-secondary);
+    color: var(--color-text-primary);
+    opacity: 0.8;
     font-size: var(--text-xs);
     font-weight: var(--font-weight-medium);
     cursor: pointer;
@@ -370,6 +370,7 @@ const sidebarStyle = computed(() => ({
 
     &--active {
       color: var(--color-text-primary);
+      opacity: 1;
       background: color-mix(in srgb, var(--color-primary) 20%, transparent);
     }
   }
@@ -490,7 +491,7 @@ const sidebarStyle = computed(() => ({
   &__empty-text {
     font-size: var(--text-sm);
     font-weight: var(--font-weight-semibold);
-    color: var(--color-text-secondary);
+    color: var(--color-text-primary);
     margin: 0;
   }
 

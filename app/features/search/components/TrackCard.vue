@@ -38,7 +38,7 @@ const isInAnyPlaylist = computed(() => playlistsStore.isTrackInAnyPlaylist(props
     <div class="track-card__thumbnail">
       <img
         v-if="track.thumbnailUrl"
-        :src="useApiUrl(`/api/image?url=${encodeURIComponent(track.thumbnailUrl)}`)"
+        :src="track.thumbnailUrl"
         :alt="track.title"
         class="track-card__img"
         fetchpriority="high" />

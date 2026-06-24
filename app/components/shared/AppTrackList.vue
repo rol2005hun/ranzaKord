@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 
 export interface TrackItemArtist {
   name: string;
@@ -98,6 +98,11 @@ function formatDate(dateStr?: string): string {
     day: '2-digit'
   });
 }
+
+const isHydrated = ref(false);
+onMounted(() => {
+  isHydrated.value = true;
+});
 </script>
 
 <template>
@@ -146,7 +151,7 @@ function formatDate(dateStr?: string): string {
             :key="index"
             class="app-track-list__track"
             :class="{
-              'app-track-list__track--playing': track?.isPlaying,
+              'app-track-list__track--playing': isHydrated && track?.isPlaying,
               'app-track-list__track--skeleton': !track
             }"
             :style="{ height: `${itemHeight}px`, gridTemplateColumns: gridColumns }"
@@ -180,15 +185,18 @@ function formatDate(dateStr?: string): string {
                   <div style="display: contents">
                     <span
                       class="app-track-list__track-num"
-                      :class="{ 'app-track-list__track-num--playing': track.isPlaying }">
+                      :class="{
+                        'app-track-list__track-num--playing': isHydrated && track.isPlaying
+                      }">
                       <AppIcon
-                        v-if="track.isPlaying"
+                        v-if="isHydrated && track.isPlaying"
                         name="ph:speaker-high-fill"
                         class="text-primary" />
                       <template v-else>{{ index + 1 }}</template>
                     </span>
                     <div class="app-track-list__track-play">
-                      <AppIcon :name="track.isPlaying ? 'ph:pause-fill' : 'ph:play-fill'" />
+                      <AppIcon
+                        :name="isHydrated && track.isPlaying ? 'ph:pause-fill' : 'ph:play-fill'" />
                     </div>
                   </div>
                   <template #fallback>
@@ -212,7 +220,7 @@ function formatDate(dateStr?: string): string {
                 <div class="app-track-list__track-text">
                   <span
                     class="app-track-list__track-title"
-                    :class="{ 'text-primary': track.isPlaying }">
+                    :class="{ 'text-primary': isHydrated && track.isPlaying }">
                     {{ track.title }}
                   </span>
                   <div class="app-track-list__track-artist">
@@ -250,7 +258,7 @@ function formatDate(dateStr?: string): string {
         v-for="(track, index) in tracks"
         :key="track.id"
         class="app-track-list__track"
-        :class="{ 'app-track-list__track--playing': track.isPlaying }"
+        :class="{ 'app-track-list__track--playing': isHydrated && track.isPlaying }"
         :style="{ height: `${itemHeight}px`, gridTemplateColumns: gridColumns }"
         @click="emit('play', track, index)">
         <div class="app-track-list__track-num-wrapper">
@@ -258,12 +266,15 @@ function formatDate(dateStr?: string): string {
             <div style="display: contents">
               <span
                 class="app-track-list__track-num"
-                :class="{ 'app-track-list__track-num--playing': track.isPlaying }">
-                <AppIcon v-if="track.isPlaying" name="ph:speaker-high-fill" class="text-primary" />
+                :class="{ 'app-track-list__track-num--playing': isHydrated && track.isPlaying }">
+                <AppIcon
+                  v-if="isHydrated && track.isPlaying"
+                  name="ph:speaker-high-fill"
+                  class="text-primary" />
                 <template v-else>{{ index + 1 }}</template>
               </span>
               <div class="app-track-list__track-play">
-                <AppIcon :name="track.isPlaying ? 'ph:pause-fill' : 'ph:play-fill'" />
+                <AppIcon :name="isHydrated && track.isPlaying ? 'ph:pause-fill' : 'ph:play-fill'" />
               </div>
             </div>
             <template #fallback>
@@ -283,7 +294,9 @@ function formatDate(dateStr?: string): string {
               loading="lazy" />
           </div>
           <div class="app-track-list__track-text">
-            <span class="app-track-list__track-title" :class="{ 'text-primary': track.isPlaying }">
+            <span
+              class="app-track-list__track-title"
+              :class="{ 'text-primary': isHydrated && track.isPlaying }">
               {{ track.title }}
             </span>
             <div class="app-track-list__track-artist">
