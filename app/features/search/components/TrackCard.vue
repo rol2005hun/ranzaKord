@@ -73,15 +73,7 @@ const isInAnyPlaylist = computed(() => playlistsStore.isTrackInAnyPlaylist(props
     <div class="track-card__info">
       <p class="track-card__title">{{ track.title }}</p>
       <p class="track-card__artist">
-        <template v-if="track.artists && track.artists.length > 0">
-          <template v-for="(artist, index) in track.artists" :key="index">
-            {{ artist.name }}
-            <span v-if="index < track.artists.length - 1">,&nbsp;</span>
-          </template>
-        </template>
-        <template v-else>
-          {{ track.artist }}
-        </template>
+        <AppTrackArtists :track="track" @click.stop />
       </p>
       <p v-if="track.durationSeconds" class="track-card__duration">
         {{ formatTime(track.durationSeconds) }}

@@ -105,7 +105,7 @@ function closeDropdown() {
             style="margin: var(--space-2) var(--space-4)"></div>
 
           <button
-            class="app-navbar__dropdown-item"
+            class="app-navbar__dropdown-item app-navbar__dropdown-item--danger"
             @click="
               () => {
                 logout();

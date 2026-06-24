@@ -178,14 +178,13 @@ const sidebarStyle = computed(() => ({
 
         <template v-else-if="currentTrack">
           <div class="right-sidebar__artwork-wrap">
-            <img
-              v-if="currentTrack.thumbnailUrl"
-              :src="currentTrack.thumbnailUrl"
-              :alt="currentTrack.title"
-              class="right-sidebar__artwork" />
-            <div v-else class="right-sidebar__artwork-placeholder">
-              <AppIcon name="ph:music-notes-simple" />
-            </div>
+            <iframe
+              :key="currentTrack.videoId"
+              class="right-sidebar__video"
+              :src="`https://www.youtube.com/embed/${currentTrack.videoId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${currentTrack.videoId}&modestbranding=1&rel=0&disablekb=1&iv_load_policy=3&fs=0`"
+              allow="autoplay; encrypted-media"
+              allowfullscreen="false"
+              frameborder="0" />
           </div>
 
           <div class="right-sidebar__track-meta">
@@ -347,8 +346,8 @@ const sidebarStyle = computed(() => ({
     gap: var(--space-1);
     padding: var(--space-1) var(--space-2);
     border: none;
-    color: var(--color-text-primary);
-    opacity: 0.8;
+    background: transparent;
+    color: var(--color-text-secondary);
     font-size: var(--text-xs);
     font-weight: var(--font-weight-medium);
     cursor: pointer;
@@ -370,7 +369,6 @@ const sidebarStyle = computed(() => ({
 
     &--active {
       color: var(--color-text-primary);
-      opacity: 1;
       background: color-mix(in srgb, var(--color-primary) 20%, transparent);
     }
   }
@@ -421,11 +419,12 @@ const sidebarStyle = computed(() => ({
     box-shadow: var(--shadow-xl);
   }
 
-  &__artwork {
+  &__video {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    border: none;
     display: block;
+    pointer-events: none;
   }
 
   &__artwork-placeholder {
