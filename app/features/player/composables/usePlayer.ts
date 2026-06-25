@@ -15,7 +15,8 @@ let crossfadeTriggered = false;
 
 export function usePlayer() {
   const store = usePlayerStore();
-  const { t } = useI18n();
+  const nuxtApp = useNuxtApp();
+  const t = nuxtApp.$i18n.t;
   const config = useRuntimeConfig();
 
   function getApiUrl(path: string) {

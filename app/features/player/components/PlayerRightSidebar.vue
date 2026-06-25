@@ -262,9 +262,7 @@ const sidebarStyle = computed(() => ({
     </div>
 
     <div class="right-sidebar__body">
-      <div
-        v-if="!isHydrated || layoutStore.rightSidebarMode === 'info'"
-        class="right-sidebar__info">
+      <div v-if="layoutStore.rightSidebarMode === 'info'" class="right-sidebar__info">
         <template v-if="!isHydrated">
           <div class="right-sidebar__artwork-wrap">
             <AppSkeleton width="100%" height="100%" border-radius="var(--radius-lg)" />
@@ -316,11 +314,13 @@ const sidebarStyle = computed(() => ({
         </template>
       </div>
 
-      <div
-        v-else-if="isHydrated && layoutStore.rightSidebarMode === 'lyrics'"
-        class="right-sidebar__lyrics">
+      <div v-else-if="layoutStore.rightSidebarMode === 'lyrics'" class="right-sidebar__lyrics">
         <div
-          v-if="lyricsLoading || (currentTrack && lyricsData?.trackId !== currentTrack.videoId)"
+          v-if="
+            !isHydrated ||
+            lyricsLoading ||
+            (currentTrack && lyricsData?.trackId !== currentTrack.videoId)
+          "
           class="right-sidebar__lyrics-loading-skeleton">
           <AppSkeleton
             v-for="(width, index) in [

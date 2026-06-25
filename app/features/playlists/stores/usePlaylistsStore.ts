@@ -20,7 +20,8 @@ export const usePlaylistsStore = defineStore('playlists', () => {
   const importResult = ref<ImportResult | null>(null);
   const importingUrl = ref<string | null>(null);
   const importingPlatform = ref<'youtube' | 'spotify' | null>(null);
-  const { t } = useI18n();
+  const nuxtApp = useNuxtApp();
+  const t = nuxtApp.$i18n.t;
 
   // Capture request headers during setup for SSR
   const reqHeaders = import.meta.server ? useRequestHeaders(['cookie']) : { cookie: '' };
