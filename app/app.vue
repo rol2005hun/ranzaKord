@@ -10,6 +10,7 @@ const customColorStyle = computed(() => {
 
 const { locale } = useI18n();
 const { showUpdateModal } = useAppUpdate();
+const layoutStore = useLayoutStore();
 
 const isTauriApp = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
@@ -94,6 +95,10 @@ onMounted(async () => {
       <ClientOnly>
         <AppUpdateModal v-model="showUpdateModal" />
       </ClientOnly>
+
+      <Teleport to="body">
+        <AppFullscreenVisualizer v-if="layoutStore.isFullscreenVisualizer" />
+      </Teleport>
 
       <div class="app-version-overlay" aria-hidden="true">
         v{{ useRuntimeConfig().public.appVersion }}

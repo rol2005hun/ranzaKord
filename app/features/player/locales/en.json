@@ -22,6 +22,8 @@
   "nowPlaying": "Now Playing",
   "moreFrom": "More from {artist}",
   "noRecommendations": "No recommendations available",
+  "fullscreenVisualizer": "Fullscreen visualizer",
+  "visualizerStyle": "Visualizer Style",
   "errors": {
     "playback": "Playback error. Please try again.",
     "stream": "Failed to load stream. Are you signed in?"

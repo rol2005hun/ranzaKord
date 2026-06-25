@@ -5,6 +5,7 @@ const player = usePlayer();
 const layoutStore = useLayoutStore();
 const { lyricsData, isLoading: lyricsLoading, fetchLyrics, getActiveLine } = useLyrics();
 const { connect: connectVisualizer } = useAudioVisualizer();
+const { drawVisualizer } = useCanvasVisualizer();
 
 const lyricsListRef = ref<HTMLElement | null>(null);
 const isResizing = ref(false);
@@ -15,14 +16,6 @@ const isHydrated = ref(false);
 
 let animId: number | null = null;
 let dataArray = new Uint8Array(128);
-let primaryH = '250';
-let primaryS = '80%';
-
-function readColorVars() {
-  const s = getComputedStyle(document.documentElement);
-  primaryH = s.getPropertyValue('--color-primary-h').trim() || '250';
-  primaryS = s.getPropertyValue('--color-primary-s').trim() || '80%';
-}
 
 function resizeCanvas() {
   const canvas = canvasRef.value;
@@ -43,6 +36,10 @@ function drawFrame() {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
+  const s = getComputedStyle(document.documentElement);
+  const primaryH = s.getPropertyValue('--color-primary-h').trim() || '250';
+  const primaryS = s.getPropertyValue('--color-primary-s').trim() || '80%';
+
   const audio1 = player.audioElement1.value;
   const audio2 = player.audioElement2.value;
   if (audio1 && audio2) {
@@ -57,88 +54,21 @@ function drawFrame() {
 
   const W = canvas.width;
   const H = canvas.height;
-  const cx = W / 2;
-  const cy = H * 0.42; // Offset slightly upwards
-  const dpr = window.devicePixelRatio || 1;
 
-  // Calculate bass energy for pulsing effects
-  let bassSum = 0;
-  const bassBins = Math.min(10, Math.max(1, Math.floor(dataArray.length / 8)));
-  for (let i = 0; i < bassBins; i++) {
-    bassSum += dataArray[i] ?? 0;
-  }
-  const bassEnergy = bassBins > 0 ? bassSum / (bassBins * 255) : 0;
-  // Steep curve for a sharp "kick" effect on the beat, increased multiplier for a stronger pulse
-  const bassScale = 1 + Math.pow(bassEnergy, 3) * 0.35;
+  const time = performance.now();
+  const bassScale = drawVisualizer({
+    ctx,
+    width: W,
+    height: H,
+    dataArray,
+    style: layoutStore.visualizerStyle,
+    primaryH,
+    primaryS,
+    time
+  });
 
   if (vizWrapRef.value) {
     vizWrapRef.value.style.setProperty('--bass-scale', bassScale.toString());
-  }
-
-  const innerR = Math.min(W, H) * 0.31 * bassScale;
-  const maxBarH = Math.min(W, H) * (0.18 + Math.pow(bassEnergy, 2) * 0.15);
-  const BARS = 90;
-
-  ctx.clearRect(0, 0, W, H);
-
-  // Slow continuous rotation for the visualizer lines
-  const time = performance.now() * 0.0002;
-
-  // Calculate symmetrical, smoothed amplitudes
-  const rawAmplitudes = new Float32Array(BARS);
-  const halfBars = BARS / 2;
-  const maxIdx = Math.floor(dataArray.length * 0.6);
-
-  for (let i = 0; i < halfBars; i++) {
-    const startP = i / halfBars;
-    const endP = (i + 1) / halfBars;
-
-    // Logarithmic curve to emphasize bass/mids
-    const startIdx = Math.floor(Math.pow(startP, 1.2) * maxIdx);
-    const endIdx = Math.max(startIdx + 1, Math.floor(Math.pow(endP, 1.2) * maxIdx));
-
-    let sum = 0;
-    for (let j = startIdx; j < endIdx; j++) {
-      sum += dataArray[j] ?? 0;
-    }
-    const val = sum / (endIdx - startIdx) / 255;
-
-    rawAmplitudes[i] = val;
-    rawAmplitudes[BARS - 1 - i] = val; // Mirror
-  }
-
-  // Moving average to smooth out "steps"
-  const smoothedAmplitudes = new Float32Array(BARS);
-  for (let i = 0; i < BARS; i++) {
-    const prev = rawAmplitudes[(i - 1 + BARS) % BARS] ?? 0;
-    const curr = rawAmplitudes[i] ?? 0;
-    const next = rawAmplitudes[(i + 1) % BARS] ?? 0;
-    smoothedAmplitudes[i] = prev * 0.25 + curr * 0.5 + next * 0.25;
-  }
-
-  for (let i = 0; i < BARS; i++) {
-    const amplitude = smoothedAmplitudes[i] ?? 0;
-
-    // Smoother visual bar height with a minimum bump
-    const barH = amplitude * amplitude * maxBarH + 2 * dpr;
-
-    // Distribute around the circle + add the continuous rotation
-    // Math.PI / 2 puts the bass (i=0) at the bottom
-    const angle = (i / BARS) * Math.PI * 2 + Math.PI / 2 + time;
-
-    const x1 = cx + Math.cos(angle) * innerR;
-    const y1 = cy + Math.sin(angle) * innerR;
-    const x2 = cx + Math.cos(angle) * (innerR + barH);
-    const y2 = cy + Math.sin(angle) * (innerR + barH);
-
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    // Slightly more vibrant color
-    ctx.strokeStyle = `hsla(${primaryH}, ${primaryS}, ${55 + amplitude * 25}%, ${0.4 + amplitude * 0.6})`;
-    ctx.lineWidth = ((2 * Math.PI * innerR) / BARS) * 0.4;
-    ctx.lineCap = 'round';
-    ctx.stroke();
   }
 }
 
@@ -146,7 +76,6 @@ let ro: ResizeObserver | null = null;
 
 onMounted(() => {
   isHydrated.value = true;
-  readColorVars();
 
   ro = new ResizeObserver(resizeCanvas);
   if (vizWrapRef.value) ro.observe(vizWrapRef.value);

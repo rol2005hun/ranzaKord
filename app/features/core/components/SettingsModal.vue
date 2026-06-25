@@ -47,6 +47,23 @@ function handleClose() {
 
       <div class="settings-modal__divider"></div>
 
+      <!-- Visualizer Settings -->
+      <div class="settings-modal__section">
+        <h3 class="settings-modal__section-title">{{ $t('player.visualizerStyle') }}</h3>
+        <AppSelect
+          :model-value="layoutStore.visualizerStyle"
+          :options="[
+            { label: 'Circle Pulse', value: 'circle', icon: 'ph:circle-notch' },
+            { label: 'Retro Bars', value: 'bars', icon: 'ph:chart-bar' },
+            { label: 'Oscilloscope', value: 'wave', icon: 'ph:wave-sine' },
+            { label: 'Particles', value: 'particles', icon: 'ph:sparkle' }
+          ]"
+          class="settings-modal__select"
+          @update:model-value="layoutStore.setVisualizerStyle($event as any)" />
+      </div>
+
+      <div class="settings-modal__divider"></div>
+
       <!-- Crossfade Settings -->
       <div class="settings-modal__section">
         <div class="settings-modal__flex-header">

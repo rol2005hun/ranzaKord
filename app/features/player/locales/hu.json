@@ -21,7 +21,9 @@
   "lyricsNotSynced": "A dalszöveg nincs szinkronizálva",
   "nowPlaying": "Most játszott",
   "moreFrom": "Továbbiak tőle: {artist}",
-  "noRecommendations": "Nincsenek elérhető ajánlások",
+  "noRecommendations": "Nincsenek ajánlások",
+  "fullscreenVisualizer": "Teljes képernyős vizualizáció",
+  "visualizerStyle": "Vizualizáció Stílusa",
   "errors": {
     "playback": "Lejátszási hiba. Kérlek próbáld újra.",
     "stream": "A stream betöltése sikertelen. Be vagy jelentkezve?"

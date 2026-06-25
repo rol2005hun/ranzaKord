@@ -278,6 +278,13 @@ function onVolumeInput(event: Event) {
 
       <div class="player-bar__right">
         <button
+          class="player-bar__btn"
+          :class="{ 'player-bar__btn--active': layoutStore.isFullscreenVisualizer }"
+          :aria-label="$t('player.fullscreenVisualizer')"
+          @click="layoutStore.toggleFullscreenVisualizer()">
+          <AppIcon name="ph:monitor-play-bold" />
+        </button>
+        <button
           id="player-lyrics-btn"
           class="player-bar__btn player-bar__btn--lyrics"
           :class="{ 'player-bar__btn--active': isLyricsActive || showMobileLyrics }"

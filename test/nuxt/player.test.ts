@@ -147,6 +147,38 @@ describe('usePlayer', () => {
 
     toggleRepeat();
     expect(store.repeatMode).toBe('all');
+    toggleRepeat();
+    expect(store.repeatMode).toBe('one');
+    toggleRepeat();
+    expect(store.repeatMode).toBe('off');
+
+    const trackToAdd = { ...mockTrack, videoId: 'q1' };
+    const { addToQueue } = usePlayer();
+    addToQueue(trackToAdd);
+    expect(store.queue[0]).toEqual(trackToAdd);
+
+    // Access computeds to increase coverage
+    const {
+      isLoading,
+      durationSeconds,
+      error,
+      repeatMode,
+      hasNext,
+      hasPrev,
+      audioElement,
+      audioElement1,
+      audioElement2
+    } = usePlayer();
+
+    expect(isLoading.value).toBe(false);
+    expect(durationSeconds.value).toBe(0);
+    expect(error.value).toBeNull();
+    expect(repeatMode.value).toBe('off');
+    expect(hasNext.value).toBe(false);
+    expect(hasPrev.value).toBe(false);
+    expect(audioElement.value).toEqual(mockAudio);
+    expect(audioElement1.value).toEqual(mockAudio);
+    expect(audioElement2.value).toEqual(mockAudio2);
   });
 
   it('playNext and playPrev', async () => {

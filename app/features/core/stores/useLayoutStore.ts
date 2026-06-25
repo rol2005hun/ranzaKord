@@ -1,4 +1,5 @@
 import type { SidebarMode } from '@/features/player/types/sidebar.types';
+import type { VisualizerStyle } from '@/features/core/types/layout.types';
 
 const RIGHT_SIDEBAR_DEFAULT_WIDTH = 300;
 const RIGHT_SIDEBAR_MIN_WIDTH = 220;
@@ -11,6 +12,9 @@ export const useLayoutStore = defineStore(
     const rightSidebarMode = ref<SidebarMode>('info');
     const rightSidebarWidth = ref(RIGHT_SIDEBAR_DEFAULT_WIDTH);
     const isSettingsOpen = ref(false);
+
+    const visualizerStyle = ref<VisualizerStyle>('circle');
+    const isFullscreenVisualizer = ref(false);
 
     function toggleRightSidebar() {
       isRightSidebarOpen.value = !isRightSidebarOpen.value;
@@ -46,11 +50,21 @@ export const useLayoutStore = defineStore(
       isSettingsOpen.value = false;
     }
 
+    function setVisualizerStyle(style: VisualizerStyle) {
+      visualizerStyle.value = style;
+    }
+
+    function toggleFullscreenVisualizer() {
+      isFullscreenVisualizer.value = !isFullscreenVisualizer.value;
+    }
+
     return {
       isRightSidebarOpen,
       rightSidebarMode,
       rightSidebarWidth,
       isSettingsOpen,
+      visualizerStyle,
+      isFullscreenVisualizer,
       toggleRightSidebar,
       openRightSidebar,
       closeRightSidebar,
@@ -58,13 +72,15 @@ export const useLayoutStore = defineStore(
       setRightSidebarWidth,
       toggleSettings,
       openSettings,
-      closeSettings
+      closeSettings,
+      setVisualizerStyle,
+      toggleFullscreenVisualizer
     };
   },
   {
     persist: [
       {
-        pick: ['isRightSidebarOpen', 'rightSidebarWidth', 'rightSidebarMode'],
+        pick: ['isRightSidebarOpen', 'rightSidebarWidth', 'rightSidebarMode', 'visualizerStyle'],
         storage: {
           getItem: (key) => {
             const cookie = useCookie<string | null>(key);
