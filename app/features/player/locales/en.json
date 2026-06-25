@@ -23,6 +23,7 @@
   "moreFrom": "More from {artist}",
   "noRecommendations": "No recommendations available",
   "fullscreenVisualizer": "Fullscreen visualizer",
+  "karaokeMode": "Karaoke Mode (Vocal Remover)",
   "visualizerStyle": "Visualizer Style",
   "visualizerStyles": {
     "circle": "Circle Pulse",

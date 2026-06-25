@@ -94,7 +94,6 @@ watch(vizWrapRef, (el) => {
   if (ro) {
     if (el) {
       ro.observe(el);
-      // Give DOM a tick to layout
       nextTick(() => resizeCanvas());
     } else {
       ro.disconnect();
@@ -163,7 +162,6 @@ watch(
     if (newMode === 'lyrics') {
       autoScrollEnabled = true;
       if (scrollResumeTimer) clearTimeout(scrollResumeTimer);
-      // Use instant scroll when the tab is first rendered
       nextTick(() => scrollToActiveLine(true));
     }
   }
@@ -560,9 +558,8 @@ const sidebarStyle = computed(() => ({
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) scale(var(--bass-scale, 1));
-    /* The transition helps smooth out rapid changes but isn't strictly necessary if raf is smooth */
     width: 60%;
-    aspect-ratio: 1 / 1; /* Ensure it stays a perfect circle */
+    aspect-ratio: 1 / 1;
     height: auto;
     border-radius: 50%;
     overflow: hidden;

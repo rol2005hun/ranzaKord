@@ -356,6 +356,12 @@ export function usePlayer() {
     }
   }
 
+  function toggleKaraoke() {
+    store.isKaraoke = !store.isKaraoke;
+    const { setKaraoke } = useAudioVisualizer();
+    setKaraoke(store.isKaraoke);
+  }
+
   return {
     currentTrack: computed(() => store.currentTrack),
     isPlaying: computed(() => store.isPlaying),
@@ -384,6 +390,8 @@ export function usePlayer() {
     toggleShuffle,
     toggleRepeat,
     setQueue,
-    playQueue
+    playQueue,
+    isKaraoke: computed(() => store.isKaraoke),
+    toggleKaraoke
   };
 }

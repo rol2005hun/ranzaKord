@@ -5,6 +5,8 @@ let sourceNode2: MediaElementAudioSourceNode | null = null;
 let crossfadeGain1: GainNode | null = null;
 let crossfadeGain2: GainNode | null = null;
 let masterGainNode: GainNode | null = null;
+let dryGainNode: GainNode | null = null;
+let wetGainNode: GainNode | null = null;
 let isConnected = false;
 
 export function useAudioVisualizer() {
@@ -42,11 +44,57 @@ export function useAudioVisualizer() {
         sourceNode2.connect(crossfadeGain2);
         crossfadeGain2.connect(analyserNode);
 
-        analyserNode.connect(masterGainNode);
+        // Karaoke Node Chain
+        const karaokeInput = audioCtx.createGain();
+        analyserNode.connect(karaokeInput);
+
+        dryGainNode = audioCtx.createGain();
+        dryGainNode.gain.value = 1;
+        wetGainNode = audioCtx.createGain();
+        wetGainNode.gain.value = 0;
+
+        karaokeInput.connect(dryGainNode);
+        dryGainNode.connect(masterGainNode);
+        wetGainNode.connect(masterGainNode);
+
+        // Vocal Remover (L - R)
+        const splitter = audioCtx.createChannelSplitter(2);
+        karaokeInput.connect(splitter);
+
+        const leftGain = audioCtx.createGain();
+        leftGain.gain.value = 1;
+        splitter.connect(leftGain, 0);
+
+        const rightGain = audioCtx.createGain();
+        rightGain.gain.value = -1;
+        splitter.connect(rightGain, 1);
+
+        const vocalRemovedMono = audioCtx.createGain();
+        leftGain.connect(vocalRemovedMono);
+        rightGain.connect(vocalRemovedMono);
+
+        const upmixMerger = audioCtx.createChannelMerger(2);
+        vocalRemovedMono.connect(upmixMerger, 0, 0);
+        vocalRemovedMono.connect(upmixMerger, 0, 1);
+        upmixMerger.connect(wetGainNode);
+
+        // Bass preservation
+        const bassFilter = audioCtx.createBiquadFilter();
+        bassFilter.type = 'lowpass';
+        bassFilter.frequency.value = 200;
+        karaokeInput.connect(bassFilter);
+        bassFilter.connect(wetGainNode);
+
         masterGainNode.connect(audioCtx.destination);
 
         isConnected = true;
         setGains(1, 0, currentVolume, audioEl1, audioEl2);
+
+        // Restore karaoke state if it was enabled
+        const playerStore = usePlayerStore();
+        if (playerStore.isKaraoke) {
+          setKaraoke(true);
+        }
       }
     } catch {
       // Audio element already connected or Web Audio not available
@@ -74,5 +122,15 @@ export function useAudioVisualizer() {
     }
   }
 
-  return { connect, setGains, isConnected };
+  function setKaraoke(enabled: boolean) {
+    if (!dryGainNode || !wetGainNode) return;
+    const now = audioCtx?.currentTime || 0;
+    // Smooth crossfade between dry and wet
+    dryGainNode.gain.cancelScheduledValues(now);
+    wetGainNode.gain.cancelScheduledValues(now);
+    dryGainNode.gain.setTargetAtTime(enabled ? 0 : 1, now, 0.1);
+    wetGainNode.gain.setTargetAtTime(enabled ? 1 : 0, now, 0.1);
+  }
+
+  return { connect, setGains, setKaraoke, isConnected };
 }

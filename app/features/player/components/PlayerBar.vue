@@ -285,6 +285,13 @@ function onVolumeInput(event: Event) {
           <AppIcon name="ph:monitor-play-bold" />
         </button>
         <button
+          class="player-bar__btn"
+          :class="{ 'player-bar__btn--active': player.isKaraoke.value }"
+          :aria-label="$t('player.karaokeMode')"
+          @click="player.toggleKaraoke()">
+          <AppIcon name="ph:magic-wand" />
+        </button>
+        <button
           id="player-lyrics-btn"
           class="player-bar__btn player-bar__btn--lyrics"
           :class="{ 'player-bar__btn--active': isLyricsActive || showMobileLyrics }"
