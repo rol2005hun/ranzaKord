@@ -99,6 +99,11 @@ function closeFullscreen() {
 <template>
   <Transition name="fade">
     <div v-if="layoutStore.isFullscreenVisualizer" ref="containerRef" class="fullscreen-visualizer">
+      <img
+        v-if="player.currentTrack.value?.thumbnailUrl"
+        :src="player.currentTrack.value.thumbnailUrl"
+        class="fullscreen-visualizer__bg"
+        alt="" />
       <canvas ref="canvasRef" class="fullscreen-visualizer__canvas"></canvas>
 
       <div class="fullscreen-visualizer__overlay">
@@ -129,12 +134,23 @@ function closeFullscreen() {
   position: fixed;
   inset: 0;
   z-index: 9999;
-  background-color: var(--color-bg-base);
+  background-color: var(--color-bg);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   --bass-scale: 1;
+
+  &__bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(48px) brightness(0.25) saturate(1.5);
+    transform: scale(1.2);
+    z-index: 0;
+  }
 
   &__canvas {
     position: absolute;
