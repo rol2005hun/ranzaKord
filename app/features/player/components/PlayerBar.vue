@@ -1008,6 +1008,24 @@ function onVolumeInput(event: Event) {
       color: var(--color-text-primary);
       opacity: 1;
       font-size: var(--text-2xl);
+      animation: lyric-bounce-mobile 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+  }
+
+  @keyframes lyric-bounce-mobile {
+    0% {
+      transform: scale(1);
+      text-shadow: 0 0 0 transparent;
+    }
+    40% {
+      transform: scale(1.06);
+      text-shadow: 0 0 20px
+        hsla(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.6);
+    }
+    100% {
+      transform: scale(1.02);
+      text-shadow: 0 0 10px
+        hsla(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.2);
     }
   }
 

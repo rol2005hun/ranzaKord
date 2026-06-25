@@ -742,8 +742,25 @@ const sidebarStyle = computed(() => ({
     &--active {
       color: var(--color-text-primary);
       opacity: 1;
-      transform: scale(1.04);
       font-size: var(--text-lg);
+      animation: lyric-bounce-desktop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+  }
+
+  @keyframes lyric-bounce-desktop {
+    0% {
+      transform: scale(1) translateX(0);
+      text-shadow: 0 0 0 transparent;
+    }
+    40% {
+      transform: scale(1.06) translateX(4px);
+      text-shadow: 0 0 20px
+        hsla(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.6);
+    }
+    100% {
+      transform: scale(1.04) translateX(0);
+      text-shadow: 0 0 10px
+        hsla(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.2);
     }
   }
 
