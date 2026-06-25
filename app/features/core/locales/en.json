@@ -45,7 +45,12 @@
     "crossfade": {
       "title": "Crossfade",
       "description": "Smooth transition between tracks",
-      "duration": "Duration"
+      "duration": "Duration",
+      "type": "Fade Type",
+      "types": {
+        "linear": "Linear",
+        "dj": "DJ (Exponential)"
+      }
     },
     "audioReactiveLyrics": {
       "title": "Audio-Reactive Lyrics",

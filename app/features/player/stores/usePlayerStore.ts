@@ -15,6 +15,7 @@ export const usePlayerStore = defineStore(
     const repeatMode = ref<'off' | 'all' | 'one'>('off');
     const crossfadeEnabled = ref(false);
     const crossfadeDuration = ref(5);
+    const crossfadeType = ref<'linear' | 'dj'>('dj');
     const isKaraoke = ref(false);
     const isAudioReactiveLyrics = ref(true);
 
@@ -169,6 +170,7 @@ export const usePlayerStore = defineStore(
       hasPrev,
       crossfadeEnabled,
       crossfadeDuration,
+      crossfadeType,
       setTrack,
       setQueue,
       addToQueue,
@@ -193,6 +195,7 @@ export const usePlayerStore = defineStore(
           'isPlaying',
           'crossfadeEnabled',
           'crossfadeDuration',
+          'crossfadeType',
           'isKaraoke',
           'isAudioReactiveLyrics'
         ],

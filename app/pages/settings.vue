@@ -36,6 +36,34 @@ const playerStore = usePlayerStore();
         </div>
         <AppToggle v-model="playerStore.crossfadeEnabled" />
       </div>
+
+      <div v-if="playerStore.crossfadeEnabled" class="settings-page__item settings-page__item--sub">
+        <div class="settings-page__item-info">
+          <span class="settings-page__item-title">
+            {{ $t('core.settings.crossfade.duration') }}
+          </span>
+        </div>
+        <AppSelect
+          v-model="playerStore.crossfadeDuration"
+          :options="[
+            { label: '3s', value: 3 },
+            { label: '5s', value: 5 },
+            { label: '8s', value: 8 },
+            { label: '10s', value: 10 }
+          ]" />
+      </div>
+
+      <div v-if="playerStore.crossfadeEnabled" class="settings-page__item settings-page__item--sub">
+        <div class="settings-page__item-info">
+          <span class="settings-page__item-title">{{ $t('core.settings.crossfade.type') }}</span>
+        </div>
+        <AppSelect
+          v-model="playerStore.crossfadeType"
+          :options="[
+            { label: $t('core.settings.crossfade.types.linear'), value: 'linear' },
+            { label: $t('core.settings.crossfade.types.dj'), value: 'dj' }
+          ]" />
+      </div>
     </div>
   </div>
 </template>
@@ -77,6 +105,15 @@ const playerStore = usePlayerStore();
 
     &:not(:last-child) {
       border-bottom: 1px solid var(--color-border);
+    }
+
+    &--sub {
+      padding-left: var(--space-8);
+      border-top: none;
+
+      &:not(:last-child) {
+        border-bottom: 1px solid var(--color-border);
+      }
     }
   }
 

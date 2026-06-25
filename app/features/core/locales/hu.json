@@ -34,7 +34,12 @@
     "crossfade": {
       "title": "Átmenet (Crossfade)",
       "description": "Finom átmenet a zeneszámok között",
-      "duration": "Időtartam"
+      "duration": "Időtartam",
+      "type": "Átmenet Típusa",
+      "types": {
+        "linear": "Lineáris",
+        "dj": "DJ (Exponenciális)"
+      }
     },
     "audioReactiveLyrics": {
       "title": "Zene-Reaktív Dalszöveg",

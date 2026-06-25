@@ -177,8 +177,18 @@ export function usePlayer() {
       const elapsed = now - startTime;
       const progress = Math.min(1, Math.max(0, elapsed / durationMs));
 
-      const fadeOut = 1 - progress;
-      const fadeIn = progress;
+      let fadeOut: number;
+      let fadeIn: number;
+
+      if (store.crossfadeType === 'dj') {
+        // Equal power crossfade (cosine/sine curve)
+        fadeOut = Math.cos(progress * 0.5 * Math.PI);
+        fadeIn = Math.sin(progress * 0.5 * Math.PI);
+      } else {
+        // Linear crossfade
+        fadeOut = 1 - progress;
+        fadeIn = progress;
+      }
 
       if (outIndex === 0) {
         crossfadeGain1 = fadeOut;
