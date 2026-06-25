@@ -94,6 +94,21 @@ onUnmounted(() => {
 function closeFullscreen() {
   layoutStore.toggleFullscreenVisualizer();
 }
+
+function getStyleIcon(style: string) {
+  switch (style) {
+    case 'circle':
+      return 'ph:circle';
+    case 'bars':
+      return 'ph:chart-bar';
+    case 'wave':
+      return 'ph:wave-sine';
+    case 'particles':
+      return 'ph:sparkle';
+    default:
+      return 'ph:paint-brush';
+  }
+}
 </script>
 
 <template>
@@ -107,10 +122,30 @@ function closeFullscreen() {
       <canvas ref="canvasRef" class="fullscreen-visualizer__canvas"></canvas>
 
       <div class="fullscreen-visualizer__overlay">
-        <!-- Close button -->
-        <button class="fullscreen-visualizer__close" @click="closeFullscreen">
-          <AppIcon name="ph:x-bold" />
-        </button>
+        <!-- Controls (Top Right) -->
+        <div class="fullscreen-visualizer__controls">
+          <div class="fullscreen-visualizer__style-selector">
+            <button
+              v-for="style in ['circle', 'bars', 'wave', 'particles'] as const"
+              :key="style"
+              class="fullscreen-visualizer__style-btn"
+              :class="{
+                'fullscreen-visualizer__style-btn--active': layoutStore.visualizerStyle === style
+              }"
+              :title="$t(`player.visualizerStyles.${style}`)"
+              @click="layoutStore.setVisualizerStyle(style)">
+              <AppIcon :name="getStyleIcon(style)" />
+            </button>
+          </div>
+
+          <!-- Close button -->
+          <button
+            class="fullscreen-visualizer__close"
+            :aria-label="$t('player.closeVisualizer')"
+            @click="closeFullscreen">
+            <AppIcon name="ph:x-bold" />
+          </button>
+        </div>
 
         <!-- Track Info -->
         <div v-if="player.currentTrack.value" class="fullscreen-visualizer__info">
@@ -182,9 +217,56 @@ function closeFullscreen() {
     pointer-events: none;
   }
 
-  &__close {
+  &__controls {
     pointer-events: auto;
     align-self: flex-end;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+  }
+
+  &__style-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    padding: 0.5rem;
+    border-radius: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  &__style-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      color: white;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    &--active {
+      color: white;
+      background: rgba(var(--color-primary-h), var(--color-primary-s), 50%, 0.8);
+      box-shadow: 0 0 12px rgba(var(--color-primary-h), var(--color-primary-s), 50%, 0.5);
+
+      &:hover {
+        background: rgba(var(--color-primary-h), var(--color-primary-s), 50%, 1);
+      }
+    }
+  }
+
+  &__close {
     background: rgba(255, 255, 255, 0.1);
     border: none;
     color: white;
