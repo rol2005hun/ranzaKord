@@ -57,39 +57,30 @@ export function useAudioVisualizer() {
         dryGainNode.connect(masterGainNode);
         wetGainNode.connect(masterGainNode);
 
-        // Karaoke Crossover (Highpass for vocal removal, Lowpass for bass preservation)
-        const highpass = audioCtx.createBiquadFilter();
-        highpass.type = 'highpass';
-        highpass.frequency.value = 200;
-        karaokeInput.connect(highpass);
-
-        const lowpass = audioCtx.createBiquadFilter();
-        lowpass.type = 'lowpass';
-        lowpass.frequency.value = 200;
-        karaokeInput.connect(lowpass);
-        lowpass.connect(wetGainNode); // Bass bypasses the vocal remover
-
-        // Vocal Remover (L - R) applied only to high frequencies
+        // --- Pure Phase Cancellation (L - R) Vocal Remover ---
+        // Filters cause phase distortion (comb filtering) when summed.
+        // We revert to a pure mathematical L-R subtraction to avoid any distortion.
         const splitter = audioCtx.createChannelSplitter(2);
-        highpass.connect(splitter);
+        karaokeInput.connect(splitter);
 
         const leftGain = audioCtx.createGain();
         leftGain.gain.value = 1;
-        splitter.connect(leftGain, 0);
+        splitter.connect(leftGain, 0); // L
 
         const rightGain = audioCtx.createGain();
         rightGain.gain.value = -1;
-        splitter.connect(rightGain, 1);
+        splitter.connect(rightGain, 1); // R
 
-        const vocalRemovedMono = audioCtx.createGain();
-        // Boost the remaining side signal slightly since we lose a lot of energy
-        vocalRemovedMono.gain.value = 1.5;
-        leftGain.connect(vocalRemovedMono);
-        rightGain.connect(vocalRemovedMono);
+        // Sum L and -R
+        const diffMono = audioCtx.createGain();
+        leftGain.connect(diffMono);
+        rightGain.connect(diffMono);
 
+        // Upmix the L-R mono signal to both ears
         const upmixMerger = audioCtx.createChannelMerger(2);
-        vocalRemovedMono.connect(upmixMerger, 0, 0);
-        vocalRemovedMono.connect(upmixMerger, 0, 1);
+        diffMono.connect(upmixMerger, 0, 0);
+        diffMono.connect(upmixMerger, 0, 1);
+
         upmixMerger.connect(wetGainNode);
 
         masterGainNode.connect(audioCtx.destination);
