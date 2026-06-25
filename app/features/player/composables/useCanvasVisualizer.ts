@@ -102,9 +102,12 @@ export function useCanvasVisualizer() {
     dpr: number
   ) {
     const cx = W / 2;
-    const cy = H * 0.42;
+    const cy = H * 0.5;
     const innerR = Math.min(W, H) * 0.31 * bassScale;
-    const maxBarH = Math.min(W, H) * (0.18 + Math.pow(bassScale - 1, 0.6) * 0.5); // Derived roughly from original
+    const maxBarH = Math.min(
+      Math.min(W, H) * 0.18 * bassScale,
+      Math.min(W, H) * 0.45 - innerR // Constrain outer radius to 45% of min dimension
+    );
 
     const slowTime = time * 0.0002;
 

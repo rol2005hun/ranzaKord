@@ -53,10 +53,18 @@ function handleClose() {
         <AppSelect
           :model-value="layoutStore.visualizerStyle"
           :options="[
-            { label: 'Circle Pulse', value: 'circle', icon: 'ph:circle-notch' },
-            { label: 'Retro Bars', value: 'bars', icon: 'ph:chart-bar' },
-            { label: 'Oscilloscope', value: 'wave', icon: 'ph:wave-sine' },
-            { label: 'Particles', value: 'particles', icon: 'ph:sparkle' }
+            {
+              label: $t('player.visualizerStyles.circle'),
+              value: 'circle',
+              icon: 'ph:circle-notch'
+            },
+            { label: $t('player.visualizerStyles.bars'), value: 'bars', icon: 'ph:chart-bar' },
+            { label: $t('player.visualizerStyles.wave'), value: 'wave', icon: 'ph:wave-sine' },
+            {
+              label: $t('player.visualizerStyles.particles'),
+              value: 'particles',
+              icon: 'ph:sparkle'
+            }
           ]"
           class="settings-modal__select"
           @update:model-value="layoutStore.setVisualizerStyle($event as any)" />

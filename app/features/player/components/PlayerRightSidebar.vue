@@ -557,7 +557,7 @@ const sidebarStyle = computed(() => ({
 
   &__artwork-center {
     position: absolute;
-    top: 42%;
+    top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) scale(var(--bass-scale, 1));
     /* The transition helps smooth out rapid changes but isn't strictly necessary if raf is smooth */

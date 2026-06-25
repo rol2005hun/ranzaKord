@@ -24,6 +24,12 @@
   "noRecommendations": "Nincsenek ajánlások",
   "fullscreenVisualizer": "Teljes képernyős vizualizáció",
   "visualizerStyle": "Vizualizáció Stílusa",
+  "visualizerStyles": {
+    "circle": "Pulzáló Kör",
+    "bars": "Retro Oszlopok",
+    "wave": "Oszcilloszkóp",
+    "particles": "Részecskék"
+  },
   "errors": {
     "playback": "Lejátszási hiba. Kérlek próbáld újra.",
     "stream": "A stream betöltése sikertelen. Be vagy jelentkezve?"

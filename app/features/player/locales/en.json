@@ -24,6 +24,12 @@
   "noRecommendations": "No recommendations available",
   "fullscreenVisualizer": "Fullscreen visualizer",
   "visualizerStyle": "Visualizer Style",
+  "visualizerStyles": {
+    "circle": "Circle Pulse",
+    "bars": "Retro Bars",
+    "wave": "Oscilloscope",
+    "particles": "Particles"
+  },
   "errors": {
     "playback": "Playback error. Please try again.",
     "stream": "Failed to load stream. Are you signed in?"
