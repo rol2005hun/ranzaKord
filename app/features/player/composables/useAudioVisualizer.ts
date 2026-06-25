@@ -46,9 +46,8 @@ export function useAudioVisualizer() {
         masterGainNode.connect(audioCtx.destination);
 
         isConnected = true;
+        setGains(1, 0, currentVolume, audioEl1, audioEl2);
       }
-
-      setGains(1, 0, currentVolume, audioEl1, audioEl2);
     } catch {
       // Audio element already connected or Web Audio not available
     }

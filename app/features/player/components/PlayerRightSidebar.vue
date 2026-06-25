@@ -282,7 +282,7 @@ function onResizeStart(event: MouseEvent | TouchEvent) {
 }
 
 const sidebarStyle = computed(() => ({
-  width: `${isHydrated.value ? layoutStore.rightSidebarWidth : 300}px`
+  width: `${layoutStore.rightSidebarWidth}px`
 }));
 </script>
 
@@ -308,7 +308,7 @@ const sidebarStyle = computed(() => ({
           id="sidebar-tab-info"
           class="right-sidebar__tab"
           :class="{
-            'right-sidebar__tab--active': !isHydrated || layoutStore.rightSidebarMode === 'info'
+            'right-sidebar__tab--active': layoutStore.rightSidebarMode === 'info'
           }"
           @click="layoutStore.setRightSidebarMode('info')">
           <AppIcon name="ph:music-note" />
@@ -318,7 +318,7 @@ const sidebarStyle = computed(() => ({
           id="sidebar-tab-lyrics"
           class="right-sidebar__tab"
           :class="{
-            'right-sidebar__tab--active': isHydrated && layoutStore.rightSidebarMode === 'lyrics'
+            'right-sidebar__tab--active': layoutStore.rightSidebarMode === 'lyrics'
           }"
           @click="layoutStore.setRightSidebarMode('lyrics')">
           <AppIcon name="ph:microphone-stage" />

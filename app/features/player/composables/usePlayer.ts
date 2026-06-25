@@ -158,7 +158,7 @@ export function usePlayer() {
     activeAudioIndex.value = activeAudioIndex.value === 0 ? 1 : 0;
     const inAudio = activeAudio.value;
 
-    if (!outAudio || !inAudio) return;
+    if (!inAudio) return;
 
     isCrossfading = true;
 
@@ -186,6 +186,7 @@ export function usePlayer() {
         crossfadeGain2 = fadeOut;
         crossfadeGain1 = fadeIn;
       }
+
       applyVolumes();
 
       if (progress < 1) {
@@ -197,6 +198,7 @@ export function usePlayer() {
         if (outAudio) outAudio.currentTime = 0;
       }
     }
+
     requestAnimationFrame(step);
   }
 

@@ -102,10 +102,10 @@ function handleClose() {
 <style lang="scss">
 .settings-modal-override {
   overflow: visible !important;
+}
 
-  .modal__body {
-    overflow: visible !important;
-  }
+.settings-modal-override .modal__body {
+  overflow: visible !important;
 }
 </style>
 
@@ -251,13 +251,13 @@ function handleClose() {
     &::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background-color: var(--color-primary);
+      width: 12px;
+      height: 12px;
+      border-radius: var(--radius-full);
+      background-color: var(--color-text-primary);
       cursor: pointer;
       transition: transform var(--transition-fast);
-      margin-top: -6px; /* (4 - 16) / 2 */
+      margin-top: -4px;
     }
 
     &:hover::-webkit-slider-thumb {

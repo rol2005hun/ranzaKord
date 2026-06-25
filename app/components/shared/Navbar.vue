@@ -108,9 +108,8 @@ function closeDropdown() {
         </div>
       </div>
     </div>
-
-    <SettingsModal />
   </header>
+  <SettingsModal />
 </template>
 
 <style lang="scss" scoped>
