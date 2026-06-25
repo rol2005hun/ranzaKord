@@ -93,6 +93,9 @@ export function useAudioVisualizer() {
         if (playerStore.isKaraoke) {
           setKaraoke(true);
         }
+
+        // Start continuous background loop for CSS variables (--audio-bass)
+        startAudioReactiveLoop();
       }
     } catch {
       // Audio element already connected or Web Audio not available
@@ -137,5 +140,30 @@ export function useAudioVisualizer() {
     );
   }
 
-  return { connect, setGains, setKaraoke, isConnected };
+  let rAFId: number | null = null;
+  const dataArray = new Uint8Array(512);
+
+  function startAudioReactiveLoop() {
+    if (rAFId) return;
+    function loop() {
+      if (analyserNode && isConnected) {
+        analyserNode.getByteFrequencyData(dataArray);
+
+        let bassSum = 0;
+        const bassBins = 8; // First 8 bins (~0-300Hz)
+        for (let i = 0; i < bassBins; i++) {
+          bassSum += dataArray[i] ?? 0;
+        }
+        // Normalize 0..1 and apply a slight curve to make it punchier
+        let bassAvg = bassSum / bassBins / 255;
+        bassAvg = Math.pow(bassAvg, 1.5);
+
+        document.documentElement.style.setProperty('--audio-bass', bassAvg.toString());
+      }
+      rAFId = requestAnimationFrame(loop);
+    }
+    loop();
+  }
+
+  return { connect, setGains, setKaraoke, isConnected, startAudioReactiveLoop };
 }

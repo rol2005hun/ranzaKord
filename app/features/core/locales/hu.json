@@ -32,9 +32,13 @@
   },
   "settings": {
     "crossfade": {
-      "title": "Keresztúszás (Crossfade)",
+      "title": "Átmenet (Crossfade)",
       "description": "Finom átmenet a zeneszámok között",
       "duration": "Időtartam"
+    },
+    "audioReactiveLyrics": {
+      "title": "Zene-Reaktív Dalszöveg",
+      "description": "Az aktív dalszöveg sor ugrál és pulzál a zene ritmusára."
     }
   }
 }

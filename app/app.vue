@@ -11,13 +11,21 @@ const customColorStyle = computed(() => {
 const { locale } = useI18n();
 const { showUpdateModal } = useAppUpdate();
 const layoutStore = useLayoutStore();
+const playerStore = usePlayerStore();
 
 const isTauriApp = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+
+const bodyClasses = computed(() => {
+  return playerStore.isAudioReactiveLyrics ? 'audio-reactive-lyrics' : '';
+});
 
 useHead({
   htmlAttrs: {
     'data-theme': themeId,
     lang: locale
+  },
+  bodyAttrs: {
+    class: bodyClasses
   },
   style: [{ innerHTML: customColorStyle, id: 'theme-custom-color' }]
 });

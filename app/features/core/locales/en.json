@@ -46,6 +46,10 @@
       "title": "Crossfade",
       "description": "Smooth transition between tracks",
       "duration": "Duration"
+    },
+    "audioReactiveLyrics": {
+      "title": "Audio-Reactive Lyrics",
+      "description": "Make the active lyric line bounce and glow to the beat of the music."
     }
   }
 }

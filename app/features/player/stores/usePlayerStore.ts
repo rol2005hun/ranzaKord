@@ -16,6 +16,7 @@ export const usePlayerStore = defineStore(
     const crossfadeEnabled = ref(false);
     const crossfadeDuration = ref(5);
     const isKaraoke = ref(false);
+    const isAudioReactiveLyrics = ref(true);
 
     const hasNext = computed(() => {
       const track = currentTrack.value;
@@ -174,7 +175,8 @@ export const usePlayerStore = defineStore(
       nextTrack,
       prevTrack,
       syncDiscordPresence,
-      isKaraoke
+      isKaraoke,
+      isAudioReactiveLyrics
     };
   },
   {
@@ -191,7 +193,8 @@ export const usePlayerStore = defineStore(
           'isPlaying',
           'crossfadeEnabled',
           'crossfadeDuration',
-          'isKaraoke'
+          'isKaraoke',
+          'isAudioReactiveLyrics'
         ],
         storage: piniaPluginPersistedstate.localStorage()
       }
