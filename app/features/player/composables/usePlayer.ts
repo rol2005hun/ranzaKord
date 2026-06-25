@@ -270,6 +270,12 @@ export function usePlayer() {
       el.src = getApiUrl(`/api/stream?v=${track.videoId}`);
       el.load();
 
+      // Ensure visualizer and audio-reactive loop are connected
+      const { connect } = useAudioVisualizer();
+      if (audio1Ref.value && audio2Ref.value) {
+        connect(audio1Ref.value, audio2Ref.value, store.volume);
+      }
+
       await el.play();
       store.isPlaying = true;
     } catch {

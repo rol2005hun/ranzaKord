@@ -142,6 +142,7 @@ export function useAudioVisualizer() {
 
   let rAFId: number | null = null;
   const dataArray = new Uint8Array(512);
+  let smoothedBass = 0;
 
   function startAudioReactiveLoop() {
     if (rAFId) return;
@@ -155,10 +156,17 @@ export function useAudioVisualizer() {
           bassSum += dataArray[i] ?? 0;
         }
         // Normalize 0..1 and apply a slight curve to make it punchier
-        let bassAvg = bassSum / bassBins / 255;
-        bassAvg = Math.pow(bassAvg, 1.5);
+        let rawBass = bassSum / bassBins / 255;
+        rawBass = Math.pow(rawBass, 1.5);
+        
+        // Fast attack, slow decay for smooth pulsing
+        if (rawBass > smoothedBass) {
+          smoothedBass = rawBass;
+        } else {
+          smoothedBass = smoothedBass * 0.85 + rawBass * 0.15;
+        }
 
-        document.documentElement.style.setProperty('--audio-bass', bassAvg.toString());
+        document.documentElement.style.setProperty('--audio-bass', smoothedBass.toString());
       }
       rAFId = requestAnimationFrame(loop);
     }

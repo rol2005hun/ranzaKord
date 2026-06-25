@@ -114,6 +114,31 @@ function handleClose() {
             " />
         </div>
       </div>
+
+      <div class="settings-modal__divider"></div>
+
+      <!-- Audio Reactive Lyrics -->
+      <div class="settings-modal__section">
+        <div class="settings-modal__flex-header">
+          <div>
+            <h3 class="settings-modal__section-title">
+              {{ $t('core.settings.audioReactiveLyrics.title') }}
+            </h3>
+            <p class="settings-modal__section-desc">
+              {{ $t('core.settings.audioReactiveLyrics.description') }}
+            </p>
+          </div>
+          <label class="settings-modal__toggle">
+            <input
+              type="checkbox"
+              :checked="playerStore.isAudioReactiveLyrics"
+              @change="
+                playerStore.isAudioReactiveLyrics = ($event.target as HTMLInputElement).checked
+              " />
+            <span class="settings-modal__toggle-slider"></span>
+          </label>
+        </div>
+      </div>
     </div>
 
     <template #footer>

@@ -705,6 +705,7 @@ const sidebarStyle = computed(() => ({
   &__lyrics-list {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: var(--space-6) var(--space-4);
     display: flex;
     flex-direction: column;
@@ -743,13 +744,10 @@ const sidebarStyle = computed(() => ({
       color: var(--color-text-primary);
       opacity: 1;
       font-size: var(--text-lg);
-      animation: lyric-bounce-desktop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     }
 
     body.audio-reactive-lyrics &--active {
-      animation: none;
-      transform: scale(calc(1.04 + var(--audio-bass, 0) * 0.1))
-        translateX(calc(var(--audio-bass, 0) * 5px));
+      transform: scale(calc(1.04 + var(--audio-bass, 0) * 0.15));
       text-shadow: 0 0 calc(10px + var(--audio-bass, 0) * 25px)
         hsla(
           var(--color-primary-h),
@@ -760,23 +758,6 @@ const sidebarStyle = computed(() => ({
       transition:
         transform 0.05s ease-out,
         text-shadow 0.05s ease-out;
-    }
-  }
-
-  @keyframes lyric-bounce-desktop {
-    0% {
-      transform: scale(1) translateX(0);
-      text-shadow: 0 0 0 transparent;
-    }
-    40% {
-      transform: scale(1.06) translateX(4px);
-      text-shadow: 0 0 20px
-        hsla(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.6);
-    }
-    100% {
-      transform: scale(1.04) translateX(0);
-      text-shadow: 0 0 10px
-        hsla(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.2);
     }
   }
 

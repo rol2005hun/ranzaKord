@@ -15,20 +15,16 @@ const playerStore = usePlayerStore();
 
 const isTauriApp = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
-const bodyClasses = computed(() => {
-  return playerStore.isAudioReactiveLyrics ? 'audio-reactive-lyrics' : '';
-});
-
-useHead({
+useHead(() => ({
   htmlAttrs: {
-    'data-theme': themeId,
-    lang: locale
+    'data-theme': themeId.value,
+    lang: locale.value
   },
   bodyAttrs: {
-    class: bodyClasses
+    class: playerStore.isAudioReactiveLyrics ? 'audio-reactive-lyrics' : ''
   },
-  style: [{ innerHTML: customColorStyle, id: 'theme-custom-color' }]
-});
+  style: [{ innerHTML: customColorStyle.value, id: 'theme-custom-color' }]
+}));
 
 onMounted(async () => {
   try {

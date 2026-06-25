@@ -984,6 +984,7 @@ function onVolumeInput(event: Event) {
   &__list {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: var(--space-8) var(--space-6);
     display: flex;
     flex-direction: column;
@@ -1008,12 +1009,10 @@ function onVolumeInput(event: Event) {
       color: var(--color-text-primary);
       opacity: 1;
       font-size: var(--text-2xl);
-      animation: lyric-bounce-mobile 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     }
 
     body.audio-reactive-lyrics &--active {
-      animation: none;
-      transform: scale(calc(1.02 + var(--audio-bass, 0) * 0.15));
+      transform: scale(calc(1.02 + var(--audio-bass, 0) * 0.2));
       text-shadow: 0 0 calc(10px + var(--audio-bass, 0) * 25px)
         hsla(
           var(--color-primary-h),
@@ -1024,23 +1023,6 @@ function onVolumeInput(event: Event) {
       transition:
         transform 0.05s ease-out,
         text-shadow 0.05s ease-out;
-    }
-  }
-
-  @keyframes lyric-bounce-mobile {
-    0% {
-      transform: scale(1);
-      text-shadow: 0 0 0 transparent;
-    }
-    40% {
-      transform: scale(1.06);
-      text-shadow: 0 0 20px
-        hsla(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.6);
-    }
-    100% {
-      transform: scale(1.02);
-      text-shadow: 0 0 10px
-        hsla(var(--color-primary-h), var(--color-primary-s), var(--color-primary-l), 0.2);
     }
   }
 
