@@ -158,7 +158,7 @@ export function useAudioVisualizer() {
         // Normalize 0..1 and apply a slight curve to make it punchier
         let rawBass = bassSum / bassBins / 255;
         rawBass = Math.pow(rawBass, 1.5);
-        
+
         // Fast attack, slow decay for smooth pulsing
         if (rawBass > smoothedBass) {
           smoothedBass = rawBass;
