@@ -1,10 +1,14 @@
 export default defineEventHandler((event) => {
-  const authHeader = getHeader(event, 'Authorization');
+  const authHeader =
+    (event.node?.req?.headers?.authorization as string) ||
+    (event.headers && event.headers.get ? event.headers.get('authorization') : undefined);
 
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.split(' ')[1];
     if (token) {
-      const existingCookie = getHeader(event, 'cookie');
+      const existingCookie =
+        (event.node?.req?.headers?.cookie as string) ||
+        (event.headers && event.headers.get ? event.headers.get('cookie') : undefined);
       const newCookie = existingCookie ? `${existingCookie}; h3=${token}` : `h3=${token}`;
 
       if (event.node?.req?.headers) {
