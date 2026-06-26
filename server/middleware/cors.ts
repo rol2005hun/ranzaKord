@@ -21,9 +21,8 @@ export default defineEventHandler((event) => {
     'Origin, Content-Type, Accept, Authorization, Cookie'
   );
 
-  if (event.node.req.method === 'OPTIONS') {
-    event.node.res.statusCode = 204;
-    event.node.res.statusMessage = 'No Content';
+  if (event.method === 'OPTIONS') {
+    setResponseStatus(event, 204, 'No Content');
     return 'OK';
   }
 });

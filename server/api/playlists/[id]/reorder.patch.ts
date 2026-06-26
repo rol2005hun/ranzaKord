@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const body = await readBody(event);
+  const body = (await readBody(event)) as { fromIndex: number; toIndex: number };
   const { fromIndex, toIndex } = body;
 
   if (typeof fromIndex !== 'number' || typeof toIndex !== 'number') {

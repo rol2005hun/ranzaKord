@@ -9,7 +9,11 @@ export async function useAppSession(event: H3Event) {
     const token = authHeader.substring(7);
     const cookieHeader = getHeader(event, 'cookie') || '';
     if (!cookieHeader.includes('h3=')) {
-      event.node.req.headers.cookie = cookieHeader ? `${cookieHeader}; h3=${token}` : `h3=${token}`;
+      if (event.node?.req?.headers) {
+        event.node.req.headers.cookie = cookieHeader
+          ? `${cookieHeader}; h3=${token}`
+          : `h3=${token}`;
+      }
     }
   }
 

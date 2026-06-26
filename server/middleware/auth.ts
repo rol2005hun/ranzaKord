@@ -1,7 +1,7 @@
 import type { ServerSession } from '../types/auth.server.types';
 
 export default defineEventHandler(async (event) => {
-  if (event.node.req.method === 'OPTIONS') {
+  if (event.method === 'OPTIONS') {
     return;
   }
 
