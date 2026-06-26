@@ -1,15 +1,63 @@
 <script setup lang="ts">
+import type { Ref } from 'vue';
+
 import type { SearchResult } from '@/features/search/types/search.types';
 
 const { currentUser } = useAuth();
 const themeStore = useThemeStore();
 
-const searchQuery = computed(() =>
-  themeStore.themeId === 'wc2026' ? 'fifa world cup official songs' : 'top hits 2024'
+const isWalker = computed(() => themeStore.themeId === 'walker');
+const isWc2026 = computed(() => themeStore.themeId === 'wc2026');
+
+const {
+  data: featuredTracksData,
+  pending: featuredPending,
+  execute: executeFeatured
+} = useLazyFetch<SearchResult[]>('/api/home/featured-tracks', {
+  immediate: false
+});
+
+const {
+  data: topTracks,
+  pending: topTracksPending,
+  execute: executeTopTracks
+} = useLazyFetch<SearchResult[]>('/api/home/top-tracks', {
+  immediate: false
+});
+
+const {
+  data: wcTracks,
+  pending: wcPending,
+  execute: executeWc
+} = useLazyFetch<SearchResult[]>('/api/search', {
+  query: { q: 'fifa world cup official songs', type: 'song' },
+  immediate: false
+});
+
+watch(
+  [isWalker, isWc2026],
+  ([walker, wc]) => {
+    if (walker) {
+      executeTopTracks();
+    } else if (wc) {
+      executeWc();
+    } else {
+      executeFeatured();
+    }
+  },
+  { immediate: true }
 );
 
-const { data: featuredTracks, pending } = useLazyFetch<SearchResult[]>('/api/search', {
-  query: { q: searchQuery, type: 'song' }
+const featuredTracks: Ref<SearchResult[] | null> = computed(() => {
+  if (isWalker.value) return topTracks.value ?? null;
+  if (isWc2026.value) return wcTracks.value ?? null;
+  return featuredTracksData.value ?? null;
+});
+
+const pending = computed(() => {
+  if (isWalker.value) return topTracksPending.value;
+  if (isWc2026.value) return wcPending.value;
+  return featuredPending.value;
 });
 
 const recommendedTrack = computed(() => featuredTracks.value?.[0]);
@@ -19,7 +67,7 @@ const { playQueue } = usePlayer();
 
 function onPlayFromList(track: SearchResult) {
   if (!featuredTracks.value) return;
-  const tracksToPlay = featuredTracks.value.map((t) => ({
+  const tracksToPlay = featuredTracks.value.map((t: SearchResult) => ({
     videoId: t.id,
     title: t.title,
     artist: t.artist,
@@ -37,7 +85,7 @@ function onPlayFromList(track: SearchResult) {
       class="home-dashboard__hero"
       :class="{ 'home-dashboard__hero--wc2026': themeStore.themeId === 'wc2026' }">
       <div class="home-dashboard__hero-content">
-        <i18n-t keypath="home.greeting" tag="p" class="home-dashboard__greeting">
+        <i18n-t keypath="home.greeting" tag="p" class="home-dashboard__greeting" scope="global">
           <template #name>
             <span class="home-dashboard__greeting-name">
               {{ currentUser?.name ?? $t('home.guest') }}
@@ -54,14 +102,21 @@ function onPlayFromList(track: SearchResult) {
         <p v-else class="home-dashboard__subtitle">{{ $t('home.subtitle') }}</p>
       </div>
       <div class="home-dashboard__hero-visual">
-        <div v-if="pending || !recommendedTrack" class="home-dashboard__skeleton-visual">
-          <div class="skeleton skeleton--thumb" />
-        </div>
-        <TopResultCard
-          v-else
-          :result="recommendedTrack"
-          class="home-dashboard__recommended-card"
-          @play="onPlayFromList" />
+        <ClientOnly>
+          <div v-if="pending || !recommendedTrack" class="home-dashboard__skeleton-visual">
+            <div class="skeleton skeleton--thumb" />
+          </div>
+          <TopResultCard
+            v-else
+            :result="recommendedTrack"
+            class="home-dashboard__recommended-card"
+            @play="onPlayFromList" />
+          <template #fallback>
+            <div class="home-dashboard__skeleton-visual">
+              <div class="skeleton skeleton--thumb" />
+            </div>
+          </template>
+        </ClientOnly>
       </div>
     </section>
 

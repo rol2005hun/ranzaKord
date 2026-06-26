@@ -7,5 +7,6 @@
   "downloading": "Letöltés folyamatban",
   "skip": "Kihagyás most",
   "installing": "Telepítés...",
-  "installAndRestart": "Telepítés és Újraindítás"
+  "installAndRestart": "Telepítés és Újraindítás",
+  "downloadApk": "Frissítés letöltése"
 }

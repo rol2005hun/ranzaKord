@@ -83,6 +83,7 @@ pub fn run() {
     let mut client = DiscordIpcClient::new("1510265493443973140");
     let _ = client.connect();
 
+    #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_opener::init())

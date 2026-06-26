@@ -4,18 +4,106 @@ import type { LyricLine } from '../types/sidebar.types';
 const player = usePlayer();
 const layoutStore = useLayoutStore();
 const { lyricsData, isLoading: lyricsLoading, fetchLyrics, getActiveLine } = useLyrics();
+const { connect: connectVisualizer } = useAudioVisualizer();
+const { drawVisualizer } = useCanvasVisualizer();
 
 const lyricsListRef = ref<HTMLElement | null>(null);
 const isResizing = ref(false);
+const canvasRef = ref<HTMLCanvasElement | null>(null);
+const vizWrapRef = ref<HTMLElement | null>(null);
 
 const isHydrated = ref(false);
 
+let animId: number | null = null;
+let dataArray = new Uint8Array(128);
+
+function resizeCanvas() {
+  const canvas = canvasRef.value;
+  const wrap = vizWrapRef.value;
+  if (!canvas || !wrap) return;
+  const { width, height } = wrap.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  canvas.style.width = `${width}px`;
+  canvas.style.height = `${height}px`;
+}
+
+function drawFrame() {
+  animId = requestAnimationFrame(drawFrame);
+  const canvas = canvasRef.value;
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const s = getComputedStyle(document.documentElement);
+  const primaryH = s.getPropertyValue('--color-primary-h').trim() || '250';
+  const primaryS = s.getPropertyValue('--color-primary-s').trim() || '80%';
+
+  const audio1 = player.audioElement1.value;
+  const audio2 = player.audioElement2.value;
+  if (audio1 && audio2) {
+    const analyser = connectVisualizer(audio1, audio2, player.volume.value);
+    if (analyser) {
+      if (dataArray.length !== analyser.frequencyBinCount) {
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+      }
+      analyser.getByteFrequencyData(dataArray);
+    }
+  }
+
+  const W = canvas.width;
+  const H = canvas.height;
+
+  const time = performance.now();
+  const bassScale = drawVisualizer({
+    ctx,
+    width: W,
+    height: H,
+    dataArray,
+    style: layoutStore.visualizerStyle,
+    primaryH,
+    primaryS,
+    time
+  });
+
+  if (vizWrapRef.value) {
+    vizWrapRef.value.style.setProperty('--bass-scale', bassScale.toString());
+  }
+}
+
+let ro: ResizeObserver | null = null;
+
 onMounted(() => {
   isHydrated.value = true;
+
+  ro = new ResizeObserver(resizeCanvas);
+  if (vizWrapRef.value) ro.observe(vizWrapRef.value);
+  nextTick(() => {
+    resizeCanvas();
+    drawFrame();
+  });
+
+  onUnmounted(() => {
+    if (animId) cancelAnimationFrame(animId);
+    if (ro) ro.disconnect();
+  });
+});
+
+watch(vizWrapRef, (el) => {
+  if (ro) {
+    if (el) {
+      ro.observe(el);
+      nextTick(() => resizeCanvas());
+    } else {
+      ro.disconnect();
+    }
+  }
 });
 
 const currentTrack = computed(() => (isHydrated.value ? player.currentTrack.value : null));
 const currentTime = computed(() => (isHydrated.value ? player.currentTimeSeconds.value : 0));
+const isPlaying = computed(() => (isHydrated.value ? player.isPlaying.value : false));
 
 watch(
   currentTrack,
@@ -39,7 +127,7 @@ let scrollResumeTimer: ReturnType<typeof setTimeout> | null = null;
 let isProgrammaticScroll = false;
 let programmaticScrollTimer: ReturnType<typeof setTimeout> | null = null;
 
-function scrollToActiveLine() {
+function scrollToActiveLine(instant = false) {
   const idx = activeLineIndex.value;
   if (idx < 0) return;
   nextTick(() => {
@@ -58,7 +146,7 @@ function scrollToActiveLine() {
         isProgrammaticScroll = false;
       }, 800);
 
-      container.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+      container.scrollTo({ top: scrollPosition, behavior: instant ? 'auto' : 'smooth' });
     }
   });
 }
@@ -67,6 +155,17 @@ watch(activeLineIndex, () => {
   if (!autoScrollEnabled) return;
   scrollToActiveLine();
 });
+
+watch(
+  () => layoutStore.rightSidebarMode,
+  (newMode) => {
+    if (newMode === 'lyrics') {
+      autoScrollEnabled = true;
+      if (scrollResumeTimer) clearTimeout(scrollResumeTimer);
+      nextTick(() => scrollToActiveLine(true));
+    }
+  }
+);
 
 function onLyricsScroll() {
   if (isProgrammaticScroll) return;
@@ -110,7 +209,7 @@ function onResizeStart(event: MouseEvent | TouchEvent) {
 }
 
 const sidebarStyle = computed(() => ({
-  width: `${isHydrated.value ? layoutStore.rightSidebarWidth : 300}px`
+  width: `${layoutStore.rightSidebarWidth}px`
 }));
 </script>
 
@@ -136,21 +235,31 @@ const sidebarStyle = computed(() => ({
           id="sidebar-tab-info"
           class="right-sidebar__tab"
           :class="{
-            'right-sidebar__tab--active': !isHydrated || layoutStore.rightSidebarMode === 'info'
+            'right-sidebar__tab--active': layoutStore.rightSidebarMode === 'info'
           }"
+          :title="$t('player.nowPlaying')"
           @click="layoutStore.setRightSidebarMode('info')">
           <AppIcon name="ph:music-note" />
-          <span>{{ $t('player.nowPlaying') }}</span>
         </button>
         <button
           id="sidebar-tab-lyrics"
           class="right-sidebar__tab"
           :class="{
-            'right-sidebar__tab--active': isHydrated && layoutStore.rightSidebarMode === 'lyrics'
+            'right-sidebar__tab--active': layoutStore.rightSidebarMode === 'lyrics'
           }"
+          :title="$t('player.lyrics')"
           @click="layoutStore.setRightSidebarMode('lyrics')">
           <AppIcon name="ph:microphone-stage" />
-          <span>{{ $t('player.lyrics') }}</span>
+        </button>
+        <button
+          id="sidebar-tab-queue"
+          class="right-sidebar__tab"
+          :class="{
+            'right-sidebar__tab--active': layoutStore.rightSidebarMode === 'queue'
+          }"
+          :title="$t('player.queue')"
+          @click="layoutStore.setRightSidebarMode('queue')">
+          <AppIcon name="ph:list-dashes" />
         </button>
       </div>
       <button
@@ -163,9 +272,7 @@ const sidebarStyle = computed(() => ({
     </div>
 
     <div class="right-sidebar__body">
-      <div
-        v-if="!isHydrated || layoutStore.rightSidebarMode === 'info'"
-        class="right-sidebar__info">
+      <div v-if="layoutStore.rightSidebarMode === 'info'" class="right-sidebar__info">
         <template v-if="!isHydrated">
           <div class="right-sidebar__artwork-wrap">
             <AppSkeleton width="100%" height="100%" border-radius="var(--radius-lg)" />
@@ -177,20 +284,34 @@ const sidebarStyle = computed(() => ({
         </template>
 
         <template v-else-if="currentTrack">
-          <div class="right-sidebar__artwork-wrap">
+          <div ref="vizWrapRef" class="right-sidebar__artwork-wrap">
             <img
               v-if="currentTrack.thumbnailUrl"
-              :src="useApiUrl(`/api/image?url=${encodeURIComponent(currentTrack.thumbnailUrl)}`)"
+              :src="currentTrack.thumbnailUrl"
               :alt="currentTrack.title"
-              class="right-sidebar__artwork" />
+              class="right-sidebar__artwork-bg" />
             <div v-else class="right-sidebar__artwork-placeholder">
               <AppIcon name="ph:music-notes-simple" />
             </div>
-          </div>
+            <canvas ref="canvasRef" class="right-sidebar__canvas" />
+            <div
+              class="right-sidebar__artwork-center"
+              :class="{ 'right-sidebar__artwork-center--spinning': isPlaying }">
+              <img
+                v-if="currentTrack.thumbnailUrl"
+                :src="currentTrack.thumbnailUrl"
+                :alt="currentTrack.title"
+                class="right-sidebar__artwork-thumb" />
+              <div v-else class="right-sidebar__artwork-placeholder-sm">
+                <AppIcon name="ph:music-notes-simple" />
+              </div>
+            </div>
 
-          <div class="right-sidebar__track-meta">
-            <p class="right-sidebar__track-title">{{ currentTrack.title }}</p>
-            <AppTrackArtists :track="currentTrack" class="right-sidebar__track-artist" />
+            <div class="right-sidebar__artwork-overlay" />
+            <div class="right-sidebar__track-meta">
+              <p class="right-sidebar__track-title">{{ currentTrack.title }}</p>
+              <AppTrackArtists :track="currentTrack" class="right-sidebar__track-artist" />
+            </div>
           </div>
         </template>
 
@@ -203,11 +324,13 @@ const sidebarStyle = computed(() => ({
         </template>
       </div>
 
-      <div
-        v-else-if="isHydrated && layoutStore.rightSidebarMode === 'lyrics'"
-        class="right-sidebar__lyrics">
+      <div v-else-if="layoutStore.rightSidebarMode === 'lyrics'" class="right-sidebar__lyrics">
         <div
-          v-if="lyricsLoading || (currentTrack && lyricsData?.trackId !== currentTrack.videoId)"
+          v-if="
+            !isHydrated ||
+            lyricsLoading ||
+            (currentTrack && lyricsData?.trackId !== currentTrack.videoId)
+          "
           class="right-sidebar__lyrics-loading-skeleton">
           <AppSkeleton
             v-for="(width, index) in [
@@ -287,6 +410,10 @@ const sidebarStyle = computed(() => ({
           </div>
         </template>
       </div>
+
+      <div v-else-if="layoutStore.rightSidebarMode === 'queue'" class="right-sidebar__queue">
+        <PlayerQueue />
+      </div>
     </div>
   </aside>
 </template>
@@ -344,12 +471,13 @@ const sidebarStyle = computed(() => ({
   &__tab {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: var(--space-1);
-    padding: var(--space-1) var(--space-2);
+    padding: var(--space-2);
     border: none;
     background: transparent;
     color: var(--color-text-secondary);
-    font-size: var(--text-xs);
+    font-size: 1.25rem;
     font-weight: var(--font-weight-medium);
     cursor: pointer;
     border-radius: var(--radius-md);
@@ -406,25 +534,79 @@ const sidebarStyle = computed(() => ({
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: var(--space-4) var(--space-3);
     gap: var(--space-3);
     overflow-y: auto;
+    flex: 1; /* Make it fill the body */
   }
 
   &__artwork-wrap {
+    position: relative;
     width: 100%;
-    aspect-ratio: 1;
-    border-radius: var(--radius-lg);
+    flex: 1; /* Expand to fill the entire info area */
     overflow: hidden;
     background: var(--color-surface-hover);
     box-shadow: var(--shadow-xl);
+    flex-shrink: 0;
   }
 
-  &__artwork {
+  &__artwork-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: blur(18px) brightness(0.35) saturate(1.6);
+    transform: scale(1.1);
+    display: block;
+  }
+
+  &__canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  &__artwork-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(var(--bass-scale, 1));
+    width: 60%;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--color-primary) 40%, transparent),
+      0 0 24px 6px color-mix(in srgb, var(--color-primary) 20%, transparent),
+      var(--shadow-xl);
+  }
+
+  &__artwork-thumb {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
+    animation: artwork-spin 24s linear infinite;
+    animation-play-state: paused;
+
+    .right-sidebar__artwork-center--spinning & {
+      animation-play-state: running;
+    }
+  }
+
+  &__artwork-placeholder-sm {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: var(--color-text-secondary);
+    background: var(--color-surface-hover);
+    opacity: 0.5;
   }
 
   &__artwork-placeholder {
@@ -438,32 +620,51 @@ const sidebarStyle = computed(() => ({
     opacity: 0.4;
   }
 
+  &__artwork-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgb(0 0 0 / 0.85) 0%,
+      rgb(0 0 0 / 0.4) 40%,
+      transparent 80%
+    );
+    pointer-events: none;
+  }
+
   &__track-meta {
+    position: absolute;
+    bottom: 0;
+    left: 0;
     width: 100%;
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
+    padding: var(--space-6) var(--space-4) var(--space-4);
+    z-index: 10;
   }
 
   &__track-title {
-    font-size: var(--text-base);
+    font-size: var(--text-lg);
     font-weight: var(--font-weight-bold);
-    color: var(--color-text-primary);
+    color: #ffffff;
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    text-shadow: 0 2px 4px rgb(0 0 0 / 0.5);
   }
 
   &__track-artist {
     font-size: var(--text-sm);
-    color: var(--color-text-secondary);
+    color: rgb(255 255 255 / 0.7);
     margin: 0;
     text-decoration: none;
+    text-shadow: 0 1px 3px rgb(0 0 0 / 0.5);
 
     &--link {
       &:hover {
-        color: var(--color-primary);
+        color: #ffffff;
         text-decoration: underline;
       }
     }
@@ -490,7 +691,7 @@ const sidebarStyle = computed(() => ({
   &__empty-text {
     font-size: var(--text-sm);
     font-weight: var(--font-weight-semibold);
-    color: var(--color-text-secondary);
+    color: var(--color-text-primary);
     margin: 0;
   }
 
@@ -508,6 +709,13 @@ const sidebarStyle = computed(() => ({
     flex-direction: column;
   }
 
+  &__queue {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
   &__lyrics-loading-skeleton {
     flex: 1;
     display: flex;
@@ -519,11 +727,11 @@ const sidebarStyle = computed(() => ({
   &__lyrics-list {
     flex: 1;
     overflow-y: auto;
-    padding: var(--space-6) var(--space-4);
+    overflow-x: hidden;
+    padding: var(--space-6) 15% var(--space-6) var(--space-4);
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
-    scroll-behavior: smooth;
 
     &::-webkit-scrollbar {
       width: 4px;
@@ -557,8 +765,21 @@ const sidebarStyle = computed(() => ({
     &--active {
       color: var(--color-text-primary);
       opacity: 1;
-      transform: scale(1.04);
       font-size: var(--text-lg);
+    }
+
+    body.audio-reactive-lyrics &--active {
+      transform: scale(calc(1.04 + var(--audio-bass, 0) * 0.15));
+      text-shadow: 0 0 calc(10px + var(--audio-bass, 0) * 25px)
+        hsla(
+          var(--color-primary-h),
+          var(--color-primary-s),
+          var(--color-primary-l),
+          calc(0.3 + var(--audio-bass, 0) * 0.7)
+        );
+      transition:
+        transform 0.05s ease-out,
+        text-shadow 0.05s ease-out;
     }
   }
 
@@ -603,6 +824,15 @@ const sidebarStyle = computed(() => ({
 
   @media (max-width: 768px) {
     display: none;
+  }
+}
+
+@keyframes artwork-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>

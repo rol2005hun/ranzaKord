@@ -9,7 +9,7 @@ export default defineNuxtConfig({
       titleTemplate: '%s | ranzaKord',
       charset: 'utf-8',
       viewport: 'width=device-width, initial-scale=1',
-      link: [{ rel: 'icon', type: 'image/x-icon', href: '/logo.webp' }],
+      link: [{ rel: 'icon', type: 'image/webp', href: '/logo.webp' }],
       script: [
         {
           innerHTML: `
@@ -56,6 +56,7 @@ export default defineNuxtConfig({
     ranzakonnectClientId: '',
     ranzakonnectClientSecret: '',
     imgurClientId: '',
+    youtubeCookies: '',
     public: {
       baseUrl: '',
       appVersion: pkg.version
@@ -79,7 +80,9 @@ export default defineNuxtConfig({
     '/api/**': { cors: true },
     '/auth/**': { cors: true },
     '/_nuxt/**': { headers: { 'Cache-Control': 'public, max-age=31536000, immutable' } },
-    '/logo.webp': { headers: { 'Cache-Control': 'public, max-age=31536000, immutable' } }
+    '/logo.webp': { headers: { 'Cache-Control': 'public, max-age=31536000, immutable' } },
+    '/sitemap.xml': { prerender: false },
+    '/__sitemap__/style.xsl': { prerender: false }
   },
 
   image: {
@@ -101,7 +104,8 @@ export default defineNuxtConfig({
   },
 
   sitemap: {
-    zeroRuntime: true
+    // Disable prerendering for sitemap to avoid H3 v2 node-mock-http crash
+    exclude: ['/api/**']
   },
 
   ogImage: {
@@ -173,7 +177,8 @@ export default defineNuxtConfig({
         '@tauri-apps/plugin-process',
         '@tauri-apps/plugin-updater',
         '@tauri-apps/plugin-deep-link',
-        '@tauri-apps/plugin-opener'
+        '@tauri-apps/plugin-opener',
+        '@unhead/schema-org/vue'
       ]
     },
     esbuild: {

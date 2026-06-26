@@ -1,4 +1,4 @@
-export type SidebarMode = 'info' | 'lyrics';
+export type SidebarMode = 'info' | 'lyrics' | 'queue';
 
 export interface LyricLine {
   time: number;

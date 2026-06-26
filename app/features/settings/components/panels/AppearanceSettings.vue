@@ -1,0 +1,140 @@
+<script setup lang="ts">
+import { useThemeStore } from '../../../theme/stores/useThemeStore';
+import type { ThemeId } from '../../../theme/types/theme.types';
+
+const themeStore = useThemeStore();
+const { t, locale } = useI18n({ useScope: 'global' });
+
+const THEME_OPTIONS: ThemeId[] = ['dark', 'light', 'ocean', 'rose', 'walker', 'wc2026'];
+
+const getThemeIcon = (theme: ThemeId) => {
+  switch (theme) {
+    case 'dark':
+      return 'ph:moon-fill';
+    case 'light':
+      return 'ph:sun-fill';
+    case 'ocean':
+      return 'ph:waves-bold';
+    case 'rose':
+      return 'ph:flower-lotus-bold';
+    case 'walker':
+      return 'ph:headphones-bold';
+    case 'wc2026':
+      return 'ph:soccer-ball-fill';
+    default:
+      return 'ph:palette-fill';
+  }
+};
+
+const themes = computed(() =>
+  THEME_OPTIONS.map((theme: ThemeId) => ({
+    label: t(`theme.${theme}`),
+    value: theme,
+    icon: getThemeIcon(theme)
+  }))
+);
+
+const customColorValue = computed({
+  get: () =>
+    themeStore.currentCustomColor?.hex || themeStore.DEFAULT_THEME_COLORS[themeStore.themeId],
+  set: (val: string) => themeStore.setCustomColor(val)
+});
+</script>
+
+<template>
+  <div class="settings-panel">
+    <h2 class="settings-panel__title">{{ $t('settings.categories.appearance') }}</h2>
+
+    <AppSettingsSection>
+      <AppSettingsItem
+        :title="$t('settings.appearance.theme.title')"
+        :description="$t('settings.appearance.theme.description')">
+        <AppSelect
+          :model-value="themeStore.themeId"
+          class="settings-select"
+          :options="themes"
+          @update:model-value="themeStore.setTheme($event as ThemeId)" />
+      </AppSettingsItem>
+
+      <AppSettingsItem
+        :title="$t('settings.appearance.customColor.title')"
+        :description="$t('settings.appearance.customColor.description')"
+        border>
+        <template #info>
+          <div class="color-picker-wrap">
+            <input
+              v-model="customColorValue"
+              type="color"
+              class="color-picker"
+              :class="{
+                'color-picker--unselected': !themeStore.customColors[themeStore.themeId]
+              }" />
+            <AppButton
+              variant="secondary"
+              size="sm"
+              :disabled="!themeStore.customColors[themeStore.themeId]"
+              @click="themeStore.resetCustomColor()">
+              <template #icon>
+                <AppIcon name="ph:arrow-counter-clockwise" />
+              </template>
+              {{ $t('settings.appearance.customColor.reset') }}
+            </AppButton>
+          </div>
+        </template>
+      </AppSettingsItem>
+
+      <AppSettingsItem
+        :title="$t('settings.appearance.language.title')"
+        :description="$t('settings.appearance.language.description')"
+        border>
+        <AppSelect
+          v-model="locale"
+          class="settings-select"
+          :options="[
+            { label: 'English', value: 'en', icon: 'twemoji:flag-united-states' },
+            { label: 'Magyar', value: 'hu', icon: 'twemoji:flag-hungary' }
+          ]" />
+      </AppSettingsItem>
+    </AppSettingsSection>
+  </div>
+</template>
+
+<style lang="scss" scoped>
+.settings-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+
+  &__title {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-4);
+  }
+}
+
+.color-picker-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.color-picker {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  background: transparent;
+
+  &::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+  &::-webkit-color-swatch {
+    border: none;
+    border-radius: var(--radius-md);
+  }
+}
+</style>

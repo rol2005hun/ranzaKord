@@ -1,6 +1,7 @@
 export function useHome() {
   const store = useHomeStore();
-  const { t } = useI18n();
+  const nuxtApp = useNuxtApp();
+  const t = nuxtApp.$i18n.t;
 
   function setup() {
     if (!store.isInitialized) {

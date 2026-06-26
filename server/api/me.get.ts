@@ -7,6 +7,7 @@ export interface MeResponse {
   email: string;
   picture: string;
   hasAccess: boolean;
+  settings?: Record<string, unknown>;
 }
 
 export default defineEventHandler(async (event): Promise<MeResponse> => {
@@ -35,6 +36,7 @@ export default defineEventHandler(async (event): Promise<MeResponse> => {
     name: sessionData.user.name,
     email: sessionData.user.email,
     picture: sessionData.user.picture ?? '',
-    hasAccess: userDoc?.hasAccess ?? false
+    hasAccess: userDoc?.hasAccess ?? false,
+    settings: userDoc?.settings
   };
 });

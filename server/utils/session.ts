@@ -1,15 +1,23 @@
-import { getHeader } from 'h3';
 import type { H3Event } from 'h3';
 
 export async function useAppSession(event: H3Event) {
   const config = useRuntimeConfig();
 
-  const authHeader = getHeader(event, 'authorization');
+  const authHeader =
+    (event.node?.req?.headers?.authorization as string) ||
+    (event.headers && event.headers.get ? event.headers.get('authorization') : undefined);
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.substring(7);
-    const cookieHeader = getHeader(event, 'cookie') || '';
+    const cookieHeader =
+      (event.node?.req?.headers?.cookie as string) ||
+      (event.headers && event.headers.get ? event.headers.get('cookie') : undefined) ||
+      '';
     if (!cookieHeader.includes('h3=')) {
-      event.node.req.headers.cookie = cookieHeader ? `${cookieHeader}; h3=${token}` : `h3=${token}`;
+      if (event.node?.req?.headers) {
+        event.node.req.headers.cookie = cookieHeader
+          ? `${cookieHeader}; h3=${token}`
+          : `h3=${token}`;
+      }
     }
   }
 

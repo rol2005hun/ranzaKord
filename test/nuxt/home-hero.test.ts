@@ -26,7 +26,8 @@ const mockPending = ref(true);
 mockNuxtImport('useLazyFetch', () => {
   return () => ({
     data: mockData,
-    pending: mockPending
+    pending: mockPending,
+    execute: vi.fn()
   });
 });
 

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 const player = usePlayer();
-const audioEl = ref<HTMLAudioElement | null>(null);
+const audioEl1 = ref<HTMLAudioElement | null>(null);
+const audioEl2 = ref<HTMLAudioElement | null>(null);
 const layoutStore = useLayoutStore();
 const { lyricsData, isLoading: lyricsLoading, fetchLyrics, getActiveLine } = useLyrics();
 
 const isHydrated = ref(false);
-const showMobileLyrics = ref(false);
 
 const displayTrack = computed(() => (isHydrated.value ? player.currentTrack.value : null));
 const displayVolume = computed(() => (isHydrated.value ? player.volume.value : 1));
@@ -15,13 +15,12 @@ const displayDuration = computed(() => (isHydrated.value ? player.durationSecond
 onMounted(() => {
   isHydrated.value = true;
   onNuxtReady(() => {
-    if (audioEl.value) {
-      player.bindAudio(audioEl.value);
+    if (audioEl1.value && audioEl2.value) {
+      player.bindAudio(audioEl1.value, audioEl2.value);
     }
   });
 });
 
-const showAddToPlaylist = ref(false);
 const playlistBtnRef = ref<HTMLElement | null>(null);
 const playlistsStore = usePlaylistsStore();
 
@@ -67,7 +66,7 @@ let mobileProgrammaticScrollTimer: ReturnType<typeof setTimeout> | null = null;
 
 function scrollMobileToActiveLine() {
   const idx = mobileActiveLine.value;
-  if (!showMobileLyrics.value || idx < 0) return;
+  if (!layoutStore.isMobileLyricsOpen || idx < 0) return;
   nextTick(() => {
     const container = mobileLyricsListRef.value;
     const el = container?.querySelector(`[data-line="${idx}"]`) as HTMLElement | null;
@@ -107,7 +106,7 @@ function onMobileLyricsScroll() {
 
 function toggleLyrics() {
   if (window.innerWidth <= 768) {
-    showMobileLyrics.value = !showMobileLyrics.value;
+    layoutStore.toggleMobileLyrics();
     return;
   }
   if (isLyricsActive.value) {
@@ -146,37 +145,49 @@ function onVolumeInput(event: Event) {
 
 <template>
   <div>
-    <audio ref="audioEl" preload="metadata" playsinline />
+    <audio ref="audioEl1" preload="metadata" playsinline />
+    <audio ref="audioEl2" preload="metadata" playsinline />
     <aside class="player-bar" :aria-label="$t('player.playerBar')">
       <div class="player-bar__left">
-        <div class="player-bar__artwork">
-          <img
-            v-if="displayTrack?.thumbnailUrl"
-            :src="useApiUrl(`/api/image?url=${encodeURIComponent(displayTrack.thumbnailUrl)}`)"
-            :alt="displayTrack?.title"
-            class="player-bar__img" />
-          <AppSkeleton v-else-if="!isHydrated" width="100%" height="100%" />
-          <AppIcon v-else name="ph:music-notes-simple" class="player-bar__img-placeholder" />
-        </div>
-        <div v-if="displayTrack" class="player-bar__info">
-          <span class="player-bar__title">{{ displayTrack.title }}</span>
-          <AppTrackArtists :track="displayTrack" class="player-bar__artist" />
-        </div>
-        <div v-else-if="!isHydrated" class="player-bar__info player-bar__info--skeleton">
-          <AppSkeleton height="12px" width="120px" border-radius="var(--radius-sm)" />
-          <AppSkeleton height="10px" width="80px" border-radius="var(--radius-sm)" />
-        </div>
-        <div v-else class="player-bar__info player-bar__info--empty">
-          <span class="player-bar__title">{{ $t('player.noTrack') }}</span>
-          <span class="player-bar__artist">{{ $t('player.startSomething') }}</span>
-        </div>
+        <ClientOnly>
+          <div class="player-bar__artwork">
+            <img
+              v-if="displayTrack?.thumbnailUrl"
+              :src="displayTrack.thumbnailUrl"
+              :alt="displayTrack?.title"
+              class="player-bar__img" />
+            <AppIcon v-else name="ph:music-notes-simple" class="player-bar__img-placeholder" />
+          </div>
+          <template #fallback>
+            <div class="player-bar__artwork">
+              <AppSkeleton width="100%" height="100%" />
+            </div>
+          </template>
+        </ClientOnly>
+
+        <ClientOnly>
+          <div v-if="displayTrack" class="player-bar__info">
+            <span class="player-bar__title">{{ displayTrack.title }}</span>
+            <AppTrackArtists :track="displayTrack" class="player-bar__artist" />
+          </div>
+          <div v-else class="player-bar__info player-bar__info--empty">
+            <span class="player-bar__title">{{ $t('player.noTrack') }}</span>
+            <span class="player-bar__artist">{{ $t('player.startSomething') }}</span>
+          </div>
+          <template #fallback>
+            <div class="player-bar__info player-bar__info--skeleton">
+              <AppSkeleton height="12px" width="120px" border-radius="var(--radius-sm)" />
+              <AppSkeleton height="10px" width="80px" border-radius="var(--radius-sm)" />
+            </div>
+          </template>
+        </ClientOnly>
         <ClientOnly>
           <button
             ref="playlistBtnRef"
             class="player-bar__add-btn"
             :disabled="!displayTrack"
             :aria-label="$t('playlists.addToPlaylist')"
-            @click="showAddToPlaylist = !showAddToPlaylist">
+            @click="layoutStore.toggleAddToPlaylist()">
             <AppIcon v-if="isInAnyPlaylist" name="ph:check-circle-fill" class="text-success" />
             <AppIcon v-else name="ph:plus-circle" />
           </button>
@@ -190,7 +201,11 @@ function onVolumeInput(event: Event) {
         <div class="player-bar__controls">
           <button
             class="player-bar__btn player-bar__btn--secondary"
-            :class="{ 'player-bar__btn--active': isHydrated ? player.isShuffle.value : false }"
+            :class="{
+              'player-bar__btn--active': isHydrated
+                ? player.playbackOrder.value === 'random'
+                : false
+            }"
             :disabled="!displayTrack"
             :aria-label="$t('player.shuffle') || 'Shuffle'"
             @click="player.toggleShuffle()">
@@ -241,6 +256,7 @@ function onVolumeInput(event: Event) {
             :aria-label="$t('player.repeat') || 'Repeat'"
             @click="player.toggleRepeat()">
             <AppIcon
+              data-allow-mismatch
               :name="
                 isHydrated && player.repeatMode.value === 'one' ? 'ph:repeat-once' : 'ph:repeat'
               " />
@@ -276,9 +292,23 @@ function onVolumeInput(event: Event) {
 
       <div class="player-bar__right">
         <button
+          class="player-bar__btn"
+          :class="{ 'player-bar__btn--active': layoutStore.isFullscreenVisualizer }"
+          :aria-label="$t('player.fullscreenVisualizer')"
+          @click="layoutStore.toggleFullscreenVisualizer()">
+          <AppIcon name="ph:monitor-play-bold" />
+        </button>
+        <button
+          class="player-bar__btn"
+          :class="{ 'player-bar__btn--active': player.isKaraoke.value }"
+          :aria-label="$t('player.karaokeMode')"
+          @click="player.toggleKaraoke()">
+          <AppIcon name="ph:magic-wand" />
+        </button>
+        <button
           id="player-lyrics-btn"
           class="player-bar__btn player-bar__btn--lyrics"
-          :class="{ 'player-bar__btn--active': isLyricsActive || showMobileLyrics }"
+          :class="{ 'player-bar__btn--active': isLyricsActive || layoutStore.isMobileLyricsOpen }"
           :aria-label="$t('player.lyrics')"
           @click="toggleLyrics">
           <AppIcon name="ph:microphone-stage" />
@@ -314,15 +344,17 @@ function onVolumeInput(event: Event) {
 
     <Teleport to="body">
       <Transition name="mobile-lyrics">
-        <div v-if="showMobileLyrics" class="mobile-lyrics-overlay" role="dialog" aria-modal="true">
+        <div
+          v-if="layoutStore.isMobileLyricsOpen"
+          class="mobile-lyrics-overlay"
+          role="dialog"
+          aria-modal="true">
           <div class="mobile-lyrics-overlay__header">
             <div class="mobile-lyrics-overlay__track">
               <div class="mobile-lyrics-overlay__artwork">
                 <img
                   v-if="displayTrack?.thumbnailUrl"
-                  :src="
-                    useApiUrl(`/api/image?url=${encodeURIComponent(displayTrack.thumbnailUrl)}`)
-                  "
+                  :src="displayTrack.thumbnailUrl"
                   :alt="displayTrack?.title" />
                 <AppIcon v-else name="ph:music-notes-simple" />
               </div>
@@ -337,7 +369,7 @@ function onVolumeInput(event: Event) {
               id="mobile-lyrics-close"
               class="mobile-lyrics-overlay__close"
               :aria-label="$t('player.closeInfoPanel')"
-              @click="showMobileLyrics = false">
+              @click="layoutStore.closeMobileLyrics()">
               <AppIcon name="ph:x-bold" />
             </button>
           </div>
@@ -379,16 +411,16 @@ function onVolumeInput(event: Event) {
     </Teleport>
 
     <AddToPlaylistPopup
-      v-if="showAddToPlaylist && displayTrack"
+      v-if="!layoutStore.isFullscreenVisualizer && layoutStore.isAddToPlaylistOpen && displayTrack"
       :track="{
-        videoId: displayTrack.videoId,
-        title: displayTrack.title,
-        artist: displayTrack.artist,
-        thumbnailUrl: displayTrack.thumbnailUrl,
+        videoId: displayTrack?.videoId || '',
+        title: displayTrack?.title || '',
+        artist: displayTrack?.artist || '',
+        thumbnailUrl: displayTrack?.thumbnailUrl || '',
         durationMs: displayDuration * 1000
       }"
       :anchor="playlistBtnRef"
-      @close="showAddToPlaylist = false" />
+      @close="layoutStore.closeAddToPlaylist()" />
   </div>
 </template>
 
@@ -552,14 +584,16 @@ function onVolumeInput(event: Event) {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition:
-      color var(--transition-fast),
-      transform var(--transition-fast);
-    padding: var(--space-1);
+    transition: all var(--transition-base);
 
-    &:hover {
-      color: var(--color-primary);
+    &:hover:not(:disabled) {
+      color: var(--color-text-primary);
       transform: scale(1.1);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
   }
 
@@ -659,22 +693,6 @@ function onVolumeInput(event: Event) {
 
     &--volume {
       width: 100px;
-    }
-
-    &::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 12px;
-      height: 12px;
-      border-radius: var(--radius-full);
-      background: var(--color-text-primary);
-      cursor: pointer;
-      margin-top: -4px;
-      transition: transform var(--transition-fast);
-    }
-
-    &:hover::-webkit-slider-thumb {
-      transform: scale(1.2);
     }
 
     &::-webkit-slider-runnable-track {
@@ -786,7 +804,7 @@ function onVolumeInput(event: Event) {
     }
 
     &__info {
-      flex: 1;
+      flex: 0 1 auto;
       min-width: 0;
     }
 
@@ -823,13 +841,16 @@ function onVolumeInput(event: Event) {
       }
 
       input[type='range'] {
-        height: 2px;
+        height: 3px;
+        background: transparent;
+
         &::-webkit-slider-thumb {
-          width: 0;
-          height: 0;
+          width: 12px;
+          height: 12px;
         }
+
         &::-webkit-slider-runnable-track {
-          height: 2px;
+          height: 3px;
           border-radius: 0;
         }
       }
@@ -970,6 +991,7 @@ function onVolumeInput(event: Event) {
   &__list {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: var(--space-8) var(--space-6);
     display: flex;
     flex-direction: column;
@@ -985,6 +1007,10 @@ function onVolumeInput(event: Event) {
     margin: 0;
     cursor: pointer;
     opacity: 0.4;
+    word-break: break-word;
+    white-space: pre-wrap;
+    width: 100%;
+    text-align: center;
     transition:
       color var(--transition-base),
       opacity var(--transition-base),
@@ -994,6 +1020,20 @@ function onVolumeInput(event: Event) {
       color: var(--color-text-primary);
       opacity: 1;
       font-size: var(--text-2xl);
+    }
+
+    body.audio-reactive-lyrics &--active {
+      transform: scale(calc(1.02 + var(--audio-bass, 0) * 0.2));
+      text-shadow: 0 0 calc(10px + var(--audio-bass, 0) * 25px)
+        hsla(
+          var(--color-primary-h),
+          var(--color-primary-s),
+          var(--color-primary-l),
+          calc(0.3 + var(--audio-bass, 0) * 0.7)
+        );
+      transition:
+        transform 0.05s ease-out,
+        text-shadow 0.05s ease-out;
     }
   }
 

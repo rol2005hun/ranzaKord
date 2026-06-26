@@ -3,7 +3,10 @@
   "loading": "Loading…",
   "error": {
     "generic": "Something went wrong.",
-    "notFound": "Page not found."
+    "notFound": "Page not found.",
+    "fatalTitle": "FATAL ERROR (An error occurred!)",
+    "fatalDescription": "Nuxt/Vue has crashed. Please copy this error message:",
+    "fatalHomeBtn": "Home"
   },
   "nav": {
     "signIn": "Sign in",
@@ -22,7 +25,8 @@
     "stop": "Stop",
     "save": "Save",
     "close": "Close",
-    "back": "Back"
+    "back": "Back",
+    "settings": "Settings"
   },
   "musicDetail": {
     "titleColumn": "Title",
@@ -39,5 +43,21 @@
     "skip": "Skip for now",
     "installing": "Installing...",
     "installAndRestart": "Install & Restart"
+  },
+  "settings": {
+    "crossfade": {
+      "title": "Crossfade",
+      "description": "Smooth transition between tracks",
+      "duration": "Duration",
+      "type": "Fade Type",
+      "types": {
+        "linear": "Linear",
+        "dj": "DJ (Exponential)"
+      }
+    },
+    "audioReactiveLyrics": {
+      "title": "Audio-Reactive Lyrics",
+      "description": "Make the active lyric line bounce and glow to the beat of the music."
+    }
   }
 }

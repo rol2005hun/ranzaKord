@@ -4,7 +4,7 @@ definePageMeta({
 });
 
 const route = useRoute();
-const { t } = useI18n();
+const { t } = useI18n({ useScope: 'global' });
 
 useHead({ title: t('auth.callback.loading') });
 

@@ -1,7 +1,7 @@
 type ClientType = 'TV' | 'WEB' | 'YTMUSIC' | 'ANDROID' | 'IOS' | 'TV_EMBEDDED' | 'WEB_CREATOR';
 const workingClients: ClientType[] = [
-  'IOS',
   'ANDROID',
+  'IOS',
   'YTMUSIC',
   'WEB',
   'TV',
@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: t('player.errors.missingVideoId') });
   }
 
-  const innertube = await createInnertube(true);
+  const innertube = await createInnertube(false);
   const debugInfo: Record<string, string> = {};
 
   let resolvedStreamUrl: string | undefined;
@@ -51,6 +51,19 @@ export default defineEventHandler(async (event) => {
 
         if (!candidateUrl) {
           debugInfo[client] = `Failed to extract stream URL on attempt ${attempt}.`;
+          continue;
+        }
+
+        const testRes = await fetch(candidateUrl, {
+          method: 'HEAD',
+          headers: {
+            'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+          }
+        });
+
+        if (testRes.status === 403) {
+          debugInfo[client] = `Stream URL HEAD returned 403 on attempt ${attempt}.`;
           continue;
         }
 

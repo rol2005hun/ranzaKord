@@ -10,7 +10,7 @@ const emit = defineEmits<{
   (e: 'close'): void;
 }>();
 
-const { t } = useI18n();
+const { t } = useI18n({ useScope: 'global' });
 const store = usePlaylistsStore();
 const toast = useToast();
 

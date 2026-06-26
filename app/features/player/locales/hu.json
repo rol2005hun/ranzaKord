@@ -20,8 +20,26 @@
   "lyricsLoading": "Dalszöveg betöltése...",
   "lyricsNotSynced": "A dalszöveg nincs szinkronizálva",
   "nowPlaying": "Most játszott",
+  "queue": "Várólista",
+  "queueEmpty": "A várólista üres",
+  "clearQueue": "Várólista törlése",
+  "removeFromQueue": "Eltávolítás",
+  "autoplay": "Végtelen lejátszás / Rádió",
+  "orderSequential": "Egymás után",
+  "orderRandom": "Véletlenszerű",
+  "orderReverse": "Visszafelé",
   "moreFrom": "Továbbiak tőle: {artist}",
-  "noRecommendations": "Nincsenek elérhető ajánlások",
+  "noRecommendations": "Nincsenek ajánlások",
+  "fullscreenVisualizer": "Teljes képernyős vizualizáció",
+  "closeVisualizer": "Vizualizáció bezárása",
+  "karaokeMode": "Karaoke Mód (Ének némítása)",
+  "visualizerStyle": "Vizualizáció Stílusa",
+  "visualizerStyles": {
+    "circle": "Pulzáló Kör",
+    "bars": "Retro Oszlopok",
+    "wave": "Oszcilloszkóp",
+    "particles": "Részecskék"
+  },
   "errors": {
     "playback": "Lejátszási hiba. Kérlek próbáld újra.",
     "stream": "A stream betöltése sikertelen. Be vagy jelentkezve?"

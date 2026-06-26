@@ -1,7 +1,9 @@
 export default defineEventHandler((event) => {
   if (!event.path.startsWith('/api/')) return;
 
-  const origin = getRequestHeader(event, 'origin');
+  const origin =
+    (event.node?.req?.headers?.origin as string) ||
+    (event.headers && event.headers.get ? event.headers.get('origin') : undefined);
 
   if (origin) {
     setResponseHeader(event, 'Access-Control-Allow-Origin', origin);
@@ -21,9 +23,8 @@ export default defineEventHandler((event) => {
     'Origin, Content-Type, Accept, Authorization, Cookie'
   );
 
-  if (event.node.req.method === 'OPTIONS') {
-    event.node.res.statusCode = 204;
-    event.node.res.statusMessage = 'No Content';
+  if (event.method === 'OPTIONS') {
+    setResponseStatus(event, 204, 'No Content');
     return 'OK';
   }
 });

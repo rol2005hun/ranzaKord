@@ -1,7 +1,7 @@
 import type { ServerSession } from '../types/auth.server.types';
 
 export default defineEventHandler(async (event) => {
-  if (event.node.req.method === 'OPTIONS') {
+  if (event.method === 'OPTIONS') {
     return;
   }
 
@@ -10,8 +10,7 @@ export default defineEventHandler(async (event) => {
   if (
     path.startsWith('/api/') &&
     !path.startsWith('/api/health') &&
-    !path.startsWith('/api/image') &&
-    !path.startsWith('/api/stream')
+    !path.startsWith('/api/image')
   ) {
     const session = await useAppSession(event);
     const sessionData = session.data as Partial<ServerSession>;

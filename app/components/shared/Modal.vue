@@ -4,12 +4,14 @@ interface Props {
   title?: string;
   size?: 'sm' | 'md' | 'lg' | 'full';
   persistent?: boolean;
+  modalClass?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   title: undefined,
   size: 'md',
-  persistent: false
+  persistent: false,
+  modalClass: undefined
 });
 
 const emit = defineEmits<{
@@ -64,7 +66,7 @@ onUnmounted(() => {
         <div v-if="props.modelValue" class="modal-overlay" @click.self="handleOverlayClick">
           <div
             class="modal"
-            :class="`modal--${props.size}`"
+            :class="[`modal--${props.size}`, props.modalClass]"
             role="dialog"
             aria-modal="true"
             :aria-label="props.title">

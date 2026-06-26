@@ -17,7 +17,7 @@ describe('Theme Module', () => {
     it('initializes with default values', () => {
       const store = useThemeStore();
       expect(store.themeId).toBe('dark');
-      expect(store.customColor).toBeNull();
+      expect(store.customColors['dark']).toBeUndefined();
     });
 
     it('sets theme', () => {
@@ -29,25 +29,26 @@ describe('Theme Module', () => {
     it('sets custom color', () => {
       const store = useThemeStore();
       store.setCustomColor('#ff0000');
-      expect(store.customColor?.hex).toBe('#ff0000');
+      expect(store.currentCustomColor?.hex).toBe('#ff0000');
     });
 
     it('clears custom color', () => {
       const store = useThemeStore();
       store.setCustomColor('#ff0000');
       store.resetCustomColor();
-      expect(store.customColor).toBeNull();
+      expect(store.customColors['dark']).toBeUndefined();
     });
   });
 
   describe('useTheme', () => {
     it('initializes theme from localStorage and handles body attributes', () => {
       const store = useThemeStore();
-      const { initialize, setTheme, setCustomColor, themeId, customColor, themes } = useTheme();
+      const { initialize, setTheme, setCustomColor, themeId, currentCustomColor, themes } =
+        useTheme();
 
       expect(themes.length).toBeGreaterThan(0);
       expect(themeId.value).toBe('dark');
-      expect(customColor.value).toBeNull();
+      expect(currentCustomColor.value?.hex).toBe(store.DEFAULT_THEME_COLORS['dark']);
 
       // Reset state first to avoid cross-test pollution
       store.setTheme('dark');
@@ -63,7 +64,7 @@ describe('Theme Module', () => {
 
       // Test changing custom color
       setCustomColor('#123456');
-      expect(store.customColor?.hex).toBe('#123456');
+      expect(store.currentCustomColor?.hex).toBe('#123456');
     });
 
     it('applies custom color via css variables', () => {
@@ -74,13 +75,14 @@ describe('Theme Module', () => {
       expect(style.getPropertyValue('--color-primary-h')).toBeDefined();
     });
 
-    it('removes custom color variables when cleared', () => {
+    it('removes custom color variables when cleared and applies default', () => {
       const { setCustomColor, resetCustomColor } = useTheme();
       setCustomColor('#ff0000');
       resetCustomColor();
 
       const style = document.documentElement.style;
-      expect(style.getPropertyValue('--color-primary-h')).toBe('');
+      // Default color for 'dark' is #7430e8, which is HSL 262 80% 55%
+      expect(style.getPropertyValue('--color-primary-h')).toBe('262');
     });
   });
 });

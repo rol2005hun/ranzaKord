@@ -28,3 +28,22 @@ export interface StreamResponse {
   mimeType: string;
   durationMs: number;
 }
+
+export interface TrackStatPayload {
+  trackId: string;
+  title: string;
+  artist: string;
+  thumbnailUrl: string;
+  durationSeconds: number;
+  listeningSeconds: number;
+  skipped: boolean;
+}
+
+export type CrossfadeType = 'linear' | 'dj';
+
+export interface PlaybackContext {
+  type: 'playlist' | 'album' | 'artist' | 'radio' | 'none';
+  sourceId?: string;
+  currentOffset: number;
+  totalItems?: number;
+}

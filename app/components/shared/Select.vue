@@ -235,8 +235,10 @@ onBeforeUnmount(() => {
 .select-dropdown {
   position: absolute;
   top: calc(100% + 4px);
-  left: 0;
-  width: 100%;
+  right: 0;
+  min-width: 100%;
+  width: max-content;
+  max-width: 300px;
   max-height: 250px;
   overflow-y: auto;
   margin: 0;
@@ -261,6 +263,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  width: 100%;
   padding: var(--space-2) var(--space-3);
   font-size: var(--text-sm);
   color: var(--color-text-primary);

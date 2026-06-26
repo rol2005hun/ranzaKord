@@ -39,9 +39,9 @@ onMounted(() => {
 <template>
   <div class="music-layout">
     <AppSidebar>
-      <template #header-top>
+      <template #header-top="{ isExpanded }">
         <NuxtLink to="/" class="app-sidebar__brand">
-          <AppBrand />
+          <AppBrand :collapsed="!isExpanded" />
         </NuxtLink>
       </template>
 
@@ -140,7 +140,7 @@ onMounted(() => {
     </div>
 
     <Transition name="right-sidebar">
-      <PlayerRightSidebar v-if="isHydrated && layoutStore.isRightSidebarOpen" />
+      <PlayerRightSidebar v-if="layoutStore.isRightSidebarOpen" />
     </Transition>
 
     <PlayerBar />

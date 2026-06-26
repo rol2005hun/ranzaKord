@@ -11,7 +11,7 @@ const emit = defineEmits<{
 }>();
 
 const store = usePlaylistsStore();
-const { t } = useI18n();
+const { t } = useI18n({ useScope: 'global' });
 
 const url = ref('');
 const openList = ref<'success' | 'already' | 'skipped' | 'failed' | null>(null);
@@ -386,8 +386,11 @@ function closeSkippedDetail(): void {
       <template v-else>
         <div class="import-modal__fields">
           <div class="import-modal__field">
-            <label class="import-modal__label">{{ $t('playlists.importUrlLabel') }}</label>
+            <label class="import-modal__label" for="import-url">
+              {{ $t('playlists.importUrlLabel') }}
+            </label>
             <input
+              id="import-url"
               v-model="url"
               type="url"
               class="import-modal__input"

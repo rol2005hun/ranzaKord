@@ -1,0 +1,51 @@
+{
+  "title": "Beállítások",
+  "categories": {
+    "account": "Fiók",
+    "appearance": "Megjelenés",
+    "player": "Lejátszó",
+    "audio": "Hangzás (EQ)"
+  },
+  "account": {
+    "title": "Fiók beállítások",
+    "signedInAs": "Bejelentkezve, mint",
+    "noAccount": "Nem vagy bejelentkezve"
+  },
+  "appearance": {
+    "title": "Megjelenés",
+    "theme": {
+      "title": "Téma",
+      "description": "Válaszd ki az alkalmazás színtémáját."
+    },
+    "language": {
+      "title": "Nyelv",
+      "description": "Válaszd ki a felület nyelvét."
+    },
+    "customColor": {
+      "title": "Egyedi szín",
+      "description": "Szabd testre az aktív téma alapszínét.",
+      "reset": "Visszaállítás",
+      "hint": "Válassz saját színt"
+    }
+  },
+  "player": {
+    "title": "Lejátszó beállítások"
+  },
+  "audio": {
+    "title": "Hangzás beállítások",
+    "eq": {
+      "title": "Hangszínszabályzó (Equalizer)",
+      "description": "Állítsd be a 10-sávos hangszínszabályzót a saját ízlésed szerint.",
+      "preset": "Előbeállítás (Preset)",
+      "presets": {
+        "flat": "Lapos (Flat)",
+        "bassBoost": "Basszus kiemelés",
+        "electronic": "Elektronikus",
+        "acoustic": "Akusztikus",
+        "pop": "Pop",
+        "rock": "Rock",
+        "custom": "Egyéni"
+      }
+    }
+  }
+}

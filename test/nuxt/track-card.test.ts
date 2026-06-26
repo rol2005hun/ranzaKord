@@ -32,12 +32,14 @@ describe('TrackCard', () => {
       props: { track: mockTrack },
       global: {
         mocks: { $t: (k: string) => k },
-        stubs: { AppIcon: true, AddToPlaylistPopup: true }
+        stubs: { AppIcon: true, AddToPlaylistPopup: true, AppTrackArtists: true }
       }
     });
 
     expect(wrapper.text()).toContain('Song Title');
-    expect(wrapper.text()).toContain('Artist Name');
+    const artistsStub = wrapper.findComponent({ name: 'AppTrackArtists' });
+    expect(artistsStub.exists()).toBe(true);
+    expect((artistsStub.props('track') as { artist: string }).artist).toBe('Artist Name');
     expect(wrapper.text()).toContain('2:10'); // 130 seconds
     const img = wrapper.find('.track-card__img');
     expect(img.exists()).toBe(true);

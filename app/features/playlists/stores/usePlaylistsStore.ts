@@ -20,7 +20,8 @@ export const usePlaylistsStore = defineStore('playlists', () => {
   const importResult = ref<ImportResult | null>(null);
   const importingUrl = ref<string | null>(null);
   const importingPlatform = ref<'youtube' | 'spotify' | null>(null);
-  const { t } = useI18n();
+  const nuxtApp = useNuxtApp();
+  const t = nuxtApp.$i18n.t;
 
   // Capture request headers during setup for SSR
   const reqHeaders = import.meta.server ? useRequestHeaders(['cookie']) : { cookie: '' };
@@ -419,6 +420,24 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     }
   }
 
+  async function reorderTrack(
+    playlistId: string,
+    fromIndex: number,
+    toIndex: number
+  ): Promise<boolean> {
+    if (fromIndex === toIndex) return true;
+
+    try {
+      const response = await $fetch<{ success: boolean }>(`/api/playlists/${playlistId}/reorder`, {
+        method: 'PATCH',
+        body: { fromIndex, toIndex }
+      });
+      return response.success;
+    } catch {
+      return false;
+    }
+  }
+
   function cancelImport(): void {
     importCancelled.value = true;
   }
@@ -442,6 +461,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     cancelImport,
     clearImportResult,
     removeTrack,
+    reorderTrack,
     fetchDetail,
     importPlaylist
   };
