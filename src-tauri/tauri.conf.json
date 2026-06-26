@@ -60,7 +60,7 @@
       }
     },
     "updater": {
-      "endpoints": ["https://github.com/rrol2/ranzaKord/releases/latest/download/latest.json"],
+      "endpoints": ["https://github.com/rol2005hun/ranzaKord/releases/latest/download/latest.json"],
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDRERTAzQTMzNENGNjI3MzEKUldReEovWk1NenJnVFdBazM3R0lITVJueUdqTlJidmNvWlpldThCSWFNMjFya0NPczFPVFdtKzgK"
     }
   }
