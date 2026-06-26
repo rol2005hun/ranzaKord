@@ -198,6 +198,7 @@ function onSliderChange() {
     background: #ffffff;
     border: 2px solid var(--color-primary);
     margin: 0;
+    margin-left: -4px; /* Center thumb horizontally on vertical track */
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
   }
 }

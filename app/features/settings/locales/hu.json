@@ -13,9 +13,20 @@
   },
   "appearance": {
     "title": "Megjelenés",
-    "theme": "Téma",
-    "language": "Nyelv",
-    "customColor": "Egyedi szín"
+    "theme": {
+      "title": "Téma",
+      "description": "Válaszd ki az alkalmazás színtémáját."
+    },
+    "language": {
+      "title": "Nyelv",
+      "description": "Válaszd ki a felület nyelvét."
+    },
+    "customColor": {
+      "title": "Egyedi szín",
+      "description": "Szabd testre az aktív téma alapszínét.",
+      "reset": "Visszaállítás",
+      "hint": "Válassz saját színt"
+    }
   },
   "player": {
     "title": "Lejátszó beállítások"

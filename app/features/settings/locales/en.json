@@ -13,9 +13,20 @@
   },
   "appearance": {
     "title": "Appearance",
-    "theme": "Theme",
-    "language": "Language",
-    "customColor": "Custom Color"
+    "theme": {
+      "title": "Theme",
+      "description": "Choose the application's color theme."
+    },
+    "language": {
+      "title": "Language",
+      "description": "Choose the application's interface language."
+    },
+    "customColor": {
+      "title": "Custom Color",
+      "description": "Customize the primary color of the active theme.",
+      "reset": "Reset",
+      "hint": "Pick a custom color"
+    }
   },
   "player": {
     "title": "Player Settings"

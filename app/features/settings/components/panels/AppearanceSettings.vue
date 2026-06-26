@@ -3,7 +3,7 @@ import { useThemeStore } from '../../../theme/stores/useThemeStore';
 import type { ThemeId } from '../../../theme/types/theme.types';
 
 const themeStore = useThemeStore();
-const { locale } = useI18n({ useScope: 'global' });
+const { t, locale } = useI18n({ useScope: 'global' });
 
 const THEME_OPTIONS: ThemeId[] = ['dark', 'light', 'ocean', 'rose', 'walker', 'wc2026'];
 
@@ -26,11 +26,13 @@ const getThemeIcon = (theme: ThemeId) => {
   }
 };
 
-const themes = THEME_OPTIONS.map((theme: ThemeId) => ({
-  label: `theme.${theme}`,
-  value: theme,
-  icon: getThemeIcon(theme)
-}));
+const themes = computed(() =>
+  THEME_OPTIONS.map((theme: ThemeId) => ({
+    label: t(`theme.${theme}`),
+    value: theme,
+    icon: getThemeIcon(theme)
+  }))
+);
 
 const customColorValue = computed({
   get: () =>
@@ -47,21 +49,14 @@ const customColorValue = computed({
       <AppSettingsItem
         :title="$t('settings.appearance.theme.title')"
         :description="$t('settings.appearance.theme.description')">
-        <div class="theme-options">
-          <button
-            v-for="theme in themes"
-            :key="theme.value"
-            class="theme-btn"
-            :class="{ 'theme-btn--active': themeStore.themeId === theme.value }"
-            @click="themeStore.setTheme(theme.value)">
-            <AppIcon :name="theme.icon" />
-            <span>{{ $t(theme.label) }}</span>
-          </button>
-        </div>
+        <AppSelect
+          :model-value="themeStore.themeId"
+          class="settings-select"
+          :options="themes"
+          @update:model-value="themeStore.setTheme($event as ThemeId)" />
       </AppSettingsItem>
 
       <AppSettingsItem
-        v-if="themeStore.themeId === 'dark' || themeStore.themeId === 'light'"
         :title="$t('settings.appearance.customColor.title')"
         :description="$t('settings.appearance.customColor.description')"
         border>
@@ -115,28 +110,6 @@ const customColorValue = computed({
     font-weight: var(--font-weight-bold);
     color: var(--color-text-primary);
     margin-bottom: var(--space-4);
-  }
-}
-
-.theme-options {
-  display: flex;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-}
-
-.theme-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  cursor: pointer;
-
-  &--active {
-    border-color: var(--color-primary);
-    background: var(--color-primary-light);
   }
 }
 
