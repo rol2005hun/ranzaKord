@@ -10,7 +10,8 @@ export default defineEventHandler(async (event) => {
   if (
     path.startsWith('/api/') &&
     !path.startsWith('/api/health') &&
-    !path.startsWith('/api/image')
+    !path.startsWith('/api/image') &&
+    !path.startsWith('/api/stream')
   ) {
     const session = await useAppSession(event);
     const sessionData = session.data as Partial<ServerSession>;
