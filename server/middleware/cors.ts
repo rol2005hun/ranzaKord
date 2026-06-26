@@ -1,7 +1,9 @@
 export default defineEventHandler((event) => {
   if (!event.path.startsWith('/api/')) return;
 
-  const origin = getRequestHeader(event, 'origin');
+  const origin =
+    (event.node?.req?.headers?.origin as string) ||
+    (event.headers && event.headers.get ? event.headers.get('origin') : undefined);
 
   if (origin) {
     setResponseHeader(event, 'Access-Control-Allow-Origin', origin);

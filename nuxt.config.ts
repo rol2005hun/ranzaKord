@@ -80,7 +80,9 @@ export default defineNuxtConfig({
     '/api/**': { cors: true },
     '/auth/**': { cors: true },
     '/_nuxt/**': { headers: { 'Cache-Control': 'public, max-age=31536000, immutable' } },
-    '/logo.webp': { headers: { 'Cache-Control': 'public, max-age=31536000, immutable' } }
+    '/logo.webp': { headers: { 'Cache-Control': 'public, max-age=31536000, immutable' } },
+    '/sitemap.xml': { prerender: false },
+    '/__sitemap__/style.xsl': { prerender: false }
   },
 
   image: {
@@ -102,7 +104,8 @@ export default defineNuxtConfig({
   },
 
   sitemap: {
-    zeroRuntime: true
+    // Disable prerendering for sitemap to avoid H3 v2 node-mock-http crash
+    exclude: ['/api/**']
   },
 
   ogImage: {
