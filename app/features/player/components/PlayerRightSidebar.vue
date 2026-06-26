@@ -29,16 +29,24 @@ function resizeCanvas() {
   canvas.style.height = `${height}px`;
 }
 
+let primaryH = '250';
+let primaryS = '80%';
+
+function syncThemeColors() {
+  if (typeof window === 'undefined') return;
+  const s = getComputedStyle(document.documentElement);
+  primaryH = s.getPropertyValue('--color-primary-h').trim() || '250';
+  primaryS = s.getPropertyValue('--color-primary-s').trim() || '80%';
+}
+
 function drawFrame() {
   animId = requestAnimationFrame(drawFrame);
+  if (layoutStore.rightSidebarMode !== 'info') return;
+
   const canvas = canvasRef.value;
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
-
-  const s = getComputedStyle(document.documentElement);
-  const primaryH = s.getPropertyValue('--color-primary-h').trim() || '250';
-  const primaryS = s.getPropertyValue('--color-primary-s').trim() || '80%';
 
   const audio1 = player.audioElement1.value;
   const audio2 = player.audioElement2.value;
@@ -80,6 +88,7 @@ onMounted(() => {
   ro = new ResizeObserver(resizeCanvas);
   if (vizWrapRef.value) ro.observe(vizWrapRef.value);
   nextTick(() => {
+    syncThemeColors();
     resizeCanvas();
     drawFrame();
   });

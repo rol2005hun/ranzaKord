@@ -1,9 +1,10 @@
 {
   "name": "ranzakord",
-  "version": "0.0.2-alpha.5",
+  "version": "0.0.2-alpha.6",
   "type": "module",
   "private": true,
   "scripts": {
+    "bump": "bumpp package.json src-tauri/tauri.conf.json --commit \"build: bump version to v%s\" --no-tag --no-push",
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
