@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: t('player.errors.missingVideoId') });
   }
 
-  const innertube = await createInnertube(false);
+  const innertube = await createInnertube(true);
   const debugInfo: Record<string, string> = {};
 
   let resolvedStreamUrl: string | undefined;
@@ -54,11 +54,18 @@ export default defineEventHandler(async (event) => {
           continue;
         }
 
+        // Use a client-specific User-Agent or omit it to avoid 403 on iOS URLs
+        const clientUA =
+          client === 'IOS'
+            ? 'com.google.ios.youtube/19.28.1 (iPhone14,5; U; CPU iOS 17_5_1 like Mac OS X)'
+            : client === 'ANDROID'
+              ? 'com.google.android.youtube/19.29.37 (Linux; U; Android 13)'
+              : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
         const testRes = await fetch(candidateUrl, {
           method: 'HEAD',
           headers: {
-            'User-Agent':
-              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+            'User-Agent': clientUA
           }
         });
 
@@ -93,10 +100,5 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  return proxyRequest(event, resolvedStreamUrl, {
-    headers: {
-      'User-Agent':
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    }
-  });
+  return proxyRequest(event, resolvedStreamUrl);
 });
