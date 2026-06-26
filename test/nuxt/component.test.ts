@@ -110,7 +110,7 @@ describe('useUpdaterStore', () => {
     store.patch({ available: true, isMandatory: false });
     store.showModal = true;
     store.dismiss();
-    expect(store.info.available).toBe(false);
+    expect(store.info.available).toBe(true);
     expect(store.showModal).toBe(false);
   });
 

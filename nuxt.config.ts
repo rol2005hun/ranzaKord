@@ -3,6 +3,8 @@ import pkg from './package.json' with { type: 'json' };
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
 
+  spaLoadingTemplate: 'spa-loading-template.html',
+
   app: {
     head: {
       htmlAttrs: { lang: 'en' },
@@ -178,7 +180,7 @@ export default defineNuxtConfig({
         '@tauri-apps/plugin-updater',
         '@tauri-apps/plugin-deep-link',
         '@tauri-apps/plugin-opener',
-        '@unhead/schema-org/vue'
+        ...(process.env.NUXT_SSR === 'true' ? ['@unhead/schema-org/vue'] : [])
       ]
     },
     esbuild: {

@@ -12,7 +12,7 @@
 }
 
 .is-tauri {
-  --titlebar-height: 32px;
+  --titlebar-height: 40px;
 
   .layout__header {
     padding-top: calc(var(--space-3) + var(--titlebar-height)) !important;

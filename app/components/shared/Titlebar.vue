@@ -6,8 +6,7 @@ const isMaximized = ref(false);
 
 onMounted(async () => {
   if (typeof window !== 'undefined') {
-    const staticTb = document.getElementById('static-tauri-titlebar');
-    if (staticTb) staticTb.remove();
+    // static titlebar removed
   }
 
   try {
@@ -15,9 +14,11 @@ onMounted(async () => {
       const { getCurrentWindow } = await import('@tauri-apps/api/window');
       const appWindow = getCurrentWindow();
       isMaximized.value = await appWindow.isMaximized();
+      localStorage.setItem('window-maximized', String(isMaximized.value));
 
       appWindow.onResized(async () => {
         isMaximized.value = await appWindow.isMaximized();
+        localStorage.setItem('window-maximized', String(isMaximized.value));
       });
     }
   } catch (err) {

@@ -185,19 +185,21 @@ export function usePlayer() {
     const durationMs = store.crossfadeDuration * 1000;
     const startTime = performance.now();
 
-    function step(now: number) {
-      const elapsed = now - startTime;
+    let rafId: number;
+
+    function step(now?: number) {
+      if (!isCrossfading) return;
+      const currentNow = now ?? performance.now();
+      const elapsed = currentNow - startTime;
       const progress = Math.min(1, Math.max(0, elapsed / durationMs));
 
       let fadeOut: number;
       let fadeIn: number;
 
       if (store.crossfadeType === 'dj') {
-        // Equal power crossfade (cosine/sine curve)
         fadeOut = Math.cos(progress * 0.5 * Math.PI);
         fadeIn = Math.sin(progress * 0.5 * Math.PI);
       } else {
-        // Linear crossfade
         fadeOut = 1 - progress;
         fadeIn = progress;
       }
@@ -212,17 +214,26 @@ export function usePlayer() {
 
       applyVolumes();
 
-      if (progress < 1) {
-        requestAnimationFrame(step);
-      } else {
+      if (progress >= 1) {
         isCrossfading = false;
         crossfadeTriggered = false;
         outAudio?.pause();
         if (outAudio) outAudio.currentTime = 0;
+        cancelAnimationFrame(rafId);
+        clearInterval(intervalId);
       }
     }
 
-    requestAnimationFrame(step);
+    function loop(now: number) {
+      if (isCrossfading) {
+        step(now);
+        rafId = requestAnimationFrame(loop);
+      }
+    }
+
+    // Run both: rAF for smooth 60fps in foreground, setInterval fallback for background tabs
+    rafId = requestAnimationFrame(loop);
+    const intervalId = setInterval(() => step(), 100);
   }
 
   function recordTrackStat(track: Track, listeningSeconds: number, skipped: boolean) {

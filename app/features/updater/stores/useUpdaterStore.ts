@@ -23,7 +23,6 @@ export const useUpdaterStore = defineStore('updater', () => {
 
   function dismiss() {
     if (!info.value.isMandatory) {
-      info.value.available = false;
       showModal.value = false;
     }
   }

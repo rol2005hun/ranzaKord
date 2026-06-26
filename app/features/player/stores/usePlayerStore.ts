@@ -149,11 +149,10 @@ export const usePlayerStore = defineStore(
           const { isTauri, invoke } = await import('@tauri-apps/api/core');
           if (isTauri()) {
             if (isPlaying.value && currentTrack.value) {
-              const startTimestamp =
-                Math.floor(Date.now() / 1000) - Math.floor(currentTimeSeconds.value);
+              const startTimestamp = Math.round(Date.now() / 1000 - currentTimeSeconds.value);
               const endTimestamp =
                 currentTrack.value.durationSeconds > 0
-                  ? startTimestamp + currentTrack.value.durationSeconds
+                  ? Math.round(startTimestamp + currentTrack.value.durationSeconds)
                   : null;
               await invoke('set_discord_presence', {
                 details: currentTrack.value.title,
@@ -187,6 +186,18 @@ export const usePlayerStore = defineStore(
             }),
             keepalive: true
           }).catch(() => {});
+        }
+
+        // Clear Discord RPC synchronously on unload
+        if (typeof window !== 'undefined') {
+          const tauriWindow = window as unknown as {
+            __TAURI_INTERNALS__?: {
+              invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
+            };
+          };
+          if (tauriWindow.__TAURI_INTERNALS__) {
+            tauriWindow.__TAURI_INTERNALS__.invoke('clear_discord_presence').catch(() => {});
+          }
         }
       });
 

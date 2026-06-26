@@ -6,12 +6,10 @@ definePageMeta({
 const { t } = useI18n({ useScope: 'global' });
 useHead({ title: t('auth.unauthorized.title') });
 
-const { logout, isTauri } = useAuth();
+const { logout } = useAuth();
 const isLoggingOut = ref(false);
 
-const redirectingText = computed(() =>
-  isTauri.value ? t('auth.login.openingInBrowser') : t('auth.login.redirecting')
-);
+const redirectingText = computed(() => t('auth.login.redirecting'));
 
 const handleLogout = async () => {
   isLoggingOut.value = true;
