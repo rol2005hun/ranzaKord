@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { usePlayerStore } from '../../../player/stores/usePlayerStore';
+import { usePlayer } from '../../../player/composables/usePlayer';
 
 const playerStore = usePlayerStore();
+const player = usePlayer();
 </script>
 
 <template>
@@ -19,7 +21,9 @@ const playerStore = usePlayerStore();
         :title="$t('player.karaokeMode')"
         description="Vocal remover using phase cancellation"
         border>
-        <AppToggle v-model="playerStore.isKaraoke" />
+        <AppToggle
+          :model-value="player.isKaraoke.value"
+          @update:model-value="player.toggleKaraoke()" />
       </AppSettingsItem>
 
       <AppSettingsItem

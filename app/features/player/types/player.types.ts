@@ -40,3 +40,10 @@ export interface TrackStatPayload {
 }
 
 export type CrossfadeType = 'linear' | 'dj';
+
+export interface PlaybackContext {
+  type: 'playlist' | 'album' | 'artist' | 'radio' | 'none';
+  sourceId?: string;
+  currentOffset: number;
+  totalItems?: number;
+}

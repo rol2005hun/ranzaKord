@@ -59,6 +59,11 @@ function playQueueTrack(index: number) {
     player.playTrack(track);
   }
 }
+
+const isHydrated = ref(false);
+onMounted(() => {
+  isHydrated.value = true;
+});
 </script>
 
 <template>
@@ -67,18 +72,45 @@ function playQueueTrack(index: number) {
       <div class="player-queue__header-top">
         <h3 class="player-queue__title">{{ $t('player.queue') }}</h3>
         <button
-          v-if="playerStore.queue.length > 0"
+          v-if="isHydrated && playerStore.queue.length > 0"
           class="player-queue__clear-btn"
           @click="playerStore.clearQueue()">
           {{ $t('player.clearQueue') }}
         </button>
       </div>
       <div class="player-queue__order-select">
-        <AppSelect v-model="playerStore.playbackOrder" :options="orderOptions" />
+        <ClientOnly>
+          <button
+            class="player-queue__autoplay-btn"
+            :class="{ 'player-queue__autoplay-btn--active': playerStore.autoplayEnabled }"
+            :title="$t('player.autoplay')"
+            @click="playerStore.autoplayEnabled = !playerStore.autoplayEnabled">
+            <AppIcon name="ph:infinity" />
+          </button>
+          <AppSelect v-model="playerStore.playbackOrder" :options="orderOptions" />
+          <template #fallback>
+            <div class="skeleton-box" style="height: 32px; border-radius: var(--radius-sm)"></div>
+          </template>
+        </ClientOnly>
       </div>
     </div>
 
-    <div v-if="playerStore.queue.length === 0" class="player-queue__empty">
+    <div v-if="!isHydrated" class="player-queue__list player-queue__list--skeleton">
+      <div v-for="i in 20" :key="i" class="player-queue__item">
+        <div class="player-queue__num-wrapper">
+          <div class="skeleton-box" style="width: 12px; height: 16px; border-radius: 4px"></div>
+        </div>
+        <div class="player-queue__track-info">
+          <div class="player-queue__track-thumb skeleton-box"></div>
+          <div class="player-queue__track-text" style="gap: 4px">
+            <div class="skeleton-box" style="width: 140px; height: 16px; max-width: 70%"></div>
+            <div class="skeleton-box" style="width: 100px; height: 12px; max-width: 50%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-else-if="playerStore.queue.length === 0" class="player-queue__empty">
       <AppIcon name="ph:queue-duotone" class="player-queue__empty-icon" />
       <p class="player-queue__empty-text">{{ $t('player.queueEmpty') }}</p>
     </div>
@@ -98,8 +130,16 @@ function playQueueTrack(index: number) {
         @dragenter="handleDragEnter($event, index)"
         @dragover="handleDragOver($event, index)"
         @drop="handleDrop($event, index)">
-        <div class="player-queue__drag-handle">
-          <AppIcon name="ph:dots-six-vertical" />
+        <div class="player-queue__num-wrapper">
+          <span
+            v-if="playerStore.currentTrack?.videoId === track.videoId"
+            class="player-queue__playing-icon">
+            <AppIcon name="ph:speaker-high-fill" class="text-primary" />
+          </span>
+          <span v-else class="player-queue__num">{{ index + 1 }}</span>
+          <div class="player-queue__drag-handle">
+            <AppIcon name="ph:dots-six-vertical" />
+          </div>
         </div>
 
         <div class="player-queue__track-info" @click="playQueueTrack(index)">
@@ -111,7 +151,11 @@ function playQueueTrack(index: number) {
           </div>
 
           <div class="player-queue__track-text">
-            <span class="player-queue__track-title">{{ track.title }}</span>
+            <span
+              class="player-queue__track-title"
+              :class="{ 'text-primary': playerStore.currentTrack?.videoId === track.videoId }">
+              {{ track.title }}
+            </span>
             <span class="player-queue__track-artist">{{ track.artist }}</span>
           </div>
         </div>
@@ -217,6 +261,10 @@ function playQueueTrack(index: number) {
     background: var(--color-border);
     border-radius: var(--radius-full);
   }
+
+  &--skeleton {
+    overflow-y: hidden;
+  }
 }
 
 .player-queue__item {
@@ -230,10 +278,6 @@ function playQueueTrack(index: number) {
 
   &:hover {
     background: var(--color-surface-hover);
-
-    .player-queue__drag-handle {
-      opacity: 0.7;
-    }
 
     .player-queue__remove-btn {
       opacity: 1;
@@ -256,7 +300,28 @@ function playQueueTrack(index: number) {
   }
 }
 
+.player-queue__num-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.player-queue__num,
+.player-queue__playing-icon {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  transition: opacity var(--transition-fast);
+}
+
 .player-queue__drag-handle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -269,6 +334,17 @@ function playQueueTrack(index: number) {
 
   &:active {
     cursor: grabbing;
+  }
+}
+
+.player-queue__item:hover {
+  .player-queue__num,
+  .player-queue__playing-icon {
+    opacity: 0;
+  }
+
+  .player-queue__drag-handle {
+    opacity: 0.7;
   }
 }
 
@@ -324,7 +400,7 @@ function playQueueTrack(index: number) {
 }
 
 .player-queue__track-artist {
-  font-size: 11px;
+  font-size: var(--text-xs);
   color: var(--color-text-secondary);
   white-space: nowrap;
   overflow: hidden;
@@ -332,23 +408,81 @@ function playQueueTrack(index: number) {
 }
 
 .player-queue__remove-btn {
-  background: transparent;
-  border: none;
-  color: var(--color-text-secondary);
-  font-size: 1.1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: none;
   cursor: pointer;
   opacity: 0;
   transition: all var(--transition-fast);
 
   &:hover {
+    background: color-mix(in srgb, var(--color-danger) 10%, transparent);
     color: var(--color-danger);
-    background: color-mix(in srgb, var(--color-danger) 15%, transparent);
   }
+}
+
+.skeleton-box {
+  background: var(--color-surface-raised, #1a1a3a);
+  border-radius: var(--radius-sm);
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.player-queue__order-select {
+  padding: 0 var(--space-4) var(--space-2) var(--space-4);
+  display: flex;
+  gap: 0;
+}
+
+.player-queue__autoplay-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  align-self: stretch;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  border: 1px solid var(--color-border);
+  border-right: none;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    border-color: var(--color-border-hover);
+    color: var(--color-text-primary);
+  }
+
+  &--active {
+    background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+    color: var(--color-primary);
+    border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+    border-right: none;
+  }
+}
+
+.player-queue__order-select :deep(.app-select) {
+  flex: 1;
+}
+
+.player-queue__order-select :deep(.select-container) {
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
 }
 </style>

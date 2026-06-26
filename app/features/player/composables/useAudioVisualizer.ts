@@ -168,14 +168,6 @@ export function useAudioVisualizer() {
     wetGainNode.gain.cancelScheduledValues(now);
     dryGainNode.gain.setValueAtTime(enabled ? 0 : 1, now);
     wetGainNode.gain.setValueAtTime(enabled ? 1 : 0, now);
-    console.log(
-      'Karaoke mode set to:',
-      enabled,
-      'dryGain:',
-      dryGainNode.gain.value,
-      'wetGain:',
-      wetGainNode.gain.value
-    );
   }
 
   let rAFId: number | null = null;

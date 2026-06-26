@@ -6,7 +6,6 @@ const layoutStore = useLayoutStore();
 const { lyricsData, isLoading: lyricsLoading, fetchLyrics, getActiveLine } = useLyrics();
 
 const isHydrated = ref(false);
-const showMobileLyrics = ref(false);
 
 const displayTrack = computed(() => (isHydrated.value ? player.currentTrack.value : null));
 const displayVolume = computed(() => (isHydrated.value ? player.volume.value : 1));
@@ -22,7 +21,6 @@ onMounted(() => {
   });
 });
 
-const showAddToPlaylist = ref(false);
 const playlistBtnRef = ref<HTMLElement | null>(null);
 const playlistsStore = usePlaylistsStore();
 
@@ -68,7 +66,7 @@ let mobileProgrammaticScrollTimer: ReturnType<typeof setTimeout> | null = null;
 
 function scrollMobileToActiveLine() {
   const idx = mobileActiveLine.value;
-  if (!showMobileLyrics.value || idx < 0) return;
+  if (!layoutStore.isMobileLyricsOpen || idx < 0) return;
   nextTick(() => {
     const container = mobileLyricsListRef.value;
     const el = container?.querySelector(`[data-line="${idx}"]`) as HTMLElement | null;
@@ -108,7 +106,7 @@ function onMobileLyricsScroll() {
 
 function toggleLyrics() {
   if (window.innerWidth <= 768) {
-    showMobileLyrics.value = !showMobileLyrics.value;
+    layoutStore.toggleMobileLyrics();
     return;
   }
   if (isLyricsActive.value) {
@@ -151,34 +149,45 @@ function onVolumeInput(event: Event) {
     <audio ref="audioEl2" preload="metadata" playsinline />
     <aside class="player-bar" :aria-label="$t('player.playerBar')">
       <div class="player-bar__left">
-        <div class="player-bar__artwork">
-          <img
-            v-if="displayTrack?.thumbnailUrl"
-            :src="displayTrack.thumbnailUrl"
-            :alt="displayTrack?.title"
-            class="player-bar__img" />
-          <AppSkeleton v-else-if="!isHydrated" width="100%" height="100%" />
-          <AppIcon v-else name="ph:music-notes-simple" class="player-bar__img-placeholder" />
-        </div>
-        <div v-if="displayTrack" class="player-bar__info">
-          <span class="player-bar__title">{{ displayTrack.title }}</span>
-          <AppTrackArtists :track="displayTrack" class="player-bar__artist" />
-        </div>
-        <div v-else-if="!isHydrated" class="player-bar__info player-bar__info--skeleton">
-          <AppSkeleton height="12px" width="120px" border-radius="var(--radius-sm)" />
-          <AppSkeleton height="10px" width="80px" border-radius="var(--radius-sm)" />
-        </div>
-        <div v-else class="player-bar__info player-bar__info--empty">
-          <span class="player-bar__title">{{ $t('player.noTrack') }}</span>
-          <span class="player-bar__artist">{{ $t('player.startSomething') }}</span>
-        </div>
+        <ClientOnly>
+          <div class="player-bar__artwork">
+            <img
+              v-if="displayTrack?.thumbnailUrl"
+              :src="displayTrack.thumbnailUrl"
+              :alt="displayTrack?.title"
+              class="player-bar__img" />
+            <AppIcon v-else name="ph:music-notes-simple" class="player-bar__img-placeholder" />
+          </div>
+          <template #fallback>
+            <div class="player-bar__artwork">
+              <AppSkeleton width="100%" height="100%" />
+            </div>
+          </template>
+        </ClientOnly>
+
+        <ClientOnly>
+          <div v-if="displayTrack" class="player-bar__info">
+            <span class="player-bar__title">{{ displayTrack.title }}</span>
+            <AppTrackArtists :track="displayTrack" class="player-bar__artist" />
+          </div>
+          <div v-else class="player-bar__info player-bar__info--empty">
+            <span class="player-bar__title">{{ $t('player.noTrack') }}</span>
+            <span class="player-bar__artist">{{ $t('player.startSomething') }}</span>
+          </div>
+          <template #fallback>
+            <div class="player-bar__info player-bar__info--skeleton">
+              <AppSkeleton height="12px" width="120px" border-radius="var(--radius-sm)" />
+              <AppSkeleton height="10px" width="80px" border-radius="var(--radius-sm)" />
+            </div>
+          </template>
+        </ClientOnly>
         <ClientOnly>
           <button
             ref="playlistBtnRef"
             class="player-bar__add-btn"
             :disabled="!displayTrack"
             :aria-label="$t('playlists.addToPlaylist')"
-            @click="showAddToPlaylist = !showAddToPlaylist">
+            @click="layoutStore.toggleAddToPlaylist()">
             <AppIcon v-if="isInAnyPlaylist" name="ph:check-circle-fill" class="text-success" />
             <AppIcon v-else name="ph:plus-circle" />
           </button>
@@ -299,7 +308,7 @@ function onVolumeInput(event: Event) {
         <button
           id="player-lyrics-btn"
           class="player-bar__btn player-bar__btn--lyrics"
-          :class="{ 'player-bar__btn--active': isLyricsActive || showMobileLyrics }"
+          :class="{ 'player-bar__btn--active': isLyricsActive || layoutStore.isMobileLyricsOpen }"
           :aria-label="$t('player.lyrics')"
           @click="toggleLyrics">
           <AppIcon name="ph:microphone-stage" />
@@ -335,7 +344,11 @@ function onVolumeInput(event: Event) {
 
     <Teleport to="body">
       <Transition name="mobile-lyrics">
-        <div v-if="showMobileLyrics" class="mobile-lyrics-overlay" role="dialog" aria-modal="true">
+        <div
+          v-if="layoutStore.isMobileLyricsOpen"
+          class="mobile-lyrics-overlay"
+          role="dialog"
+          aria-modal="true">
           <div class="mobile-lyrics-overlay__header">
             <div class="mobile-lyrics-overlay__track">
               <div class="mobile-lyrics-overlay__artwork">
@@ -356,7 +369,7 @@ function onVolumeInput(event: Event) {
               id="mobile-lyrics-close"
               class="mobile-lyrics-overlay__close"
               :aria-label="$t('player.closeInfoPanel')"
-              @click="showMobileLyrics = false">
+              @click="layoutStore.closeMobileLyrics()">
               <AppIcon name="ph:x-bold" />
             </button>
           </div>
@@ -398,16 +411,16 @@ function onVolumeInput(event: Event) {
     </Teleport>
 
     <AddToPlaylistPopup
-      v-if="showAddToPlaylist && displayTrack"
+      v-if="!layoutStore.isFullscreenVisualizer && layoutStore.isAddToPlaylistOpen && displayTrack"
       :track="{
-        videoId: displayTrack.videoId,
-        title: displayTrack.title,
-        artist: displayTrack.artist,
-        thumbnailUrl: displayTrack.thumbnailUrl,
+        videoId: displayTrack?.videoId || '',
+        title: displayTrack?.title || '',
+        artist: displayTrack?.artist || '',
+        thumbnailUrl: displayTrack?.thumbnailUrl || '',
         durationMs: displayDuration * 1000
       }"
       :anchor="playlistBtnRef"
-      @close="showAddToPlaylist = false" />
+      @close="layoutStore.closeAddToPlaylist()" />
   </div>
 </template>
 
@@ -571,14 +584,16 @@ function onVolumeInput(event: Event) {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition:
-      color var(--transition-fast),
-      transform var(--transition-fast);
-    padding: var(--space-1);
+    transition: all var(--transition-base);
 
-    &:hover {
-      color: var(--color-primary);
+    &:hover:not(:disabled) {
+      color: var(--color-text-primary);
       transform: scale(1.1);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
   }
 
@@ -789,7 +804,7 @@ function onVolumeInput(event: Event) {
     }
 
     &__info {
-      flex: 1;
+      flex: 0 1 auto;
       min-width: 0;
     }
 
@@ -826,13 +841,16 @@ function onVolumeInput(event: Event) {
       }
 
       input[type='range'] {
-        height: 2px;
+        height: 3px;
+        background: transparent;
+
         &::-webkit-slider-thumb {
-          width: 0;
-          height: 0;
+          width: 12px;
+          height: 12px;
         }
+
         &::-webkit-slider-runnable-track {
-          height: 2px;
+          height: 3px;
           border-radius: 0;
         }
       }
@@ -989,6 +1007,10 @@ function onVolumeInput(event: Event) {
     margin: 0;
     cursor: pointer;
     opacity: 0.4;
+    word-break: break-word;
+    white-space: pre-wrap;
+    width: 100%;
+    text-align: center;
     transition:
       color var(--transition-base),
       opacity var(--transition-base),

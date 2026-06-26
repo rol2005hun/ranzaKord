@@ -728,7 +728,7 @@ const sidebarStyle = computed(() => ({
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: var(--space-6) var(--space-4);
+    padding: var(--space-6) 15% var(--space-6) var(--space-4);
     display: flex;
     flex-direction: column;
     gap: var(--space-3);

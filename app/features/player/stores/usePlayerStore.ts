@@ -1,4 +1,4 @@
-import type { Track, CrossfadeType } from '../types/player.types';
+import type { Track, CrossfadeType, PlaybackContext } from '../types/player.types';
 
 export const usePlayerStore = defineStore(
   'player',
@@ -22,6 +22,9 @@ export const usePlayerStore = defineStore(
     const eqEnabled = ref(false);
     const eqPreset = ref('flat');
     const eqBands = ref<number[]>([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+    const playbackContext = ref<PlaybackContext | null>(null);
+    const autoplayEnabled = ref(false);
 
     const hasNext = computed(() => {
       const track = currentTrack.value;
@@ -54,12 +57,15 @@ export const usePlayerStore = defineStore(
     }
 
     function setQueue(tracks: Track[]) {
-      queue.value = tracks;
+      queue.value = tracks.slice(0, 100);
     }
 
     function addToQueue(track: Track) {
       if (!queue.value.find((t) => t.videoId === track.videoId)) {
         queue.value.push(track);
+        if (queue.value.length > 100) {
+          queue.value.shift();
+        }
       }
     }
 
@@ -218,7 +224,9 @@ export const usePlayerStore = defineStore(
       isAudioReactiveLyrics,
       eqEnabled,
       eqPreset,
-      eqBands
+      eqBands,
+      playbackContext,
+      autoplayEnabled
     };
   },
   {
@@ -240,7 +248,10 @@ export const usePlayerStore = defineStore(
           'isAudioReactiveLyrics',
           'eqEnabled',
           'eqPreset',
-          'eqBands'
+          'eqBands',
+          'playbackContext',
+          'autoplayEnabled',
+          'playbackOrder'
         ],
         storage: piniaPluginPersistedstate.localStorage()
       }

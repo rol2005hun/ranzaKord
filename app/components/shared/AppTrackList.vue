@@ -37,6 +37,7 @@ interface Props {
   isLoading?: boolean;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
+  reorderable?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -50,12 +51,14 @@ const props = withDefaults(defineProps<Props>(), {
   itemHeight: 56,
   isLoading: false,
   sortBy: '',
-  sortOrder: 'asc'
+  sortOrder: 'asc',
+  reorderable: false
 });
 
 const emit = defineEmits<{
   (e: 'play' | 'remove', track: TrackListItem, index: number): void;
   (e: 'sort', by: string, order: 'asc' | 'desc'): void;
+  (e: 'reorder', fromIndex: number, toIndex: number): void;
 }>();
 
 function handleSort(column: string): void {
@@ -68,6 +71,53 @@ function handleSort(column: string): void {
   } else {
     emit('sort', column, 'asc');
   }
+}
+
+const dragIndex = ref<number | null>(null);
+const dragOverIndex = ref<number | null>(null);
+
+function handleDragStart(event: DragEvent, index: number) {
+  if (!props.reorderable) return;
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.dropEffect = 'move';
+    event.dataTransfer.setData('text/plain', index.toString());
+  }
+  dragIndex.value = index;
+}
+
+function handleDragEnter(event: DragEvent, index: number) {
+  if (!props.reorderable) return;
+  event.preventDefault();
+  dragOverIndex.value = index;
+}
+
+function handleDragOver(event: DragEvent, index: number) {
+  if (!props.reorderable) return;
+  event.preventDefault();
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'move';
+  }
+  dragOverIndex.value = index;
+}
+
+function handleDragEnd() {
+  if (!props.reorderable) return;
+  dragIndex.value = null;
+  dragOverIndex.value = null;
+}
+
+function handleDrop(event: DragEvent, toIndex: number) {
+  if (!props.reorderable) return;
+  event.preventDefault();
+  const fromIndex = dragIndex.value;
+
+  if (fromIndex !== null && fromIndex !== toIndex) {
+    emit('reorder', fromIndex, toIndex);
+  }
+
+  dragIndex.value = null;
+  dragOverIndex.value = null;
 }
 
 const hasDateColumn = computed(() => props.columns.includes('date'));
@@ -152,9 +202,17 @@ onMounted(() => {
             class="app-track-list__track"
             :class="{
               'app-track-list__track--playing': isHydrated && track?.isPlaying,
-              'app-track-list__track--skeleton': !track
+              'app-track-list__track--skeleton': !track,
+              'app-track-list__track--dragged': dragIndex === index,
+              'app-track-list__track--drag-over': dragOverIndex === index
             }"
             :style="{ height: `${itemHeight}px`, gridTemplateColumns: gridColumns }"
+            :draggable="reorderable && !!track"
+            @dragstart="track && handleDragStart($event, index)"
+            @dragenter="track && handleDragEnter($event, index)"
+            @dragover="track && handleDragOver($event, index)"
+            @dragend="track && handleDragEnd()"
+            @drop="track && handleDrop($event, index)"
             @click="track && emit('play', track, index)">
             <template v-if="!track">
               <div class="app-track-list__track-num-wrapper">
@@ -260,8 +318,18 @@ onMounted(() => {
         v-for="(track, index) in tracks"
         :key="track.id"
         class="app-track-list__track"
-        :class="{ 'app-track-list__track--playing': isHydrated && track.isPlaying }"
+        :class="{
+          'app-track-list__track--playing': isHydrated && track.isPlaying,
+          'app-track-list__track--dragged': dragIndex === index,
+          'app-track-list__track--drag-over': dragOverIndex === index
+        }"
         :style="{ height: `${itemHeight}px`, gridTemplateColumns: gridColumns }"
+        :draggable="reorderable && !!track"
+        @dragstart="track && handleDragStart($event, index)"
+        @dragenter="track && handleDragEnter($event, index)"
+        @dragover="track && handleDragOver($event, index)"
+        @dragend="track && handleDragEnd()"
+        @drop="track && handleDrop($event, index)"
         @click="emit('play', track, index)">
         <div class="app-track-list__track-num-wrapper">
           <ClientOnly>

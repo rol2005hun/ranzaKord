@@ -174,10 +174,11 @@ function onSliderChange() {
   cursor: pointer;
 
   /* Vertical slider: swap the thumb offsets to center horizontally instead of vertically */
-  --thumb-offset-x: var(--thumb-offset-y);
+  --thumb-offset-x: -5px;
   --thumb-offset-y: 0px;
 
   &::-webkit-slider-runnable-track {
+    box-sizing: border-box;
     background: linear-gradient(
       to top,
       var(--color-primary) var(--val, 50%),
@@ -190,16 +191,21 @@ function onSliderChange() {
   }
 
   &::-webkit-slider-thumb {
+    box-sizing: border-box;
     -webkit-appearance: none;
     appearance: none;
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     background: #ffffff;
     border: 2px solid var(--color-primary);
     margin: 0;
-    margin-left: -4px; /* Center thumb horizontally on vertical track */
+    transform: translateX(-5px); /* Move left to center exactly on the 4px track */
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  &:hover::-webkit-slider-thumb {
+    transform: translateX(-5px) scale(1.2);
   }
 }
 

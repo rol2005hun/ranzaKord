@@ -39,6 +39,12 @@ function onContentScroll(event: Event): void {
   isScrolled.value = el.scrollTop >= headerHeight - 64;
   emit('scroll', event);
 }
+
+const img = useImage();
+const optimizedBgUrl = computed(() => {
+  if (!props.imageUrl) return '';
+  return img(props.imageUrl, { format: 'webp', width: 800, quality: 50 });
+});
 </script>
 
 <template>
@@ -122,7 +128,7 @@ function onContentScroll(event: Event): void {
         <div ref="headerRef" class="music-page__header">
           <div
             class="music-page__header-bg"
-            :style="imageUrl ? `background-image: url('${imageUrl}')` : ''"></div>
+            :style="optimizedBgUrl ? `background-image: url('${optimizedBgUrl}')` : ''"></div>
           <div class="music-page__header-overlay"></div>
           <div class="music-page__header-content">
             <div class="music-page__cover" :class="{ 'music-page__cover--rounded': roundedImage }">

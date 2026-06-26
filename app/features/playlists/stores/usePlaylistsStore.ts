@@ -420,6 +420,24 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     }
   }
 
+  async function reorderTrack(
+    playlistId: string,
+    fromIndex: number,
+    toIndex: number
+  ): Promise<boolean> {
+    if (fromIndex === toIndex) return true;
+
+    try {
+      const response = await $fetch<{ success: boolean }>(`/api/playlists/${playlistId}/reorder`, {
+        method: 'PATCH',
+        body: { fromIndex, toIndex }
+      });
+      return response.success;
+    } catch {
+      return false;
+    }
+  }
+
   function cancelImport(): void {
     importCancelled.value = true;
   }
@@ -443,6 +461,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     cancelImport,
     clearImportResult,
     removeTrack,
+    reorderTrack,
     fetchDetail,
     importPlaylist
   };

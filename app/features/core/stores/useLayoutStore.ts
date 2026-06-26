@@ -16,6 +16,9 @@ export const useLayoutStore = defineStore(
     const visualizerStyle = ref<VisualizerStyle>('circle');
     const isFullscreenVisualizer = ref(false);
 
+    const isMobileLyricsOpen = ref(false);
+    const isAddToPlaylistOpen = ref(false);
+
     function toggleRightSidebar() {
       isRightSidebarOpen.value = !isRightSidebarOpen.value;
     }
@@ -58,6 +61,22 @@ export const useLayoutStore = defineStore(
       isFullscreenVisualizer.value = !isFullscreenVisualizer.value;
     }
 
+    function toggleMobileLyrics() {
+      isMobileLyricsOpen.value = !isMobileLyricsOpen.value;
+    }
+
+    function closeMobileLyrics() {
+      isMobileLyricsOpen.value = false;
+    }
+
+    function toggleAddToPlaylist() {
+      isAddToPlaylistOpen.value = !isAddToPlaylistOpen.value;
+    }
+
+    function closeAddToPlaylist() {
+      isAddToPlaylistOpen.value = false;
+    }
+
     return {
       isRightSidebarOpen,
       rightSidebarMode,
@@ -65,6 +84,8 @@ export const useLayoutStore = defineStore(
       isSettingsOpen,
       visualizerStyle,
       isFullscreenVisualizer,
+      isMobileLyricsOpen,
+      isAddToPlaylistOpen,
       toggleRightSidebar,
       openRightSidebar,
       closeRightSidebar,
@@ -74,7 +95,11 @@ export const useLayoutStore = defineStore(
       openSettings,
       closeSettings,
       setVisualizerStyle,
-      toggleFullscreenVisualizer
+      toggleFullscreenVisualizer,
+      toggleMobileLyrics,
+      closeMobileLyrics,
+      toggleAddToPlaylist,
+      closeAddToPlaylist
     };
   },
   {

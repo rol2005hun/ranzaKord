@@ -241,6 +241,82 @@ export function usePlayer() {
     }).catch(() => {});
   }
 
+  let isFetchingMore = false;
+
+  async function checkAndFetchMore(currentTrackId: string) {
+    if (isFetchingMore || store.playbackOrder !== 'sequential') return;
+    const ctx = store.playbackContext;
+    if (!ctx || ctx.type === 'none') {
+      if (!store.autoplayEnabled) return;
+    }
+
+    const q = store.queue;
+    const idx = q.findIndex((t) => t.videoId === currentTrackId);
+    if (idx < 0) return;
+
+    // Check if we are near the end of the queue (e.g. 3 tracks remaining)
+    const tracksRemaining = q.length - 1 - idx;
+    if (tracksRemaining > 3) return;
+
+    isFetchingMore = true;
+
+    try {
+      if (ctx?.type === 'playlist' && ctx.sourceId && ctx.totalItems) {
+        if (ctx.currentOffset < ctx.totalItems) {
+          const limit = 50;
+          const { $pinia } = useNuxtApp();
+          const pStore = (
+            await import('../../playlists/stores/usePlaylistsStore')
+          ).usePlaylistsStore($pinia);
+          const result = await pStore.fetchDetail(ctx.sourceId, {
+            offset: ctx.currentOffset,
+            limit
+          });
+          if (result && result.tracks.length > 0) {
+            const mapped = result.tracks.map((t) => ({
+              videoId: t.videoId,
+              title: t.title,
+              artist: t.artist,
+              artistId: t.artistId,
+              artists: t.artists?.length
+                ? t.artists.map((a) => ({ name: a.name, id: a.channelId }))
+                : t.artist
+                    .split(/,\s*|\s+feat\.\s+|\s+ft\.\s+|\s+&\s+/i)
+                    .map((s) => ({ name: s.trim() }))
+                    .filter((a) => a.name),
+              thumbnailUrl: t.thumbnailUrl,
+              durationSeconds: Math.round(t.durationMs / 1000)
+            }));
+            mapped.forEach((t) => store.addToQueue(t));
+            if (store.playbackContext) {
+              store.playbackContext.currentOffset += limit;
+            }
+          }
+        } else if (store.autoplayEnabled) {
+          // Playlist finished, fallback to radio if autoplay is enabled
+          await fetchRadioNext(currentTrackId);
+        }
+      } else if (store.autoplayEnabled) {
+        await fetchRadioNext(currentTrackId);
+      }
+    } catch (e) {
+      console.error('Failed to fetch more tracks', e);
+    } finally {
+      isFetchingMore = false;
+    }
+  }
+
+  async function fetchRadioNext(videoId: string) {
+    const res = await $fetch<Track[]>(`/api/search/related?videoId=${videoId}`).catch(() => []);
+    if (res && res.length > 0) {
+      const filtered = res.filter((rt) => !store.queue.some((qt) => qt.videoId === rt.videoId));
+      if (filtered.length > 0) {
+        // take first 5-10
+        filtered.slice(0, 10).forEach((t) => store.addToQueue(t));
+      }
+    }
+  }
+
   async function playTrack(track: Track, fromHistory = false) {
     if (store.currentTrack?.videoId === track.videoId) {
       togglePlay();
@@ -259,6 +335,8 @@ export function usePlayer() {
     store.isLoading = true;
     store.isPlaying = false;
     store.error = null;
+
+    checkAndFetchMore(track.videoId);
 
     if ('mediaSession' in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({

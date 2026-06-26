@@ -147,6 +147,8 @@ useHead({
   title: computed(() => playlist.value?.name || 'Playlist')
 });
 
+const isReorderable = computed(() => !debouncedSearch.value && !sortBy.value);
+
 const isCurrentPlaylistPlaying = computed(() => {
   if (!playlist.value || virtualTracks.value.length === 0) return false;
   if (!player.isPlaying.value) return false;
@@ -179,6 +181,13 @@ function playAll(): void {
     durationSeconds: Math.round(t.durationMs / 1000)
   }));
 
+  const pStore = usePlayerStore();
+  pStore.playbackContext = {
+    type: 'playlist',
+    sourceId: id.value,
+    currentOffset: loadedTracks.length,
+    totalItems: playlist.value?.trackCount || loadedTracks.length
+  };
   player.playQueue(tracksToPlay, 0);
 }
 
@@ -199,6 +208,13 @@ function onPlaySong(track: TrackListItem, index: number): void {
     durationSeconds: Math.round(t.durationMs / 1000)
   }));
 
+  const pStore = usePlayerStore();
+  pStore.playbackContext = {
+    type: 'playlist',
+    sourceId: id.value,
+    currentOffset: loadedTracks.length,
+    totalItems: playlist.value?.trackCount || loadedTracks.length
+  };
   const resolvedIndex = loadedTracks.findIndex((t) => t.videoId === track.id);
   player.playQueue(tracksToPlay, resolvedIndex >= 0 ? resolvedIndex : index);
 }
@@ -397,9 +413,11 @@ async function onImageError(): Promise<void> {
               :show-thumbnails="true"
               :sort-by="sortBy"
               :sort-order="sortOrder"
+              :reorderable="isReorderable"
               @play="onPlaySong"
               @remove="removeTrackWrapper"
-              @sort="onSort" />
+              @sort="onSort"
+              @reorder="(from, to) => store.reorderTrack(id, from, to)" />
           </div>
         </template>
       </template>
