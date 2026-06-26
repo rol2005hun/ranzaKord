@@ -63,7 +63,7 @@
   // Soccer ball slider thumb
   input[type='range']::-webkit-slider-thumb {
     appearance: none;
-    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36"><text y="28" font-size="28">⚽</text></svg>')
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36"><text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" font-size="28">⚽</text></svg>')
       center center no-repeat !important;
     background-size: contain !important;
     border: none !important;
@@ -71,7 +71,10 @@
     border-radius: 50%;
     width: 24px !important;
     height: 24px !important;
-    margin-top: -10px !important;
+  }
+
+  input[type='range'] {
+    --thumb-offset-y: -10px;
   }
 
   --login-logo-gradient: linear-gradient(135deg, hsl(158 85% 45%) 0%, hsl(158 85% 65%) 100%);

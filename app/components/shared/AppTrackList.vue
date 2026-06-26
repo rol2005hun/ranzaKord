@@ -191,11 +191,13 @@ onMounted(() => {
                       <AppIcon
                         v-if="isHydrated && track.isPlaying"
                         name="ph:speaker-high-fill"
+                        data-allow-mismatch
                         class="text-primary" />
                       <template v-else>{{ index + 1 }}</template>
                     </span>
                     <div class="app-track-list__track-play">
                       <AppIcon
+                        data-allow-mismatch
                         :name="isHydrated && track.isPlaying ? 'ph:pause-fill' : 'ph:play-fill'" />
                     </div>
                   </div>
@@ -270,11 +272,14 @@ onMounted(() => {
                 <AppIcon
                   v-if="isHydrated && track.isPlaying"
                   name="ph:speaker-high-fill"
+                  data-allow-mismatch
                   class="text-primary" />
                 <template v-else>{{ index + 1 }}</template>
               </span>
               <div class="app-track-list__track-play">
-                <AppIcon :name="isHydrated && track.isPlaying ? 'ph:pause-fill' : 'ph:play-fill'" />
+                <AppIcon
+                  data-allow-mismatch
+                  :name="isHydrated && track.isPlaying ? 'ph:pause-fill' : 'ph:play-fill'" />
               </div>
             </div>
             <template #fallback>

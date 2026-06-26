@@ -29,8 +29,20 @@ export function usePlayer() {
 
   let isRestoring = false;
 
+  const { setGains, setEqGains } = useAudioVisualizer();
+
+  watch(
+    () => store.eqEnabled,
+    (enabled) => setEqGains(store.eqBands, enabled)
+  );
+
+  watch(
+    () => store.eqBands,
+    (bands) => setEqGains(bands, store.eqEnabled),
+    { deep: true }
+  );
+
   function applyVolumes() {
-    const { setGains } = useAudioVisualizer();
     setGains(crossfadeGain1, crossfadeGain2, store.volume, audio1Ref.value, audio2Ref.value);
   }
 

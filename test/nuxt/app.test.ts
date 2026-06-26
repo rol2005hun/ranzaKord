@@ -4,6 +4,7 @@ import App from '../../app/app.vue';
 import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 import { ref } from 'vue';
 import * as tauriCore from '@tauri-apps/api/core';
+import { createPinia, setActivePinia } from 'pinia';
 
 // Mock Tauri
 vi.mock('@tauri-apps/api/core', () => ({
@@ -24,13 +25,13 @@ const mockCustomColor = ref<{ h: number; s: number; l: number } | null>(null);
 mockNuxtImport('useTheme', () => {
   return () => ({
     themeId: mockThemeId,
-    customColor: mockCustomColor
+    currentCustomColor: mockCustomColor
   });
 });
 
 mockNuxtImport('useI18n', () => {
   return () => ({
-    locale: ref('en'),
+    locale: { value: 'en' },
     t: (key: string) => key
   });
 });
@@ -43,7 +44,10 @@ mockNuxtImport('useAppUpdate', () => {
   });
 });
 
-mockNuxtImport('useHead', () => vi.fn());
+const { mockUseHead } = vi.hoisted(() => ({
+  mockUseHead: vi.fn()
+}));
+mockNuxtImport('useHead', () => mockUseHead);
 
 describe('app.vue', () => {
   beforeEach(() => {
@@ -54,6 +58,7 @@ describe('app.vue', () => {
     if (typeof window !== 'undefined') {
       delete (window as unknown as Window & Record<string, unknown>).__TAURI_INTERNALS__;
     }
+    setActivePinia(createPinia());
   });
 
   const mountApp = () => {
@@ -77,6 +82,19 @@ describe('app.vue', () => {
     const wrapper = mountApp();
     expect(wrapper.find('nuxt-route-announcer-stub').exists()).toBe(true);
     expect(wrapper.find('nuxt-page-stub').exists()).toBe(true);
+    expect(wrapper.find('.app-version-overlay').exists()).toBe(true);
+  });
+
+  it('calls useHead with proper theme and locale', () => {
+    mockThemeId.value = 'light';
+    mountApp();
+    expect(mockUseHead).toHaveBeenCalled();
+    const calls = mockUseHead.mock.calls;
+    const headArg = calls[calls.length - 1]?.[0];
+    expect(headArg).toBeDefined();
+    const headObj = typeof headArg === 'function' ? headArg() : headArg;
+    expect(headObj.htmlAttrs['data-theme']).toBe('light');
+    expect(headObj.htmlAttrs['lang']).toBe('en');
   });
 
   it('calls getCurrentWindow.show() if in Tauri', async () => {

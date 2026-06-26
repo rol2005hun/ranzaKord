@@ -38,3 +38,5 @@ export interface TrackStatPayload {
   listeningSeconds: number;
   skipped: boolean;
 }
+
+export type CrossfadeType = 'linear' | 'dj';

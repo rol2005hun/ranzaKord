@@ -243,6 +243,7 @@ function onVolumeInput(event: Event) {
             :aria-label="$t('player.repeat') || 'Repeat'"
             @click="player.toggleRepeat()">
             <AppIcon
+              data-allow-mismatch
               :name="
                 isHydrated && player.repeatMode.value === 'one' ? 'ph:repeat-once' : 'ph:repeat'
               " />
@@ -673,22 +674,6 @@ function onVolumeInput(event: Event) {
 
     &--volume {
       width: 100px;
-    }
-
-    &::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 12px;
-      height: 12px;
-      border-radius: var(--radius-full);
-      background: var(--color-text-primary);
-      cursor: pointer;
-      margin-top: -4px;
-      transition: transform var(--transition-fast);
-    }
-
-    &:hover::-webkit-slider-thumb {
-      transform: scale(1.2);
     }
 
     &::-webkit-slider-runnable-track {

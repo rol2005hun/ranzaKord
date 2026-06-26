@@ -39,7 +39,9 @@ if (isAuthenticated.value) {
         <span class="login-page__logo-text">{{ $t('core.appName') }}</span>
       </div>
 
-      <h1 class="login-page__title">{{ $t('auth.login.title') }}</h1>
+      <component :is="themeStore.themeId === 'wc2026' ? 'div' : 'h1'" class="login-page__title">
+        {{ $t('auth.login.title') }}
+      </component>
       <p class="login-page__subtitle">{{ $t('auth.login.subtitle') }}</p>
 
       <AppButton
@@ -62,10 +64,10 @@ if (isAuthenticated.value) {
     </div>
 
     <div v-if="themeStore.themeId === 'wc2026'" class="wc-stadium__cta">
-      <div class="wc-stadium__cta-logo">
+      <h1 class="wc-stadium__cta-logo">
         <AppIcon name="ph:music-note-fill" />
         <span>{{ $t('core.appName') }}</span>
-      </div>
+      </h1>
       <AppButton
         id="login-with-ranzakonnect-wc"
         class="wc-stadium__cta-btn"
@@ -699,6 +701,7 @@ if (isAuthenticated.value) {
     display: flex;
     align-items: center;
     gap: var(--space-2);
+    margin: 0;
     font-size: 1.1rem;
     font-weight: 700;
     color: hsl(var(--color-primary-h) var(--color-primary-s) 70%);

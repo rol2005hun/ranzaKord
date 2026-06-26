@@ -1,0 +1,40 @@
+{
+  "title": "Settings",
+  "categories": {
+    "account": "Account",
+    "appearance": "Appearance",
+    "player": "Player",
+    "audio": "Audio (EQ)"
+  },
+  "account": {
+    "title": "Account Settings",
+    "signedInAs": "Signed in as",
+    "noAccount": "You are not signed in"
+  },
+  "appearance": {
+    "title": "Appearance",
+    "theme": "Theme",
+    "language": "Language",
+    "customColor": "Custom Color"
+  },
+  "player": {
+    "title": "Player Settings"
+  },
+  "audio": {
+    "title": "Audio Settings",
+    "eq": {
+      "title": "Equalizer",
+      "description": "Adjust the 10-band audio equalizer to your liking.",
+      "preset": "Preset",
+      "presets": {
+        "flat": "Flat",
+        "bassBoost": "Bass Boost",
+        "electronic": "Electronic",
+        "acoustic": "Acoustic",
+        "pop": "Pop",
+        "rock": "Rock",
+        "custom": "Custom"
+      }
+    }
+  }
+}

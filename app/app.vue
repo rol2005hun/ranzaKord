@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
 
-const { themeId, customColor } = useTheme();
+const { themeId, currentCustomColor } = useTheme();
 
 const customColorStyle = computed(() => {
-  if (!customColor.value) return '';
-  return `:root { --color-primary-h: ${customColor.value.h}; --color-primary-s: ${customColor.value.s}%; --color-primary-l: ${customColor.value.l}%; }`;
+  if (!currentCustomColor.value) return '';
+  return `:root { --color-primary-h: ${currentCustomColor.value.h}; --color-primary-s: ${currentCustomColor.value.s}%; --color-primary-l: ${currentCustomColor.value.l}%; }`;
 });
 
-const { locale } = useI18n();
+const { locale } = useI18n({ useScope: 'global' });
 const { showUpdateModal } = useAppUpdate();
 const layoutStore = useLayoutStore();
 const playerStore = usePlayerStore();
@@ -45,70 +45,26 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NuxtErrorBoundary>
-    <template #error="{ error, clearError }">
-      <div
-        style="
-          padding: 2rem;
-          background: #1a1a1a;
-          color: #ff5555;
-          height: 100vh;
-          font-family: monospace;
-          overflow: auto;
-        ">
-        <h1 style="color: #ff0000; font-size: 24px; margin-bottom: 1rem">
-          FATAL ERROR (Hiba történt!)
-        </h1>
-        <p style="margin-bottom: 1rem; color: #ccc">
-          A Nuxt/Vue összeomlott. Kérlek másold ki ezt a hibaüzenetet:
-        </p>
-        <pre
-          style="
-            background: #000;
-            padding: 1rem;
-            border-radius: 4px;
-            border: 1px solid #333;
-            white-space: pre-wrap;
-            word-break: break-all;
-          "
-          >{{ error }}</pre
-        >
-        <button
-          style="
-            margin-top: 1rem;
-            padding: 0.5rem 1rem;
-            background: #ff5555;
-            color: white;
-            border: none;
-            cursor: pointer;
-            border-radius: 4px;
-          "
-          @click="clearError()">
-          Kezdőlap
-        </button>
-      </div>
-    </template>
+  <div :class="{ 'is-tauri': isTauriApp }">
+    <AppTitlebar v-if="isTauriApp" />
+    <NuxtRouteAnnouncer />
+    <NuxtLayout>
+      <NuxtPage />
+    </NuxtLayout>
+    <AppToast />
+    <ClientOnly>
+      <AppUpdateModal v-model="showUpdateModal" />
+      <SettingsModal />
+    </ClientOnly>
 
-    <div :class="{ 'is-tauri': isTauriApp }">
-      <AppTitlebar v-if="isTauriApp" />
-      <NuxtRouteAnnouncer />
-      <NuxtLayout>
-        <NuxtPage />
-      </NuxtLayout>
-      <AppToast />
-      <ClientOnly>
-        <AppUpdateModal v-model="showUpdateModal" />
-      </ClientOnly>
+    <Teleport to="body">
+      <FullscreenVisualizer v-if="layoutStore.isFullscreenVisualizer" />
+    </Teleport>
 
-      <Teleport to="body">
-        <FullscreenVisualizer v-if="layoutStore.isFullscreenVisualizer" />
-      </Teleport>
-
-      <div class="app-version-overlay" aria-hidden="true">
-        v{{ useRuntimeConfig().public.appVersion }}
-      </div>
+    <div class="app-version-overlay" aria-hidden="true">
+      v{{ useRuntimeConfig().public.appVersion }}
     </div>
-  </NuxtErrorBoundary>
+  </div>
 </template>
 
 <style scoped>

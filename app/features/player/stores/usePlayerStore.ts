@@ -1,4 +1,4 @@
-import type { Track } from '../types/player.types';
+import type { Track, CrossfadeType } from '../types/player.types';
 
 export const usePlayerStore = defineStore(
   'player',
@@ -15,9 +15,12 @@ export const usePlayerStore = defineStore(
     const repeatMode = ref<'off' | 'all' | 'one'>('off');
     const crossfadeEnabled = ref(false);
     const crossfadeDuration = ref(5);
-    const crossfadeType = ref<'linear' | 'dj'>('dj');
+    const crossfadeType = ref<CrossfadeType>('dj');
     const isKaraoke = ref(false);
     const isAudioReactiveLyrics = ref(true);
+    const eqEnabled = ref(false);
+    const eqPreset = ref('flat');
+    const eqBands = ref<number[]>([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
     const hasNext = computed(() => {
       const track = currentTrack.value;
@@ -178,7 +181,10 @@ export const usePlayerStore = defineStore(
       prevTrack,
       syncDiscordPresence,
       isKaraoke,
-      isAudioReactiveLyrics
+      isAudioReactiveLyrics,
+      eqEnabled,
+      eqPreset,
+      eqBands
     };
   },
   {
@@ -197,7 +203,10 @@ export const usePlayerStore = defineStore(
           'crossfadeDuration',
           'crossfadeType',
           'isKaraoke',
-          'isAudioReactiveLyrics'
+          'isAudioReactiveLyrics',
+          'eqEnabled',
+          'eqPreset',
+          'eqBands'
         ],
         storage: piniaPluginPersistedstate.localStorage()
       }

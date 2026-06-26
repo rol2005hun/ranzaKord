@@ -95,3 +95,29 @@ body.has-open-modal {
     transform: translateY(0px);
   }
 }
+
+/* Global Range Slider Baseline */
+input[type='range'] {
+  --thumb-offset-y: -4px;
+  --thumb-offset-x: 0px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--color-text-primary);
+    margin-top: var(--thumb-offset-y) !important;
+    margin-left: var(--thumb-offset-x) !important;
+    transition: transform var(--transition-fast, 0.2s);
+  }
+
+  &:hover::-webkit-slider-thumb {
+    transform: scale(1.2);
+  }
+}

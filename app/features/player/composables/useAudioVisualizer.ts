@@ -7,7 +7,10 @@ let crossfadeGain2: GainNode | null = null;
 let masterGainNode: GainNode | null = null;
 let dryGainNode: GainNode | null = null;
 let wetGainNode: GainNode | null = null;
+let eqFilters: BiquadFilterNode[] = [];
 let isConnected = false;
+
+const EQ_FREQUENCIES = [32, 64, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
 
 export function useAudioVisualizer() {
   function connect(
@@ -83,16 +86,33 @@ export function useAudioVisualizer() {
 
         upmixMerger.connect(wetGainNode);
 
-        masterGainNode.connect(audioCtx.destination);
+        // --- Equalizer Chain ---
+        let prevNode: AudioNode = masterGainNode;
+        eqFilters = [];
+
+        EQ_FREQUENCIES.forEach((freq) => {
+          const filter = (audioCtx as AudioContext).createBiquadFilter();
+          filter.type = 'peaking';
+          filter.frequency.value = freq;
+          filter.Q.value = 1.41; // Standard Q factor
+          filter.gain.value = 0;
+          eqFilters.push(filter);
+
+          prevNode.connect(filter);
+          prevNode = filter;
+        });
+
+        prevNode.connect(audioCtx.destination);
 
         isConnected = true;
         setGains(1, 0, currentVolume, audioEl1, audioEl2);
 
-        // Restore karaoke state if it was enabled
+        // Restore karaoke and EQ state if they were enabled
         const playerStore = usePlayerStore();
         if (playerStore.isKaraoke) {
           setKaraoke(true);
         }
+        setEqGains(playerStore.eqBands, playerStore.eqEnabled);
 
         // Start continuous background loop for CSS variables (--audio-bass)
         startAudioReactiveLoop();
@@ -121,6 +141,24 @@ export function useAudioVisualizer() {
       if (audioEl1) audioEl1.volume = cf1 * Math.pow(masterVol, 3);
       if (audioEl2) audioEl2.volume = cf2 * Math.pow(masterVol, 3);
     }
+  }
+
+  function setMasterVolume(vol: number) {
+    if (!masterGainNode) return;
+    masterGainNode.gain.value = vol;
+  }
+
+  function setEqGains(gains: number[], enabled: boolean) {
+    if (!eqFilters.length) return;
+    eqFilters.forEach((filter, index) => {
+      // Smoothly transition gains using setTargetAtTime
+      const targetGain = enabled ? (gains[index] ?? 0) : 0;
+      if (audioCtx) {
+        filter.gain.setTargetAtTime(targetGain, audioCtx.currentTime, 0.1);
+      } else {
+        filter.gain.value = targetGain;
+      }
+    });
   }
 
   function setKaraoke(enabled: boolean) {
@@ -173,5 +211,13 @@ export function useAudioVisualizer() {
     loop();
   }
 
-  return { connect, setGains, setKaraoke, isConnected, startAudioReactiveLoop };
+  return {
+    connect,
+    setGains,
+    setMasterVolume,
+    setKaraoke,
+    setEqGains,
+    isConnected,
+    startAudioReactiveLoop
+  };
 }

@@ -10,35 +10,29 @@ const artists = computed(() => getTrackArtists(props.track || undefined));
 </script>
 
 <template>
-  <span class="app-track-artists">
-    <ClientOnly>
-      <template v-if="artists.length > 0">
-        <template v-for="(artist, index) in artists" :key="index">
-          <NuxtLink
-            v-if="artist.id"
-            :to="`/artist/${artist.id}`"
-            class="app-track-artists__link"
-            @click.stop>
-            {{ artist.name }}
-          </NuxtLink>
-          <NuxtLink
-            v-else
-            :to="`/search?q=${encodeURIComponent(artist.name)}&type=artist`"
-            class="app-track-artists__link"
-            @click.stop>
-            {{ artist.name }}
-          </NuxtLink>
-          <template v-if="index < artists.length - 1">{{ ', ' }}</template>
-        </template>
+  <span class="app-track-artists" data-allow-mismatch="children">
+    <template v-if="artists.length > 0">
+      <template v-for="(artist, index) in artists" :key="index">
+        <NuxtLink
+          v-if="artist.id"
+          :to="`/artist/${artist.id}`"
+          class="app-track-artists__link"
+          @click.stop>
+          {{ artist.name }}
+        </NuxtLink>
+        <NuxtLink
+          v-else
+          :to="`/search?q=${encodeURIComponent(artist.name)}&type=artist`"
+          class="app-track-artists__link"
+          @click.stop>
+          {{ artist.name }}
+        </NuxtLink>
+        <span v-if="index < artists.length - 1" class="app-track-artists__separator">,</span>
       </template>
-      <template v-else>
-        <span class="app-track-artists__text">{{ $t('player.startSomething') }}</span>
-      </template>
-
-      <template #fallback>
-        <span class="app-track-artists__text">{{ $t('player.startSomething') }}</span>
-      </template>
-    </ClientOnly>
+    </template>
+    <template v-else>
+      <span class="app-track-artists__text">{{ $t('player.startSomething') }}</span>
+    </template>
   </span>
 </template>
 

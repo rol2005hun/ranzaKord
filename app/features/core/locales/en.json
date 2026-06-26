@@ -3,7 +3,10 @@
   "loading": "Loading…",
   "error": {
     "generic": "Something went wrong.",
-    "notFound": "Page not found."
+    "notFound": "Page not found.",
+    "fatalTitle": "FATAL ERROR (An error occurred!)",
+    "fatalDescription": "Nuxt/Vue has crashed. Please copy this error message:",
+    "fatalHomeBtn": "Home"
   },
   "nav": {
     "signIn": "Sign in",

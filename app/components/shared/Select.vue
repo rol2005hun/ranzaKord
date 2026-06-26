@@ -235,8 +235,10 @@ onBeforeUnmount(() => {
 .select-dropdown {
   position: absolute;
   top: calc(100% + 4px);
-  left: 0;
-  width: 100%;
+  right: 0;
+  min-width: 100%;
+  width: max-content;
+  max-width: 300px;
   max-height: 250px;
   overflow-y: auto;
   margin: 0;

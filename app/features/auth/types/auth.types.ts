@@ -1,11 +1,26 @@
 import type { ComputedRef } from 'vue';
 
+export interface UserSettings {
+  theme?: string;
+  customColor?: string;
+  customColors?: Record<string, string>;
+  crossfadeEnabled?: boolean;
+  crossfadeDuration?: number;
+  crossfadeType?: string;
+  isKaraoke?: boolean;
+  isAudioReactiveLyrics?: boolean;
+  eqEnabled?: boolean;
+  eqPreset?: string;
+  eqBands?: number[];
+}
+
 export interface OAuthUser {
   sub: string;
   name: string;
   email: string;
   picture?: string;
   hasAccess: boolean;
+  settings?: UserSettings;
 }
 
 export interface OAuthSession {

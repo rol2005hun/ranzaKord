@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { mount } from '@vue/test-utils';
-import Settings from '../../app/pages/settings.vue';
+import PlayerSettings from '../../app/features/settings/components/panels/PlayerSettings.vue';
 import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 import { createTestingPinia } from '@pinia/testing';
 
@@ -15,21 +15,22 @@ mockNuxtImport('usePlayerStore', () => {
   });
 });
 
-describe('settings.vue', () => {
-  it('renders settings page correctly', () => {
-    const wrapper = mount(Settings, {
+describe('PlayerSettings.vue', () => {
+  it('renders settings panel correctly', () => {
+    const wrapper = mount(PlayerSettings, {
       global: {
         plugins: [createTestingPinia({ createSpy: vi.fn })],
         mocks: {
           $t: (key: string) => key
         },
         stubs: {
-          AppToggle: true
+          AppToggle: true,
+          AppSelect: true
         }
       }
     });
-    // the title uses translation key nav.settings
-    expect(wrapper.text()).toContain('nav.settings');
+    // the title uses translation key settings.categories.player
+    expect(wrapper.text()).toContain('settings.categories.player');
     expect(wrapper.text()).toContain('core.settings.audioReactiveLyrics.title');
   });
 });

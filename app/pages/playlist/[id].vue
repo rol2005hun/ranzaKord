@@ -63,7 +63,6 @@ const { data, status, refresh } = await useAsyncData<PlaylistDetail | null>(
     });
   },
   {
-    lazy: true,
     watch: [id, sortBy, sortOrder, debouncedSearch]
   }
 );
@@ -292,9 +291,11 @@ async function onImageError(): Promise<void> {
           class="playlist-page__search-bar">
           <AppIcon name="ph:magnifying-glass" class="playlist-page__search-icon" />
           <input
+            id="playlist-search-input"
             v-model="searchQuery"
             type="text"
             :placeholder="$t('search.placeholder')"
+            :aria-label="$t('search.placeholder')"
             class="playlist-page__search-input" />
 
           <div class="playlist-page__search-actions">

@@ -133,6 +133,7 @@ function onContentScroll(event: Event): void {
                 width="120"
                 height="120"
                 format="webp"
+                loading="eager"
                 fetchpriority="high"
                 preload
                 @error="emit('image-error')" />

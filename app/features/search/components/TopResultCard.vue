@@ -53,6 +53,7 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
           width="92"
           height="92"
           format="webp"
+          loading="eager"
           fetchpriority="high"
           preload />
         <AppIcon v-else name="ph:music-notes-simple" />
@@ -64,10 +65,12 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
               <AppIcon
                 v-if="isPlaying"
                 name="ph:speaker-high-fill"
+                data-allow-mismatch
                 style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom" />
               <AppIcon
                 v-else-if="isCurrentlyPlaying"
                 name="ph:speaker-none-fill"
+                data-allow-mismatch
                 style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom" />
             </span>
           </ClientOnly>
@@ -126,6 +129,7 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
           width="92"
           height="92"
           format="webp"
+          loading="eager"
           fetchpriority="high"
           preload />
         <AppIcon v-else name="ph:music-notes-simple" />
@@ -137,10 +141,12 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
               <AppIcon
                 v-if="isPlaying"
                 name="ph:speaker-high-fill"
+                data-allow-mismatch
                 style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom" />
               <AppIcon
                 v-else-if="isCurrentlyPlaying"
                 name="ph:speaker-none-fill"
+                data-allow-mismatch
                 style="margin-right: 4px; font-size: 1.1em; vertical-align: text-bottom" />
             </span>
           </ClientOnly>
@@ -189,8 +195,8 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
         :aria-label="$t('player.play') || 'Lejátszás'"
         @click.prevent="emit('play', props.result)">
         <ClientOnly>
-          <AppIcon v-if="isPlaying" name="ph:pause-fill" />
-          <AppIcon v-else name="ph:play-fill" />
+          <AppIcon v-if="isPlaying" name="ph:pause-fill" data-allow-mismatch />
+          <AppIcon v-else name="ph:play-fill" data-allow-mismatch />
         </ClientOnly>
       </button>
     </div>

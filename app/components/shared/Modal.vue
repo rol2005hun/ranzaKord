@@ -10,7 +10,8 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   title: undefined,
   size: 'md',
-  persistent: false
+  persistent: false,
+  modalClass: undefined
 });
 
 const emit = defineEmits<{
