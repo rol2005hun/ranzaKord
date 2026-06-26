@@ -151,15 +151,26 @@ function scrollToActiveLine(instant = false) {
   });
 }
 
+let initialScrollDone = false;
+
 watch(activeLineIndex, () => {
   if (!autoScrollEnabled) return;
-  scrollToActiveLine();
+  scrollToActiveLine(!initialScrollDone);
+  initialScrollDone = true;
 });
+
+watch(
+  () => player.currentTrack.value?.videoId,
+  () => {
+    initialScrollDone = false;
+  }
+);
 
 watch(
   () => layoutStore.rightSidebarMode,
   (newMode) => {
     if (newMode === 'lyrics') {
+      initialScrollDone = false;
       autoScrollEnabled = true;
       if (scrollResumeTimer) clearTimeout(scrollResumeTimer);
       nextTick(() => scrollToActiveLine(true));
@@ -744,8 +755,8 @@ const sidebarStyle = computed(() => ({
   }
 
   &__lyric-line {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-semibold);
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-bold);
     color: var(--color-text-secondary);
     line-height: var(--leading-relaxed);
     margin: 0;
@@ -765,12 +776,11 @@ const sidebarStyle = computed(() => ({
     &--active {
       color: var(--color-text-primary);
       opacity: 1;
-      font-size: var(--text-lg);
     }
 
     body.audio-reactive-lyrics &--active {
-      transform: scale(calc(1.04 + var(--audio-bass, 0) * 0.15));
-      text-shadow: 0 0 calc(10px + var(--audio-bass, 0) * 25px)
+      transform: scale(calc(1 + var(--audio-bass, 0) * 0.15));
+      text-shadow: 0 0 calc(10px + var(--audio-bass, 0) * 30px)
         hsla(
           var(--color-primary-h),
           var(--color-primary-s),

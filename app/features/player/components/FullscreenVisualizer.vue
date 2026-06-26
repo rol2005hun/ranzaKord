@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { LyricLine } from '../types/sidebar.types';
 const player = usePlayer();
 const layoutStore = useLayoutStore();
 const playlistsStore = usePlaylistsStore();
@@ -27,6 +28,103 @@ function toggleLyrics() {
   } else {
     layoutStore.openRightSidebar('lyrics');
   }
+}
+
+const { lyricsData, isLoading: lyricsLoading, fetchLyrics, getActiveLine } = useLyrics();
+
+watch(
+  () => player.currentTrack.value,
+  (track) => {
+    if (track) fetchLyrics(track);
+  },
+  { immediate: true }
+);
+
+const currentTime = computed(() => player.currentTimeSeconds.value);
+const activeLineIndex = computed(() => getActiveLine(currentTime.value));
+const syncedLines = computed<LyricLine[]>(() => lyricsData.value?.synced ?? []);
+const plainLyrics = computed<string | null>(() => lyricsData.value?.plain ?? null);
+const hasSyncedLyrics = computed(() => syncedLines.value.length > 0);
+
+const lyricsListRef = ref<HTMLElement | null>(null);
+let autoScrollEnabled = true;
+let scrollResumeTimer: ReturnType<typeof setTimeout> | null = null;
+let isProgrammaticScroll = false;
+let programmaticScrollTimer: ReturnType<typeof setTimeout> | null = null;
+
+function scrollToActiveLine(instant = false) {
+  const idx = activeLineIndex.value;
+  if (idx < 0) return;
+  nextTick(() => {
+    const container = lyricsListRef.value;
+    const el = container?.querySelector(`[data-line="${idx}"]`) as HTMLElement | null;
+    if (el && container) {
+      const containerRect = container.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const relativeTop = elRect.top - containerRect.top;
+      const scrollPosition =
+        container.scrollTop + relativeTop - containerRect.height / 2 + elRect.height / 2;
+
+      isProgrammaticScroll = true;
+      if (programmaticScrollTimer) clearTimeout(programmaticScrollTimer);
+      programmaticScrollTimer = setTimeout(() => {
+        isProgrammaticScroll = false;
+      }, 800);
+
+      container.scrollTo({ top: scrollPosition, behavior: instant ? 'auto' : 'smooth' });
+    }
+  });
+}
+
+let initialScrollDone = false;
+
+watch(activeLineIndex, () => {
+  if (!autoScrollEnabled) return;
+  scrollToActiveLine(!initialScrollDone);
+  initialScrollDone = true;
+});
+
+watch(
+  () => player.currentTrack.value?.videoId,
+  () => {
+    initialScrollDone = false;
+  }
+);
+
+watch(
+  isLyricsActive,
+  (isActive) => {
+    if (isActive) {
+      initialScrollDone = false;
+      autoScrollEnabled = true;
+      if (scrollResumeTimer) clearTimeout(scrollResumeTimer);
+      nextTick(() => scrollToActiveLine(true));
+    }
+  },
+  { immediate: true }
+);
+
+watch(
+  isMobileLyricsActive,
+  (isActive) => {
+    if (isActive) {
+      initialScrollDone = false;
+      autoScrollEnabled = true;
+      if (scrollResumeTimer) clearTimeout(scrollResumeTimer);
+      nextTick(() => scrollToActiveLine(true));
+    }
+  },
+  { immediate: true }
+);
+
+function onLyricsScroll() {
+  if (isProgrammaticScroll) return;
+  autoScrollEnabled = false;
+  if (scrollResumeTimer) clearTimeout(scrollResumeTimer);
+  scrollResumeTimer = setTimeout(() => {
+    autoScrollEnabled = true;
+    scrollToActiveLine();
+  }, 3000);
 }
 
 const previousVolume = ref(1);
@@ -182,11 +280,7 @@ function getStyleIcon(style: string) {
 
 <template>
   <Transition name="fade">
-    <div
-      v-show="!isLyricsActive && !isMobileLyricsActive"
-      v-if="layoutStore.isFullscreenVisualizer"
-      ref="containerRef"
-      class="fullscreen-visualizer">
+    <div v-if="layoutStore.isFullscreenVisualizer" ref="containerRef" class="fullscreen-visualizer">
       <img
         v-if="player.currentTrack.value?.thumbnailUrl"
         :src="player.currentTrack.value.thumbnailUrl"
@@ -223,8 +317,51 @@ function getStyleIcon(style: string) {
           </button>
         </div>
 
+        <!-- Fullscreen Lyrics -->
+        <div
+          v-if="isLyricsActive || isMobileLyricsActive"
+          class="fullscreen-visualizer__lyrics-container">
+          <div
+            v-if="
+              lyricsLoading ||
+              (player.currentTrack.value &&
+                lyricsData?.trackId !== player.currentTrack.value.videoId)
+            "
+            class="fullscreen-visualizer__lyrics-loading">
+            <AppSpinner size="lg" />
+          </div>
+          <div
+            v-else-if="hasSyncedLyrics"
+            ref="lyricsListRef"
+            class="fullscreen-visualizer__lyrics-list"
+            @scroll.passive="onLyricsScroll">
+            <p
+              v-for="(line, idx) in syncedLines"
+              :key="idx"
+              :data-line="idx"
+              class="fullscreen-visualizer__lyric-line"
+              :class="{ 'fullscreen-visualizer__lyric-line--active': idx === activeLineIndex }"
+              @click.stop="player.seek(line.time)">
+              {{ line.text }}
+            </p>
+          </div>
+          <div v-else-if="plainLyrics" class="fullscreen-visualizer__lyrics-plain">
+            <p class="fullscreen-visualizer__unsync-badge">
+              <AppIcon name="ph:warning" />
+              {{ $t('player.lyricsNotSynced') }}
+            </p>
+            <p>{{ plainLyrics }}</p>
+          </div>
+          <div v-else class="fullscreen-visualizer__lyrics-empty">
+            <AppIcon name="ph:music-notes-duotone" />
+            <p>{{ $t('player.noTrack') }}</p>
+          </div>
+        </div>
+
         <!-- Mobile Track Info (Centered on screen) -->
-        <div v-if="player.currentTrack.value" class="fullscreen-visualizer__mobile-info">
+        <div
+          v-if="player.currentTrack.value && !(isLyricsActive || isMobileLyricsActive)"
+          class="fullscreen-visualizer__mobile-info">
           <img
             v-if="player.currentTrack.value.thumbnailUrl"
             :src="player.currentTrack.value.thumbnailUrl"
@@ -316,7 +453,8 @@ function getStyleIcon(style: string) {
                 :disabled="!player.currentTrack.value"
                 :aria-label="player.isPlaying.value ? $t('player.pause') : $t('player.play')"
                 @click.stop="player.togglePlay()">
-                <AppIcon :name="player.isPlaying.value ? 'ph:pause-fill' : 'ph:play-fill'" />
+                <AppSpinner v-if="player.isLoading.value" size="md" />
+                <AppIcon v-else :name="player.isPlaying.value ? 'ph:pause-fill' : 'ph:play-fill'" />
               </button>
               <button
                 class="fullscreen-visualizer__playback-btn"
@@ -444,6 +582,134 @@ function getStyleIcon(style: string) {
     z-index: 0;
   }
 
+  &__lyrics-container {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    padding: 100px 20px;
+    pointer-events: none;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+
+  &__lyrics-list {
+    width: 100%;
+    max-width: 1000px;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 30vh 4rem;
+    scrollbar-width: none;
+
+    @media (max-width: 768px) {
+      padding: 30vh 2rem;
+    }
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent 0%,
+      black 15%,
+      black 85%,
+      transparent 100%
+    );
+  }
+
+  &__lyric-line {
+    font-size: 3rem;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.4);
+    text-align: center;
+    margin: 0;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: center;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    word-break: break-word;
+    overflow-wrap: break-word;
+
+    &:hover {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    &--active {
+      color: white;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    @media (max-width: 768px) {
+      font-size: 1.75rem;
+    }
+  }
+
+  body.audio-reactive-lyrics &__lyric-line--active {
+    transform: scale(calc(1 + var(--audio-bass, 0) * 0.15));
+    text-shadow: 0 0 calc(10px + var(--audio-bass, 0) * 30px)
+      hsla(
+        var(--color-primary-h),
+        var(--color-primary-s),
+        50%,
+        calc(0.3 + var(--audio-bass, 0) * 0.7)
+      );
+    transition:
+      transform 0.05s ease-out,
+      text-shadow 0.05s ease-out;
+  }
+
+  &__lyrics-plain {
+    pointer-events: auto;
+    width: 100%;
+    max-width: 800px;
+    height: 100%;
+    overflow-y: auto;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.5rem;
+    line-height: 2;
+    padding: 20vh 0;
+    mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+
+    p {
+      margin: 0;
+      white-space: pre-line;
+    }
+  }
+
+  &__unsync-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 100px;
+    margin-bottom: 2rem;
+  }
+
+  &__lyrics-loading,
+  &__lyrics-empty {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
   &__canvas {
     position: absolute;
     inset: 0;
@@ -472,6 +738,10 @@ function getStyleIcon(style: string) {
     justify-content: space-between;
     padding: 2rem;
     pointer-events: none;
+
+    html.is-tauri & {
+      padding-top: calc(2rem + var(--titlebar-height, 32px));
+    }
   }
 
   &__controls {
@@ -480,6 +750,8 @@ function getStyleIcon(style: string) {
     display: flex;
     align-items: center;
     gap: 1.5rem;
+    position: relative;
+    z-index: 10;
   }
 
   &__style-selector {
@@ -550,6 +822,8 @@ function getStyleIcon(style: string) {
     pointer-events: auto;
     width: auto;
     margin: 0 4rem;
+    position: relative;
+    z-index: 10;
 
     background: rgba(0, 0, 0, 0.35);
     backdrop-filter: blur(16px);

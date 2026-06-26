@@ -64,7 +64,10 @@ async function downloadApk() {
         <div class="update-modal__progress-text">
           {{ $t('updater.downloading') }}...
           <span v-if="updateInfo.total > 0">
-            {{ Math.round((updateInfo.progress / updateInfo.total) * 100) }}%
+            {{ Math.round((updateInfo.progress / updateInfo.total) * 100) }}% ({{
+              (updateInfo.progress / 1024 / 1024).toFixed(1)
+            }}
+            MB / {{ (updateInfo.total / 1024 / 1024).toFixed(1) }} MB)
           </span>
         </div>
         <div class="update-modal__progress-bar">

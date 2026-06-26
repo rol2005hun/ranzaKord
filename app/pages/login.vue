@@ -19,6 +19,24 @@ const handleLogin = () => {
   loginWithRanzaKonnect();
 };
 
+const handleWindowFocus = () => {
+  if (isRedirecting.value && isTauri.value) {
+    isRedirecting.value = false;
+  }
+};
+
+onMounted(() => {
+  if (import.meta.client) {
+    window.addEventListener('focus', handleWindowFocus);
+  }
+});
+
+onUnmounted(() => {
+  if (import.meta.client) {
+    window.removeEventListener('focus', handleWindowFocus);
+  }
+});
+
 if (isAuthenticated.value) {
   await navigateTo('/');
 }

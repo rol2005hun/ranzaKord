@@ -69,13 +69,64 @@
       0% { left: -50%; }
       100% { left: 100%; }
     }
+    .window-controls {
+      position: fixed;
+      top: 0;
+      right: 0;
+      display: flex;
+      height: 40px;
+      z-index: 10;
+      -webkit-app-region: no-drag;
+    }
+    .window-controls .btn {
+      width: 46px;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #9494c7;
+      cursor: default;
+      transition: background 0.1s;
+    }
+    .window-controls .btn:hover {
+      background: #121230;
+      color: #e8e8ff;
+    }
+    .window-controls .btn.close:hover {
+      background: #e81123;
+      color: white;
+    }
   </style>
 </head>
 <body data-tauri-drag-region>
+  <div class="window-controls">
+    <div class="btn" id="minimize">
+      <svg width="10" height="10" viewBox="0 0 10 10"><path d="M 0 5 h 10" stroke="currentColor" stroke-width="1.5"/></svg>
+    </div>
+    <div class="btn close" id="close">
+      <svg width="10" height="10" viewBox="0 0 10 10"><path d="M 1 1 l 8 8 M 9 1 l -8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </div>
+  </div>
+
   <div class="splash-container" data-tauri-drag-region>
     <img src="/logo.webp" alt="ranzaKord" class="logo" data-tauri-drag-region>
     <div class="title" data-tauri-drag-region>ranzaKord</div>
     <div class="loader" data-tauri-drag-region></div>
   </div>
+
+  <script>
+    if (window.__TAURI_INTERNALS__) {
+      const minimizeBtn = document.getElementById('minimize');
+      const closeBtn = document.getElementById('close');
+
+      minimizeBtn.addEventListener('click', () => {
+        window.__TAURI_INTERNALS__.invoke('plugin:window|minimize', { label: 'splashscreen' });
+      });
+
+      closeBtn.addEventListener('click', () => {
+        window.__TAURI_INTERNALS__.invoke('plugin:window|close', { label: 'splashscreen' });
+      });
+    }
+  </script>
 </body>
 </html>

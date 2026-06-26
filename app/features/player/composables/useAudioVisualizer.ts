@@ -189,11 +189,11 @@ export function useAudioVisualizer() {
         let rawBass = bassSum / bassBins / 255;
         rawBass = Math.pow(rawBass, 1.5);
 
-        // Fast attack, slow decay for smooth pulsing
+        // Fast attack, fast decay for punchier beat syncing
         if (rawBass > smoothedBass) {
           smoothedBass = rawBass;
         } else {
-          smoothedBass = smoothedBass * 0.85 + rawBass * 0.15;
+          smoothedBass = smoothedBass * 0.7 + rawBass * 0.3;
         }
 
         document.documentElement.style.setProperty('--audio-bass', smoothedBass.toString());
