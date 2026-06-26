@@ -3,20 +3,32 @@ import { relaunch } from '@tauri-apps/plugin-process';
 
 import type { GithubRelease } from '@/features/updater/types/updater.types';
 
-const GITHUB_REPO = 'rrol2/ranzaKord';
+const GITHUB_REPO = 'rol2005hun/ranzaKord';
 const APK_ASSET_SUFFIX = '.apk';
 
-function parseVersion(v: string): [number, number, number] {
-  const [maj = 0, min = 0, pat = 0] = v.replace(/^v/, '').split('.').map(Number);
-  return [maj, min, pat];
+function parseVersion(v: string) {
+  const [main = '', pre] = v.replace(/^v/, '').split('-');
+  const [maj = 0, min = 0, pat = 0] = main.split('.').map(Number);
+  return { maj, min, pat, pre };
 }
 
 function isNewerVersion(latest: string, current: string): boolean {
-  const [lMaj, lMin, lPat] = parseVersion(latest);
-  const [cMaj, cMin, cPat] = parseVersion(current);
-  if (lMaj !== cMaj) return lMaj > cMaj;
-  if (lMin !== cMin) return lMin > cMin;
-  return lPat > cPat;
+  if (latest === current) return false;
+  const l = parseVersion(latest);
+  const c = parseVersion(current);
+
+  if (l.maj !== c.maj) return l.maj > c.maj;
+  if (l.min !== c.min) return l.min > c.min;
+  if (l.pat !== c.pat) return l.pat > c.pat;
+
+  // Stable is greater than prerelease
+  if (l.pre && !c.pre) return false;
+  if (!l.pre && c.pre) return true;
+
+  // Both are prerelease
+  if (l.pre && c.pre) return l.pre > c.pre;
+
+  return false;
 }
 
 export function useAppUpdate() {
@@ -28,10 +40,13 @@ export function useAppUpdate() {
   async function checkViaGithub() {
     try {
       const currentVersion = config.public.appVersion as string;
-      const release = await $fetch<GithubRelease>(
-        `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`
+      const releases = await $fetch<GithubRelease[]>(
+        `https://api.github.com/repos/${GITHUB_REPO}/releases`
       );
+      if (!releases || releases.length === 0) return;
 
+      const release = releases[0];
+      if (!release) return;
       const latestVersion = release.tag_name.replace(/^v/, '');
       if (!isNewerVersion(latestVersion, currentVersion)) return;
 
