@@ -12,6 +12,7 @@ export interface UserSettings {
   eqEnabled?: boolean;
   eqPreset?: string;
   eqBands?: number[];
+  playbackOrder?: 'sequential' | 'random' | 'reverse';
 }
 
 export interface OAuthUser {

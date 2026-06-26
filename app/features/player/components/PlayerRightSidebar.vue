@@ -237,9 +237,9 @@ const sidebarStyle = computed(() => ({
           :class="{
             'right-sidebar__tab--active': layoutStore.rightSidebarMode === 'info'
           }"
+          :title="$t('player.nowPlaying')"
           @click="layoutStore.setRightSidebarMode('info')">
           <AppIcon name="ph:music-note" />
-          <span>{{ $t('player.nowPlaying') }}</span>
         </button>
         <button
           id="sidebar-tab-lyrics"
@@ -247,9 +247,19 @@ const sidebarStyle = computed(() => ({
           :class="{
             'right-sidebar__tab--active': layoutStore.rightSidebarMode === 'lyrics'
           }"
+          :title="$t('player.lyrics')"
           @click="layoutStore.setRightSidebarMode('lyrics')">
           <AppIcon name="ph:microphone-stage" />
-          <span>{{ $t('player.lyrics') }}</span>
+        </button>
+        <button
+          id="sidebar-tab-queue"
+          class="right-sidebar__tab"
+          :class="{
+            'right-sidebar__tab--active': layoutStore.rightSidebarMode === 'queue'
+          }"
+          :title="$t('player.queue')"
+          @click="layoutStore.setRightSidebarMode('queue')">
+          <AppIcon name="ph:list-dashes" />
         </button>
       </div>
       <button
@@ -400,6 +410,10 @@ const sidebarStyle = computed(() => ({
           </div>
         </template>
       </div>
+
+      <div v-else-if="layoutStore.rightSidebarMode === 'queue'" class="right-sidebar__queue">
+        <PlayerQueue />
+      </div>
     </div>
   </aside>
 </template>
@@ -457,12 +471,13 @@ const sidebarStyle = computed(() => ({
   &__tab {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: var(--space-1);
-    padding: var(--space-1) var(--space-2);
+    padding: var(--space-2);
     border: none;
     background: transparent;
     color: var(--color-text-secondary);
-    font-size: var(--text-xs);
+    font-size: 1.25rem;
     font-weight: var(--font-weight-medium);
     cursor: pointer;
     border-radius: var(--radius-md);
@@ -688,6 +703,13 @@ const sidebarStyle = computed(() => ({
   }
 
   &__lyrics {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__queue {
     flex: 1;
     overflow: hidden;
     display: flex;

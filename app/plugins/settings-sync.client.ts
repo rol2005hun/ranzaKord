@@ -32,6 +32,8 @@ export default defineNuxtPlugin((nuxtApp) => {
           if (s.isKaraoke !== undefined) playerStore.isKaraoke = s.isKaraoke;
           if (s.isAudioReactiveLyrics !== undefined)
             playerStore.isAudioReactiveLyrics = s.isAudioReactiveLyrics;
+          if (s.playbackOrder !== undefined)
+            playerStore.playbackOrder = s.playbackOrder as 'sequential' | 'random' | 'reverse';
           if (s.eqEnabled !== undefined) playerStore.eqEnabled = s.eqEnabled;
           if (s.eqPreset !== undefined) playerStore.eqPreset = s.eqPreset;
           if (s.eqBands !== undefined) playerStore.eqBands = s.eqBands;
@@ -58,7 +60,8 @@ export default defineNuxtPlugin((nuxtApp) => {
         isAudioReactiveLyrics: playerStore.isAudioReactiveLyrics,
         eqEnabled: playerStore.eqEnabled,
         eqPreset: playerStore.eqPreset,
-        eqBands: playerStore.eqBands
+        eqBands: playerStore.eqBands,
+        playbackOrder: playerStore.playbackOrder
       };
 
       try {
@@ -83,7 +86,8 @@ export default defineNuxtPlugin((nuxtApp) => {
         playerStore.isAudioReactiveLyrics,
         playerStore.eqEnabled,
         playerStore.eqPreset,
-        playerStore.eqBands
+        playerStore.eqBands,
+        playerStore.playbackOrder
       ],
       () => {
         if (!isSyncingFromServer) {

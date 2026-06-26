@@ -3,7 +3,7 @@ definePageMeta({
   layout: 'auth'
 });
 
-const { t } = useI18n();
+const { t } = useI18n({ useScope: 'global' });
 useHead({ title: t('auth.unauthorized.title') });
 
 const { logout, isTauri } = useAuth();

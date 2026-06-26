@@ -90,6 +90,7 @@ describe('playlist/[id].vue', () => {
             $t: (k: string, p: Record<string, unknown>) => k + (p ? JSON.stringify(p) : '')
           },
           stubs: {
+            RouterLink: true,
             AppMusicPage: {
               name: 'AppMusicPage',
               template: `

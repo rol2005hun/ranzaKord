@@ -143,7 +143,7 @@ describe('usePlayer', () => {
     // Note: Since useAudioVisualizer handles the volume logic now, we mock it or just assume it is set appropriately.
 
     toggleShuffle();
-    expect(store.isShuffle).toBe(true);
+    expect(store.playbackOrder).toBe('random');
 
     toggleRepeat();
     expect(store.repeatMode).toBe('all');

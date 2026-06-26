@@ -307,7 +307,7 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
     height: 48px;
     border-radius: 50%;
     background-color: var(--color-primary);
-    color: var(--color-text-inverse);
+    color: var(--color-primary-foreground, #ffffff);
     border: none;
     display: flex;
     align-items: center;

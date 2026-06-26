@@ -12,26 +12,39 @@ const artists = computed(() => getTrackArtists(props.track || undefined));
 <template>
   <span class="app-track-artists" data-allow-mismatch="children">
     <template v-if="artists.length > 0">
-      <template v-for="(artist, index) in artists" :key="index">
+      <span
+        v-for="(artist, index) in artists"
+        :key="index"
+        class="app-track-artists__artist"
+        data-allow-mismatch="children">
         <NuxtLink
           v-if="artist.id"
           :to="`/artist/${artist.id}`"
           class="app-track-artists__link"
+          data-allow-mismatch
           @click.stop>
           {{ artist.name }}
         </NuxtLink>
         <NuxtLink
           v-else
-          :to="`/search?q=${encodeURIComponent(artist.name)}&type=artist`"
+          :to="{ path: '/search', query: { q: artist.name, type: 'artist' } }"
           class="app-track-artists__link"
+          data-allow-mismatch
           @click.stop>
           {{ artist.name }}
         </NuxtLink>
-        <span v-if="index < artists.length - 1" class="app-track-artists__separator">,</span>
-      </template>
+        <span
+          v-if="index < artists.length - 1"
+          class="app-track-artists__separator"
+          data-allow-mismatch>
+          {{ ', ' }}
+        </span>
+      </span>
     </template>
     <template v-else>
-      <span class="app-track-artists__text">{{ $t('player.startSomething') }}</span>
+      <span class="app-track-artists__text" data-allow-mismatch>
+        {{ $t('player.startSomething') }}
+      </span>
     </template>
   </span>
 </template>

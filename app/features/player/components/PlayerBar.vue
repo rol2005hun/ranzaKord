@@ -192,7 +192,11 @@ function onVolumeInput(event: Event) {
         <div class="player-bar__controls">
           <button
             class="player-bar__btn player-bar__btn--secondary"
-            :class="{ 'player-bar__btn--active': isHydrated ? player.isShuffle.value : false }"
+            :class="{
+              'player-bar__btn--active': isHydrated
+                ? player.playbackOrder.value === 'random'
+                : false
+            }"
             :disabled="!displayTrack"
             :aria-label="$t('player.shuffle') || 'Shuffle'"
             @click="player.toggleShuffle()">

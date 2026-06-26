@@ -3,7 +3,7 @@ definePageMeta({
   layout: 'auth'
 });
 
-const { t, locale, setLocale } = useI18n();
+const { t, locale, setLocale } = useI18n({ useScope: 'global' });
 useHead({ title: t('core.nav.signIn') });
 
 const { loginWithRanzaKonnect, isAuthenticated, isTauri } = useAuth();

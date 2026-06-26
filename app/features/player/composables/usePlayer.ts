@@ -241,7 +241,7 @@ export function usePlayer() {
     }).catch(() => {});
   }
 
-  async function playTrack(track: Track) {
+  async function playTrack(track: Track, fromHistory = false) {
     if (store.currentTrack?.videoId === track.videoId) {
       togglePlay();
       return;
@@ -255,7 +255,7 @@ export function usePlayer() {
       recordTrackStat(store.currentTrack, Math.floor(store.currentTimeSeconds), skipped);
     }
 
-    store.setTrack(track);
+    store.setTrack(track, fromHistory);
     store.isLoading = true;
     store.isPlaying = false;
     store.error = null;
@@ -356,11 +356,15 @@ export function usePlayer() {
       return;
     }
     const prev = store.prevTrack();
-    if (prev) playTrack(prev);
+    if (prev) playTrack(prev, true);
   }
 
   function toggleShuffle() {
-    store.isShuffle = !store.isShuffle;
+    if (store.playbackOrder === 'random') {
+      store.playbackOrder = 'sequential';
+    } else {
+      store.playbackOrder = 'random';
+    }
   }
 
   function toggleRepeat() {
@@ -399,7 +403,7 @@ export function usePlayer() {
     currentTimeSeconds: computed(() => store.currentTimeSeconds),
     durationSeconds: computed(() => store.durationSeconds),
     error: computed(() => store.error),
-    isShuffle: computed(() => store.isShuffle),
+    playbackOrder: computed(() => store.playbackOrder),
     repeatMode: computed(() => store.repeatMode),
     hasNext: computed(() => store.hasNext),
     hasPrev: computed(() => store.hasPrev),

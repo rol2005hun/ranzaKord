@@ -24,6 +24,7 @@ export interface IUser extends Document {
     eqEnabled?: boolean;
     eqPreset?: string;
     eqBands?: number[];
+    playbackOrder?: string;
   };
   createdAt: Date;
   updatedAt: Date;
@@ -53,7 +54,8 @@ const userSchema = new Schema<IUser>(
       visualizerStyle: { type: String },
       eqEnabled: { type: Boolean },
       eqPreset: { type: String },
-      eqBands: { type: [Number] }
+      eqBands: { type: [Number] },
+      playbackOrder: { type: String, enum: ['sequential', 'random', 'reverse'] }
     }
   },
   { timestamps: true }

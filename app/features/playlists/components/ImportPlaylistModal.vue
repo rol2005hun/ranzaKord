@@ -11,7 +11,7 @@ const emit = defineEmits<{
 }>();
 
 const store = usePlaylistsStore();
-const { t } = useI18n();
+const { t } = useI18n({ useScope: 'global' });
 
 const url = ref('');
 const openList = ref<'success' | 'already' | 'skipped' | 'failed' | null>(null);

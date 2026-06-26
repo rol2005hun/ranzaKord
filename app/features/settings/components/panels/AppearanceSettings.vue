@@ -69,16 +69,16 @@ const customColorValue = computed({
               :class="{
                 'color-picker--unselected': !themeStore.customColors[themeStore.themeId]
               }" />
-            <button
-              v-if="themeStore.customColors[themeStore.themeId]"
-              class="reset-color-btn"
+            <AppButton
+              variant="secondary"
+              size="sm"
+              :disabled="!themeStore.customColors[themeStore.themeId]"
               @click="themeStore.resetCustomColor()">
-              <AppIcon name="ph:arrow-counter-clockwise" />
+              <template #icon>
+                <AppIcon name="ph:arrow-counter-clockwise" />
+              </template>
               {{ $t('settings.appearance.customColor.reset') }}
-            </button>
-            <span v-else class="color-picker-hint">
-              {{ $t('settings.appearance.customColor.hint') }}
-            </span>
+            </AppButton>
           </div>
         </template>
       </AppSettingsItem>
@@ -135,14 +135,6 @@ const customColorValue = computed({
   &::-webkit-color-swatch {
     border: none;
     border-radius: var(--radius-md);
-  }
-}
-
-.color-reset-btn {
-  color: var(--color-text-secondary);
-
-  &:hover {
-    color: var(--color-text-primary);
   }
 }
 </style>

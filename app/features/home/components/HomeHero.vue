@@ -85,7 +85,7 @@ function onPlayFromList(track: SearchResult) {
       class="home-dashboard__hero"
       :class="{ 'home-dashboard__hero--wc2026': themeStore.themeId === 'wc2026' }">
       <div class="home-dashboard__hero-content">
-        <i18n-t keypath="home.greeting" tag="p" class="home-dashboard__greeting">
+        <i18n-t keypath="home.greeting" tag="p" class="home-dashboard__greeting" scope="global">
           <template #name>
             <span class="home-dashboard__greeting-name">
               {{ currentUser?.name ?? $t('home.guest') }}

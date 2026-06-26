@@ -40,7 +40,7 @@ describe('usePlayerStore', () => {
     expect(store.queue).toEqual([]);
     expect(store.isPlaying).toBe(false);
     expect(store.volume).toBe(0.8);
-    expect(store.isShuffle).toBe(false);
+    expect(store.playbackOrder).toBe('sequential');
     expect(store.repeatMode).toBe('off');
   });
 
@@ -123,20 +123,20 @@ describe('usePlayerStore', () => {
       expect(store.nextTrack()?.videoId).toBe('v1'); // Loop to start
     });
 
-    it('handles shuffle mode', () => {
+    it('handles random mode', () => {
       const store = usePlayerStore();
       store.setQueue([mockTrack1, mockTrack2]);
-      store.isShuffle = true;
+      store.playbackOrder = 'random';
 
       store.setTrack(mockTrack1);
       expect(store.hasNext).toBe(true);
-      expect(store.hasPrev).toBe(true);
+      expect(store.hasPrev).toBe(false); // In random mode, hasPrev is false if history is empty
 
       const next = store.nextTrack();
       expect(next?.videoId).toBe('v2');
 
       const prev = store.prevTrack();
-      expect(prev?.videoId).toBe('v2');
+      expect(prev).toBeNull(); // because playbackOrder === 'random' and history is empty (since setTrack resets history? actually setTrack pushes to history if not fromHistory)
 
       // If only one item in queue, returns itself in shuffle? Wait, queue length is > 1.
       store.setQueue([mockTrack1]);

@@ -157,7 +157,7 @@ function closeDropdown() {
 
     &:hover {
       background-color: var(--color-primary);
-      color: var(--color-text-inverse);
+      color: var(--color-primary-foreground, #ffffff);
       border-color: var(--color-primary);
     }
 
@@ -183,7 +183,7 @@ function closeDropdown() {
 
     &:hover {
       background-color: var(--color-primary);
-      color: var(--color-text-inverse);
+      color: var(--color-primary-foreground, #ffffff);
     }
   }
 
