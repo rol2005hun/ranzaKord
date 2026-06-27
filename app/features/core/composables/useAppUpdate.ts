@@ -42,34 +42,44 @@ export function useAppUpdate() {
       );
       if (!releases || releases.length === 0) return;
 
-      const release = releases[0];
-      if (!release) return;
-      const latestVersion = release.tag_name.replace(/^v/, '');
-      if (!isNewerVersion(latestVersion, currentVersion)) return;
-
-      const isMandatory = release.body?.includes('[MANDATORY]') ?? false;
       const isAndroid = import.meta.client && /android/i.test(navigator.userAgent);
-      let downloadUrl: string | null = null;
-
-      if (isAndroid) {
-        const apkAsset = release.assets.find((a) => a.name.endsWith(APK_ASSET_SUFFIX));
-        downloadUrl = apkAsset?.browser_download_url ?? null;
-      } else {
-        downloadUrl = release.html_url;
-      }
-
       const IGNORED_SUFFIXES = ['.json', '.sig'];
-      const relevantAssets = release.assets.filter(
+
+      const readyRelease = releases.find((release) => {
+        const latestVersion = release.tag_name.replace(/^v/, '');
+        if (!isNewerVersion(latestVersion, currentVersion)) return false;
+
+        if (isAndroid) {
+          return release.assets.some((a) => a.name.endsWith(APK_ASSET_SUFFIX));
+        } else {
+          return release.assets.some((a) => a.name === 'latest.json');
+        }
+      });
+
+      if (!readyRelease) return;
+
+      const latestVersion = readyRelease.tag_name.replace(/^v/, '');
+      const isMandatory = readyRelease.body?.includes('[MANDATORY]') ?? false;
+      const relevantAssets = readyRelease.assets.filter(
         (a) => !IGNORED_SUFFIXES.some((s) => a.name.endsWith(s))
       );
       const totalSize = relevantAssets.reduce((sum, a) => sum + a.size, 0);
 
+      let downloadUrl: string;
+      if (isAndroid) {
+        const apkAsset = relevantAssets.find((a) => a.name.endsWith(APK_ASSET_SUFFIX));
+        if (!apkAsset) return;
+        downloadUrl = apkAsset.browser_download_url;
+      } else {
+        downloadUrl = readyRelease.html_url;
+      }
+
       store.patch({
         available: true,
         version: latestVersion,
-        name: release.name ?? release.tag_name,
-        body: release.body?.replace('[MANDATORY]', '').trim() ?? '',
-        date: release.published_at,
+        name: readyRelease.name ?? readyRelease.tag_name,
+        body: readyRelease.body?.replace('[MANDATORY]', '').trim() ?? '',
+        date: readyRelease.published_at,
         isMandatory,
         externalDownloadUrl: downloadUrl,
         downloadSize: totalSize > 0 ? totalSize : null,
