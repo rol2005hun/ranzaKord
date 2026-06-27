@@ -40,6 +40,12 @@ const isArtistPlaying = computed(() => {
   return allSongs.value.some((t: SearchResult) => t.id === currentTrack.value?.videoId);
 });
 
+const isArtistLoading = computed(() => {
+  if (allSongs.value.length === 0) return false;
+  if (!playerStore.isLoading) return false;
+  return allSongs.value.some((t: SearchResult) => t.id === currentTrack.value?.videoId);
+});
+
 function onPlaySong(track: TrackListItem, index: number): void {
   const tracksToPlay: Track[] = allSongs.value.map((t: SearchResult) => ({
     videoId: t.id,
@@ -176,6 +182,7 @@ function onScroll(event: Event): void {
       :image-url="artist?.thumbnailUrl"
       :rounded-image="true"
       :is-list-playing="isArtistPlaying"
+      :is-list-loading="isArtistLoading"
       :disable-play-button="!artist || allSongs.length === 0"
       @play-all="onPlayArtist"
       @scroll="onScroll">

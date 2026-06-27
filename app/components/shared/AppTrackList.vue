@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue';
 
+const player = usePlayer();
+
 export interface TrackItemArtist {
   name: string;
   channelId?: string;
@@ -254,7 +256,15 @@ onMounted(() => {
                       <template v-else>{{ index + 1 }}</template>
                     </span>
                     <div class="app-track-list__track-play">
+                      <AppSpinner
+                        v-if="
+                          isHydrated &&
+                          player.currentTrack.value?.videoId === track.id &&
+                          player.isLoading.value
+                        "
+                        size="sm" />
                       <AppIcon
+                        v-else
                         data-allow-mismatch
                         :name="isHydrated && track.isPlaying ? 'ph:pause-fill' : 'ph:play-fill'" />
                     </div>
@@ -345,7 +355,15 @@ onMounted(() => {
                 <template v-else>{{ index + 1 }}</template>
               </span>
               <div class="app-track-list__track-play">
+                <AppSpinner
+                  v-if="
+                    isHydrated &&
+                    player.currentTrack.value?.videoId === track.id &&
+                    player.isLoading.value
+                  "
+                  size="sm" />
                 <AppIcon
+                  v-else
                   data-allow-mismatch
                   :name="isHydrated && track.isPlaying ? 'ph:pause-fill' : 'ph:play-fill'" />
               </div>

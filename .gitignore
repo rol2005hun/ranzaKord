@@ -1,4 +1,8 @@
 # Nuxt
+# Android keystore (DO NOT COMMIT!)
+*.keystore
+*.keystore.b64.txt
+
 .nuxt
 .output
 .data

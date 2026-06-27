@@ -1,7 +1,7 @@
 import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
 
-import type { GithubRelease } from '@/features/updater/types/updater.types';
+import type { GithubRelease, GithubReleaseAsset } from '@/features/updater/types/updater.types';
 
 const GITHUB_REPO = 'rol2005hun/ranzaKord';
 const APK_ASSET_SUFFIX = '.apk';
@@ -66,12 +66,45 @@ export function useAppUpdate() {
       const totalSize = relevantAssets.reduce((sum, a) => sum + a.size, 0);
 
       let downloadUrl: string;
+      let displaySize: number;
+      let displayCount: number;
+
       if (isAndroid) {
         const apkAsset = relevantAssets.find((a) => a.name.endsWith(APK_ASSET_SUFFIX));
         if (!apkAsset) return;
         downloadUrl = apkAsset.browser_download_url;
+        displaySize = apkAsset.size;
+        displayCount = 1;
       } else {
-        downloadUrl = readyRelease.html_url;
+        const ua = import.meta.client ? navigator.userAgent.toLowerCase() : '';
+        const isWin = ua.includes('win');
+        const isMac = ua.includes('mac');
+        const isLinux = ua.includes('linux');
+
+        let targetAsset: GithubReleaseAsset | undefined;
+        if (isWin) {
+          targetAsset = relevantAssets.find(
+            (a) => a.name.endsWith('.exe') || a.name.endsWith('.msi')
+          );
+        } else if (isMac) {
+          targetAsset = relevantAssets.find(
+            (a) => a.name.endsWith('.dmg') || a.name.endsWith('app.tar.gz')
+          );
+        } else if (isLinux) {
+          targetAsset = relevantAssets.find(
+            (a) => a.name.endsWith('.AppImage') || a.name.endsWith('.deb')
+          );
+        }
+
+        if (targetAsset) {
+          downloadUrl = targetAsset.browser_download_url;
+          displaySize = targetAsset.size;
+          displayCount = 1;
+        } else {
+          downloadUrl = readyRelease.html_url;
+          displaySize = totalSize;
+          displayCount = relevantAssets.length;
+        }
       }
 
       store.patch({
@@ -82,8 +115,8 @@ export function useAppUpdate() {
         date: readyRelease.published_at,
         isMandatory,
         externalDownloadUrl: downloadUrl,
-        downloadSize: totalSize > 0 ? totalSize : null,
-        assetCount: relevantAssets.length > 0 ? relevantAssets.length : null
+        downloadSize: displaySize > 0 ? displaySize : null,
+        assetCount: displayCount > 0 ? displayCount : null
       });
       showModal.value = true;
     } catch {

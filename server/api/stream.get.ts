@@ -40,7 +40,10 @@ export default defineEventHandler(async (event) => {
         }
 
         if (!format) {
-          debugInfo[client] = `No audio format found on attempt ${attempt}.`;
+          const status = info.playability_status?.status || 'UNKNOWN';
+          const reason = info.playability_status?.reason || 'No reason provided';
+          debugInfo[client] =
+            `No audio format found on attempt ${attempt}. Status: ${status}. Reason: ${reason}.`;
           continue;
         }
 

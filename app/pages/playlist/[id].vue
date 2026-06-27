@@ -157,6 +157,14 @@ const isCurrentPlaylistPlaying = computed(() => {
   );
 });
 
+const isCurrentPlaylistLoading = computed(() => {
+  if (!playlist.value || virtualTracks.value.length === 0) return false;
+  if (!player.isLoading.value) return false;
+  return virtualTracks.value.some(
+    (t) => t !== null && t.videoId === player.currentTrack.value?.videoId
+  );
+});
+
 function playAll(): void {
   const loadedTracks = virtualTracks.value.filter((t): t is PlaylistTrack => t !== null);
   if (loadedTracks.length === 0) return;
@@ -287,6 +295,7 @@ async function onImageError(): Promise<void> {
       :badge="$t('playlists.myPlaylist')"
       :image-url="playlist?.imageUrl"
       :is-list-playing="isCurrentPlaylistPlaying"
+      :is-list-loading="isCurrentPlaylistLoading"
       :disable-play-button="trackCount === 0"
       @play-all="playAll"
       @scroll="onScroll"

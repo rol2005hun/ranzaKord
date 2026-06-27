@@ -27,6 +27,7 @@ mockNuxtImport('usePlayer', () => {
     playQueue: mockPlayQueue,
     currentTrack: ref(null),
     isPlaying: ref(false),
+    isLoading: ref(false),
     togglePlay: vi.fn()
   });
 });

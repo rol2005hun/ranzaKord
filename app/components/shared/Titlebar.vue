@@ -2,6 +2,8 @@
 import { ref, onMounted } from 'vue';
 
 const isTauriApp = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+const isMobile =
+  typeof window !== 'undefined' && /android|ios|iphone|ipad/i.test(navigator.userAgent);
 const isMaximized = ref(false);
 
 onMounted(async () => {
@@ -10,7 +12,7 @@ onMounted(async () => {
   }
 
   try {
-    if (isTauriApp) {
+    if (isTauriApp && !isMobile) {
       const { getCurrentWindow } = await import('@tauri-apps/api/window');
       const appWindow = getCurrentWindow();
       isMaximized.value = await appWindow.isMaximized();
@@ -27,23 +29,26 @@ onMounted(async () => {
 });
 
 async function minimize() {
+  if (isMobile) return;
   const { getCurrentWindow } = await import('@tauri-apps/api/window');
   getCurrentWindow().minimize();
 }
 
 async function toggleMaximize() {
+  if (isMobile) return;
   const { getCurrentWindow } = await import('@tauri-apps/api/window');
   getCurrentWindow().toggleMaximize();
 }
 
 async function close() {
+  if (isMobile) return;
   const { getCurrentWindow } = await import('@tauri-apps/api/window');
   getCurrentWindow().close();
 }
 </script>
 
 <template>
-  <div v-if="isTauriApp" class="titlebar">
+  <div v-if="isTauriApp && !isMobile" class="titlebar">
     <div class="titlebar-left" data-tauri-drag-region>
       <img src="/logo.webp" alt="Logo" class="titlebar-icon" />
       <span class="titlebar-title">{{ $t('core.appName') || 'ranzaKord' }}</span>

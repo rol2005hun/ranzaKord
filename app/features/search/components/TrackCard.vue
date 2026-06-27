@@ -57,7 +57,8 @@ const isInAnyPlaylist = computed(() => playlistsStore.isTrackInAnyPlaylist(props
             <AppIcon v-else name="ph:plus-circle" />
           </button>
           <button class="track-card__play-btn" :aria-label="$t('player.play')" @click.stop="onPlay">
-            <AppIcon v-if="isCurrentTrack && player.isPlaying.value" name="ph:pause-fill" />
+            <AppSpinner v-if="isCurrentTrack && player.isLoading.value" size="sm" />
+            <AppIcon v-else-if="isCurrentTrack && player.isPlaying.value" name="ph:pause-fill" />
             <AppIcon v-else name="ph:play-fill" />
           </button>
         </div>
