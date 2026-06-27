@@ -20,6 +20,8 @@
     "downloadApp": "Get Desktop App",
     "signOut": "Sign out"
   },
+  "miniPlayer": "Mini Player",
+  "exitMiniPlayer": "Exit Mini Player",
   "actions": {
     "cancel": "Cancel",
     "stop": "Stop",

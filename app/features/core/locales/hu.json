@@ -20,6 +20,8 @@
     "downloadApp": "Asztali alkalmazás letöltése",
     "signOut": "Kijelentkezés"
   },
+  "miniPlayer": "Mini lejátszó",
+  "exitMiniPlayer": "Kilépés a mini lejátszóból",
   "actions": {
     "cancel": "Mégsem",
     "stop": "Leállít",

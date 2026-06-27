@@ -59,6 +59,9 @@ onMounted(async () => {
 
     <Teleport to="body">
       <FullscreenVisualizer v-if="layoutStore.isFullscreenVisualizer" />
+      <ClientOnly>
+        <MiniPlayer />
+      </ClientOnly>
     </Teleport>
 
     <div class="app-version-overlay" aria-hidden="true">

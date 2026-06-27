@@ -41,6 +41,8 @@ export interface TrackStatPayload {
 
 export type CrossfadeType = 'linear' | 'dj';
 
+export type SleepTimerMode = 'off' | 'timer' | 'end-of-track';
+
 export interface PlaybackContext {
   type: 'playlist' | 'album' | 'artist' | 'radio' | 'none';
   sourceId?: string;

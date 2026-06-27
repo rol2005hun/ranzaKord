@@ -1,5 +1,7 @@
 import type { Track, TrackStatPayload } from '../types/player.types';
 
+const { registerPauseCallback, onTrackEnded: sleepTimerOnTrackEnded } = useSleepTimer();
+
 const audio1Ref = ref<HTMLAudioElement | null>(null);
 const audio2Ref = ref<HTMLAudioElement | null>(null);
 const activeAudioIndex = ref(0);
@@ -103,6 +105,7 @@ export function usePlayer() {
         if (store.currentTrack) {
           recordTrackStat(store.currentTrack, Math.floor(el.currentTime), false);
         }
+        sleepTimerOnTrackEnded();
         if (store.repeatMode === 'one') {
           seek(0);
           resume();
@@ -401,6 +404,8 @@ export function usePlayer() {
     activeAudio.value?.pause();
     store.isPlaying = false;
   }
+
+  registerPauseCallback(pause);
 
   function resume() {
     activeAudio.value

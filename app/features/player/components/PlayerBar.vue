@@ -6,6 +6,9 @@ const layoutStore = useLayoutStore();
 const { lyricsData, isLoading: lyricsLoading, fetchLyrics, getActiveLine } = useLyrics();
 
 const isHydrated = ref(false);
+const isTauri = computed(
+  () => isHydrated.value && typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
+);
 
 const displayTrack = computed(() => (isHydrated.value ? player.currentTrack.value : null));
 const displayVolume = computed(() => (isHydrated.value ? player.volume.value : 1));
@@ -291,6 +294,14 @@ function onVolumeInput(event: Event) {
       </div>
 
       <div class="player-bar__right">
+        <button
+          v-if="isTauri"
+          class="player-bar__btn"
+          :aria-label="$t('core.miniPlayer')"
+          @click="layoutStore.toggleMiniPlayer()">
+          <AppIcon name="ph:picture-in-picture-fill" />
+        </button>
+        <PlayerSleepTimerButton />
         <button
           class="player-bar__btn"
           :class="{ 'player-bar__btn--active': layoutStore.isFullscreenVisualizer }"
