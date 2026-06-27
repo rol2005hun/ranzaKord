@@ -31,6 +31,12 @@ const isAlbumPlaying = computed(() => {
   return album.value.tracks.some((t: SearchResult) => t.id === currentTrack.value?.videoId);
 });
 
+const isAlbumLoading = computed(() => {
+  if (!album.value || album.value.tracks.length === 0) return false;
+  if (!playerStore.isLoading) return false;
+  return album.value.tracks.some((t: SearchResult) => t.id === currentTrack.value?.videoId);
+});
+
 const mappedTracks = computed<MusicTrack[]>(() => {
   if (!album.value) return [];
   return album.value.tracks.map((t: SearchResult) => ({
@@ -91,6 +97,7 @@ function onPlayAlbum(): void {
       :badge="$t('search.album.badge')"
       :image-url="album?.thumbnailUrl"
       :is-list-playing="isAlbumPlaying"
+      :is-list-loading="isAlbumLoading"
       :disable-play-button="!album || album.tracks.length === 0"
       @play-all="onPlayAlbum">
       <template #meta>

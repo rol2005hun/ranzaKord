@@ -8,6 +8,7 @@ interface Props {
   imageUrl?: string | null;
   roundedImage?: boolean;
   isListPlaying?: boolean;
+  isListLoading?: boolean;
   disablePlayButton?: boolean;
   showPlayButton?: boolean;
 }
@@ -21,6 +22,7 @@ const props = withDefaults(defineProps<Props>(), {
   imageUrl: null,
   roundedImage: false,
   isListPlaying: false,
+  isListLoading: false,
   disablePlayButton: false,
   showPlayButton: true
 });
@@ -108,7 +110,8 @@ const optimizedBgUrl = computed(() => {
               :disabled="disablePlayButton"
               :aria-label="$t('player.play')"
               @click="emit('play-all')">
-              <AppIcon v-if="isListPlaying" name="ph:pause-fill" />
+              <AppSpinner v-if="isListLoading" size="sm" />
+              <AppIcon v-else-if="isListPlaying" name="ph:pause-fill" />
               <AppIcon v-else name="ph:play-fill" />
             </button>
             <div class="music-page__sticky-bar-text">
@@ -166,7 +169,8 @@ const optimizedBgUrl = computed(() => {
                 :disabled="disablePlayButton"
                 :aria-label="$t('player.play')"
                 @click="emit('play-all')">
-                <AppIcon v-if="isListPlaying" name="ph:pause-fill" />
+                <AppSpinner v-if="isListLoading" size="md" />
+                <AppIcon v-else-if="isListPlaying" name="ph:pause-fill" />
                 <AppIcon v-else name="ph:play-fill" />
               </button>
               <slot name="actions" />

@@ -329,7 +329,7 @@ export function usePlayer() {
   }
 
   async function playTrack(track: Track, fromHistory = false) {
-    if (store.currentTrack?.videoId === track.videoId) {
+    if (store.currentTrack?.videoId === track.videoId && !store.error) {
       togglePlay();
       return;
     }
@@ -417,7 +417,11 @@ export function usePlayer() {
     if (store.isPlaying) {
       pause();
     } else {
-      resume();
+      if (store.error && store.currentTrack) {
+        playTrack(store.currentTrack, true);
+      } else {
+        resume();
+      }
     }
   }
 

@@ -97,7 +97,9 @@ async function downloadExternal() {
           </span>
           <span class="update-modal__meta-value">{{ formatBytes(updateInfo.downloadSize) }}</span>
         </div>
-        <div v-if="updateInfo.assetCount" class="update-modal__meta-item">
+        <div
+          v-if="updateInfo.assetCount && updateInfo.assetCount > 1"
+          class="update-modal__meta-item">
           <AppIcon name="ph:files" class="update-modal__meta-icon" />
           <span class="update-modal__meta-label">
             {{ $t('updater.fileCount', 'Fájlok száma') }}:
