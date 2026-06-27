@@ -42,7 +42,7 @@ describe('Updater Feature', () => {
       progress: 0,
       total: 0,
       error: null,
-      apkDownloadUrl: null
+      externalDownloadUrl: null
     });
   });
 
@@ -82,7 +82,7 @@ describe('Updater Feature', () => {
         version: '1.2.3',
         body: 'New features and bug fixes',
         isMandatory: false,
-        apkDownloadUrl: null
+        externalDownloadUrl: null
       });
 
       const wrapper = await mountSuspended(UpdateModal, {
@@ -110,7 +110,7 @@ describe('Updater Feature', () => {
         version: '1.2.3',
         body: 'Mobile update',
         isMandatory: true,
-        apkDownloadUrl: 'https://github.com/test/download.apk'
+        externalDownloadUrl: 'https://github.com/test/download.apk'
       });
 
       const wrapper = await mountSuspended(UpdateModal, {
