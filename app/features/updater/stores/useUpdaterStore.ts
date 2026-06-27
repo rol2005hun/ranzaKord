@@ -4,14 +4,18 @@ export const useUpdaterStore = defineStore('updater', () => {
   const info = ref<UpdateInfo>({
     available: false,
     version: '',
+    name: '',
     body: '',
     date: '',
     isMandatory: false,
     downloading: false,
+    readyToInstall: false,
     progress: 0,
     total: 0,
     error: null,
-    apkDownloadUrl: null
+    externalDownloadUrl: null,
+    downloadSize: null,
+    assetCount: null
   });
 
   const showModal = ref(false);

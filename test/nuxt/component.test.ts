@@ -123,9 +123,9 @@ describe('useUpdaterStore', () => {
     expect(store.showModal).toBe(true);
   });
 
-  it('patch with apkDownloadUrl stores the url', () => {
+  it('patch with externalDownloadUrl stores the url', () => {
     const store = useUpdaterStore();
-    store.patch({ apkDownloadUrl: 'https://example.com/app.apk' });
-    expect(store.info.apkDownloadUrl).toBe('https://example.com/app.apk');
+    store.patch({ externalDownloadUrl: 'https://example.com/app.apk' });
+    expect(store.info.externalDownloadUrl).toBe('https://example.com/app.apk');
   });
 });
