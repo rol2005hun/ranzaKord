@@ -1,5 +1,7 @@
 import { Innertube, UniversalCache, Platform } from 'youtubei.js';
+import type { OAuth2Tokens } from 'youtubei.js';
 import vm from 'vm';
+import { SystemConfig } from '../models/SystemConfig';
 
 interface EvaluatorData {
   output: string;
@@ -27,14 +29,32 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
     isAuthenticating = true;
 
     try {
-      const config = useRuntimeConfig();
-      const cookie = config.youtubeCookies as string;
+      const configRecord = await SystemConfig.findOne({ key: 'youtube_oauth' });
 
-      authenticatedInstance = await Innertube.create({
-        cookie: cookie ? cookie : undefined,
-        cache: new UniversalCache(false),
-        generate_session_locally: true
-      });
+      if (configRecord && configRecord.value) {
+        authenticatedInstance = await Innertube.create({
+          cache: new UniversalCache(false)
+        });
+
+        authenticatedInstance.session.on('update-credentials', async ({ credentials }) => {
+          await SystemConfig.findOneAndUpdate(
+            { key: 'youtube_oauth' },
+            { value: credentials },
+            { upsert: true }
+          );
+        });
+
+        await authenticatedInstance.session.signIn(configRecord.value as OAuth2Tokens);
+      } else {
+        const config = useRuntimeConfig();
+        const cookie = config.youtubeCookies as string;
+
+        authenticatedInstance = await Innertube.create({
+          cookie: cookie ? cookie : undefined,
+          cache: new UniversalCache(false),
+          generate_session_locally: true
+        });
+      }
     } catch (e) {
       console.error('Failed to initialize Innertube with cookies:', e);
     } finally {
