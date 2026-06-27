@@ -142,37 +142,56 @@ export const usePlayerStore = defineStore(
       return null;
     }
 
-    const syncDiscordPresence = useDebounceFn(
-      async () => {
-        if (!import.meta.client) return;
-        try {
-          const { isTauri, invoke } = await import('@tauri-apps/api/core');
-          if (isTauri()) {
-            if (isPlaying.value && currentTrack.value) {
-              const startTimestamp = Math.round(Date.now() / 1000 - currentTimeSeconds.value);
-              const endTimestamp =
-                currentTrack.value.durationSeconds > 0
-                  ? Math.round(startTimestamp + currentTrack.value.durationSeconds)
-                  : null;
-              await invoke('set_discord_presence', {
-                details: currentTrack.value.title,
-                stateStr: currentTrack.value.artist,
-                largeImage: currentTrack.value.thumbnailUrl,
-                trackId: currentTrack.value.videoId,
-                startTimestamp,
-                endTimestamp
-              });
-            } else {
+    let lastStartTimestamp = 0;
+    let lastTrackId = '';
+    let lastIsPlaying = false;
+
+    const doSyncDiscord = async () => {
+      if (!import.meta.client) return;
+      try {
+        const { isTauri, invoke } = await import('@tauri-apps/api/core');
+        if (isTauri()) {
+          if (isPlaying.value && currentTrack.value) {
+            const startTimestamp = Math.round(Date.now() / 1000 - currentTimeSeconds.value);
+
+            const isSameTrack = lastTrackId === currentTrack.value.videoId;
+            const isSamePlaying = lastIsPlaying === isPlaying.value;
+            const drift = Math.abs(startTimestamp - lastStartTimestamp);
+
+            // Only update if state changed, track changed, or time drifted by > 2 seconds
+            if (isSameTrack && isSamePlaying && drift <= 2) {
+              return;
+            }
+
+            lastStartTimestamp = startTimestamp;
+            lastTrackId = currentTrack.value.videoId;
+            lastIsPlaying = isPlaying.value;
+
+            const endTimestamp =
+              currentTrack.value.durationSeconds > 0
+                ? Math.round(startTimestamp + currentTrack.value.durationSeconds)
+                : null;
+            await invoke('set_discord_presence', {
+              details: currentTrack.value.title,
+              stateStr: currentTrack.value.artist,
+              largeImage: currentTrack.value.thumbnailUrl,
+              trackId: currentTrack.value.videoId,
+              startTimestamp,
+              endTimestamp
+            });
+          } else {
+            if (lastIsPlaying !== false) {
               await invoke('clear_discord_presence');
+              lastIsPlaying = false;
             }
           }
-        } catch (e) {
-          console.error('Discord RPC error:', e);
         }
-      },
-      500,
-      { maxWait: 5000 }
-    );
+      } catch (e) {
+        console.error('Discord RPC error:', e);
+      }
+    };
+
+    const syncDiscordPresence = useThrottleFn(doSyncDiscord, 2000);
 
     if (import.meta.client) {
       window.addEventListener('beforeunload', () => {
@@ -201,7 +220,7 @@ export const usePlayerStore = defineStore(
         }
       });
 
-      watch([isPlaying, currentTrack], () => {
+      watch([isPlaying, currentTrack, currentTimeSeconds], () => {
         syncDiscordPresence();
       });
     }

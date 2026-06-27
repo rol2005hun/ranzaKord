@@ -23,7 +23,36 @@ function isNewerVersion(latest: string, current: string): boolean {
 
   if (l.pre && !c.pre) return false;
   if (!l.pre && c.pre) return true;
-  if (l.pre && c.pre) return l.pre > c.pre;
+  if (l.pre && c.pre) {
+    const lParts = l.pre.split('.');
+    const cParts = c.pre.split('.');
+    for (let i = 0; i < Math.max(lParts.length, cParts.length); i++) {
+      const lp = lParts[i];
+      const cp = cParts[i];
+      if (lp === cp) continue;
+      if (lp === undefined) return false;
+      if (cp === undefined) return true;
+      const ln = parseInt(lp, 10);
+      const cn = parseInt(cp, 10);
+      if (!isNaN(ln) && !isNaN(cn)) {
+        if (ln !== cn) return ln > cn;
+      } else {
+        if (lp !== cp) return lp > cp;
+      }
+    }
+    return false;
+  }
+
+  return false;
+}
+
+function isMajorOrMinorBump(latest: string, current: string): boolean {
+  if (latest === current) return false;
+  const l = parseVersion(latest);
+  const c = parseVersion(current);
+
+  if (l.maj !== c.maj) return l.maj > c.maj;
+  if (l.min !== c.min) return l.min > c.min;
 
   return false;
 }
@@ -52,14 +81,22 @@ export function useAppUpdate() {
         if (isAndroid) {
           return release.assets.some((a) => a.name.endsWith(APK_ASSET_SUFFIX));
         } else {
-          return release.assets.some((a) => a.name === 'latest.json');
+          return release.assets.some(
+            (a) =>
+              a.name.endsWith('.exe') ||
+              a.name.endsWith('.msi') ||
+              a.name.endsWith('.dmg') ||
+              a.name.endsWith('app.tar.gz') ||
+              a.name.endsWith('.AppImage') ||
+              a.name.endsWith('.deb')
+          );
         }
       });
 
       if (!readyRelease) return;
 
       const latestVersion = readyRelease.tag_name.replace(/^v/, '');
-      const isMandatory = readyRelease.body?.includes('[MANDATORY]') ?? false;
+      const isMandatory = isMajorOrMinorBump(latestVersion, currentVersion);
       const relevantAssets = readyRelease.assets.filter(
         (a) => !IGNORED_SUFFIXES.some((s) => a.name.endsWith(s))
       );
@@ -156,7 +193,8 @@ export function useAppUpdate() {
     try {
       const update = await check();
       if (update) {
-        const isMandatory = update.body?.includes('[MANDATORY]') ?? false;
+        const currentVersion = config.public.appVersion as string;
+        const isMandatory = isMajorOrMinorBump(update.version, currentVersion);
         store.patch({
           available: true,
           version: update.version,

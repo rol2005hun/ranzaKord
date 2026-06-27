@@ -98,26 +98,26 @@ jobs:
       - name: Initialize Tauri Android
         run: npx tauri android init --ci
 
-      - name: Setup Android signing keystore
-        run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > $RUNNER_TEMP/ranzakord-release.keystore
-
       - name: Build Android App
         env:
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           NUXT_PUBLIC_BASE_URL: ${{ secrets.NUXT_PUBLIC_BASE_URL }}
-          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/ranzakord-release.keystore
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: npx tauri android build --apk
+
+      - name: Sign Android APK
+        uses: r0adkll/sign-android-release@v1
+        id: sign_app
+        with:
+          releaseDirectory: src-tauri/gen/android/app/build/outputs/apk/universal/release
+          signingKeyBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
       - name: Upload Android Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           files: |
-            src-tauri/gen/android/app/build/outputs/apk/universal/release/*.apk
+            ${{steps.sign_app.outputs.signedReleaseFile}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
