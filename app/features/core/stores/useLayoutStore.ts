@@ -10,7 +10,20 @@ export const useLayoutStore = defineStore(
   () => {
     const isRightSidebarOpen = ref(true);
     const rightSidebarMode = ref<SidebarMode>('info');
-    const rightSidebarWidth = ref(RIGHT_SIDEBAR_DEFAULT_WIDTH);
+    const cookieWidth = useCookie<string | null>('layout_rightSidebarWidth');
+    const rightSidebarWidth = ref(
+      cookieWidth.value ? Number(cookieWidth.value) : RIGHT_SIDEBAR_DEFAULT_WIDTH
+    );
+
+    watchDebounced(
+      rightSidebarWidth,
+      (val) => {
+        const cookie = useCookie<string | null>('layout_rightSidebarWidth', { maxAge: 31536000 });
+        cookie.value = String(val);
+      },
+      { debounce: 500 }
+    );
+
     const isSettingsOpen = ref(false);
 
     const visualizerStyle = ref<VisualizerStyle>('circle');
@@ -132,7 +145,7 @@ export const useLayoutStore = defineStore(
   {
     persist: [
       {
-        pick: ['isRightSidebarOpen', 'rightSidebarWidth', 'rightSidebarMode', 'visualizerStyle'],
+        pick: ['isRightSidebarOpen', 'rightSidebarMode', 'visualizerStyle'],
         storage: {
           getItem: (key) => {
             const cookie = useCookie<string | null>(key);

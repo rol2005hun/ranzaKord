@@ -63,9 +63,23 @@ const hasSyncedLyrics = computed(() => syncedLines.value.length > 0);
 const hasAnyLyrics = computed(() => hasSyncedLyrics.value || !!plainLyrics.value);
 
 let mobileAutoScroll = true;
-let mobileScrollTimer: ReturnType<typeof setTimeout> | null = null;
+const { start: startMobileScrollTimer, stop: stopMobileScrollTimer } = useTimeoutFn(
+  () => {
+    mobileAutoScroll = true;
+    scrollMobileToActiveLine();
+  },
+  3000,
+  { immediate: false }
+);
+
 let isMobileProgrammaticScroll = false;
-let mobileProgrammaticScrollTimer: ReturnType<typeof setTimeout> | null = null;
+const { start: startProgrammaticScrollTimer, stop: stopProgrammaticScrollTimer } = useTimeoutFn(
+  () => {
+    isMobileProgrammaticScroll = false;
+  },
+  800,
+  { immediate: false }
+);
 
 function scrollMobileToActiveLine() {
   const idx = mobileActiveLine.value;
@@ -81,10 +95,8 @@ function scrollMobileToActiveLine() {
         container.scrollTop + relativeTop - containerRect.height / 2 + elRect.height / 2;
 
       isMobileProgrammaticScroll = true;
-      if (mobileProgrammaticScrollTimer) clearTimeout(mobileProgrammaticScrollTimer);
-      mobileProgrammaticScrollTimer = setTimeout(() => {
-        isMobileProgrammaticScroll = false;
-      }, 800);
+      stopProgrammaticScrollTimer();
+      startProgrammaticScrollTimer();
 
       container.scrollTo({ top: scrollPosition, behavior: 'smooth' });
     }
@@ -100,11 +112,8 @@ function onMobileLyricsScroll() {
   if (isMobileProgrammaticScroll) return;
 
   mobileAutoScroll = false;
-  if (mobileScrollTimer) clearTimeout(mobileScrollTimer);
-  mobileScrollTimer = setTimeout(() => {
-    mobileAutoScroll = true;
-    scrollMobileToActiveLine();
-  }, 3000);
+  stopMobileScrollTimer();
+  startMobileScrollTimer();
 }
 
 function toggleLyrics() {
