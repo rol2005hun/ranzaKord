@@ -35,10 +35,14 @@ const isLoading = ref(false);
 const error = ref<string | null>(null);
 const currentFetchTrackId = ref<string | null>(null);
 
-const lyricsCache = useLocalStorage<Record<string, LyricsData>>('ranzakord_lyrics_cache', {});
+let lyricsCache: globalThis.Ref<Record<string, LyricsData>>;
 const MAX_CACHE_SIZE = 50;
 
 export function useLyrics() {
+  if (!lyricsCache) {
+    lyricsCache = useLocalStorage<Record<string, LyricsData>>('ranzakord_lyrics_cache', {});
+  }
+
   async function fetchLyrics(track: Track): Promise<void> {
     const trackId = track.videoId;
 
