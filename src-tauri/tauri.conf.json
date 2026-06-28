@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "ranzaKord",
-  "version": "0.0.2-alpha.10",
+  "version": "0.0.2-alpha.11",
   "identifier": "dev.ranzak.kord",
   "build": {
     "frontendDist": "../dist",
