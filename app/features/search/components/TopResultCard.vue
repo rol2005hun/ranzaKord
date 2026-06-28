@@ -55,6 +55,7 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
           format="webp"
           loading="eager"
           fetchpriority="high"
+          referrerpolicy="no-referrer"
           preload />
         <AppIcon v-else name="ph:music-notes-simple" />
       </div>
@@ -131,6 +132,7 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
           format="webp"
           loading="eager"
           fetchpriority="high"
+          referrerpolicy="no-referrer"
           preload />
         <AppIcon v-else name="ph:music-notes-simple" />
       </div>

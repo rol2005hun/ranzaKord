@@ -20,8 +20,8 @@ export const useLayoutStore = defineStore(
     const isAddToPlaylistOpen = ref(false);
     const isMiniPlayer = ref(false);
 
-    const MINI_PLAYER_WIDTH = 320;
-    const MINI_PLAYER_HEIGHT = 160;
+    const MINI_PLAYER_WIDTH = 360;
+    const MINI_PLAYER_HEIGHT = 140;
 
     function toggleRightSidebar() {
       isRightSidebarOpen.value = !isRightSidebarOpen.value;

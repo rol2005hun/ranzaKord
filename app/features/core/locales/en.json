@@ -28,7 +28,8 @@
     "save": "Save",
     "close": "Close",
     "back": "Back",
-    "settings": "Settings"
+    "settings": "Settings",
+    "more": "More"
   },
   "musicDetail": {
     "titleColumn": "Title",

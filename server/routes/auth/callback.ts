@@ -62,13 +62,17 @@ export default defineEventHandler(async (event) => {
 
   const authSource = session.data['authSource'] as string | undefined;
   const desktopAuth = session.data['desktopAuth'] as boolean | undefined;
+  const rememberMe = session.data['rememberMe'] as boolean | undefined;
 
   await session.update({
     oauthState: null,
     authSource: null,
     desktopAuth: false,
+    rememberMe,
     accessToken: 'valid',
-    expiresAt: Date.now() + (tokenResponse.expires_in || 2592000) * 1000,
+    expiresAt: rememberMe
+      ? Date.now() + 365 * 24 * 60 * 60 * 1000 // 1 year
+      : Date.now() + (tokenResponse.expires_in || 86400) * 1000,
     user: {
       sub: userInfo.sub,
       name: userInfo.name,
@@ -81,11 +85,22 @@ export default defineEventHandler(async (event) => {
   let sessionToken = '';
   if (setCookieHeaders) {
     const cookies = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
-    for (const cookie of cookies) {
+    const newHeaders = [...cookies];
+
+    for (let i = 0; i < cookies.length; i++) {
+      let cookie = cookies[i];
       if (typeof cookie === 'string' && cookie.startsWith('h3=')) {
         sessionToken = (cookie.split(';')[0] || '').substring(3);
-        break;
+
+        if (!rememberMe) {
+          cookie = cookie.replace(/Max-Age=\d+;?\s*/i, '').replace(/Expires=[^;]+;?\s*/i, '');
+          newHeaders[i] = cookie;
+        }
       }
+    }
+
+    if (!rememberMe) {
+      setResponseHeader(event, 'set-cookie', newHeaders);
     }
   }
 
@@ -97,7 +112,8 @@ export default defineEventHandler(async (event) => {
     const tl = (key: 'successTitle' | 'successMessage' | 'closeWindow' | 'openAppManually') =>
       localeObj.callback[key];
 
-    const deepLinkUrl = `ranzakord://auth?token=${encodeURIComponent(sessionToken)}`;
+    const rememberParam = rememberMe ? '1' : '0';
+    const deepLinkUrl = `ranzakord://auth?token=${encodeURIComponent(sessionToken)}&remember=${rememberParam}`;
     setResponseHeader(event, 'content-type', 'text/html');
     return `
       <!DOCTYPE html>
@@ -250,8 +266,10 @@ export default defineEventHandler(async (event) => {
     `;
   }
 
-  const redirectUrl = authSource
-    ? `${authSource}/auth/save-token?token=${encodeURIComponent(sessionToken)}`
-    : `/auth/save-token?token=${encodeURIComponent(sessionToken)}`;
+  const redirectUrl =
+    authSource && !authSource.includes('tauri.localhost')
+      ? `${authSource}/auth/save-token?token=${encodeURIComponent(sessionToken)}&remember=${rememberMe ? '1' : '0'}`
+      : `/auth/save-token?token=${encodeURIComponent(sessionToken)}&remember=${rememberMe ? '1' : '0'}`;
+
   return sendRedirect(event, redirectUrl, 302);
 });

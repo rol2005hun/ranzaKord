@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { useThemeStore } from '../../../theme/stores/useThemeStore';
 import type { ThemeId } from '../../../theme/types/theme.types';
+import { useLayoutStore } from '../../../core/stores/useLayoutStore';
 
 const themeStore = useThemeStore();
+const layoutStore = useLayoutStore();
 const { t, locale } = useI18n({ useScope: 'global' });
 
 const THEME_OPTIONS: ThemeId[] = ['dark', 'light', 'ocean', 'rose', 'walker', 'wc2026'];
@@ -93,6 +95,29 @@ const customColorValue = computed({
           :options="[
             { label: 'English', value: 'en', icon: 'twemoji:flag-united-states' },
             { label: 'Magyar', value: 'hu', icon: 'twemoji:flag-hungary' }
+          ]" />
+      </AppSettingsItem>
+
+      <AppSettingsItem
+        :title="$t('settings.appearance.visualizerStyle.title')"
+        :description="$t('settings.appearance.visualizerStyle.description')"
+        border>
+        <AppSelect
+          v-model="layoutStore.visualizerStyle"
+          class="settings-select"
+          :options="[
+            {
+              label: $t('player.visualizerStyles.circle'),
+              value: 'circle',
+              icon: 'ph:circle-bold'
+            },
+            { label: $t('player.visualizerStyles.bars'), value: 'bars', icon: 'ph:chart-bar-bold' },
+            { label: $t('player.visualizerStyles.wave'), value: 'wave', icon: 'ph:wave-sine-bold' },
+            {
+              label: $t('player.visualizerStyles.particles'),
+              value: 'particles',
+              icon: 'ph:sparkle-bold'
+            }
           ]" />
       </AppSettingsItem>
     </AppSettingsSection>

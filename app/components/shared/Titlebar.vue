@@ -48,13 +48,13 @@ async function close() {
 </script>
 
 <template>
-  <div v-if="isTauriApp && !isMobile" class="titlebar">
-    <div class="titlebar-left" data-tauri-drag-region>
+  <div v-if="isTauriApp && !isMobile" class="titlebar" role="region" aria-label="Window Titlebar">
+    <div class="titlebar-left" data-tauri-drag-region @dblclick="toggleMaximize">
       <img src="/logo.webp" alt="Logo" class="titlebar-icon" />
       <span class="titlebar-title">{{ $t('core.appName') || 'ranzaKord' }}</span>
     </div>
 
-    <div class="titlebar-middle" data-tauri-drag-region></div>
+    <div class="titlebar-middle" data-tauri-drag-region @dblclick="toggleMaximize"></div>
 
     <div class="titlebar-right">
       <div class="titlebar-button" @click="minimize">

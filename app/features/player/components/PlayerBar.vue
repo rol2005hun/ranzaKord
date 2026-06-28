@@ -144,6 +144,15 @@ function onVolumeInput(event: Event) {
   const input = event.target as HTMLInputElement;
   player.setVolume(parseFloat(input.value));
 }
+
+const isMoreMenuOpen = ref(false);
+const moreMenuBtnRef = ref<HTMLElement | null>(null);
+const extraControlsRef = ref<HTMLElement | null>(null);
+
+onClickOutside(moreMenuBtnRef, (e) => {
+  if (extraControlsRef.value?.contains(e.target as Node)) return;
+  isMoreMenuOpen.value = false;
+});
 </script>
 
 <template>
@@ -295,61 +304,75 @@ function onVolumeInput(event: Event) {
 
       <div class="player-bar__right">
         <button
-          v-if="isTauri"
-          class="player-bar__btn"
-          :aria-label="$t('core.miniPlayer')"
-          @click="layoutStore.toggleMiniPlayer()">
-          <AppIcon name="ph:picture-in-picture-fill" />
+          ref="moreMenuBtnRef"
+          class="player-bar__btn player-bar__more-btn"
+          :class="{ 'player-bar__btn--active': isMoreMenuOpen }"
+          :aria-label="$t('core.actions.more')"
+          @click="isMoreMenuOpen = !isMoreMenuOpen">
+          <AppIcon name="ph:dots-three-vertical-bold" />
         </button>
-        <PlayerSleepTimerButton />
-        <button
-          class="player-bar__btn"
-          :class="{ 'player-bar__btn--active': layoutStore.isFullscreenVisualizer }"
-          :aria-label="$t('player.fullscreenVisualizer')"
-          @click="layoutStore.toggleFullscreenVisualizer()">
-          <AppIcon name="ph:monitor-play-bold" />
-        </button>
-        <button
-          class="player-bar__btn"
-          :class="{ 'player-bar__btn--active': player.isKaraoke.value }"
-          :aria-label="$t('player.karaokeMode')"
-          @click="player.toggleKaraoke()">
-          <AppIcon name="ph:magic-wand" />
-        </button>
-        <button
-          id="player-lyrics-btn"
-          class="player-bar__btn player-bar__btn--lyrics"
-          :class="{ 'player-bar__btn--active': isLyricsActive || layoutStore.isMobileLyricsOpen }"
-          :aria-label="$t('player.lyrics')"
-          @click="toggleLyrics">
-          <AppIcon name="ph:microphone-stage" />
-        </button>
-        <button
-          class="player-bar__btn"
-          style="width: auto; height: auto"
-          :aria-label="$t('player.mute')"
-          @click="toggleMute">
-          <ClientOnly>
-            <AppIcon :name="volumeIcon" class="player-bar__volume-icon" />
-            <template #fallback>
-              <AppIcon name="ph:speaker-high-fill" class="player-bar__volume-icon" />
-            </template>
-          </ClientOnly>
-        </button>
-        <input
-          v-if="displayTrack"
-          id="player-volume"
-          class="player-bar__slider player-bar__slider--volume"
-          type="range"
-          min="0"
-          max="1"
-          :value="displayVolume"
-          step="0.01"
-          :aria-label="$t('player.volume')"
-          :style="{ '--progress': displayVolume * 100 + '%' }"
-          data-allow-mismatch
-          @input="onVolumeInput" />
-        <AppSkeleton v-else height="4px" width="100px" class="player-bar__slider--volume" />
+
+        <div
+          ref="extraControlsRef"
+          class="player-bar__extra-controls"
+          :class="{ 'is-open': isMoreMenuOpen }">
+          <button
+            v-if="isTauri"
+            class="player-bar__btn"
+            :aria-label="$t('core.miniPlayer')"
+            @click="layoutStore.toggleMiniPlayer()">
+            <AppIcon name="ph:picture-in-picture-fill" />
+          </button>
+          <SleepTimerButton />
+          <button
+            class="player-bar__btn"
+            :class="{ 'player-bar__btn--active': layoutStore.isFullscreenVisualizer }"
+            :aria-label="$t('player.fullscreenVisualizer')"
+            @click="layoutStore.toggleFullscreenVisualizer()">
+            <AppIcon name="ph:monitor-play-bold" />
+          </button>
+          <button
+            class="player-bar__btn"
+            :class="{ 'player-bar__btn--active': player.isKaraoke.value }"
+            :aria-label="$t('player.karaokeMode')"
+            @click="player.toggleKaraoke()">
+            <AppIcon name="ph:magic-wand" />
+          </button>
+          <button
+            id="player-lyrics-btn"
+            class="player-bar__btn player-bar__btn--lyrics"
+            :class="{ 'player-bar__btn--active': isLyricsActive || layoutStore.isMobileLyricsOpen }"
+            :aria-label="$t('player.lyrics')"
+            @click="toggleLyrics">
+            <AppIcon name="ph:microphone-stage" />
+          </button>
+          <button
+            class="player-bar__btn player-bar__volume-btn"
+            style="width: auto; height: auto"
+            :aria-label="$t('player.mute')"
+            @click="toggleMute">
+            <ClientOnly>
+              <AppIcon :name="volumeIcon" class="player-bar__volume-icon" />
+              <template #fallback>
+                <AppIcon name="ph:speaker-high-fill" class="player-bar__volume-icon" />
+              </template>
+            </ClientOnly>
+          </button>
+          <input
+            v-if="displayTrack"
+            id="player-volume"
+            class="player-bar__slider player-bar__slider--volume"
+            type="range"
+            min="0"
+            max="1"
+            :value="displayVolume"
+            step="0.01"
+            :aria-label="$t('player.volume')"
+            :style="{ '--progress': displayVolume * 100 + '%' }"
+            data-allow-mismatch
+            @input="onVolumeInput" />
+          <AppSkeleton v-else height="4px" width="100px" class="player-bar__slider--volume" />
+        </div>
       </div>
     </aside>
 
@@ -473,8 +496,13 @@ function onVolumeInput(event: Event) {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: var(--space-3);
     min-width: 0;
+  }
+
+  &__extra-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
   }
 
   &__artwork {
@@ -879,6 +907,41 @@ function onVolumeInput(event: Event) {
     }
     &__slider--volume {
       width: 50px;
+    }
+  }
+
+  &__more-btn {
+    display: none !important;
+  }
+
+  @media (max-width: 1000px) {
+    &__volume-btn,
+    &__slider--volume {
+      display: none !important;
+    }
+
+    &__extra-controls {
+      display: none;
+
+      &.is-open {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        place-items: center;
+        position: absolute;
+        bottom: calc(100% + var(--space-2));
+        right: var(--space-3);
+        background: var(--color-surface-raised);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        padding: var(--space-3);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        gap: var(--space-4);
+      }
+    }
+
+    &__more-btn {
+      display: flex !important;
     }
   }
 }

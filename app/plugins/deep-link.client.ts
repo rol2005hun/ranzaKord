@@ -14,11 +14,16 @@ export default defineNuxtPlugin(async () => {
       }
 
       const token = url.searchParams.get('token');
+      const remember = url.searchParams.get('remember') !== '0';
       if (!token) {
         continue;
       }
 
-      localStorage.setItem('auth_token', token);
+      if (remember) {
+        localStorage.setItem('auth_token', token);
+      } else {
+        sessionStorage.setItem('auth_token', token);
+      }
       window.location.href = '/';
       break;
     }

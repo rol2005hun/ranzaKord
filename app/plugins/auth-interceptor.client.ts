@@ -21,6 +21,9 @@ export default defineNuxtPlugin({
               .replace(/=.*/, `=;expires=${new Date(0).toUTCString()};path=/`);
           });
 
+          localStorage.removeItem('auth_token');
+          sessionStorage.removeItem('auth_token');
+
           const authStore = useAuthStore();
           authStore.clearSession();
 
