@@ -9,6 +9,18 @@ export const usePlayerStore = defineStore(
     const isPlaying = ref(false);
     const volume = ref(0.8);
     const currentTimeSeconds = ref(0);
+
+    if (import.meta.client) {
+      currentTimeSeconds.value = Number(localStorage.getItem('player_currentTimeSeconds')) || 0;
+
+      watchThrottled(
+        currentTimeSeconds,
+        (val) => {
+          localStorage.setItem('player_currentTimeSeconds', String(val));
+        },
+        { throttle: 5000 }
+      );
+    }
     const durationSeconds = ref(0);
     const isLoading = ref(false);
     const error = ref<string | null>(null);
@@ -197,6 +209,7 @@ export const usePlayerStore = defineStore(
     if (import.meta.client) {
       window.addEventListener('beforeunload', () => {
         if (currentTrack.value) {
+          localStorage.setItem('player_currentTimeSeconds', String(currentTimeSeconds.value));
           fetch('/api/player/sync', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -221,9 +234,15 @@ export const usePlayerStore = defineStore(
         }
       });
 
-      watch([isPlaying, currentTrack, currentTimeSeconds], () => {
+      watch([isPlaying, currentTrack], () => {
         syncDiscordPresence();
       });
+
+      useIntervalFn(() => {
+        if (isPlaying.value) {
+          syncDiscordPresence();
+        }
+      }, 2000);
     }
 
     return {
@@ -266,7 +285,6 @@ export const usePlayerStore = defineStore(
         pick: [
           'currentTrack',
           'volume',
-          'currentTimeSeconds',
           'durationSeconds',
           'isShuffle',
           'repeatMode',

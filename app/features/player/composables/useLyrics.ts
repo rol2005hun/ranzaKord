@@ -35,11 +35,20 @@ const isLoading = ref(false);
 const error = ref<string | null>(null);
 const currentFetchTrackId = ref<string | null>(null);
 
+const lyricsCache = useLocalStorage<Record<string, LyricsData>>('ranzakord_lyrics_cache', {});
+const MAX_CACHE_SIZE = 50;
+
 export function useLyrics() {
   async function fetchLyrics(track: Track): Promise<void> {
     const trackId = track.videoId;
 
     if (lyricsData.value?.trackId === trackId || currentFetchTrackId.value === trackId) return;
+
+    if (lyricsCache.value[trackId]) {
+      lyricsData.value = lyricsCache.value[trackId];
+      error.value = null;
+      return;
+    }
 
     currentFetchTrackId.value = trackId;
     isLoading.value = true;
@@ -61,11 +70,23 @@ export function useLyrics() {
         `https://lrclib.net/api/get?${params.toString()}`
       );
 
-      lyricsData.value = {
+      const result: LyricsData = {
         trackId,
         synced: response.syncedLyrics ? parseLrc(response.syncedLyrics) : null,
         plain: response.plainLyrics ?? null
       };
+
+      lyricsData.value = result;
+
+      lyricsCache.value[trackId] = result;
+      const keys = Object.keys(lyricsCache.value);
+      if (keys.length > MAX_CACHE_SIZE) {
+        // Remove oldest entries to keep size within limit
+        const keysToRemove = keys.slice(0, keys.length - MAX_CACHE_SIZE);
+        lyricsCache.value = Object.fromEntries(
+          Object.entries(lyricsCache.value).filter(([k]) => !keysToRemove.includes(k))
+        );
+      }
     } catch {
       error.value = 'lyrics.notFound';
       lyricsData.value = { trackId, synced: null, plain: null };

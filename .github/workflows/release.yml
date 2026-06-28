@@ -98,6 +98,12 @@ jobs:
       - name: Initialize Tauri Android
         run: npx tauri android init --ci
 
+      - name: Inject Deep Link Intent Filter
+        run: |
+          MANIFEST="src-tauri/gen/android/app/src/main/AndroidManifest.xml"
+          INTENT='<intent-filter><action android:name="android.intent.action.VIEW" /><category android:name="android.intent.category.DEFAULT" /><category android:name="android.intent.category.BROWSABLE" /><data android:scheme="ranzakord" /></intent-filter>'
+          sed -i "s|</activity>|    $INTENT\n        </activity>|g" $MANIFEST
+
       - name: Build Android App
         env:
           NUXT_PUBLIC_BASE_URL: ${{ secrets.NUXT_PUBLIC_BASE_URL }}
