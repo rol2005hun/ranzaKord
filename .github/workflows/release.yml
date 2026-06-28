@@ -107,20 +107,23 @@ jobs:
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > $RUNNER_TEMP/ranzakord-release.keystore
           APK_PATH=$(find src-tauri/gen/android/app/build/outputs/apk/universal/release -name "*.apk" | head -1)
-          SIGNED_APK="${APK_PATH%.apk}-signed.apk"
-          jarsigner \
-            -verbose \
-            -sigalg SHA256withRSA \
-            -digestalg SHA-256 \
-            -keystore $RUNNER_TEMP/ranzakord-release.keystore \
-            -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
-            -keypass "${{ secrets.ANDROID_KEY_PASSWORD }}" \
-            -signedjar "$SIGNED_APK" \
-            "$APK_PATH" \
-            "${{ secrets.ANDROID_KEY_ALIAS }}"
+          ALIGNED_APK="${APK_PATH%.apk}-aligned.apk"
+          SIGNED_APK="${APK_PATH%.apk}-aligned-signed.apk"
           BUILD_TOOLS=$(ls /usr/local/lib/android/sdk/build-tools/ | sort -V | tail -1)
-          /usr/local/lib/android/sdk/build-tools/$BUILD_TOOLS/zipalign -v -p 4 "$SIGNED_APK" "${SIGNED_APK%.apk}-aligned.apk"
-          echo "SIGNED_APK=${SIGNED_APK%.apk}-aligned.apk" >> $GITHUB_ENV
+
+          # 1. Zipalign FIRST
+          /usr/local/lib/android/sdk/build-tools/$BUILD_TOOLS/zipalign -v -p 4 "$APK_PATH" "$ALIGNED_APK"
+
+          # 2. apksigner LAST
+          /usr/local/lib/android/sdk/build-tools/$BUILD_TOOLS/apksigner sign \
+            --ks $RUNNER_TEMP/ranzakord-release.keystore \
+            --ks-pass pass:"${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            --key-pass pass:"${{ secrets.ANDROID_KEY_PASSWORD }}" \
+            --ks-key-alias "${{ secrets.ANDROID_KEY_ALIAS }}" \
+            --out "$SIGNED_APK" \
+            "$ALIGNED_APK"
+            
+          echo "SIGNED_APK=$SIGNED_APK" >> $GITHUB_ENV
 
       - name: Upload Android Release
         uses: softprops/action-gh-release@v2
