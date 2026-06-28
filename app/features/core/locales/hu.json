@@ -20,13 +20,16 @@
     "downloadApp": "Asztali alkalmazás letöltése",
     "signOut": "Kijelentkezés"
   },
+  "miniPlayer": "Mini lejátszó",
+  "exitMiniPlayer": "Kilépés a mini lejátszóból",
   "actions": {
     "cancel": "Mégsem",
     "stop": "Leállít",
     "save": "Mentés",
     "close": "Bezárás",
     "back": "Vissza",
-    "settings": "Beállítások"
+    "settings": "Beállítások",
+    "more": "Továbbiak"
   },
   "musicDetail": {
     "titleColumn": "Cím",

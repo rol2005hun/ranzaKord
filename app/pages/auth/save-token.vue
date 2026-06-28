@@ -10,9 +10,14 @@ useHead({ title: t('auth.callback.loading') });
 
 onMounted(async () => {
   const token = route.query.token as string | undefined;
+  const remember = route.query.remember !== '0';
 
   if (token) {
-    localStorage.setItem('auth_token', token);
+    if (remember) {
+      localStorage.setItem('auth_token', token);
+    } else {
+      sessionStorage.setItem('auth_token', token);
+    }
   }
 
   // Force a hard navigation to root so the app re-initializes and fetches the user

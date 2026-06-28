@@ -104,20 +104,29 @@ jobs:
         run: npx tauri android build --apk
 
       - name: Sign Android APK
-        uses: r0adkll/sign-android-release@v1
-        id: sign_app
-        with:
-          releaseDirectory: src-tauri/gen/android/app/build/outputs/apk/universal/release
-          signingKeyBase64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          alias: ${{ secrets.ANDROID_KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > $RUNNER_TEMP/ranzakord-release.keystore
+          APK_PATH=$(find src-tauri/gen/android/app/build/outputs/apk/universal/release -name "*.apk" | head -1)
+          SIGNED_APK="${APK_PATH%.apk}-signed.apk"
+          jarsigner \
+            -verbose \
+            -sigalg SHA256withRSA \
+            -digestalg SHA-256 \
+            -keystore $RUNNER_TEMP/ranzakord-release.keystore \
+            -storepass "${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
+            -keypass "${{ secrets.ANDROID_KEY_PASSWORD }}" \
+            -signedjar "$SIGNED_APK" \
+            "$APK_PATH" \
+            "${{ secrets.ANDROID_KEY_ALIAS }}"
+          BUILD_TOOLS=$(ls /usr/local/lib/android/sdk/build-tools/ | sort -V | tail -1)
+          /usr/local/lib/android/sdk/build-tools/$BUILD_TOOLS/zipalign -v -p 4 "$SIGNED_APK" "${SIGNED_APK%.apk}-aligned.apk"
+          echo "SIGNED_APK=${SIGNED_APK%.apk}-aligned.apk" >> $GITHUB_ENV
 
       - name: Upload Android Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           files: |
-            ${{steps.sign_app.outputs.signedReleaseFile}}
+            ${{ env.SIGNED_APK }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

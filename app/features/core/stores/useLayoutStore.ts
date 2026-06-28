@@ -18,6 +18,10 @@ export const useLayoutStore = defineStore(
 
     const isMobileLyricsOpen = ref(false);
     const isAddToPlaylistOpen = ref(false);
+    const isMiniPlayer = ref(false);
+
+    const MINI_PLAYER_WIDTH = 360;
+    const MINI_PLAYER_HEIGHT = 140;
 
     function toggleRightSidebar() {
       isRightSidebarOpen.value = !isRightSidebarOpen.value;
@@ -77,6 +81,27 @@ export const useLayoutStore = defineStore(
       isAddToPlaylistOpen.value = false;
     }
 
+    async function toggleMiniPlayer() {
+      if (!import.meta.client) return;
+      try {
+        const { getCurrentWindow, LogicalSize } = await import('@tauri-apps/api/window');
+        const win = getCurrentWindow();
+        if (isMiniPlayer.value) {
+          await win.setAlwaysOnTop(false);
+          await win.setSize(new LogicalSize(900, 650));
+          await win.setResizable(true);
+          isMiniPlayer.value = false;
+        } else {
+          await win.setResizable(false);
+          await win.setSize(new LogicalSize(MINI_PLAYER_WIDTH, MINI_PLAYER_HEIGHT));
+          await win.setAlwaysOnTop(true);
+          isMiniPlayer.value = true;
+        }
+      } catch {
+        // Not in Tauri context
+      }
+    }
+
     return {
       isRightSidebarOpen,
       rightSidebarMode,
@@ -99,7 +124,9 @@ export const useLayoutStore = defineStore(
       toggleMobileLyrics,
       closeMobileLyrics,
       toggleAddToPlaylist,
-      closeAddToPlaylist
+      closeAddToPlaylist,
+      isMiniPlayer,
+      toggleMiniPlayer
     };
   },
   {

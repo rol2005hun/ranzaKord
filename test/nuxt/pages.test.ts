@@ -22,7 +22,7 @@ describe('LoginPage', () => {
   it('renders login button and title', async () => {
     const wrapper = await mountSuspended(LoginPage);
     expect(wrapper.find('#login-with-ranzakonnect').exists()).toBe(true);
-    expect(wrapper.find('h1').exists()).toBe(true);
+    expect(wrapper.find('.login-page__title').exists()).toBe(true);
   });
 
   it('calls loginWithRanzaKonnect and sets redirecting state on click', async () => {

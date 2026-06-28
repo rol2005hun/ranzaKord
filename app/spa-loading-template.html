@@ -5,6 +5,7 @@
     document.documentElement.classList.add('is-maximized');
   }
 </script>
+<!-- [html-validate-disable element-permitted-content] -->
 <style>
   /* Base reset for the loading screen */
   body,
@@ -131,7 +132,7 @@
 </style>
 
 <div class="spa-loading-wrapper">
-  <div id="spa-loading-titlebar">
+  <div id="spa-loading-titlebar" role="region" aria-label="Loading Titlebar">
     <div class="spa-tb-left" data-tauri-drag-region>
       <img src="/logo.webp" alt="Logo" class="spa-tb-icon" />
       <span class="spa-tb-title">ranzaKord</span>

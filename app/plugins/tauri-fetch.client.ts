@@ -17,7 +17,7 @@ export default defineNuxtPlugin(() => {
 
       if (isInternalApi) {
         options.credentials = isTauri() ? 'omit' : 'include';
-        const token = localStorage.getItem('auth_token');
+        const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
         if (token) {
           const headers = new Headers(options.headers || {});
           headers.set('Authorization', `Bearer ${token}`);

@@ -43,5 +43,12 @@
   "errors": {
     "playback": "Lejátszási hiba. Kérlek próbáld újra.",
     "stream": "A stream betöltése sikertelen. Be vagy jelentkezve?"
-  }
+  },
+  "sleepTimer": "Elalváskapcsoló",
+  "sleepTimerOff": "Ki",
+  "sleepTimerEndOfTrack": "Szám végén",
+  "sleepTimerMinutes": "{n} perc",
+  "sleepTimerActive": "Leáll {time} múlva",
+  "sleepTimerSet": "Elalváskapcsoló beállítva",
+  "sleepTimerCleared": "Elalváskapcsoló törölve"
 }

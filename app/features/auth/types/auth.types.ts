@@ -48,7 +48,7 @@ export interface UseAuthReturn {
   isAuthenticated: ComputedRef<boolean>;
   currentUser: ComputedRef<OAuthUser | null>;
   isTauri: ComputedRef<boolean>;
-  loginWithRanzaKonnect: () => Promise<void>;
+  loginWithRanzaKonnect: (rememberMe?: boolean) => Promise<void>;
   logout: () => Promise<void>;
   fetchUser: () => Promise<void>;
 }

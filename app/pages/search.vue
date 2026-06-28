@@ -126,7 +126,7 @@ function onPlay(track: SearchResult) {
         <div class="search-page__top-section">
           <div class="search-page__top-result-col">
             <AppSkeleton height="32px" width="150px" style="margin-bottom: var(--space-4)" />
-            <AppSkeleton height="250px" border-radius="var(--radius-xl)" />
+            <AppSkeleton height="124px" border-radius="var(--radius-xl)" />
           </div>
           <div class="search-page__songs-col">
             <AppSkeleton height="32px" width="100px" style="margin-bottom: var(--space-4)" />
@@ -175,7 +175,7 @@ function onPlay(track: SearchResult) {
             </div>
           </template>
           <template v-else>
-            <AppSkeleton v-for="i in 8" :key="i" height="250px" border-radius="var(--radius-xl)" />
+            <AppSkeleton v-for="i in 8" :key="i" height="124px" border-radius="var(--radius-xl)" />
           </template>
         </div>
       </div>

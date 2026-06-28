@@ -43,5 +43,12 @@
   "errors": {
     "playback": "Playback error. Please try again.",
     "stream": "Failed to load stream. Are you signed in?"
-  }
+  },
+  "sleepTimer": "Sleep Timer",
+  "sleepTimerOff": "Off",
+  "sleepTimerEndOfTrack": "End of track",
+  "sleepTimerMinutes": "{n} min",
+  "sleepTimerActive": "Stops in {time}",
+  "sleepTimerSet": "Sleep timer set",
+  "sleepTimerCleared": "Sleep timer cleared"
 }

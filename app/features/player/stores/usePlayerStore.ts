@@ -152,7 +152,8 @@ export const usePlayerStore = defineStore(
         const { isTauri, invoke } = await import('@tauri-apps/api/core');
         if (isTauri()) {
           if (isPlaying.value && currentTrack.value) {
-            const startTimestamp = Math.round(Date.now() / 1000 - currentTimeSeconds.value);
+            // Add 1 second to startTimestamp so Discord always appears slightly delayed, never ahead.
+            const startTimestamp = Math.round(Date.now() / 1000 - currentTimeSeconds.value) + 1;
 
             const isSameTrack = lastTrackId === currentTrack.value.videoId;
             const isSamePlaying = lastIsPlaying === isPlaying.value;

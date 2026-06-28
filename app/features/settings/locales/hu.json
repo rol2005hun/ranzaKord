@@ -26,6 +26,10 @@
       "description": "Szabd testre az aktív téma alapszínét.",
       "reset": "Visszaállítás",
       "hint": "Válassz saját színt"
+    },
+    "visualizerStyle": {
+      "title": "Vizualizáció stílusa",
+      "description": "Válaszd ki a hanghullámok megjelenési stílusát."
     }
   },
   "player": {

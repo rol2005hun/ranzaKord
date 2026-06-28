@@ -6,12 +6,14 @@ export default defineEventHandler(async (event) => {
 
   const state = randomBytes(16).toString('hex');
   const desktopAuth = query.desktop === '1';
+  const rememberMe = query.remember === '1';
 
   const session = await useAppSession(event);
   await session.update({
     oauthState: state,
     authSource: query.source || null,
     desktopAuth,
+    rememberMe,
     lang: query.lang || 'en'
   });
 

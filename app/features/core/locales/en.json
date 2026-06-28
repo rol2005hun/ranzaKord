@@ -20,13 +20,16 @@
     "downloadApp": "Get Desktop App",
     "signOut": "Sign out"
   },
+  "miniPlayer": "Mini Player",
+  "exitMiniPlayer": "Exit Mini Player",
   "actions": {
     "cancel": "Cancel",
     "stop": "Stop",
     "save": "Save",
     "close": "Close",
     "back": "Back",
-    "settings": "Settings"
+    "settings": "Settings",
+    "more": "More"
   },
   "musicDetail": {
     "titleColumn": "Title",

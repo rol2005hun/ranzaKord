@@ -12,14 +12,15 @@ export function useAuth(): UseAuthReturn {
     : null;
   const globalFetch = $fetch as unknown as (req: string) => Promise<unknown>;
 
-  async function loginWithRanzaKonnect(): Promise<void> {
+  async function loginWithRanzaKonnect(rememberMe: boolean = false): Promise<void> {
     const origin = encodeURIComponent(window.location.origin);
     const lang = nuxtApp.$i18n?.locale?.value || 'en';
     const desktopAuth = isTauri.value ? '&desktop=1' : '';
+    const rememberAuth = rememberMe ? '&remember=1' : '';
     const baseUrl = config.public.baseUrl;
     const loginUrl = isTauri.value
-      ? `${baseUrl}/auth/login?source=${origin}&lang=${lang}${desktopAuth}`
-      : `/auth/login?source=${origin}&lang=${lang}${desktopAuth}`;
+      ? `${baseUrl}/auth/login?source=${origin}&lang=${lang}${desktopAuth}${rememberAuth}`
+      : `/auth/login?source=${origin}&lang=${lang}${desktopAuth}${rememberAuth}`;
 
     if (isTauri.value) {
       const { openUrl } = await import('@tauri-apps/plugin-opener');
@@ -34,6 +35,7 @@ export function useAuth(): UseAuthReturn {
 
     if (import.meta.client) {
       localStorage.removeItem('auth_token');
+      sessionStorage.removeItem('auth_token');
       document.cookie.split(';').forEach((c) => {
         document.cookie = c
           .replace(/^ +/, '')

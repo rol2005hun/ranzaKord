@@ -314,6 +314,30 @@ const sidebarStyle = computed(() => ({
               <AppIcon name="ph:music-notes-simple" />
             </div>
             <canvas ref="canvasRef" class="right-sidebar__canvas" />
+
+            <div class="right-sidebar__visualizer-selector">
+              <button
+                v-for="style in ['circle', 'bars', 'wave', 'particles']"
+                :key="style"
+                class="right-sidebar__style-btn"
+                :class="{
+                  'right-sidebar__style-btn--active': layoutStore.visualizerStyle === style
+                }"
+                :title="$t(`player.visualizerStyles.${style}`)"
+                @click="layoutStore.setVisualizerStyle(style as any)">
+                <AppIcon
+                  :name="
+                    style === 'circle'
+                      ? 'ph:circle-bold'
+                      : style === 'bars'
+                        ? 'ph:chart-bar-bold'
+                        : style === 'wave'
+                          ? 'ph:wave-sine-bold'
+                          : 'ph:sparkle-bold'
+                  " />
+              </button>
+            </div>
+
             <div
               class="right-sidebar__artwork-center"
               :class="{ 'right-sidebar__artwork-center--spinning': isPlaying }">
@@ -586,6 +610,44 @@ const sidebarStyle = computed(() => ({
     width: 100%;
     height: 100%;
     pointer-events: none;
+  }
+
+  &__visualizer-selector {
+    position: absolute;
+    top: var(--space-4);
+    right: var(--space-4);
+    display: flex;
+    gap: var(--space-2);
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.4);
+    padding: var(--space-1);
+    border-radius: var(--radius-full);
+    backdrop-filter: blur(8px);
+  }
+
+  &__style-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-size: 1.1rem;
+
+    &:hover {
+      color: var(--color-text-primary);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    &--active {
+      color: var(--color-primary);
+      background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+    }
   }
 
   &__artwork-center {

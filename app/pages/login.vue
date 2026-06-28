@@ -9,6 +9,7 @@ useHead({ title: t('core.nav.signIn') });
 const { loginWithRanzaKonnect, isAuthenticated, isTauri } = useAuth();
 const themeStore = useThemeStore();
 const isRedirecting = ref(false);
+const rememberMe = ref(false);
 
 const redirectingText = computed(() =>
   isTauri.value ? t('auth.login.openingInBrowser') : t('auth.login.redirecting')
@@ -16,7 +17,7 @@ const redirectingText = computed(() =>
 
 const handleLogin = () => {
   isRedirecting.value = true;
-  loginWithRanzaKonnect();
+  loginWithRanzaKonnect(rememberMe.value);
 };
 
 const handleWindowFocus = () => {
@@ -62,6 +63,13 @@ if (isAuthenticated.value) {
       </component>
       <p class="login-page__subtitle">{{ $t('auth.login.subtitle') }}</p>
 
+      <div class="login-page__remember">
+        <label class="login-page__remember-label">
+          <input v-model="rememberMe" type="checkbox" class="login-page__remember-checkbox" />
+          <span>{{ $t('auth.login.rememberMe') }}</span>
+        </label>
+      </div>
+
       <AppButton
         id="login-with-ranzakonnect"
         class="login-page__btn"
@@ -82,10 +90,12 @@ if (isAuthenticated.value) {
     </div>
 
     <div v-if="themeStore.themeId === 'wc2026'" class="wc-stadium__cta">
-      <h1 class="wc-stadium__cta-logo">
-        <AppIcon name="ph:music-note-fill" />
-        <span>{{ $t('core.appName') }}</span>
-      </h1>
+      <div class="login-page__remember login-page__remember--wc">
+        <label class="login-page__remember-label">
+          <input v-model="rememberMe" type="checkbox" class="login-page__remember-checkbox" />
+          <span>{{ $t('auth.login.rememberMe') }}</span>
+        </label>
+      </div>
       <AppButton
         id="login-with-ranzakonnect-wc"
         class="wc-stadium__cta-btn"
@@ -189,13 +199,54 @@ if (isAuthenticated.value) {
 
 <style lang="scss" scoped>
 .login-page {
-  position: relative;
-  flex: 1;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-bg, #09090f);
+  background-color: var(--color-bg);
+  position: relative;
   overflow: hidden;
+
+  &__remember {
+    width: 100%;
+    margin-top: var(--space-2);
+    margin-bottom: var(--space-2);
+
+    &--wc {
+      margin: 0;
+      .login-page__remember-label {
+        color: rgba(255, 255, 255, 0.85);
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+
+        &:hover {
+          color: white;
+        }
+      }
+    }
+  }
+
+  &__remember-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    user-select: none;
+    transition: color var(--transition-base);
+
+    &:hover {
+      color: var(--color-text-primary);
+    }
+  }
+
+  &__remember-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--color-primary);
+  }
 
   &__card {
     position: relative;
@@ -472,23 +523,181 @@ if (isAuthenticated.value) {
       border-radius: 50%;
     }
 
-    @for $i from 1 through 11 {
-      &--a#{$i} {
-        background: hsl(158 85% 65% / 0.9);
-        box-shadow: 0 0 6px hsl(158 85% 50% / 0.5);
-        &::before {
-          background: hsl(158 85% 75%);
-        }
-        animation: player-hover 4s infinite alternate ease-in-out ($i * 0.3s);
+    &--a1 {
+      background: hsl(158, 85%, 65%, 0.9);
+      box-shadow: 0 0 6px hsl(158, 85%, 50%, 0.5);
+      &::before {
+        background: hsl(158, 85%, 75%);
       }
-      &--b#{$i} {
-        background: hsl(0 80% 65% / 0.9);
-        box-shadow: 0 0 6px hsl(0 80% 50% / 0.5);
-        &::before {
-          background: hsl(0 80% 75%);
-        }
-        animation: player-hover 5s infinite alternate ease-in-out ($i * 0.2s);
+      animation: player-hover 4s infinite alternate ease-in-out 0.3s;
+    }
+    &--b1 {
+      background: hsl(0, 80%, 65%, 0.9);
+      box-shadow: 0 0 6px hsl(0, 80%, 50%, 0.5);
+      &::before {
+        background: hsl(0, 80%, 75%);
       }
+      animation: player-hover 5s infinite alternate ease-in-out 0.2s;
+    }
+    &--a2 {
+      background: hsl(158, 85%, 65%, 0.9);
+      box-shadow: 0 0 6px hsl(158, 85%, 50%, 0.5);
+      &::before {
+        background: hsl(158, 85%, 75%);
+      }
+      animation: player-hover 4s infinite alternate ease-in-out 0.6s;
+    }
+    &--b2 {
+      background: hsl(0, 80%, 65%, 0.9);
+      box-shadow: 0 0 6px hsl(0, 80%, 50%, 0.5);
+      &::before {
+        background: hsl(0, 80%, 75%);
+      }
+      animation: player-hover 5s infinite alternate ease-in-out 0.4s;
+    }
+    &--a3 {
+      background: hsl(158, 85%, 65%, 0.9);
+      box-shadow: 0 0 6px hsl(158, 85%, 50%, 0.5);
+      &::before {
+        background: hsl(158, 85%, 75%);
+      }
+      animation: player-hover 4s infinite alternate ease-in-out 0.9s;
+    }
+    &--b3 {
+      background: hsl(0, 80%, 65%, 0.9);
+      box-shadow: 0 0 6px hsl(0, 80%, 50%, 0.5);
+      &::before {
+        background: hsl(0, 80%, 75%);
+      }
+      animation: player-hover 5s infinite alternate ease-in-out 0.6s;
+    }
+    &--a4 {
+      background: hsl(158, 85%, 65%, 0.9);
+      box-shadow: 0 0 6px hsl(158, 85%, 50%, 0.5);
+      &::before {
+        background: hsl(158, 85%, 75%);
+      }
+      animation: player-hover 4s infinite alternate ease-in-out 1.2s;
+    }
+    &--b4 {
+      background: hsl(0, 80%, 65%, 0.9);
+      box-shadow: 0 0 6px hsl(0, 80%, 50%, 0.5);
+      &::before {
+        background: hsl(0, 80%, 75%);
+      }
+      animation: player-hover 5s infinite alternate ease-in-out 0.8s;
+    }
+    &--a5 {
+      background: hsl(158, 85%, 65%, 0.9);
+      box-shadow: 0 0 6px hsl(158, 85%, 50%, 0.5);
+      &::before {
+        background: hsl(158, 85%, 75%);
+      }
+      animation: player-hover 4s infinite alternate ease-in-out 1.5s;
+    }
+    &--b5 {
+      background: hsl(0, 80%, 65%, 0.9);
+      box-shadow: 0 0 6px hsl(0, 80%, 50%, 0.5);
+      &::before {
+        background: hsl(0, 80%, 75%);
+      }
+      animation: player-hover 5s infinite alternate ease-in-out 1s;
+    }
+    &--a6 {
+      background: hsl(158, 85%, 65%, 0.9);
+      box-shadow: 0 0 6px hsl(158, 85%, 50%, 0.5);
+      &::before {
+        background: hsl(158, 85%, 75%);
+      }
+      animation: player-hover 4s infinite alternate ease-in-out 1.8s;
+    }
+    &--b6 {
+      background: hsl(0, 80%, 65%, 0.9);
+      box-shadow: 0 0 6px hsl(0, 80%, 50%, 0.5);
+      &::before {
+        background: hsl(0, 80%, 75%);
+      }
+      animation: player-hover 5s infinite alternate ease-in-out 1.2s;
+    }
+    &--a7 {
+      background: hsl(158, 85%, 65%, 0.9);
+      box-shadow: 0 0 6px hsl(158, 85%, 50%, 0.5);
+      &::before {
+        background: hsl(158, 85%, 75%);
+      }
+      animation: player-hover 4s infinite alternate ease-in-out 2.1s;
+    }
+    &--b7 {
+      background: hsl(0, 80%, 65%, 0.9);
+      box-shadow: 0 0 6px hsl(0, 80%, 50%, 0.5);
+      &::before {
+        background: hsl(0, 80%, 75%);
+      }
+      animation: player-hover 5s infinite alternate ease-in-out 1.4s;
+    }
+    &--a8 {
+      background: hsl(158, 85%, 65%, 0.9);
+      box-shadow: 0 0 6px hsl(158, 85%, 50%, 0.5);
+      &::before {
+        background: hsl(158, 85%, 75%);
+      }
+      animation: player-hover 4s infinite alternate ease-in-out 2.4s;
+    }
+    &--b8 {
+      background: hsl(0, 80%, 65%, 0.9);
+      box-shadow: 0 0 6px hsl(0, 80%, 50%, 0.5);
+      &::before {
+        background: hsl(0, 80%, 75%);
+      }
+      animation: player-hover 5s infinite alternate ease-in-out 1.6s;
+    }
+    &--a9 {
+      background: hsl(158, 85%, 65%, 0.9);
+      box-shadow: 0 0 6px hsl(158, 85%, 50%, 0.5);
+      &::before {
+        background: hsl(158, 85%, 75%);
+      }
+      animation: player-hover 4s infinite alternate ease-in-out 2.7s;
+    }
+    &--b9 {
+      background: hsl(0, 80%, 65%, 0.9);
+      box-shadow: 0 0 6px hsl(0, 80%, 50%, 0.5);
+      &::before {
+        background: hsl(0, 80%, 75%);
+      }
+      animation: player-hover 5s infinite alternate ease-in-out 1.8s;
+    }
+    &--a10 {
+      background: hsl(158, 85%, 65%, 0.9);
+      box-shadow: 0 0 6px hsl(158, 85%, 50%, 0.5);
+      &::before {
+        background: hsl(158, 85%, 75%);
+      }
+      animation: player-hover 4s infinite alternate ease-in-out 3s;
+    }
+    &--b10 {
+      background: hsl(0, 80%, 65%, 0.9);
+      box-shadow: 0 0 6px hsl(0, 80%, 50%, 0.5);
+      &::before {
+        background: hsl(0, 80%, 75%);
+      }
+      animation: player-hover 5s infinite alternate ease-in-out 2s;
+    }
+    &--a11 {
+      background: hsl(158, 85%, 65%, 0.9);
+      box-shadow: 0 0 6px hsl(158, 85%, 50%, 0.5);
+      &::before {
+        background: hsl(158, 85%, 75%);
+      }
+      animation: player-hover 4s infinite alternate ease-in-out 3.3s;
+    }
+    &--b11 {
+      background: hsl(0, 80%, 65%, 0.9);
+      box-shadow: 0 0 6px hsl(0, 80%, 50%, 0.5);
+      &::before {
+        background: hsl(0, 80%, 75%);
+      }
+      animation: player-hover 5s infinite alternate ease-in-out 2.2s;
     }
 
     /* Formations */

@@ -83,7 +83,7 @@ const { toasts, remove } = useToast();
 <style scoped lang="scss">
 .toast-container {
   position: fixed;
-  top: var(--toast-offset, var(--space-4));
+  top: calc(var(--titlebar-height, 0px) + var(--toast-offset, var(--space-4)));
   right: var(--toast-offset, var(--space-4));
   display: flex;
   flex-direction: column;
@@ -95,14 +95,24 @@ const { toasts, remove } = useToast();
 }
 
 .toast {
+  position: relative;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-3);
   padding: var(--toast-padding, var(--space-3) var(--space-4));
   border-radius: var(--toast-radius, var(--radius-lg));
   box-shadow: var(--toast-shadow, var(--shadow-lg));
   pointer-events: auto;
   border: 1px solid;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: var(--color-surface);
+    border-radius: inherit;
+    z-index: -1;
+  }
 
   &--success {
     background-color: var(--color-success-light);
