@@ -42,9 +42,7 @@
   },
   "plugins": {
     "deep-link": {
-      "desktop": {
-        "schemes": ["ranzakord"]
-      }
+      "schemes": ["ranzakord"]
     },
     "updater": {
       "endpoints": ["https://kord.ranzak.dev/api/updater"],
