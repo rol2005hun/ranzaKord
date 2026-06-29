@@ -15,7 +15,7 @@ fn set_discord_presence(
     details: String,
     state_str: String,
     large_image: Option<String>,
-    track_id: Option<String>,
+    button_url: Option<String>,
     start_timestamp: Option<i64>,
     end_timestamp: Option<i64>,
 ) -> Result<(), String> {
@@ -48,12 +48,9 @@ fn set_discord_presence(
             activity = activity.timestamps(timestamps);
         }
 
-        let mut url = "https://kord.ranzak.dev".to_string();
-        if let Some(id) = track_id {
-            url = format!("https://kord.ranzak.dev/?play={}", id);
+        if let Some(ref url) = button_url {
+            activity = activity.buttons(vec![activity::Button::new("Listen on ranzaKord", url)]);
         }
-
-        activity = activity.buttons(vec![activity::Button::new("Listen on ranzaKord", &url)]);
 
         if let Err(e) = client.set_activity(activity.clone()) {
             eprintln!(
@@ -88,7 +85,6 @@ fn clear_discord_presence(state: State<'_, DiscordState>) -> Result<(), String> 
 pub fn run() {
     #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
-        .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_process::init());
 
@@ -98,11 +94,9 @@ pub fn run() {
         let _ = client.connect();
         
         builder = builder
-            .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
-                use tauri::Emitter;
-                if let Some(url) = args.iter().find(|a| a.starts_with("ranzakord://")) {
-                    let _ = app.emit("deep-link-received", url);
-                }
+            .plugin(tauri_plugin_single_instance::init(|_app, _args, _cwd| {
+                // The deep link plugin automatically integrates with single instance
+                // to trigger the onOpenUrl callback in JavaScript on Windows/Linux.
             }))
             .plugin(tauri_plugin_updater::Builder::new().build())
             .manage(DiscordState(Mutex::new(Some(client))))
@@ -113,7 +107,13 @@ pub fn run() {
     }
 
     builder
-        .setup(|_app| {
+        .plugin(tauri_plugin_deep_link::init())
+        .setup(|app| {
+            #[cfg(any(windows, target_os = "linux"))]
+            {
+                use tauri_plugin_deep_link::DeepLinkExt;
+                let _ = app.deep_link().register_all();
+            }
             Ok(())
         })
         .run(tauri::generate_context!())

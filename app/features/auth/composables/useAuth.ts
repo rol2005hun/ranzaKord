@@ -4,7 +4,6 @@ import { isTauri as checkIsTauri } from '@tauri-apps/api/core';
 
 export function useAuth(): UseAuthReturn {
   const store = useAuthStore();
-  const router = useRouter();
   const isTauri = computed(() => import.meta.client && checkIsTauri());
 
   const nuxtApp = useNuxtApp();
@@ -34,7 +33,7 @@ export function useAuth(): UseAuthReturn {
   }
 
   async function logout() {
-    store.clearSession();
+    await $fetch('/auth/logout', { method: 'POST' }).catch(() => null);
 
     if (import.meta.client) {
       localStorage.removeItem('auth_token');
@@ -44,10 +43,10 @@ export function useAuth(): UseAuthReturn {
           .replace(/^ +/, '')
           .replace(/=.*/, `=;expires=${new Date(0).toUTCString()};path=/`);
       });
+      window.location.href = '/login';
+    } else {
+      store.clearSession();
     }
-
-    await $fetch('/auth/logout', { method: 'POST' }).catch(() => null);
-    await router.push('/login');
   }
 
   async function fetchUser() {

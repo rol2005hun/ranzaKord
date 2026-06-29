@@ -13,9 +13,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
 
       const isCustomScheme = url.protocol === 'ranzakord:';
       const isAppLink =
-        (url.protocol === 'https:' || url.protocol === 'http:') &&
-        url.hostname === 'kord.ranzak.dev' &&
-        url.pathname.startsWith('/auth');
+        (url.protocol === 'https:' || url.protocol === 'http:') && url.pathname.startsWith('/auth');
 
       if (!isCustomScheme && !isAppLink) {
         return;
@@ -52,7 +50,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     }
   };
 
-  // Register the official Tauri deep link listener
+  // Register the official Tauri deep link listener (Mac, Android, iOS, Windows with single-instance)
   try {
     await onOpenUrl((urls: string[]) => {
       for (const url of urls) {
@@ -60,7 +58,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       }
     });
   } catch (e) {
-    console.error('Failed to register onOpenUrl listener:', e);
+    console.error('[DEEP_LINK] Failed to register onOpenUrl listener:', e);
   }
 
   // 3. Fallback: Native Android evaluateJavascript Bridge!

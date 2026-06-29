@@ -218,11 +218,16 @@ export const usePlayerStore = defineStore(
               currentTrack.value.durationSeconds > 0
                 ? Math.round(startTimestamp + currentTrack.value.durationSeconds)
                 : null;
+
+            const config = useRuntimeConfig();
+            const baseUrl = config.public.baseUrl;
+            const buttonUrl = `${baseUrl}/?play=${currentTrack.value.videoId}`;
+
             await invoke('set_discord_presence', {
               details: currentTrack.value.title,
               stateStr: currentTrack.value.artist,
               largeImage: currentTrack.value.thumbnailUrl,
-              trackId: currentTrack.value.videoId,
+              buttonUrl: buttonUrl,
               startTimestamp,
               endTimestamp
             });
