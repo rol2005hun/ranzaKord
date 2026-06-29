@@ -93,12 +93,15 @@ export default defineEventHandler(async (event) => {
 
     for (let i = 0; i < cookies.length; i++) {
       let cookie = cookies[i];
-      if (typeof cookie === 'string' && cookie.startsWith('h3=')) {
-        sessionToken = (cookie.split(';')[0] || '').substring(3);
+      if (typeof cookie === 'string') {
+        const match = cookie.match(/^(?:h3|session)=([^;]+)/);
+        if (match && match[1]) {
+          sessionToken = match[1];
 
-        if (!rememberMe) {
-          cookie = cookie.replace(/Max-Age=\d+;?\s*/i, '').replace(/Expires=[^;]+;?\s*/i, '');
-          newHeaders[i] = cookie;
+          if (!rememberMe) {
+            cookie = cookie.replace(/Max-Age=\d+;?\s*/i, '').replace(/Expires=[^;]+;?\s*/i, '');
+            newHeaders[i] = cookie;
+          }
         }
       }
     }

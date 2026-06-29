@@ -12,8 +12,8 @@ export async function useAppSession(event: H3Event) {
       (event.headers && event.headers.get ? event.headers.get('cookie') : undefined) ||
       (event.node?.req?.headers?.cookie as string) ||
       '';
-    if (!cookieHeader.includes('h3=')) {
-      const newCookie = cookieHeader ? `${cookieHeader}; h3=${token}` : `h3=${token}`;
+    if (!cookieHeader.includes('session=')) {
+      const newCookie = cookieHeader ? `${cookieHeader}; session=${token}` : `session=${token}`;
       if (event.node?.req?.headers) {
         event.node.req.headers.cookie = newCookie;
       }

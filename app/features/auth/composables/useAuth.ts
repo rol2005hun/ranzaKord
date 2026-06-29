@@ -1,9 +1,11 @@
 import type { UseAuthReturn } from '../types/auth.types';
 
+import { isTauri as checkIsTauri } from '@tauri-apps/api/core';
+
 export function useAuth(): UseAuthReturn {
   const store = useAuthStore();
   const router = useRouter();
-  const isTauri = computed(() => import.meta.client && '__TAURI_INTERNALS__' in window);
+  const isTauri = computed(() => import.meta.client && checkIsTauri());
 
   const nuxtApp = useNuxtApp();
   const config = useRuntimeConfig();
@@ -17,7 +19,7 @@ export function useAuth(): UseAuthReturn {
     const lang = nuxtApp.$i18n?.locale?.value || 'en';
     const desktopAuth = isTauri.value ? '&desktop=1' : '';
     const rememberAuth = rememberMe ? '&remember=1' : '';
-    const isTauriProd = window.location.hostname === 'tauri.localhost';
+    const isTauriProd = isTauri.value && !import.meta.dev;
     const baseUrl = isTauriProd ? config.public.baseUrl : window.location.origin;
     const loginUrl = isTauri.value
       ? `${baseUrl}/auth/login?source=${origin}&lang=${lang}${desktopAuth}${rememberAuth}`

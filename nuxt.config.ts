@@ -186,6 +186,7 @@ export default defineNuxtConfig({
         'pinia-orm',
         'pinia-orm/decorators',
         '@tauri-apps/api/core',
+        '@tauri-apps/api/event',
         '@tauri-apps/api/window',
         '@tauri-apps/plugin-process',
         '@tauri-apps/plugin-updater',

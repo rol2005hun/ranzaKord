@@ -47,30 +47,21 @@ export default defineNuxtPlugin(async (nuxtApp) => {
           );
         }
       });
-    } catch (e) {
-      console.error('[DEEP_LINK] Failed to process URL:', e);
+    } catch (err) {
+      console.error('[DEEP_LINK] Failed to process URL:', err);
     }
   };
 
-  // 1. Check if app was started directly via deep link (Cold Start)
+  // Register the official Tauri deep link listener
   try {
-    const initialUrls = await getCurrent();
-    if (initialUrls && initialUrls.length > 0) {
-      for (const url of initialUrls) {
-        await processUrl(url);
+    await onOpenUrl((urls: string[]) => {
+      for (const url of urls) {
+        processUrl(url);
       }
-    }
+    });
   } catch (e) {
-    console.error('Failed to get initial deep link:', e);
+    console.error('Failed to register onOpenUrl listener:', e);
   }
-
-  // 2. Listen for deep links while the app is running (Warm Start)
-  await onOpenUrl(async (urls: string[]) => {
-    for (const urlText of urls) {
-      await processUrl(urlText);
-      break;
-    }
-  });
 
   // 3. Fallback: Native Android evaluateJavascript Bridge!
   // This is the ultimate fallback: MainActivity.kt directly injects a CustomEvent ('android_intent')
