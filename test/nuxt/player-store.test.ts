@@ -70,7 +70,7 @@ describe('usePlayerStore', () => {
 
       store.addToQueue(mockTrack1); // Duplicate adds another instance
       expect(store.queue.length).toBe(2);
-      expect(store.queue[0]!.queueId).not.toEqual(store.queue[1]!.queueId);
+      expect(store.queue[0]?.queueId).not.toEqual(store.queue[1]?.queueId);
 
       store.addToQueue(mockTrack2);
       expect(store.queue.length).toBe(3);
