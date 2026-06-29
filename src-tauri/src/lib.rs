@@ -1,9 +1,14 @@
+#[cfg(desktop)]
 use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
+#[cfg(desktop)]
 use std::sync::Mutex;
+#[cfg(desktop)]
 use tauri::State;
 
+#[cfg(desktop)]
 struct DiscordState(Mutex<Option<DiscordIpcClient>>);
 
+#[cfg(desktop)]
 #[tauri::command]
 fn set_discord_presence(
     state: State<'_, DiscordState>,
@@ -69,6 +74,7 @@ fn set_discord_presence(
     Ok(())
 }
 
+#[cfg(desktop)]
 #[tauri::command]
 fn clear_discord_presence(state: State<'_, DiscordState>) -> Result<(), String> {
     let mut client_guard = state.0.lock().unwrap();
@@ -80,9 +86,6 @@ fn clear_discord_presence(state: State<'_, DiscordState>) -> Result<(), String> 
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut client = DiscordIpcClient::new("1510265493443973140");
-    let _ = client.connect();
-
     #[allow(unused_mut)]
     let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_deep_link::init())
@@ -91,25 +94,21 @@ pub fn run() {
 
     #[cfg(desktop)]
     {
+        let mut client = DiscordIpcClient::new("1510265493443973140");
+        let _ = client.connect();
+        
         builder = builder
             .plugin(tauri_plugin_single_instance::init(|_app, _args, _cwd| {}))
-            .plugin(tauri_plugin_updater::Builder::new().build());
+            .plugin(tauri_plugin_updater::Builder::new().build())
+            .manage(DiscordState(Mutex::new(Some(client))))
+            .invoke_handler(tauri::generate_handler![
+                set_discord_presence,
+                clear_discord_presence
+            ]);
     }
 
     builder
-        .manage(DiscordState(Mutex::new(Some(client))))
-        .invoke_handler(tauri::generate_handler![
-            set_discord_presence,
-            clear_discord_presence
-        ])
         .setup(|_app| {
-            if cfg!(debug_assertions) {
-                // app.handle().plugin(
-                //   tauri_plugin_log::Builder::default()
-                //     .level(log::LevelFilter::Info)
-                //     .build(),
-                // )?;
-            }
             Ok(())
         })
         .run(tauri::generate_context!())

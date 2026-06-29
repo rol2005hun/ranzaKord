@@ -744,6 +744,10 @@ function getStyleIcon(style: string) {
     html.is-tauri & {
       padding-top: calc(2rem + var(--titlebar-height, 32px));
     }
+
+    @media (max-width: 768px) {
+      padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+    }
   }
 
   &__controls {

@@ -1,12 +1,12 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "ranzaKord",
-  "version": "0.0.2-alpha.16",
+  "version": "0.0.2-alpha.17",
   "identifier": "dev.ranzak.kord",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:3000",
-    "beforeDevCommand": "pnpm dev",
+    "beforeDevCommand": "pnpm dev --host 0.0.0.0",
     "beforeBuildCommand": "pnpm generate"
   },
   "app": {
@@ -42,9 +42,7 @@
   },
   "plugins": {
     "deep-link": {
-      "desktop": {
-        "schemes": ["ranzakord"]
-      }
+      "schemes": ["ranzakord"]
     },
     "updater": {
       "endpoints": ["https://kord.ranzak.dev/api/updater"],

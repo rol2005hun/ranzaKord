@@ -17,7 +17,8 @@ export function useAuth(): UseAuthReturn {
     const lang = nuxtApp.$i18n?.locale?.value || 'en';
     const desktopAuth = isTauri.value ? '&desktop=1' : '';
     const rememberAuth = rememberMe ? '&remember=1' : '';
-    const baseUrl = config.public.baseUrl;
+    const isTauriProd = window.location.hostname === 'tauri.localhost';
+    const baseUrl = isTauriProd ? config.public.baseUrl : window.location.origin;
     const loginUrl = isTauri.value
       ? `${baseUrl}/auth/login?source=${origin}&lang=${lang}${desktopAuth}${rememberAuth}`
       : `/auth/login?source=${origin}&lang=${lang}${desktopAuth}${rememberAuth}`;
@@ -43,7 +44,7 @@ export function useAuth(): UseAuthReturn {
       });
     }
 
-    $fetch('/auth/logout', { method: 'POST' }).catch(() => null);
+    await $fetch('/auth/logout', { method: 'POST' }).catch(() => null);
     await router.push('/login');
   }
 

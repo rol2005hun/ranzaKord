@@ -166,6 +166,11 @@ const isInAnyPlaylist = computed(() => playlistsStore.isTrackInAnyPlaylist(props
     .track-card--active & {
       opacity: 1;
     }
+
+    @media (hover: none), (max-width: 768px) {
+      opacity: 1;
+      background: linear-gradient(transparent 60%, rgb(0 0 0 / 0.7) 100%);
+    }
   }
 
   &__overlay-actions {
@@ -204,6 +209,7 @@ const isInAnyPlaylist = computed(() => playlistsStore.isTrackInAnyPlaylist(props
     border: none;
     background: var(--color-primary);
     color: var(--color-primary-foreground);
+    --spinner-color: var(--color-primary-foreground);
     font-size: var(--text-xl);
     cursor: pointer;
     display: flex;

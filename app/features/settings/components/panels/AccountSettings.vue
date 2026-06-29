@@ -139,4 +139,16 @@ const { currentUser, isAuthenticated, logout } = useAuth();
     text-decoration: none;
   }
 }
+
+@media (max-width: 768px) {
+  .account-card {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--space-4);
+
+    &__info {
+      align-items: center;
+    }
+  }
+}
 </style>

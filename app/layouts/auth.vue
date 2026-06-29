@@ -12,5 +12,10 @@
   margin-top: var(--titlebar-height, 0px);
   background: var(--color-bg, #09090f);
   overflow: hidden;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
 }
 </style>

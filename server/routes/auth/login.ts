@@ -17,10 +17,14 @@ export default defineEventHandler(async (event) => {
     lang: query.lang || 'en'
   });
 
+  const host = getRequestHeader(event, 'host');
+  const protocol = host?.includes('localhost') || host?.match(/^\d{1,3}\./) ? 'http' : 'https';
+  const redirectUri = `${protocol}://${host}/auth/callback`;
+
   const params = new URLSearchParams({
     response_type: 'code',
     client_id: config.ranzakonnectClientId as string,
-    redirect_uri: `${config.public.baseUrl}/auth/callback`,
+    redirect_uri: redirectUri,
     state,
     scope: 'openid profile email'
   });
