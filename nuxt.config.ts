@@ -110,7 +110,7 @@ export default defineNuxtConfig({
   },
 
   site: {
-    url: 'https://kord.ranzak.dev',
+    url: process.env.NUXT_PUBLIC_BASE_URL,
     name: 'ranzaKord',
     description: 'Premium music streaming.'
   },

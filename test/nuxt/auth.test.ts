@@ -79,16 +79,14 @@ describe('Auth Module', () => {
       );
     });
 
-    it('logout calls clearSession and fetches logout endpoint', async () => {
+    it('logout fetches logout endpoint and hard reloads to login', async () => {
       fetchMock.mockResolvedValue(null);
-      const store = useAuthStore();
-      const clearSessionSpy = vi.spyOn(store, 'clearSession');
       const { logout } = useAuth();
 
       await logout();
 
       expect(globalThis.$fetch).toHaveBeenCalledWith('/auth/logout', { method: 'POST' });
-      expect(clearSessionSpy).toHaveBeenCalled();
+      expect(window.location.href).toBe('/login');
     });
 
     it('fetchUser sets user on success', async () => {

@@ -48,9 +48,10 @@ function closeDropdown() {
       <button
         v-if="updateInfo.available"
         class="app-navbar__update-btn"
+        :title="$t('updater.updateAvailable')"
         @click="showUpdateModal = true">
         <AppIcon name="ph:download-simple" />
-        <span>{{ $t('updater.updateAvailable') }}</span>
+        <span class="app-navbar__update-text">{{ $t('updater.updateAvailable') }}</span>
       </button>
 
       <a
@@ -184,6 +185,17 @@ function closeDropdown() {
     &:hover {
       background-color: var(--color-primary);
       color: var(--color-primary-foreground, #ffffff);
+    }
+
+    @media (max-width: 768px) {
+      padding: var(--space-2);
+      gap: 0;
+    }
+  }
+
+  &__update-text {
+    @media (max-width: 768px) {
+      display: none;
     }
   }
 
