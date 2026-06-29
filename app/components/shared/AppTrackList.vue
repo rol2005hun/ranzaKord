@@ -126,10 +126,10 @@ const hasDateColumn = computed(() => props.columns.includes('date'));
 const hasActionColumn = computed(() => props.columns.includes('action'));
 
 const gridColumns = computed(() => {
-  const cols = ['48px', '1fr'];
-  if (hasDateColumn.value) cols.push('160px');
-  cols.push('60px');
-  if (hasActionColumn.value) cols.push('48px');
+  const cols = ['var(--track-list-idx, 48px)', '1fr'];
+  if (hasDateColumn.value) cols.push('var(--track-list-date, 160px)');
+  cols.push('var(--track-list-time, 60px)');
+  if (hasActionColumn.value) cols.push('var(--track-list-action, 48px)');
   return cols.join(' ');
 });
 
@@ -709,6 +709,32 @@ onMounted(() => {
       opacity: 0.5;
     }
     100% {
+      opacity: 1;
+    }
+  }
+
+  @media (max-width: 768px) {
+    --track-list-idx: 32px;
+    --track-list-date: 0fr;
+    --track-list-action: 40px;
+
+    &__header {
+      padding: var(--space-3) var(--space-2);
+    }
+
+    &__track {
+      padding: 0 var(--space-2);
+      gap: var(--space-2);
+    }
+
+    &__col-date,
+    &__track-date {
+      opacity: 0;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    &__action-btn {
       opacity: 1;
     }
   }

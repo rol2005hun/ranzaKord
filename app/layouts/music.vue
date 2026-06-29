@@ -473,6 +473,7 @@ onMounted(() => {
 
   @media (max-width: 768px) {
     flex-direction: column;
+    padding-top: env(safe-area-inset-top, 0px);
 
     &__library {
       display: none;
@@ -501,6 +502,7 @@ onMounted(() => {
 
   &__actions {
     display: flex;
+    flex-direction: column;
     gap: var(--space-2);
   }
 

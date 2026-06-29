@@ -325,6 +325,11 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
       transform: scale(1.05) !important;
       background-color: var(--color-primary-hover);
     }
+
+    @media (hover: none), (max-width: 768px) {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
 

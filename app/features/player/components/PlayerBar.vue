@@ -919,14 +919,14 @@ onClickOutside(moreMenuBtnRef, (e) => {
     }
 
     .player-bar__btn {
-      width: 26px;
-      height: 26px;
-      font-size: var(--text-lg);
-    }
-    .player-bar__btn--play {
       width: 32px;
       height: 32px;
       font-size: var(--text-xl);
+    }
+    .player-bar__btn--play {
+      width: 44px;
+      height: 44px;
+      font-size: var(--text-2xl);
     }
     &__slider--volume {
       width: 50px;
@@ -1094,6 +1094,12 @@ onClickOutside(moreMenuBtnRef, (e) => {
     flex-direction: column;
     gap: var(--space-5);
     -webkit-overflow-scrolling: touch;
+    width: 100%;
+    box-sizing: border-box;
+
+    @media (max-width: 768px) {
+      padding: var(--space-8) var(--space-8);
+    }
   }
 
   &__line {
@@ -1105,9 +1111,13 @@ onClickOutside(moreMenuBtnRef, (e) => {
     cursor: pointer;
     opacity: 0.4;
     word-break: break-word;
+    overflow-wrap: break-word;
     white-space: pre-wrap;
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     text-align: center;
+    transform-origin: center center;
     transition:
       color var(--transition-base),
       opacity var(--transition-base),
@@ -1117,11 +1127,15 @@ onClickOutside(moreMenuBtnRef, (e) => {
       color: var(--color-text-primary);
       opacity: 1;
       font-size: var(--text-2xl);
+
+      @media (max-width: 768px) {
+        font-size: var(--text-xl);
+      }
     }
 
     body.audio-reactive-lyrics &--active {
-      transform: scale(calc(1.02 + var(--audio-bass, 0) * 0.2));
-      text-shadow: 0 0 calc(10px + var(--audio-bass, 0) * 25px)
+      transform: scale(calc(1.01 + var(--audio-bass, 0) * 0.08));
+      text-shadow: 0 0 calc(5px + var(--audio-bass, 0) * 15px)
         hsla(
           var(--color-primary-h),
           var(--color-primary-s),

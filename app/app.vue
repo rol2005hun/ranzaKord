@@ -13,7 +13,10 @@ const { showUpdateModal } = useAppUpdate();
 const layoutStore = useLayoutStore();
 const playerStore = usePlayerStore();
 
-const isTauriApp = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+const isTauriDesktop =
+  typeof window !== 'undefined' &&
+  '__TAURI_INTERNALS__' in window &&
+  !/android|ios|iphone|ipad/i.test(navigator.userAgent);
 
 useHead(() => ({
   htmlAttrs: {
@@ -28,7 +31,7 @@ useHead(() => ({
 
 onMounted(async () => {
   try {
-    if (isTauriApp) {
+    if (isTauriDesktop) {
       const { Window, getCurrentWindow } = await import('@tauri-apps/api/window');
       setTimeout(async () => {
         const splashscreen = await Window.getByLabel('splashscreen');
@@ -45,8 +48,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div :class="{ 'is-tauri': isTauriApp }">
-    <AppTitlebar v-if="isTauriApp" />
+  <div :class="{ 'is-tauri': isTauriDesktop }">
+    <AppTitlebar v-if="isTauriDesktop" />
     <NuxtRouteAnnouncer />
     <NuxtLayout>
       <NuxtPage />

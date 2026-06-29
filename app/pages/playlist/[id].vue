@@ -63,7 +63,8 @@ const { data, status, refresh } = await useAsyncData<PlaylistDetail | null>(
     });
   },
   {
-    watch: [id, sortBy, sortOrder, debouncedSearch]
+    watch: [id, sortBy, sortOrder, debouncedSearch],
+    lazy: true
   }
 );
 

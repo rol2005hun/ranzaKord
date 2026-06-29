@@ -390,7 +390,11 @@ function closeDropdown() {
 
 @media (max-width: 768px) {
   .app-navbar {
-    padding: 0 var(--space-4);
+    padding-bottom: var(--space-2);
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+    height: auto;
+    min-height: 4rem;
   }
 }
 </style>
