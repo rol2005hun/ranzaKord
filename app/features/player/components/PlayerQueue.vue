@@ -118,13 +118,15 @@ onMounted(() => {
     <ul v-else class="player-queue__list" @dragend="handleDragEnd">
       <li
         v-for="(track, index) in playerStore.queue"
-        :key="track.videoId + '-' + index"
+        :key="track.queueId || track.videoId + '-' + index"
         draggable="true"
         class="player-queue__item"
         :class="{
           'player-queue__item--dragging': dragIndex === index,
           'player-queue__item--drag-over': dragOverIndex === index,
-          'player-queue__item--playing': playerStore.currentTrack?.videoId === track.videoId
+          'player-queue__item--playing': playerStore.currentTrack?.queueId
+            ? playerStore.currentTrack.queueId === track.queueId
+            : playerStore.currentTrack?.videoId === track.videoId
         }"
         @dragstart="handleDragStart($event, index)"
         @dragenter="handleDragEnter($event, index)"
@@ -132,7 +134,11 @@ onMounted(() => {
         @drop="handleDrop($event, index)">
         <div class="player-queue__num-wrapper">
           <span
-            v-if="playerStore.currentTrack?.videoId === track.videoId"
+            v-if="
+              playerStore.currentTrack?.queueId
+                ? playerStore.currentTrack.queueId === track.queueId
+                : playerStore.currentTrack?.videoId === track.videoId
+            "
             class="player-queue__playing-icon">
             <AppIcon name="ph:speaker-high-fill" class="text-primary" />
           </span>
@@ -144,7 +150,11 @@ onMounted(() => {
 
         <div class="player-queue__track-info" @click="playQueueTrack(index)">
           <div class="player-queue__track-thumb">
-            <img v-if="track.thumbnailUrl" :src="track.thumbnailUrl" :alt="track.title" />
+            <img
+              v-if="track.thumbnailUrl"
+              :src="track.thumbnailUrl"
+              :alt="track.title"
+              loading="lazy" />
             <div v-else class="player-queue__track-thumb-placeholder">
               <AppIcon name="ph:music-notes" />
             </div>
@@ -153,7 +163,11 @@ onMounted(() => {
           <div class="player-queue__track-text">
             <span
               class="player-queue__track-title"
-              :class="{ 'text-primary': playerStore.currentTrack?.videoId === track.videoId }">
+              :class="{
+                'text-primary': playerStore.currentTrack?.queueId
+                  ? playerStore.currentTrack.queueId === track.queueId
+                  : playerStore.currentTrack?.videoId === track.videoId
+              }">
               {{ track.title }}
             </span>
             <span class="player-queue__track-artist">{{ track.artist }}</span>

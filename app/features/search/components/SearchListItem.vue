@@ -84,7 +84,8 @@ function resolveArtists(track: SearchResult): { name: string; id?: string }[] {
         v-if="track.thumbnailUrl"
         :src="track.thumbnailUrl"
         :alt="track.title"
-        referrerpolicy="no-referrer" />
+        referrerpolicy="no-referrer"
+        loading="lazy" />
       <AppIcon v-else name="ph:music-notes-simple" />
       <div
         v-if="track.type === 'song'"

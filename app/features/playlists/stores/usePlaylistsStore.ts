@@ -217,6 +217,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
         importProgress.value = null;
         return null;
       }
+      const targetId = targetPlaylist.id;
 
       const normalizeString = (str: string): string => {
         return str
@@ -248,151 +249,164 @@ export const usePlaylistsStore = defineStore('playlists', () => {
       const importedTrackKeys = new Set<string>();
       const processedIncomingKeys = new Set<string>();
 
-      for (let i = 0; i < result.tracks.length; i++) {
+      const CHUNK_SIZE = 5;
+      for (let i = 0; i < result.tracks.length; i += CHUNK_SIZE) {
         if (importCancelled.value) break;
-        importProgress.value = { current: i + 1, total: result.tracks.length };
-        let track = result.tracks[i] as Track;
-        const originalTitle = track.title;
-        const originalArtist = track.artist;
 
-        const incomingKey = trackKey(track.title, track.artist);
+        const chunk = result.tracks.slice(i, i + CHUNK_SIZE);
 
-        if (processedIncomingKeys.has(incomingKey)) {
-          skippedCount++;
-          skippedTracks.push({
-            incoming: {
-              title: track.title,
-              artist: track.artist,
-              thumbnailUrl: track.thumbnailUrl,
-              videoId: track.videoId
-            },
-            existing: existingKeyToTrack.get(incomingKey) || {
-              title: track.title,
-              artist: track.artist,
-              thumbnailUrl: track.thumbnailUrl,
-              videoId: track.videoId
+        await Promise.all(
+          chunk.map(async (rawTrack) => {
+            if (importCancelled.value) return;
+
+            let track = rawTrack as Track;
+            const originalTitle = track.title;
+            const originalArtist = track.artist;
+
+            const incomingKey = trackKey(track.title, track.artist);
+
+            if (processedIncomingKeys.has(incomingKey)) {
+              skippedCount++;
+              skippedTracks.push({
+                incoming: {
+                  title: track.title,
+                  artist: track.artist,
+                  thumbnailUrl: track.thumbnailUrl,
+                  videoId: track.videoId
+                },
+                existing: existingKeyToTrack.get(incomingKey) || {
+                  title: track.title,
+                  artist: track.artist,
+                  thumbnailUrl: track.thumbnailUrl,
+                  videoId: track.videoId
+                }
+              });
+              return;
             }
-          });
-          continue;
-        }
-        processedIncomingKeys.add(incomingKey);
+            processedIncomingKeys.add(incomingKey);
 
-        if (initialTrackKeys.has(incomingKey)) {
-          alreadyExistsCount++;
-          const existingTrack = existingKeyToTrack.get(incomingKey) || {
-            title: track.title,
-            artist: track.artist,
-            thumbnailUrl: track.thumbnailUrl,
-            videoId: track.videoId
-          };
-          alreadyExistsTracks.push({
-            incoming: {
-              title: track.title,
-              artist: track.artist,
-              thumbnailUrl: track.thumbnailUrl,
-              videoId: track.videoId
-            },
-            existing: existingTrack
-          });
-          continue;
-        }
-
-        if (importedTrackKeys.has(incomingKey)) {
-          // This should technically never be hit now due to processedIncomingKeys, but keeping it for safety
-          skippedCount++;
-          skippedTracks.push({
-            incoming: {
-              title: track.title,
-              artist: track.artist,
-              thumbnailUrl: track.thumbnailUrl,
-              videoId: track.videoId
-            },
-            existing: {
-              title: track.title,
-              artist: track.artist,
-              thumbnailUrl: track.thumbnailUrl,
-              videoId: track.videoId
+            if (initialTrackKeys.has(incomingKey)) {
+              alreadyExistsCount++;
+              const existingTrack = existingKeyToTrack.get(incomingKey) || {
+                title: track.title,
+                artist: track.artist,
+                thumbnailUrl: track.thumbnailUrl,
+                videoId: track.videoId
+              };
+              alreadyExistsTracks.push({
+                incoming: {
+                  title: track.title,
+                  artist: track.artist,
+                  thumbnailUrl: track.thumbnailUrl,
+                  videoId: track.videoId
+                },
+                existing: existingTrack
+              });
+              return;
             }
-          });
-          continue;
-        }
 
-        if (platform === 'spotify') {
-          const searchQuery = `${track.title} ${track.artist}`;
-          try {
-            const searchRes = await $fetch<SearchResult[]>(`/api/search`, {
-              query: { q: searchQuery, type: 'song' }
-            });
-            if (searchRes && searchRes.length > 0) {
-              const ytTrack = searchRes[0];
-              if (!ytTrack) {
+            if (importedTrackKeys.has(incomingKey)) {
+              skippedCount++;
+              skippedTracks.push({
+                incoming: {
+                  title: track.title,
+                  artist: track.artist,
+                  thumbnailUrl: track.thumbnailUrl,
+                  videoId: track.videoId
+                },
+                existing: {
+                  title: track.title,
+                  artist: track.artist,
+                  thumbnailUrl: track.thumbnailUrl,
+                  videoId: track.videoId
+                }
+              });
+              return;
+            }
+
+            if (platform === 'spotify') {
+              const searchQuery = `${track.title} ${track.artist}`;
+              try {
+                const searchRes = await $fetch<SearchResult[]>(`/api/search`, {
+                  query: { q: searchQuery, type: 'song' }
+                });
+                if (searchRes && searchRes.length > 0) {
+                  const ytTrack = searchRes[0];
+                  if (!ytTrack) {
+                    failedCount++;
+                    failedTracks.push({ title: originalTitle, artist: originalArtist });
+                    return;
+                  }
+                  const resolvedArtist = ytTrack.artist || track.artist;
+                  const resolvedArtists =
+                    ytTrack.artists && ytTrack.artists.length > 0
+                      ? ytTrack.artists.map((a) => ({ name: a.name, channelId: a.id }))
+                      : splitArtistString(resolvedArtist);
+                  track = {
+                    ...track,
+                    videoId: ytTrack.id,
+                    title: ytTrack.title,
+                    artist: resolvedArtist,
+                    artistId: ytTrack.artistId,
+                    artists: resolvedArtists,
+                    thumbnailUrl: ytTrack.thumbnailUrl,
+                    durationSeconds: ytTrack.durationSeconds ?? 0
+                  };
+                } else {
+                  failedCount++;
+                  failedTracks.push({ title: originalTitle, artist: originalArtist });
+                  return;
+                }
+              } catch (e) {
+                console.error(`Search failed for ${searchQuery}`, e);
                 failedCount++;
                 failedTracks.push({ title: originalTitle, artist: originalArtist });
-                continue;
+                return;
               }
-              const resolvedArtist = ytTrack.artist || track.artist;
-              const resolvedArtists =
-                ytTrack.artists && ytTrack.artists.length > 0
-                  ? ytTrack.artists.map((a) => ({ name: a.name, channelId: a.id }))
-                  : splitArtistString(resolvedArtist);
-              track = {
-                ...track,
-                videoId: ytTrack.id,
-                title: ytTrack.title,
-                artist: resolvedArtist,
-                artistId: ytTrack.artistId,
-                artists: resolvedArtists,
-                thumbnailUrl: ytTrack.thumbnailUrl,
-                durationSeconds: ytTrack.durationSeconds ?? 0
-              };
-            } else {
+            }
+
+            const resolvedKey = trackKey(track.title, track.artist);
+            if (
+              track.videoId &&
+              !existingTrackIds.has(track.videoId) &&
+              !initialTrackKeys.has(resolvedKey) &&
+              !importedTrackKeys.has(resolvedKey)
+            ) {
+              existingTrackIds.add(track.videoId);
+              importedTrackKeys.add(resolvedKey);
+              try {
+                await addTrack(targetId, {
+                  videoId: track.videoId,
+                  title: track.title,
+                  artist: track.artist,
+                  artistId: track.artistId,
+                  artists: track.artists ?? [],
+                  thumbnailUrl: track.thumbnailUrl,
+                  durationMs: track.durationSeconds * 1000
+                });
+                successCount++;
+                successTracks.push({
+                  title: track.title,
+                  artist: track.artist,
+                  thumbnailUrl: track.thumbnailUrl
+                });
+              } catch {
+                failedCount++;
+                failedTracks.push({ title: originalTitle, artist: originalArtist });
+              }
+            } else if (!track.videoId) {
               failedCount++;
               failedTracks.push({ title: originalTitle, artist: originalArtist });
-              continue;
+            } else {
+              skippedCount++;
             }
-          } catch (e) {
-            console.error(`Search failed for ${searchQuery}`, e);
-            failedCount++;
-            failedTracks.push({ title: originalTitle, artist: originalArtist });
-            continue;
-          }
-        }
+          })
+        );
 
-        const resolvedKey = trackKey(track.title, track.artist);
-        if (
-          track.videoId &&
-          !existingTrackIds.has(track.videoId) &&
-          !initialTrackKeys.has(resolvedKey) &&
-          !importedTrackKeys.has(resolvedKey)
-        ) {
-          try {
-            await addTrack(targetPlaylist.id, {
-              videoId: track.videoId,
-              title: track.title,
-              artist: track.artist,
-              artistId: track.artistId,
-              artists: track.artists ?? [],
-              thumbnailUrl: track.thumbnailUrl,
-              durationMs: track.durationSeconds * 1000
-            });
-            existingTrackIds.add(track.videoId);
-            importedTrackKeys.add(resolvedKey);
-            successCount++;
-            successTracks.push({
-              title: track.title,
-              artist: track.artist,
-              thumbnailUrl: track.thumbnailUrl
-            });
-          } catch {
-            failedCount++;
-            failedTracks.push({ title: originalTitle, artist: originalArtist });
-          }
-        } else if (!track.videoId) {
-          failedCount++;
-          failedTracks.push({ title: originalTitle, artist: originalArtist });
-        } else {
-          skippedCount++;
-        }
+        importProgress.value = {
+          current: Math.min(i + CHUNK_SIZE, result.tracks.length),
+          total: result.tracks.length
+        };
       }
 
       importCancelled.value = false;

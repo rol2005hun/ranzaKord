@@ -24,7 +24,11 @@ const {
 } = await useFetch<ArtistDetail>('/api/artist', {
   headers,
   query: { id },
-  lazy: true
+  lazy: true,
+  getCachedData(key) {
+    const nuxtApp = useNuxtApp();
+    return nuxtApp.payload.data[key] || nuxtApp.static.data[key];
+  }
 });
 
 const playerStore = usePlayerStore();
@@ -114,12 +118,10 @@ async function loadSongs() {
       }
     });
     if (data.items) {
-      const currentArtistName = artist.value?.name?.toLowerCase() || '';
       const newItems = data.items.filter(
         (item) =>
           !allSongs.value.some((existing) => existing.id === item.id) &&
-          (item.artist?.toLowerCase().includes(currentArtistName) ||
-            item.artists?.some((a) => a.name.toLowerCase().includes(currentArtistName)))
+          (item.artistId === id || item.artists?.some((a) => a.id === id))
       );
       allSongs.value.push(...newItems);
 

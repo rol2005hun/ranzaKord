@@ -41,7 +41,7 @@ function syncThemeColors() {
 
 function drawFrame() {
   animId = requestAnimationFrame(drawFrame);
-  if (layoutStore.rightSidebarMode !== 'info') return;
+  if (layoutStore.rightSidebarMode !== 'info' || !layoutStore.isRightSidebarOpen) return;
 
   const canvas = canvasRef.value;
   if (!canvas) return;

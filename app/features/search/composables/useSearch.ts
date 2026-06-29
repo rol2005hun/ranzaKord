@@ -4,6 +4,9 @@ import type {
   SearchResultType
 } from '../types/search.types';
 
+const searchCache = new Map<string, CategorizedSearchResults | SearchResult[]>();
+const MAX_CACHE_SIZE = 20;
+
 export function useSearch() {
   const store = useSearchStore();
 
@@ -31,7 +34,23 @@ export function useSearch() {
             ? `/api/search?q=${encodeURIComponent(q.trim())}&_v=2`
             : `/api/search?q=${encodeURIComponent(q.trim())}&type=${type}&_v=2`;
 
+        if (searchCache.has(fetchUrl)) {
+          const cachedData = searchCache.get(fetchUrl);
+          if (type === 'all') {
+            store.setCategorizedResults(cachedData as CategorizedSearchResults);
+          } else {
+            store.setResults(cachedData as SearchResult[]);
+          }
+          return;
+        }
+
         const data = await $fetch<CategorizedSearchResults | SearchResult[]>(fetchUrl);
+
+        if (searchCache.size >= MAX_CACHE_SIZE) {
+          const firstKey = searchCache.keys().next().value;
+          if (firstKey) searchCache.delete(firstKey);
+        }
+        searchCache.set(fetchUrl, data);
 
         if (type === 'all') {
           store.setCategorizedResults(data as CategorizedSearchResults);

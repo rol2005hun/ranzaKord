@@ -57,19 +57,23 @@ describe('usePlayerStore', () => {
     it('sets queue', () => {
       const store = usePlayerStore();
       store.setQueue([mockTrack1, mockTrack2]);
-      expect(store.queue).toEqual([mockTrack1, mockTrack2]);
+      expect(store.queue).toEqual([
+        expect.objectContaining(mockTrack1),
+        expect.objectContaining(mockTrack2)
+      ]);
     });
 
-    it('adds to queue without duplicating', () => {
+    it('adds to queue and assigns unique queueId', () => {
       const store = usePlayerStore();
       store.addToQueue(mockTrack1);
-      expect(store.queue).toEqual([mockTrack1]);
+      expect(store.queue).toEqual([expect.objectContaining(mockTrack1)]);
 
-      store.addToQueue(mockTrack1); // Duplicate
-      expect(store.queue.length).toBe(1);
+      store.addToQueue(mockTrack1); // Duplicate adds another instance
+      expect(store.queue.length).toBe(2);
+      expect(store.queue[0]!.queueId).not.toEqual(store.queue[1]!.queueId);
 
       store.addToQueue(mockTrack2);
-      expect(store.queue).toEqual([mockTrack1, mockTrack2]);
+      expect(store.queue.length).toBe(3);
     });
   });
 
