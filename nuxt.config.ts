@@ -22,6 +22,16 @@ export default defineNuxtConfig({
                 if ('__TAURI_INTERNALS__' in window) {
                   document.documentElement.classList.add('is-tauri');
                 }
+                
+                if (!window.crypto) window.crypto = {};
+                if (!window.crypto.randomUUID) {
+                  window.crypto.randomUUID = function() {
+                    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                      var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                      return v.toString(16);
+                    });
+                  };
+                }
               } catch (e) {}
             })();
           `
@@ -189,6 +199,16 @@ export default defineNuxtConfig({
         compilerOptions: {
           experimentalDecorators: true
         }
+      }
+    },
+    clearScreen: false,
+    envPrefix: ['VITE_', 'TAURI_'],
+    server: {
+      strictPort: true,
+      hmr: {
+        protocol: 'ws',
+        host: process.env.TAURI_DEV_HOST || 'localhost',
+        port: 5183
       }
     }
   }

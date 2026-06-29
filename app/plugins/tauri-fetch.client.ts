@@ -4,12 +4,11 @@ export default defineNuxtPlugin({
   name: 'tauri-fetch',
   enforce: 'pre',
   setup() {
-    const isTauriProd = isTauri() && !import.meta.dev;
     const config = useRuntimeConfig();
     const defaultBaseUrl = config.public.baseUrl;
 
     globalThis.$fetch = $fetch.create({
-      baseURL: isTauriProd ? defaultBaseUrl : undefined,
+      baseURL: isTauri() ? defaultBaseUrl : undefined,
       onRequest({ request, options }) {
         const requestUrl = request.toString();
         const isInternalApi =

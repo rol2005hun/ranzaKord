@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { getCurrentWindow } from '@tauri-apps/api/window';
+
 definePageMeta({
   layout: 'auth'
 });
@@ -29,6 +31,14 @@ const handleWindowFocus = () => {
 onMounted(() => {
   if (import.meta.client) {
     window.addEventListener('focus', handleWindowFocus);
+
+    if (isTauri.value) {
+      getCurrentWindow().onFocusChanged(({ payload: focused }) => {
+        if (focused && isRedirecting.value) {
+          isRedirecting.value = false;
+        }
+      });
+    }
   }
 });
 

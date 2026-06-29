@@ -61,11 +61,17 @@ const props = withDefaults(defineProps<Props>(), {
     box-shadow: 0 0 0 3px var(--color-ring);
   }
 
-  &:disabled,
-  &[aria-disabled='true'] {
+  &:disabled:not(.btn--loading),
+  &[aria-disabled='true']:not(.btn--loading) {
     opacity: 0.5;
     cursor: not-allowed;
     pointer-events: none;
+  }
+
+  &--loading {
+    cursor: not-allowed;
+    pointer-events: none;
+    filter: brightness(0.85);
   }
 
   &--sm {
@@ -118,10 +124,6 @@ const props = withDefaults(defineProps<Props>(), {
     &:hover:not(:disabled) {
       background-color: var(--color-danger-hover);
     }
-  }
-
-  &--loading {
-    cursor: wait;
   }
 
   &__spinner {

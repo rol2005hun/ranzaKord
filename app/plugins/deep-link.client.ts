@@ -1,4 +1,4 @@
-export default defineNuxtPlugin(async () => {
+export default defineNuxtPlugin(async (nuxtApp) => {
   if (!('__TAURI_INTERNALS__' in window)) {
     return;
   }
@@ -9,7 +9,13 @@ export default defineNuxtPlugin(async () => {
     try {
       const url = new URL(urlText);
 
-      if (url.protocol !== 'ranzakord:') {
+      const isCustomScheme = url.protocol === 'ranzakord:';
+      const isAppLink =
+        (url.protocol === 'https:' || url.protocol === 'http:') &&
+        url.hostname === 'kord.ranzak.dev' &&
+        url.pathname.startsWith('/auth');
+
+      if (!isCustomScheme && !isAppLink) {
         return;
       }
 
@@ -26,8 +32,12 @@ export default defineNuxtPlugin(async () => {
         sessionStorage.setItem('auth_token', token);
       }
 
-      // Force a full reload to ensure the app initializes freshly with the new token
-      window.location.href = '/';
+      // Run within Nuxt context to ensure Pinia and Router work
+      await nuxtApp.runWithContext(async () => {
+        const { fetchUser } = useAuth();
+        await fetchUser();
+        await navigateTo('/');
+      });
     } catch (e) {
       console.error('Failed to process deep link URL:', e);
     }

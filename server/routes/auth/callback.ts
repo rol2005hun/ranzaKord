@@ -27,6 +27,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: t('auth.errors.invalidState') });
   }
 
+  const host = getRequestHeader(event, 'host');
+  const protocol = host?.includes('localhost') || host?.match(/^\d{1,3}\./) ? 'http' : 'https';
+  const redirectUri = `${protocol}://${host}/auth/callback`;
+
   const tokenResponse = await $fetch<OAuthTokenResponse>(
     `https://${config.ranzakonnectDomain}/api/oauth/token`,
     {
@@ -35,7 +39,7 @@ export default defineEventHandler(async (event) => {
       body: new URLSearchParams({
         grant_type: 'authorization_code',
         code,
-        redirect_uri: `${config.public.baseUrl}/auth/callback`,
+        redirect_uri: redirectUri,
         client_id: config.ranzakonnectClientId as string,
         client_secret: config.ranzakonnectClientSecret as string
       }).toString()
