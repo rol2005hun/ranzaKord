@@ -72,6 +72,7 @@ mockNuxtImport('useAsyncData', () => {
 
 mockNuxtImport('useHead', () => vi.fn());
 mockNuxtImport('definePageMeta', () => vi.fn());
+mockNuxtImport('useSiteConfig', () => () => ({ url: 'https://test.com', name: 'Test' }));
 
 describe('playlist/[id].vue', () => {
   beforeEach(() => {

@@ -3,7 +3,7 @@ import type { FetchRequest, FetchOptions } from 'ofetch';
 export default defineNuxtPlugin({
   name: 'auth-interceptor',
   enforce: 'post',
-  setup() {
+  setup(nuxtApp) {
     const originalFetch = globalThis.$fetch as (
       request: FetchRequest,
       options?: FetchOptions
@@ -31,7 +31,9 @@ export default defineNuxtPlugin({
             window.location.pathname !== '/login' &&
             !window.location.pathname.startsWith('/auth/save-token')
           ) {
-            window.location.href = '/login';
+            nuxtApp.runWithContext(() => {
+              navigateTo('/login');
+            });
           }
         }
         throw error;

@@ -18,7 +18,11 @@ const {
 } = await useFetch<AlbumDetail>('/api/album', {
   headers,
   query: { id },
-  lazy: true
+  lazy: true,
+  getCachedData(key) {
+    const nuxtApp = useNuxtApp();
+    return nuxtApp.payload.data[key] || nuxtApp.static.data[key];
+  }
 });
 
 const playerStore = usePlayerStore();

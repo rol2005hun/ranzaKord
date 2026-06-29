@@ -5,6 +5,7 @@ export interface TrackArtist {
 
 export interface Track {
   videoId: string;
+  queueId?: string;
   title: string;
   artist: string;
   artists?: TrackArtist[];

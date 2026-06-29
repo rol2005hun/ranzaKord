@@ -2,9 +2,16 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import plugin from '../../app/plugins/auth-interceptor.client';
 import { useAuthStore } from '../../app/features/auth/stores/useAuthStore';
 
+import { mockNuxtImport } from '@nuxt/test-utils/runtime';
+
 vi.mock('../../app/features/auth/stores/useAuthStore', () => ({
   useAuthStore: vi.fn()
 }));
+mockNuxtImport('navigateTo', () => {
+  return (url: string) => {
+    window.location.href = url;
+  };
+});
 
 describe('auth-interceptor.client plugin', () => {
   let originalFetch: import('vitest').Mock;
@@ -54,10 +61,11 @@ describe('auth-interceptor.client plugin', () => {
 
     const mockClearSession = vi.fn();
     vi.mocked(useAuthStore).mockReturnValue({
-      clearSession: mockClearSession
+      clearSession: mockClearSession,
+      isAuthenticated: false
     } as unknown as ReturnType<typeof useAuthStore>);
 
-    plugin({} as import('nuxt/app').NuxtApp);
+    plugin({ runWithContext: (fn: () => unknown) => fn() } as import('nuxt/app').NuxtApp);
 
     await expect(globalThis.$fetch('/api/test')).rejects.toThrow('Unauthorized');
 

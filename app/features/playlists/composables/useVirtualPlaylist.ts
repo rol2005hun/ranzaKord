@@ -132,9 +132,8 @@ export function useVirtualPlaylist({
     }, debounceMs);
   }
 
-  watch(containerRef, (el) => {
+  watch(containerRef, (el, _, onCleanup) => {
     if (el) {
-      // Poll for silent scroll restorations from the browser history for 1 second
       let attempts = 0;
       const interval = setInterval(() => {
         const scrollArea =
@@ -155,6 +154,10 @@ export function useVirtualPlaylist({
         attempts++;
         if (attempts > 10) clearInterval(interval);
       }, 100);
+
+      onCleanup(() => {
+        clearInterval(interval);
+      });
     }
   });
 

@@ -155,7 +155,7 @@ describe('usePlayer', () => {
     const trackToAdd = { ...mockTrack, videoId: 'q1' };
     const { addToQueue } = usePlayer();
     addToQueue(trackToAdd);
-    expect(store.queue[0]).toEqual(trackToAdd);
+    expect(store.queue[0]).toEqual(expect.objectContaining(trackToAdd));
 
     // Access computeds to increase coverage
     const {

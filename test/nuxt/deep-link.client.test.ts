@@ -1,12 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import plugin from '../../app/plugins/deep-link.client';
 
-const { mockOnOpenUrl } = vi.hoisted(() => ({
-  mockOnOpenUrl: vi.fn()
+const { mockOnOpenUrl, mockGetCurrent } = vi.hoisted(() => ({
+  mockOnOpenUrl: vi.fn(),
+  mockGetCurrent: vi.fn().mockResolvedValue([])
 }));
 
 vi.mock('@tauri-apps/plugin-deep-link', () => ({
-  onOpenUrl: mockOnOpenUrl
+  onOpenUrl: mockOnOpenUrl,
+  getCurrent: mockGetCurrent
 }));
 
 describe('deep-link.client plugin', () => {

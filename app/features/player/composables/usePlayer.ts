@@ -14,6 +14,20 @@ let crossfadeGain1 = 1.0;
 let crossfadeGain2 = 0.0;
 let isCrossfading = false;
 let crossfadeTriggered = false;
+let crossfadeRafId: number | null = null;
+let crossfadeIntervalId: ReturnType<typeof setInterval> | null = null;
+let audioAbortController: AbortController | null = null;
+
+function stopCrossfadeTimers() {
+  if (crossfadeRafId !== null) {
+    cancelAnimationFrame(crossfadeRafId);
+    crossfadeRafId = null;
+  }
+  if (crossfadeIntervalId !== null) {
+    clearInterval(crossfadeIntervalId);
+    crossfadeIntervalId = null;
+  }
+}
 
 export function usePlayer() {
   const store = usePlayerStore();
@@ -49,6 +63,12 @@ export function usePlayer() {
   }
 
   function bindAudio(el1: HTMLAudioElement, el2: HTMLAudioElement) {
+    if (audioAbortController) {
+      audioAbortController.abort();
+    }
+    audioAbortController = new AbortController();
+    const { signal } = audioAbortController;
+
     audio1Ref.value = el1;
     audio2Ref.value = el2;
     activeAudioIndex.value = 0;
@@ -60,70 +80,95 @@ export function usePlayer() {
     const els = [el1, el2];
 
     els.forEach((el, index) => {
-      el.addEventListener('timeupdate', () => {
-        if (isRestoring) return;
-        if (index === activeAudioIndex.value) {
-          store.currentTimeSeconds = el.currentTime;
+      el.addEventListener(
+        'timeupdate',
+        () => {
+          if (isRestoring) return;
+          if (index === activeAudioIndex.value) {
+            store.currentTimeSeconds = el.currentTime;
 
-          const actualDuration = store.currentTrack?.durationSeconds || 0;
-          if (
-            store.crossfadeEnabled &&
-            store.crossfadeDuration > 0 &&
-            actualDuration > 0 &&
-            store.hasNext &&
-            !isCrossfading &&
-            !crossfadeTriggered
-          ) {
-            const timeLeft = actualDuration - el.currentTime;
-            if (timeLeft <= store.crossfadeDuration) {
-              crossfadeTriggered = true;
-              startCrossfade();
+            const actualDuration = store.currentTrack?.durationSeconds || 0;
+            if (
+              store.crossfadeEnabled &&
+              store.crossfadeDuration > 0 &&
+              actualDuration > 0 &&
+              store.hasNext &&
+              !isCrossfading &&
+              !crossfadeTriggered
+            ) {
+              const safeCrossfade = Math.min(store.crossfadeDuration, actualDuration / 2);
+              const timeLeft = actualDuration - el.currentTime;
+              if (timeLeft <= safeCrossfade) {
+                crossfadeTriggered = true;
+                startCrossfade();
+              }
             }
           }
-        }
-      });
+        },
+        { signal }
+      );
 
-      el.addEventListener('durationchange', () => {
-        if (index === activeAudioIndex.value && isFinite(el.duration)) {
-          store.durationSeconds = el.duration;
-        }
-      });
-
-      el.addEventListener('play', () => {
-        if (index === activeAudioIndex.value) store.isPlaying = true;
-      });
-
-      el.addEventListener('pause', () => {
-        if (index === activeAudioIndex.value && !isCrossfading) {
-          store.isPlaying = false;
-        }
-      });
-
-      el.addEventListener('ended', () => {
-        if (index !== activeAudioIndex.value) return;
-        store.isPlaying = false;
-        if (store.currentTrack) {
-          recordTrackStat(store.currentTrack, Math.floor(el.currentTime), false);
-        }
-        sleepTimerOnTrackEnded();
-        if (store.repeatMode === 'one') {
-          seek(0);
-          resume();
-        } else {
-          if (!isCrossfading) {
-            const next = store.nextTrack();
-            if (next) playTrack(next);
+      el.addEventListener(
+        'durationchange',
+        () => {
+          if (index === activeAudioIndex.value && isFinite(el.duration)) {
+            store.durationSeconds = el.duration;
           }
-        }
-      });
+        },
+        { signal }
+      );
 
-      el.addEventListener('error', () => {
-        if (index === activeAudioIndex.value) {
-          store.isLoading = false;
+      el.addEventListener(
+        'play',
+        () => {
+          if (index === activeAudioIndex.value) store.isPlaying = true;
+        },
+        { signal }
+      );
+
+      el.addEventListener(
+        'pause',
+        () => {
+          if (index === activeAudioIndex.value && !isCrossfading) {
+            store.isPlaying = false;
+          }
+        },
+        { signal }
+      );
+
+      el.addEventListener(
+        'ended',
+        () => {
+          if (index !== activeAudioIndex.value) return;
           store.isPlaying = false;
-          store.error = t('player.errors.playback');
-        }
-      });
+          if (store.currentTrack) {
+            recordTrackStat(store.currentTrack, Math.floor(el.currentTime), false);
+          }
+          sleepTimerOnTrackEnded();
+          if (store.repeatMode === 'one') {
+            seek(0);
+            resume();
+          } else {
+            if (!isCrossfading) {
+              const next = store.nextTrack();
+              if (next) playTrack(next);
+            }
+          }
+        },
+        { signal }
+      );
+
+      el.addEventListener(
+        'error',
+        () => {
+          if (index === activeAudioIndex.value) {
+            store.isLoading = false;
+            store.isPlaying = false;
+            store.error = t('player.errors.playback');
+          }
+        },
+        { signal }
+      );
     });
 
     applyVolumes();
@@ -188,8 +233,6 @@ export function usePlayer() {
     const durationMs = store.crossfadeDuration * 1000;
     const startTime = performance.now();
 
-    let rafId: number;
-
     function step(now?: number) {
       if (!isCrossfading) return;
       const currentNow = now ?? performance.now();
@@ -222,21 +265,20 @@ export function usePlayer() {
         crossfadeTriggered = false;
         outAudio?.pause();
         if (outAudio) outAudio.currentTime = 0;
-        cancelAnimationFrame(rafId);
-        clearInterval(intervalId);
+        stopCrossfadeTimers();
       }
     }
 
     function loop(now: number) {
       if (isCrossfading) {
         step(now);
-        rafId = requestAnimationFrame(loop);
+        crossfadeRafId = requestAnimationFrame(loop);
       }
     }
 
-    // Run both: rAF for smooth 60fps in foreground, setInterval fallback for background tabs
-    rafId = requestAnimationFrame(loop);
-    const intervalId = setInterval(() => step(), 100);
+    stopCrossfadeTimers();
+    crossfadeRafId = requestAnimationFrame(loop);
+    crossfadeIntervalId = setInterval(() => step(), 100);
   }
 
   function recordTrackStat(track: Track, listeningSeconds: number, skipped: boolean) {
@@ -257,7 +299,7 @@ export function usePlayer() {
 
   let isFetchingMore = false;
 
-  async function checkAndFetchMore(currentTrackId: string) {
+  async function checkAndFetchMore(track: Track) {
     if (isFetchingMore || store.playbackOrder !== 'sequential') return;
     const ctx = store.playbackContext;
     if (!ctx || ctx.type === 'none') {
@@ -265,7 +307,9 @@ export function usePlayer() {
     }
 
     const q = store.queue;
-    const idx = q.findIndex((t) => t.videoId === currentTrackId);
+    const idx = q.findIndex(
+      (t) => (track.queueId && t.queueId === track.queueId) || t.videoId === track.videoId
+    );
     if (idx < 0) return;
 
     // Check if we are near the end of the queue (e.g. 3 tracks remaining)
@@ -308,10 +352,10 @@ export function usePlayer() {
           }
         } else if (store.autoplayEnabled) {
           // Playlist finished, fallback to radio if autoplay is enabled
-          await fetchRadioNext(currentTrackId);
+          await fetchRadioNext(track.videoId);
         }
       } else if (store.autoplayEnabled) {
-        await fetchRadioNext(currentTrackId);
+        await fetchRadioNext(track.videoId);
       }
     } catch (e) {
       console.error('Failed to fetch more tracks', e);
@@ -339,6 +383,7 @@ export function usePlayer() {
 
     isCrossfading = false;
     crossfadeTriggered = false;
+    stopCrossfadeTimers();
 
     if (store.currentTrack && store.currentTimeSeconds > 0) {
       const skipped = store.currentTimeSeconds < store.durationSeconds * 0.9;
@@ -350,7 +395,7 @@ export function usePlayer() {
     store.isPlaying = false;
     store.error = null;
 
-    checkAndFetchMore(track.videoId);
+    checkAndFetchMore(track);
 
     if ('mediaSession' in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({

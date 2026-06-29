@@ -12,7 +12,13 @@ const isTauri = computed(
 
 const displayTrack = computed(() => (isHydrated.value ? player.currentTrack.value : null));
 const displayVolume = computed(() => (isHydrated.value ? player.volume.value : 1));
-const displayTime = computed(() => (isHydrated.value ? player.currentTimeSeconds.value : 0));
+const isDraggingSeek = ref(false);
+const localSeekTime = ref(0);
+
+const displayTime = computed(() => {
+  if (isDraggingSeek.value) return localSeekTime.value;
+  return isHydrated.value ? player.currentTimeSeconds.value : 0;
+});
 const displayDuration = computed(() => (isHydrated.value ? player.durationSeconds.value : 0));
 
 onMounted(() => {
@@ -145,6 +151,13 @@ function formatTime(seconds: number): string {
 }
 
 function onSeekInput(event: Event) {
+  isDraggingSeek.value = true;
+  const input = event.target as HTMLInputElement;
+  localSeekTime.value = parseFloat(input.value);
+}
+
+function onSeekChange(event: Event) {
+  isDraggingSeek.value = false;
   const input = event.target as HTMLInputElement;
   player.seek(parseFloat(input.value));
 }
@@ -303,7 +316,8 @@ onClickOutside(moreMenuBtnRef, (e) => {
               '--progress': (displayTime / (displayDuration || 1)) * 100 + '%'
             }"
             data-allow-mismatch
-            @input="onSeekInput" />
+            @input="onSeekInput"
+            @change="onSeekChange" />
           <AppSkeleton v-else height="4px" class="player-bar__slider--seek" />
           <span class="player-bar__time" data-allow-mismatch>
             {{ formatTime(displayDuration) }}

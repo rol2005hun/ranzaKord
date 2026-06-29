@@ -4,8 +4,8 @@ export const usePlayerStore = defineStore(
   'player',
   () => {
     const currentTrack = ref<Track | null>(null);
-    const queue = ref<Track[]>([]);
-    const playHistory = ref<Track[]>([]);
+    const queue = shallowRef<Track[]>([]);
+    const playHistory = shallowRef<Track[]>([]);
     const isPlaying = ref(false);
     const volume = ref(0.8);
     const currentTimeSeconds = ref(0);
@@ -43,8 +43,12 @@ export const usePlayerStore = defineStore(
       if (!track) return false;
       if (playbackOrder.value === 'random') return queue.value.length > 1;
       if (repeatMode.value === 'all') return queue.value.length > 0;
-      const idx = queue.value.findIndex((t) => t.videoId === track.videoId);
-      return idx >= 0 && idx < queue.value.length - 1;
+      const idx = queue.value.findIndex(
+        (t) => (track.queueId && t.queueId === track.queueId) || t.videoId === track.videoId
+      );
+      if (idx === -1) return false;
+      if (playbackOrder.value === 'reverse') return idx > 0;
+      return idx < queue.value.length - 1;
     });
 
     const hasPrev = computed(() => {
@@ -53,14 +57,19 @@ export const usePlayerStore = defineStore(
       if (playHistory.value.length > 0) return true;
       if (playbackOrder.value === 'random') return false;
       if (repeatMode.value === 'all') return queue.value.length > 0;
-      const idx = queue.value.findIndex((t) => t.videoId === track.videoId);
+      const idx = queue.value.findIndex(
+        (t) => (track.queueId && t.queueId === track.queueId) || t.videoId === track.videoId
+      );
+      if (idx === -1) return false;
+      if (playbackOrder.value === 'reverse') return idx < queue.value.length - 1;
       return idx > 0;
     });
 
     function setTrack(track: Track, fromHistory = false) {
       if (currentTrack.value && !fromHistory) {
-        playHistory.value.push(currentTrack.value);
-        if (playHistory.value.length > 50) playHistory.value.shift();
+        const newHistory = [...playHistory.value, currentTrack.value];
+        if (newHistory.length > 50) newHistory.shift();
+        playHistory.value = newHistory;
       }
       currentTrack.value = track;
       currentTimeSeconds.value = 0;
@@ -69,30 +78,40 @@ export const usePlayerStore = defineStore(
     }
 
     function setQueue(tracks: Track[]) {
-      queue.value = tracks.slice(0, 100);
+      queue.value = tracks.slice(0, 100).map((t) => ({
+        ...t,
+        queueId: t.queueId || crypto.randomUUID()
+      }));
     }
 
     function addToQueue(track: Track) {
-      if (!queue.value.find((t) => t.videoId === track.videoId)) {
-        queue.value.push(track);
-        if (queue.value.length > 100) {
-          queue.value.shift();
-        }
+      const newQueue = [...queue.value];
+      newQueue.push({
+        ...track,
+        queueId: track.queueId || crypto.randomUUID()
+      });
+      if (newQueue.length > 100) {
+        newQueue.shift();
       }
+      queue.value = newQueue;
     }
 
     function reorderQueue(fromIndex: number, toIndex: number) {
       if (fromIndex < 0 || fromIndex >= queue.value.length) return;
       if (toIndex < 0 || toIndex >= queue.value.length) return;
-      const item = queue.value.splice(fromIndex, 1)[0];
+      const newQueue = [...queue.value];
+      const item = newQueue.splice(fromIndex, 1)[0];
       if (item) {
-        queue.value.splice(toIndex, 0, item);
+        newQueue.splice(toIndex, 0, item);
+        queue.value = newQueue;
       }
     }
 
     function removeFromQueue(index: number) {
       if (index >= 0 && index < queue.value.length) {
-        queue.value.splice(index, 1);
+        const newQueue = [...queue.value];
+        newQueue.splice(index, 1);
+        queue.value = newQueue;
       }
     }
 
@@ -106,13 +125,17 @@ export const usePlayerStore = defineStore(
       if (queue.value.length === 0) return null;
 
       if (playbackOrder.value === 'random') {
-        const others = queue.value.filter((t) => t.videoId !== track.videoId);
+        const others = queue.value.filter((t) =>
+          track.queueId ? t.queueId !== track.queueId : t.videoId !== track.videoId
+        );
         if (others.length === 0) return track;
         const randomIdx = Math.floor(Math.random() * others.length);
         return others[randomIdx] ?? null;
       }
 
-      const idx = queue.value.findIndex((t) => t.videoId === track.videoId);
+      const idx = queue.value.findIndex(
+        (t) => (track.queueId && t.queueId === track.queueId) || t.videoId === track.videoId
+      );
 
       if (playbackOrder.value === 'reverse') {
         if (idx > 0) return queue.value[idx - 1] ?? null;
@@ -133,7 +156,9 @@ export const usePlayerStore = defineStore(
 
     function prevTrack(): Track | null {
       if (playHistory.value.length > 0) {
-        const prev = playHistory.value.pop();
+        const newHistory = [...playHistory.value];
+        const prev = newHistory.pop();
+        playHistory.value = newHistory;
         return prev ?? null;
       }
       const track = currentTrack.value;
@@ -142,7 +167,16 @@ export const usePlayerStore = defineStore(
 
       if (playbackOrder.value === 'random') return null;
 
-      const idx = queue.value.findIndex((t) => t.videoId === track.videoId);
+      const idx = queue.value.findIndex(
+        (t) => (track.queueId && t.queueId === track.queueId) || t.videoId === track.videoId
+      );
+
+      if (playbackOrder.value === 'reverse') {
+        if (idx >= 0 && idx < queue.value.length - 1) return queue.value[idx + 1] ?? null;
+        if (repeatMode.value === 'all') return queue.value[0] ?? null;
+        return null;
+      }
+
       if (idx > 0) {
         return queue.value[idx - 1] ?? null;
       }
@@ -286,7 +320,8 @@ export const usePlayerStore = defineStore(
           'currentTrack',
           'volume',
           'durationSeconds',
-          'isShuffle',
+          'playbackOrder',
+          'playHistory',
           'repeatMode',
           'queue',
           'isPlaying',
@@ -299,8 +334,7 @@ export const usePlayerStore = defineStore(
           'eqPreset',
           'eqBands',
           'playbackContext',
-          'autoplayEnabled',
-          'playbackOrder'
+          'autoplayEnabled'
         ],
         storage: piniaPluginPersistedstate.localStorage()
       }
