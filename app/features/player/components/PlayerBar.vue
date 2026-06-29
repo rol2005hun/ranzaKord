@@ -179,8 +179,8 @@ onClickOutside(moreMenuBtnRef, (e) => {
 
 <template>
   <div>
-    <audio ref="audioEl1" preload="metadata" playsinline />
-    <audio ref="audioEl2" preload="metadata" playsinline />
+    <audio ref="audioEl1" preload="metadata" playsinline crossorigin="anonymous" />
+    <audio ref="audioEl2" preload="metadata" playsinline crossorigin="anonymous" />
     <aside class="player-bar" :aria-label="$t('player.playerBar')">
       <div class="player-bar__left">
         <ClientOnly>

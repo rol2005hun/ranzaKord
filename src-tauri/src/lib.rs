@@ -98,7 +98,12 @@ pub fn run() {
         let _ = client.connect();
         
         builder = builder
-            .plugin(tauri_plugin_single_instance::init(|_app, _args, _cwd| {}))
+            .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+                use tauri::Emitter;
+                if let Some(url) = args.iter().find(|a| a.starts_with("ranzakord://")) {
+                    let _ = app.emit("deep-link-received", url);
+                }
+            }))
             .plugin(tauri_plugin_updater::Builder::new().build())
             .manage(DiscordState(Mutex::new(Some(client))))
             .invoke_handler(tauri::generate_handler![

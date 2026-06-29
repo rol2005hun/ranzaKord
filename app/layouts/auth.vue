@@ -15,7 +15,7 @@
   box-sizing: border-box;
 
   @media (max-width: 768px) {
-    padding-top: env(safe-area-inset-top, 0px);
+    padding-top: 0;
   }
 }
 </style>

@@ -64,9 +64,9 @@ const mockAsyncData = ref({
 const mockStatus = ref('success');
 
 mockNuxtImport('useAsyncData', () => {
-  return async () => {
+  return () => {
     // just return mocked data for test
-    return { data: mockAsyncData, status: mockStatus };
+    return { data: mockAsyncData, status: mockStatus, refresh: vi.fn() };
   };
 });
 
