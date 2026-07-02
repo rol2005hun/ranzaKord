@@ -280,7 +280,7 @@ function onNavClick(e: MouseEvent) {
   .settings-modal {
     &__container {
       flex-direction: column;
-      padding-top: max(32px, env(safe-area-inset-top));
+      padding-top: max(32px, var(--safe-area-top));
     }
 
     &__sidebar {
@@ -356,7 +356,7 @@ function onNavClick(e: MouseEvent) {
     }
 
     &__close {
-      top: max(16px, env(safe-area-inset-top));
+      top: max(16px, var(--safe-area-top));
       right: var(--space-3);
 
       .icon {

@@ -216,11 +216,12 @@ onMounted(() => {
   display: flex;
   height: calc(100dvh - var(--titlebar-height, 0px));
   margin-top: var(--titlebar-height, 0px);
+  padding-top: var(--safe-area-top);
   width: 100%;
   background: var(--color-bg);
   overflow: hidden;
   box-sizing: border-box;
-  padding-bottom: var(--player-height, 90px);
+  padding-bottom: calc(var(--player-height, 90px) + var(--safe-area-bottom));
 
   &__content {
     flex: 1;

@@ -402,7 +402,7 @@ function closeDropdown() {
 
 @media (max-width: 768px) {
   .app-navbar {
-    padding-top: calc(env(safe-area-inset-top, 0px) + var(--space-2));
+    padding-top: var(--space-2);
     padding-bottom: var(--space-2);
     padding-left: var(--space-4);
     padding-right: var(--space-4);

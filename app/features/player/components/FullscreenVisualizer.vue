@@ -564,7 +564,10 @@ function getStyleIcon(style: string) {
 <style scoped lang="scss">
 .fullscreen-visualizer {
   position: fixed;
-  inset: 0;
+  top: var(--safe-area-top);
+  left: 0;
+  width: 100vw;
+  height: calc(100dvh - var(--safe-area-top) - var(--safe-area-bottom));
   z-index: 9999;
   background-color: var(--color-bg);
   display: flex;
@@ -746,7 +749,7 @@ function getStyleIcon(style: string) {
     }
 
     @media (max-width: 768px) {
-      padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+      padding: 1rem;
     }
   }
 
