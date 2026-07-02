@@ -402,12 +402,12 @@ function closeDropdown() {
 
 @media (max-width: 768px) {
   .app-navbar {
-    padding-top: var(--space-2);
+    padding-top: max(var(--safe-area-top, 0px), var(--space-2));
     padding-bottom: var(--space-2);
     padding-left: var(--space-4);
     padding-right: var(--space-4);
     height: auto;
-    min-height: 4rem;
+    min-height: calc(3.5rem + max(var(--safe-area-top, 0px), var(--space-2)));
   }
 }
 </style>

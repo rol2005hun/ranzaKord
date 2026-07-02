@@ -28,12 +28,14 @@ const handleWindowFocus = () => {
   }
 };
 
-onMounted(() => {
+let unlistenTauriFocus: (() => void) | null = null;
+
+onMounted(async () => {
   if (import.meta.client) {
     window.addEventListener('focus', handleWindowFocus);
 
     if (isTauri.value) {
-      getCurrentWindow().onFocusChanged(({ payload: focused }) => {
+      unlistenTauriFocus = await getCurrentWindow().onFocusChanged(({ payload: focused }) => {
         if (focused && isRedirecting.value) {
           isRedirecting.value = false;
         }
@@ -45,6 +47,9 @@ onMounted(() => {
 onUnmounted(() => {
   if (import.meta.client) {
     window.removeEventListener('focus', handleWindowFocus);
+    if (unlistenTauriFocus) {
+      unlistenTauriFocus();
+    }
   }
 });
 
@@ -371,8 +376,8 @@ if (isAuthenticated.value) {
   }
   &__lang-toggle {
     position: absolute;
-    top: var(--space-6);
-    right: var(--space-6);
+    top: calc(var(--safe-area-top, 0px) + var(--space-4));
+    right: var(--space-4);
     display: flex;
     gap: var(--space-1);
     z-index: 10;

@@ -173,21 +173,28 @@ export function useAudioVisualizer() {
   let rAFId: number | null = null;
   const dataArray = new Uint8Array(512);
   let smoothedBass = 0;
+  let lastSetBass = '';
 
   function startAudioReactiveLoop() {
     if (rAFId) return;
     function loop() {
       if (analyserNode && isConnected) {
-        analyserNode.getByteFrequencyData(dataArray);
+        let rawBass = 0;
 
-        let bassSum = 0;
-        const bassBins = 8; // First 8 bins (~0-300Hz)
-        for (let i = 0; i < bassBins; i++) {
-          bassSum += dataArray[i] ?? 0;
+        // Only calculate bass if audio is actually playing, otherwise snap to 0 immediately
+        const playerStore = usePlayerStore();
+        if (playerStore.isPlaying) {
+          analyserNode.getByteFrequencyData(dataArray);
+
+          let bassSum = 0;
+          const bassBins = 8; // First 8 bins (~0-300Hz)
+          for (let i = 0; i < bassBins; i++) {
+            bassSum += dataArray[i] ?? 0;
+          }
+          // Normalize 0..1 and apply a slight curve to make it punchier
+          rawBass = bassSum / bassBins / 255;
+          rawBass = Math.pow(rawBass, 1.5);
         }
-        // Normalize 0..1 and apply a slight curve to make it punchier
-        let rawBass = bassSum / bassBins / 255;
-        rawBass = Math.pow(rawBass, 1.5);
 
         // Fast attack, fast decay for punchier beat syncing
         if (rawBass > smoothedBass) {
@@ -196,7 +203,15 @@ export function useAudioVisualizer() {
           smoothedBass = smoothedBass * 0.7 + rawBass * 0.3;
         }
 
-        document.documentElement.style.setProperty('--audio-bass', smoothedBass.toString());
+        if (smoothedBass < 0.001) {
+          smoothedBass = 0;
+        }
+
+        const bassString = smoothedBass.toString();
+        if (bassString !== lastSetBass) {
+          document.documentElement.style.setProperty('--audio-bass', bassString);
+          lastSetBass = bassString;
+        }
       }
       rAFId = requestAnimationFrame(loop);
     }

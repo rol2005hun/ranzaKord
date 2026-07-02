@@ -1,3 +1,4 @@
+import os from 'node:os';
 import pkg from './package.json' with { type: 'json' };
 
 export default defineNuxtConfig({
@@ -10,7 +11,7 @@ export default defineNuxtConfig({
       htmlAttrs: { lang: 'en' },
       titleTemplate: '%s | ranzaKord',
       charset: 'utf-8',
-      viewport: 'width=device-width, initial-scale=1',
+      viewport: 'width=device-width, initial-scale=1, viewport-fit=cover',
       link: [{ rel: 'icon', type: 'image/webp', href: '/logo.webp' }],
       script: [
         {
@@ -19,7 +20,7 @@ export default defineNuxtConfig({
               try {
                 var theme = document.cookie.match(/theme-id=([^;]+)/)?.[1] || 'dark';
                 document.documentElement.setAttribute('data-theme', theme);
-                if ('__TAURI_INTERNALS__' in window) {
+                if ('__TAURI_INTERNALS__' in window && !/android|ios|iphone|ipad/i.test(navigator.userAgent)) {
                   document.documentElement.classList.add('is-tauri');
                 }
                 
@@ -208,7 +209,14 @@ export default defineNuxtConfig({
       strictPort: true,
       hmr: {
         protocol: 'ws',
-        host: process.env.TAURI_DEV_HOST || 'localhost',
+        host:
+          process.env.TAURI_DEV_HOST ||
+          (os.networkInterfaces()
+            ? Object.values(os.networkInterfaces())
+                .flat()
+                .find((i) => i?.family === 'IPv4' && !i?.internal)?.address
+            : 'localhost') ||
+          'localhost',
         port: 5183
       }
     }

@@ -182,8 +182,7 @@ export default defineCachedEventHandler(
 
         const results = await innertube.music.search(q.trim(), { type: 'song' });
         const shelf = results.contents?.find((c) => (c as ShelfItem).type === 'MusicShelf') as
-          | ShelfItem
-          | undefined;
+          ShelfItem | undefined;
 
         if (shelf?.contents) {
           for (const item of shelf.contents) {

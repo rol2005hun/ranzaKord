@@ -299,10 +299,11 @@ const optimizedBgUrl = computed(() => {
       width: 100%;
 
       @media (max-width: 768px) {
-        flex-direction: column;
-        text-align: center;
-        gap: var(--space-4);
-        padding-top: var(--space-4);
+        flex-direction: row;
+        flex-wrap: wrap;
+        text-align: left;
+        gap: var(--space-5) var(--space-3);
+        padding-top: var(--space-2);
       }
     }
   }
@@ -429,6 +430,12 @@ const optimizedBgUrl = computed(() => {
       border-radius: 50%;
     }
 
+    @media (max-width: 768px) {
+      width: 80px;
+      height: 80px;
+      font-size: 2rem;
+    }
+
     img {
       width: 100%;
       height: 100%;
@@ -444,7 +451,9 @@ const optimizedBgUrl = computed(() => {
     min-width: 0;
 
     @media (max-width: 768px) {
-      align-items: center;
+      align-items: flex-start;
+      flex: 0 0 calc(100% - 80px - var(--space-3));
+      max-width: calc(100% - 80px - var(--space-3));
     }
   }
 
@@ -461,7 +470,7 @@ const optimizedBgUrl = computed(() => {
     font-weight: var(--font-weight-black);
     color: var(--color-text-primary);
     line-height: 1.1;
-    margin: 0 0 var(--space-2) 0;
+    margin: 0;
     display: -webkit-box;
     line-clamp: 2;
     -webkit-line-clamp: 2;
@@ -480,7 +489,7 @@ const optimizedBgUrl = computed(() => {
     flex-wrap: wrap;
 
     @media (max-width: 768px) {
-      justify-content: center;
+      justify-content: flex-start;
     }
   }
 

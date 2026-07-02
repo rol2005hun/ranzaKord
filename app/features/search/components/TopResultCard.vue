@@ -264,6 +264,7 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
+    padding-right: calc(48px + var(--space-2)); /* Reserve space for play button */
   }
 
   &__title {
@@ -277,6 +278,11 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    word-break: break-word;
+
+    @media (max-width: 768px) {
+      font-size: 1.5rem;
+    }
   }
 
   &__meta {

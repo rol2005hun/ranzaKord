@@ -43,8 +43,7 @@ export default defineEventHandler(async (event) => {
 
     let description = '';
     const rawDesc = header?.description as
-      | { description?: { text?: string }; toString?: () => string }
-      | undefined;
+      { description?: { text?: string }; toString?: () => string } | undefined;
     if (rawDesc) {
       if (rawDesc.description?.text) {
         description = rawDesc.description.text;
@@ -88,9 +87,7 @@ export default defineEventHandler(async (event) => {
       authors?: YtAuthor[];
       artists?: YtAuthor[];
       author?:
-        | YtAuthor
-        | YtAuthor[]
-        | { toString: () => string; name?: string; channel_id?: string };
+        YtAuthor | YtAuthor[] | { toString: () => string; name?: string; channel_id?: string };
     }
 
     for (const item of items) {

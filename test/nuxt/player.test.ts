@@ -4,6 +4,7 @@ import { usePlayer } from '../../app/features/player/composables/usePlayer';
 import { usePlayerStore } from '../../app/features/player/stores/usePlayerStore';
 import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 import { nextTick } from 'vue';
+import type { Track } from '@/features/player/types/player.types';
 
 mockNuxtImport('useI18n', () => {
   return () => ({
@@ -131,6 +132,7 @@ describe('usePlayer', () => {
     expect(store.isPlaying).toBe(false);
 
     const playSpy = vi.spyOn(mockAudio, 'play').mockResolvedValue();
+    store.currentTrack = { videoId: 'test' } as unknown as Track;
     resume();
     expect(playSpy).toHaveBeenCalled();
 

@@ -86,6 +86,17 @@ export function usePlayer() {
           if (isRestoring) return;
           if (index === activeAudioIndex.value) {
             store.currentTimeSeconds = el.currentTime;
+            if ('mediaSession' in navigator && isFinite(el.duration) && el.duration > 0) {
+              try {
+                navigator.mediaSession.setPositionState({
+                  duration: el.duration,
+                  playbackRate: el.playbackRate,
+                  position: el.currentTime
+                });
+              } catch {
+                // ignore errors when mediaSession state cannot be updated
+              }
+            }
 
             const actualDuration = store.currentTrack?.durationSeconds || 0;
             if (
@@ -446,21 +457,27 @@ export function usePlayer() {
   }
 
   function pause() {
-    activeAudio.value?.pause();
-    store.isPlaying = false;
+    if (activeAudio.value) {
+      activeAudio.value.pause();
+      store.isPlaying = false;
+      if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+    }
   }
 
   registerPauseCallback(pause);
 
   function resume() {
-    activeAudio.value
-      ?.play()
-      .then(() => {
-        store.isPlaying = true;
-      })
-      .catch(() => {
-        store.isPlaying = false;
-      });
+    if (activeAudio.value && store.currentTrack) {
+      activeAudio.value
+        .play()
+        .then(() => {
+          store.isPlaying = true;
+          if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+        })
+        .catch(() => {
+          store.isPlaying = false;
+        });
+    }
   }
 
   function togglePlay() {

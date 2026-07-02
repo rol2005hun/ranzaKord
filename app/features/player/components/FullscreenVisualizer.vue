@@ -564,10 +564,7 @@ function getStyleIcon(style: string) {
 <style scoped lang="scss">
 .fullscreen-visualizer {
   position: fixed;
-  top: var(--safe-area-top);
-  left: 0;
-  width: 100vw;
-  height: calc(100dvh - var(--safe-area-top) - var(--safe-area-bottom));
+  inset: 0;
   z-index: 9999;
   background-color: var(--color-bg);
   display: flex;
@@ -595,7 +592,7 @@ function getStyleIcon(style: string) {
     align-items: center;
     justify-content: center;
     z-index: 1;
-    padding: 100px 20px;
+    padding: calc(60px + var(--safe-area-top, 0px)) 20px 100px 20px;
     pointer-events: none;
     background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(24px);
@@ -749,7 +746,10 @@ function getStyleIcon(style: string) {
     }
 
     @media (max-width: 768px) {
-      padding: 1rem;
+      padding-top: calc(1rem + var(--safe-area-top, 0px));
+      padding-bottom: 1rem;
+      padding-left: 1rem;
+      padding-right: 1rem;
     }
   }
 

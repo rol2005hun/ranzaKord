@@ -6,8 +6,16 @@ const layoutStore = useLayoutStore();
 const { lyricsData, isLoading: lyricsLoading, fetchLyrics, getActiveLine } = useLyrics();
 
 const isHydrated = ref(false);
+
 const isTauri = computed(
   () => isHydrated.value && typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
+);
+
+const isDesktopTauri = computed(
+  () =>
+    isTauri.value &&
+    typeof navigator !== 'undefined' &&
+    !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
 );
 
 const displayTrack = computed(() => (isHydrated.value ? player.currentTrack.value : null));
@@ -182,7 +190,13 @@ onClickOutside(moreMenuBtnRef, (e) => {
     <audio ref="audioEl1" preload="metadata" playsinline crossorigin="anonymous" />
     <audio ref="audioEl2" preload="metadata" playsinline crossorigin="anonymous" />
     <aside class="player-bar" :aria-label="$t('player.playerBar')">
-      <div class="player-bar__left">
+      <div
+        class="player-bar__left"
+        role="button"
+        tabindex="0"
+        @click="toggleLyrics"
+        @keydown.enter="toggleLyrics"
+        @keydown.space.prevent="toggleLyrics">
         <ClientOnly>
           <div class="player-bar__artwork">
             <img
@@ -340,7 +354,7 @@ onClickOutside(moreMenuBtnRef, (e) => {
           class="player-bar__extra-controls"
           :class="{ 'is-open': isMoreMenuOpen }">
           <button
-            v-if="isTauri"
+            v-if="isDesktopTauri"
             class="player-bar__btn"
             :aria-label="$t('core.miniPlayer')"
             @click="layoutStore.toggleMiniPlayer()">
@@ -504,6 +518,7 @@ onClickOutside(moreMenuBtnRef, (e) => {
     align-items: center;
     gap: var(--space-3);
     min-width: 0;
+    cursor: pointer;
   }
 
   &__center {
@@ -986,7 +1001,8 @@ onClickOutside(moreMenuBtnRef, (e) => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--space-4) var(--space-4) var(--space-3);
+    padding: calc(max(var(--safe-area-top, 0px), var(--space-2)) + var(--space-4)) var(--space-4)
+      var(--space-3);
     border-bottom: 1px solid var(--color-border);
     gap: var(--space-3);
     flex-shrink: 0;

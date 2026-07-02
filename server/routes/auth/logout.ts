@@ -1,7 +1,7 @@
 export default defineEventHandler(async (event) => {
   const session = await useAppSession(event);
   await session.clear();
-  
+
   const host = getRequestHeader(event, 'host') || '';
   const isSecure = !host.includes('localhost') && !host.match(/^\d{1,3}\./);
 
@@ -11,6 +11,6 @@ export default defineEventHandler(async (event) => {
     secure: isSecure,
     httpOnly: true
   });
-  
+
   return { success: true };
 });

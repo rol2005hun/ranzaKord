@@ -216,7 +216,6 @@ onMounted(() => {
   display: flex;
   height: calc(100dvh - var(--titlebar-height, 0px));
   margin-top: var(--titlebar-height, 0px);
-  padding-top: var(--safe-area-top);
   width: 100%;
   background: var(--color-bg);
   overflow: hidden;

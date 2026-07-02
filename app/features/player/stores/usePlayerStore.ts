@@ -238,8 +238,8 @@ export const usePlayerStore = defineStore(
             }
           }
         }
-      } catch (e) {
-        console.error('Discord RPC error:', e);
+      } catch {
+        // Ignore Discord RPC errors (e.g. not supported on mobile)
       }
     };
 

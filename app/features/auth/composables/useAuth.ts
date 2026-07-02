@@ -1,6 +1,7 @@
 import type { UseAuthReturn } from '../types/auth.types';
 
 import { isTauri as checkIsTauri } from '@tauri-apps/api/core';
+import { openUrl } from '@tauri-apps/plugin-opener';
 
 export function useAuth(): UseAuthReturn {
   const store = useAuthStore();
@@ -18,14 +19,12 @@ export function useAuth(): UseAuthReturn {
     const lang = nuxtApp.$i18n?.locale?.value || 'en';
     const desktopAuth = isTauri.value ? '&desktop=1' : '';
     const rememberAuth = rememberMe ? '&remember=1' : '';
-    const isTauriProd = isTauri.value && !import.meta.dev;
-    const baseUrl = isTauriProd ? config.public.baseUrl : window.location.origin;
+    const baseUrl = isTauri.value ? config.public.baseUrl : window.location.origin;
     const loginUrl = isTauri.value
       ? `${baseUrl}/auth/login?source=${origin}&lang=${lang}${desktopAuth}${rememberAuth}`
       : `/auth/login?source=${origin}&lang=${lang}${desktopAuth}${rememberAuth}`;
 
     if (isTauri.value) {
-      const { openUrl } = await import('@tauri-apps/plugin-opener');
       await openUrl(loginUrl);
     } else {
       window.location.assign(loginUrl);

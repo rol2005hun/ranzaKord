@@ -53,7 +53,6 @@ const { isAuthenticated, currentUser, logout } = useAuth();
   min-height: 100dvh;
   background-color: var(--color-bg);
   color: var(--color-text-primary);
-  padding-top: var(--safe-area-top);
   padding-bottom: var(--safe-area-bottom);
   box-sizing: border-box;
   transition:
