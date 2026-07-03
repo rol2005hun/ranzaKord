@@ -186,6 +186,8 @@ const optimizedBgUrl = computed(() => {
 
 <style scoped lang="scss">
 .music-page {
+  container-type: inline-size;
+  container-name: music-page;
   position: absolute;
   inset: 0;
   max-width: 1600px;
@@ -206,6 +208,12 @@ const optimizedBgUrl = computed(() => {
     gap: var(--space-5);
     padding: var(--space-4) var(--space-6);
     min-height: 160px;
+
+    @container (max-width: 768px) {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: var(--space-5) var(--space-3);
+    }
   }
 
   &__skeleton-cover {
@@ -217,6 +225,11 @@ const optimizedBgUrl = computed(() => {
     &--rounded {
       border-radius: 50%;
     }
+
+    @container (max-width: 768px) {
+      width: 80px;
+      height: 80px;
+    }
   }
 
   &__skeleton-info {
@@ -224,6 +237,11 @@ const optimizedBgUrl = computed(() => {
     flex-direction: column;
     gap: var(--space-3);
     flex: 1;
+
+    @container (max-width: 768px) {
+      flex: 0 0 calc(100% - 80px - var(--space-3));
+      max-width: calc(100% - 80px - var(--space-3));
+    }
   }
 
   &__skeleton-center-header {
@@ -298,7 +316,7 @@ const optimizedBgUrl = computed(() => {
       gap: var(--space-5);
       width: 100%;
 
-      @media (max-width: 768px) {
+      @container (max-width: 768px) {
         flex-direction: row;
         flex-wrap: wrap;
         text-align: left;
@@ -320,7 +338,7 @@ const optimizedBgUrl = computed(() => {
     position: relative;
     --tracklist-sticky-top: 64px;
 
-    @media (max-width: 768px) {
+    @container (max-width: 768px) {
       padding: 0 0 var(--space-2);
     }
 
@@ -430,7 +448,7 @@ const optimizedBgUrl = computed(() => {
       border-radius: 50%;
     }
 
-    @media (max-width: 768px) {
+    @container (max-width: 768px) {
       width: 80px;
       height: 80px;
       font-size: 2rem;
@@ -450,7 +468,7 @@ const optimizedBgUrl = computed(() => {
     flex: 1;
     min-width: 0;
 
-    @media (max-width: 768px) {
+    @container (max-width: 768px) {
       align-items: flex-start;
       flex: 0 0 calc(100% - 80px - var(--space-3));
       max-width: calc(100% - 80px - var(--space-3));
@@ -488,7 +506,7 @@ const optimizedBgUrl = computed(() => {
     opacity: 0.9;
     flex-wrap: wrap;
 
-    @media (max-width: 768px) {
+    @container (max-width: 768px) {
       justify-content: flex-start;
     }
   }
