@@ -45,6 +45,13 @@ onMounted(() => {
         </NuxtLink>
       </template>
 
+      <template #header-bottom>
+        <div class="music-layout__main-nav">
+          <AppSidebarItem to="/" icon="ph:house-duotone" :label="$t('core.home')" />
+          <AppSidebarItem to="/stats" icon="ph:chart-bar-duotone" :label="$t('stats.title')" />
+        </div>
+      </template>
+
       <template #default="{ isExpanded }">
         <div v-if="isAuthenticated" class="music-layout__library">
           <div
@@ -157,9 +164,25 @@ onMounted(() => {
 
     <AppModal
       :model-value="showMobilePlaylists"
-      :title="$t('playlists.title')"
+      :title="$t('core.nav.menu') || 'Menu'"
       @update:model-value="showMobilePlaylists = false">
       <div class="mobile-playlists">
+        <div class="mobile-playlists__main-nav">
+          <NuxtLink to="/" class="mobile-playlists__nav-item" @click="showMobilePlaylists = false">
+            <AppIcon name="ph:house-duotone" />
+            {{ $t('core.home') }}
+          </NuxtLink>
+          <NuxtLink
+            to="/stats"
+            class="mobile-playlists__nav-item"
+            @click="showMobilePlaylists = false">
+            <AppIcon name="ph:chart-bar-duotone" />
+            {{ $t('stats.title') }}
+          </NuxtLink>
+        </div>
+
+        <div class="mobile-playlists__divider"></div>
+
         <div class="mobile-playlists__actions">
           <button
             class="mobile-playlists__btn"
@@ -235,10 +258,14 @@ onMounted(() => {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    overflow-x: hidden;
+  }
+
+  &__main-nav {
     display: flex;
     flex-direction: column;
-    position: relative;
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: var(--space-2);
   }
 
   &__library {
@@ -498,6 +525,37 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+
+  &__main-nav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+  }
+
+  &__nav-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border-radius: var(--radius-lg);
+    color: var(--color-text-primary);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: var(--text-base);
+    background: var(--color-surface-hover);
+
+    svg {
+      font-size: 1.25rem;
+      color: var(--color-primary);
+    }
+  }
+
+  &__divider {
+    height: 1px;
+    background: var(--color-border);
+    margin: var(--space-2) 0;
+  }
 
   &__actions {
     display: flex;
