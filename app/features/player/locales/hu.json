@@ -19,6 +19,8 @@
   "lyricsNotFound": "Nem található dalszöveg ehhez a számhoz",
   "lyricsLoading": "Dalszöveg betöltése...",
   "lyricsNotSynced": "A dalszöveg nincs szinkronizálva",
+  "translateToHu": "Fordítás magyarra",
+  "translating": "Fordítás folyamatban...",
   "nowPlaying": "Most játszott",
   "queue": "Várólista",
   "queueEmpty": "A várólista üres",
@@ -42,7 +44,8 @@
   },
   "errors": {
     "playback": "Lejátszási hiba. Kérlek próbáld újra.",
-    "stream": "A stream betöltése sikertelen. Be vagy jelentkezve?"
+    "stream": "A stream betöltése sikertelen. Be vagy jelentkezve?",
+    "translationFailed": "A fordítás sikertelen. Kérlek próbáld újra."
   },
   "sleepTimer": "Elalváskapcsoló",
   "sleepTimerOff": "Ki",

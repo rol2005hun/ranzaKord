@@ -32,6 +32,8 @@ function parseLrc(lrc: string): LyricLine[] {
 
 const lyricsData = ref<LyricsData | null>(null);
 const isLoading = ref(false);
+const isTranslating = ref(false);
+const translatedLanguage = ref<string | null>(null);
 const error = ref<string | null>(null);
 const currentFetchTrackId = ref<string | null>(null);
 
@@ -117,6 +119,59 @@ export function useLyrics() {
     return active;
   }
 
+  async function translateLyrics(targetLang: string = 'hu') {
+    if (!lyricsData.value || isTranslating.value) return;
+
+    // If we already translated it to this language for this track, do nothing
+    if (
+      translatedLanguage.value === targetLang &&
+      (lyricsData.value.synced?.[0]?.translatedText || lyricsData.value.translatedPlain)
+    ) {
+      return;
+    }
+
+    let textToTranslate: string;
+
+    if (lyricsData.value.synced) {
+      textToTranslate = lyricsData.value.synced.map((l) => l.text).join('\n');
+    } else if (lyricsData.value.plain) {
+      textToTranslate = lyricsData.value.plain;
+    } else {
+      return;
+    }
+
+    if (!textToTranslate.trim()) return;
+
+    isTranslating.value = true;
+    error.value = null;
+
+    try {
+      const response = await $fetch<{ translatedText: string }>('/api/player/translate', {
+        method: 'POST',
+        body: {
+          text: textToTranslate,
+          targetLang
+        }
+      });
+
+      if (lyricsData.value.synced) {
+        const translatedLines = response.translatedText.split('\n');
+        lyricsData.value.synced = lyricsData.value.synced.map((line, index) => ({
+          ...line,
+          translatedText: translatedLines[index] ?? undefined
+        }));
+      } else {
+        lyricsData.value.translatedPlain = response.translatedText;
+      }
+
+      translatedLanguage.value = targetLang;
+    } catch {
+      error.value = 'player.errors.translationFailed';
+    } finally {
+      isTranslating.value = false;
+    }
+  }
+
   function clearLyrics() {
     lyricsData.value = null;
     error.value = null;
@@ -125,8 +180,11 @@ export function useLyrics() {
   return {
     lyricsData: computed(() => lyricsData.value),
     isLoading: computed(() => isLoading.value),
+    isTranslating: computed(() => isTranslating.value),
+    translatedLanguage: computed(() => translatedLanguage.value),
     error: computed(() => error.value),
     fetchLyrics,
+    translateLyrics,
     getActiveLine,
     clearLyrics
   };
