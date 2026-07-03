@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue';
+import OfflineDownloadButton from '@/features/offline/components/DownloadButton.vue';
 
 const player = usePlayer();
 
@@ -20,7 +21,7 @@ export interface TrackListItem {
   isPlaying?: boolean;
 }
 
-export type TrackListColumn = 'index' | 'title' | 'date' | 'time' | 'action';
+export type TrackListColumn = 'index' | 'title' | 'date' | 'time' | 'action' | 'download';
 
 export interface VirtualTrackItem {
   index: number;
@@ -124,11 +125,13 @@ function handleDrop(event: DragEvent, toIndex: number) {
 
 const hasDateColumn = computed(() => props.columns.includes('date'));
 const hasActionColumn = computed(() => props.columns.includes('action'));
+const hasDownloadColumn = computed(() => props.columns.includes('download'));
 
 const gridColumns = computed(() => {
   const cols = ['var(--track-list-idx, 48px)', '1fr'];
   if (hasDateColumn.value) cols.push('var(--track-list-date, 160px)');
   cols.push('var(--track-list-time, 60px)');
+  if (hasDownloadColumn.value) cols.push('var(--track-list-action, 40px)');
   if (hasActionColumn.value) cols.push('var(--track-list-action, 48px)');
   return cols.join(' ');
 });
@@ -189,6 +192,7 @@ onMounted(() => {
           :name="sortOrder === 'asc' ? 'ph:arrow-up' : 'ph:arrow-down'"
           class="app-track-list__sort-icon" />
       </div>
+      <div v-if="hasDownloadColumn" class="app-track-list__col-action"></div>
       <div v-if="hasActionColumn" class="app-track-list__col-action"></div>
     </div>
 
@@ -236,6 +240,7 @@ onMounted(() => {
                 class="skeleton-box"
                 style="height: 14px; width: 80px"></div>
               <div class="skeleton-box" style="height: 14px; width: 40px"></div>
+              <div v-if="hasDownloadColumn"></div>
               <div v-if="hasActionColumn"></div>
             </template>
 
@@ -307,6 +312,20 @@ onMounted(() => {
                 {{ formatDuration(track.durationSeconds) }}
               </span>
 
+              <div v-if="hasDownloadColumn" class="app-track-list__track-action" @click.stop>
+                <ClientOnly>
+                  <OfflineDownloadButton
+                    v-if="track"
+                    :track="{
+                      videoId: track.id,
+                      title: track.title,
+                      artist: track.artist,
+                      thumbnailUrl: track.thumbnailUrl || '',
+                      durationSeconds: track.durationSeconds
+                    }"
+                    size="sm" />
+                </ClientOnly>
+              </div>
               <div v-if="hasActionColumn" class="app-track-list__track-action">
                 <button
                   v-if="track"
@@ -404,6 +423,19 @@ onMounted(() => {
           {{ formatDuration(track.durationSeconds) }}
         </span>
 
+        <div v-if="hasDownloadColumn" class="app-track-list__track-action" @click.stop>
+          <ClientOnly>
+            <OfflineDownloadButton
+              :track="{
+                videoId: track.id,
+                title: track.title,
+                artist: track.artist,
+                thumbnailUrl: track.thumbnailUrl || '',
+                durationSeconds: track.durationSeconds
+              }"
+              size="sm" />
+          </ClientOnly>
+        </div>
         <div v-if="hasActionColumn" class="app-track-list__track-action">
           <button
             class="app-track-list__action-btn"
@@ -433,6 +465,7 @@ onMounted(() => {
           </div>
           <div v-if="hasDateColumn" class="skeleton-box" style="height: 14px; width: 80px"></div>
           <div class="skeleton-box" style="height: 14px; width: 40px"></div>
+          <div v-if="hasDownloadColumn"></div>
           <div v-if="hasActionColumn"></div>
         </div>
       </template>

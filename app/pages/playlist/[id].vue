@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
 import type { PlaylistDetail, PlaylistTrack } from '@/features/playlists/types/playlists.types';
 import type { TrackListItem } from '@/components/shared/AppTrackList.vue';
+import type { Track } from '@/features/player/types/player.types';
 
 definePageMeta({
   layout: 'music'
@@ -16,6 +17,11 @@ const id = computed(() => route.params.id as string);
 
 const store = usePlaylistsStore();
 const player = usePlayer();
+const offlineStore = useOfflineStore();
+
+onMounted(async () => {
+  await offlineStore.init();
+});
 
 const playlist = ref<PlaylistDetail | null>(null);
 const isLoading = ref(true);
@@ -285,6 +291,28 @@ async function onImageError(): Promise<void> {
   await store.update(id.value, { imageUrl: firstTrackThumb });
   await refresh();
 }
+
+const isDownloadingPlaylist = ref(false);
+
+async function downloadPlaylist(): Promise<void> {
+  if (isDownloadingPlaylist.value) return;
+  const loaded = virtualTracks.value.filter((t): t is PlaylistTrack => t !== null);
+  if (loaded.length === 0) return;
+  isDownloadingPlaylist.value = true;
+  for (const t of loaded) {
+    const track: Track = {
+      videoId: t.videoId,
+      title: t.title,
+      artist: t.artist,
+      thumbnailUrl: t.thumbnailUrl,
+      durationSeconds: Math.round(t.durationMs / 1000)
+    };
+    if (!offlineStore.isTrackDownloaded(track.videoId)) {
+      await offlineStore.downloadTrack(track);
+    }
+  }
+  isDownloadingPlaylist.value = false;
+}
 </script>
 
 <template>
@@ -368,6 +396,14 @@ async function onImageError(): Promise<void> {
       <template #actions>
         <button
           class="playlist-page__action-btn"
+          :title="$t('offline.downloadPlaylist')"
+          :disabled="isDownloadingPlaylist"
+          @click="downloadPlaylist">
+          <AppSpinner v-if="isDownloadingPlaylist" size="sm" />
+          <AppIcon v-else name="ph:arrow-circle-down-duotone" />
+        </button>
+        <button
+          class="playlist-page__action-btn"
           :title="$t('playlists.editPlaylist')"
           @click="showEditModal = true">
           <AppIcon name="ph:pencil-simple" />
@@ -390,7 +426,7 @@ async function onImageError(): Promise<void> {
       <template #skeleton-tracks>
         <AppTrackList
           :is-loading="true"
-          :columns="['index', 'title', 'date', 'time', 'action']"
+          :columns="['index', 'title', 'date', 'time', 'download', 'action']"
           :show-thumbnails="true" />
       </template>
 
@@ -419,7 +455,7 @@ async function onImageError(): Promise<void> {
               :visible-items="mappedVisibleItems"
               :offset-y="offsetY"
               :total-height="totalHeight"
-              :columns="['index', 'title', 'date', 'time', 'action']"
+              :columns="['index', 'title', 'date', 'time', 'download', 'action']"
               :show-thumbnails="true"
               :sort-by="sortBy"
               :sort-order="sortOrder"

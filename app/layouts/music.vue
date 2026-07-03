@@ -49,6 +49,10 @@ onMounted(() => {
         <div class="music-layout__main-nav">
           <AppSidebarItem to="/" icon="ph:house-duotone" :label="$t('core.home')" />
           <AppSidebarItem to="/stats" icon="ph:chart-bar-duotone" :label="$t('stats.title')" />
+          <AppSidebarItem
+            to="/offline"
+            icon="ph:wifi-slash-duotone"
+            :label="$t('offline.navLabel')" />
         </div>
       </template>
 
@@ -178,6 +182,13 @@ onMounted(() => {
             @click="showMobilePlaylists = false">
             <AppIcon name="ph:chart-bar-duotone" />
             {{ $t('stats.title') }}
+          </NuxtLink>
+          <NuxtLink
+            to="/offline"
+            class="mobile-playlists__nav-item"
+            @click="showMobilePlaylists = false">
+            <AppIcon name="ph:wifi-slash-duotone" />
+            {{ $t('offline.navLabel') }}
           </NuxtLink>
         </div>
 

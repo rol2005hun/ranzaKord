@@ -163,6 +163,7 @@ function playTrack(index: number) {
     font-weight: 800;
     margin: 0;
     background: linear-gradient(90deg, var(--color-text-primary), var(--color-primary));
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     letter-spacing: -1px;

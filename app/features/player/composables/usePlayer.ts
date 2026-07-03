@@ -43,6 +43,17 @@ export function usePlayer() {
     return normalizedPath;
   }
 
+  async function getStreamUrl(videoId: string): Promise<string> {
+    if (import.meta.client) {
+      const { useOfflineStore } = await import('@/features/offline/stores/useOfflineStore');
+      const { $pinia } = useNuxtApp();
+      const offlineStore = useOfflineStore($pinia);
+      const objectUrl = await offlineStore.getObjectUrl(videoId);
+      if (objectUrl) return objectUrl;
+    }
+    return getApiUrl(`/api/stream?v=${videoId}`);
+  }
+
   let isRestoring = false;
 
   const { setGains, setEqGains } = useAudioVisualizer();
@@ -192,8 +203,10 @@ export function usePlayer() {
       if (savedTime > 0) isRestoring = true;
 
       const el = el1;
-      el.src = getApiUrl(`/api/stream?v=${store.currentTrack.videoId}`);
-      el.load();
+      getStreamUrl(store.currentTrack.videoId).then((url) => {
+        el.src = url;
+        el.load();
+      });
 
       el.addEventListener('loadedmetadata', function onLoaded() {
         if (savedTime > 0) {
@@ -234,9 +247,11 @@ export function usePlayer() {
 
     isCrossfading = true;
 
-    inAudio.src = getApiUrl(`/api/stream?v=${nextTrack.videoId}`);
-    inAudio.load();
-    inAudio.play().catch(() => {});
+    getStreamUrl(nextTrack.videoId).then((url) => {
+      inAudio.src = url;
+      inAudio.load();
+      inAudio.play().catch(() => {});
+    });
 
     store.setTrack(nextTrack);
     store.isPlaying = true;
@@ -438,7 +453,7 @@ export function usePlayer() {
         otherEl.currentTime = 0;
       }
 
-      el.src = getApiUrl(`/api/stream?v=${track.videoId}`);
+      el.src = await getStreamUrl(track.videoId);
       el.load();
 
       // Ensure visualizer and audio-reactive loop are connected

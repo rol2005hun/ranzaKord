@@ -1,0 +1,19 @@
+{
+  "offline": {
+    "title": "Offline Library",
+    "description": "Your downloaded tracks, available without internet.",
+    "download": "Download",
+    "downloaded": "Downloaded",
+    "downloading": "Downloading...",
+    "delete": "Delete offline copy",
+    "retryDownload": "Retry download",
+    "error": "Download failed",
+    "downloadPlaylist": "Download playlist",
+    "empty": "No downloaded tracks yet.",
+    "emptyHint": "Download tracks from any playlist to listen offline.",
+    "totalSize": "Total size",
+    "deleteAll": "Delete all",
+    "deleteAllConfirm": "Are you sure you want to delete all downloaded tracks?",
+    "navLabel": "Offline Library"
+  }
+}
