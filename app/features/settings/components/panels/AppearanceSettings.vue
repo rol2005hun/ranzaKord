@@ -59,6 +59,13 @@ const customColorValue = computed({
       </AppSettingsItem>
 
       <AppSettingsItem
+        :title="$t('settings.appearance.adaptiveTheme.title')"
+        :description="$t('settings.appearance.adaptiveTheme.description')"
+        border>
+        <AppToggle v-model="themeStore.isAdaptiveThemeEnabled" />
+      </AppSettingsItem>
+
+      <AppSettingsItem
         :title="$t('settings.appearance.customColor.title')"
         :description="$t('settings.appearance.customColor.description')"
         border>
@@ -68,13 +75,17 @@ const customColorValue = computed({
               v-model="customColorValue"
               type="color"
               class="color-picker"
+              :disabled="themeStore.isAdaptiveThemeEnabled"
               :class="{
-                'color-picker--unselected': !themeStore.customColors[themeStore.themeId]
+                'color-picker--unselected':
+                  !themeStore.customColors[themeStore.themeId] || themeStore.isAdaptiveThemeEnabled
               }" />
             <AppButton
               variant="secondary"
               size="sm"
-              :disabled="!themeStore.customColors[themeStore.themeId]"
+              :disabled="
+                !themeStore.customColors[themeStore.themeId] || themeStore.isAdaptiveThemeEnabled
+              "
               @click="themeStore.resetCustomColor()">
               <template #icon>
                 <AppIcon name="ph:arrow-counter-clockwise" />
@@ -160,6 +171,11 @@ const customColorValue = computed({
   &::-webkit-color-swatch {
     border: none;
     border-radius: var(--radius-md);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 }
 </style>

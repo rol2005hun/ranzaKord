@@ -8,6 +8,7 @@ export const useOfflineStore = defineStore('offline', () => {
   const downloadStatuses = ref<Record<string, DownloadStatus>>({});
   const downloadProgress = ref<Record<string, number>>({});
   const objectUrlCache = new Map<string, string>();
+  const storageQuotaBytes = ref(0);
 
   const totalSizeBytes = computed(() =>
     downloadedTracks.value.reduce((acc, t) => acc + t.sizeBytes, 0)
@@ -19,6 +20,13 @@ export const useOfflineStore = defineStore('offline', () => {
       const metas = await getAllMetas();
       downloadedTracks.value = metas;
       downloadedIds.value = new Set(metas.map((m) => m.videoId));
+
+      if (navigator.storage && navigator.storage.estimate) {
+        const estimate = await navigator.storage.estimate();
+        if (estimate.quota) {
+          storageQuotaBytes.value = estimate.quota;
+        }
+      }
     } catch (e) {
       console.warn('Failed to initialize offline store:', e);
     }
@@ -171,6 +179,7 @@ export const useOfflineStore = defineStore('offline', () => {
     getObjectUrl,
     downloadTrack,
     removeTrack,
-    removeAll
+    removeAll,
+    storageQuotaBytes
   };
 });

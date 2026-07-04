@@ -74,6 +74,24 @@ function formatSize(bytes: number): string {
       </div>
     </template>
 
+    <div v-if="offlineStore.storageQuotaBytes > 0" class="offline-storage">
+      <div class="offline-storage__info">
+        <span class="offline-storage__used">
+          {{ t('offline.storageUsed', { size: formatSize(offlineStore.totalSizeBytes) }) }}
+        </span>
+        <span class="offline-storage__quota">
+          {{ formatSize(offlineStore.storageQuotaBytes) }} MAX
+        </span>
+      </div>
+      <div class="offline-storage__bar">
+        <div
+          class="offline-storage__fill"
+          :style="{
+            width: `${Math.min(100, (offlineStore.totalSizeBytes / offlineStore.storageQuotaBytes) * 100)}%`
+          }"></div>
+      </div>
+    </div>
+
     <div v-if="offlineStore.downloadedTracks.length === 0" class="offline-empty">
       <AppIcon name="ph:wifi-slash-duotone" class="offline-empty__icon" />
       <p class="offline-empty__title">{{ t('offline.empty') }}</p>
@@ -184,6 +202,47 @@ function formatSize(bytes: number): string {
       border-color: hsl(0, 70%, 55%);
       color: hsl(0, 70%, 55%);
     }
+  }
+}
+
+.offline-storage {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-6);
+
+  &__info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-2);
+    font-size: var(--text-sm);
+  }
+
+  &__used {
+    color: var(--color-text-primary);
+    font-weight: 500;
+  }
+
+  &__quota {
+    color: var(--color-text-secondary);
+    font-size: var(--text-xs);
+  }
+
+  &__bar {
+    width: 100%;
+    height: 8px;
+    background: var(--color-surface-hover);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+
+  &__fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-primary), hsl(var(--color-primary-h), 80%, 65%));
+    border-radius: var(--radius-full);
+    transition: width 0.3s ease;
   }
 }
 

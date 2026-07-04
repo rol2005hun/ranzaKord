@@ -22,10 +22,20 @@ export const useThemeStore = defineStore('theme', () => {
     maxAge: 31536000
   });
 
+  const cookieIsAdaptive = useCookie<boolean>('theme-adaptive', {
+    default: () => false,
+    maxAge: 31536000
+  });
+
   const themeId = ref<ThemeId>(cookieThemeId.value);
   const customColors = ref<Record<string, string>>(cookieCustomColors.value || {});
+  const isAdaptiveThemeEnabled = ref<boolean>(cookieIsAdaptive.value);
+  const adaptiveColorHex = ref<string | null>(null);
 
   const currentCustomColor = computed(() => {
+    if (isAdaptiveThemeEnabled.value && adaptiveColorHex.value) {
+      return { hex: adaptiveColorHex.value, ...hexToHsl(adaptiveColorHex.value) };
+    }
     const hex = customColors.value[themeId.value] || DEFAULT_THEME_COLORS[themeId.value];
     return hex ? { hex, ...hexToHsl(hex) } : null;
   });
@@ -45,6 +55,19 @@ export const useThemeStore = defineStore('theme', () => {
     },
     { deep: true }
   );
+
+  watch(isAdaptiveThemeEnabled, (val) => {
+    cookieIsAdaptive.value = val;
+    if (import.meta.client && currentCustomColor.value) {
+      applyColorToDom(currentCustomColor.value);
+    }
+  });
+
+  watch(adaptiveColorHex, () => {
+    if (isAdaptiveThemeEnabled.value && import.meta.client && currentCustomColor.value) {
+      applyColorToDom(currentCustomColor.value);
+    }
+  });
 
   function applyThemeToDom(id: ThemeId) {
     document.documentElement.setAttribute('data-theme', id);
@@ -103,6 +126,8 @@ export const useThemeStore = defineStore('theme', () => {
     themeId,
     customColors,
     currentCustomColor,
+    isAdaptiveThemeEnabled,
+    adaptiveColorHex,
     DEFAULT_THEME_COLORS,
     setTheme,
     setCustomColor,

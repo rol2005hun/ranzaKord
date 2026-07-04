@@ -21,6 +21,10 @@
       "title": "Language",
       "description": "Choose the application's interface language."
     },
+    "adaptiveTheme": {
+      "title": "Adaptive Theme Color",
+      "description": "Dynamically match the primary color to the current album art."
+    },
     "customColor": {
       "title": "Custom Color",
       "description": "Customize the primary color of the active theme.",

@@ -21,6 +21,10 @@
       "title": "Nyelv",
       "description": "Válaszd ki a felület nyelvét."
     },
+    "adaptiveTheme": {
+      "title": "Dinamikus Téma (Adaptív Szín)",
+      "description": "Automatikusan igazítja az alkalmazás alapszínét az aktuális borítóképhez."
+    },
     "customColor": {
       "title": "Egyedi szín",
       "description": "Szabd testre az aktív téma alapszínét.",

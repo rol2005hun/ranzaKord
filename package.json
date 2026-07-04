@@ -17,7 +17,7 @@
     "prettier:fix": "prettier --write .",
     "typecheck": "nuxt typecheck",
     "fix": "pnpm run prettier:fix && pnpm run eslint:fix",
-    "check": "pnpm run fix && pnpm run typecheck && pnpm run test --run",
+    "check": "pnpm run fix && pnpm run prettier:check && pnpm run eslint:check && pnpm run typecheck && pnpm run test --run",
     "test": "vitest run",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
