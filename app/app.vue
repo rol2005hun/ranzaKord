@@ -13,6 +13,9 @@ const { showUpdateModal } = useAppUpdate();
 const layoutStore = useLayoutStore();
 const playerStore = usePlayerStore();
 
+// Initialize global shortcuts
+useGlobalShortcuts();
+
 const isTauriDesktop =
   typeof window !== 'undefined' &&
   '__TAURI_INTERNALS__' in window &&

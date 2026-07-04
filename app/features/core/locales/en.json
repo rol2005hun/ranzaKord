@@ -61,6 +61,10 @@
     "audioReactiveLyrics": {
       "title": "Audio-Reactive Lyrics",
       "description": "Make the active lyric line bounce and glow to the beat of the music."
+    },
+    "globalShortcuts": {
+      "title": "Global Shortcuts",
+      "description": "Control playback (Ctrl+Alt+Space/Left/Right) even while playing games or using other apps."
     }
   }
 }

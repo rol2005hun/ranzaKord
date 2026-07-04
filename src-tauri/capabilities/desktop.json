@@ -4,5 +4,5 @@
   "description": "enables desktop specific permissions",
   "platforms": ["windows", "macOS", "linux"],
   "windows": ["main"],
-  "permissions": ["updater:default"]
+  "permissions": ["updater:default", "global-shortcut:default"]
 }

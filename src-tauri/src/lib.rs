@@ -99,6 +99,7 @@ pub fn run() {
                 // to trigger the onOpenUrl callback in JavaScript on Windows/Linux.
             }))
             .plugin(tauri_plugin_updater::Builder::new().build())
+            .plugin(tauri_plugin_global_shortcut::Builder::new().build())
             .manage(DiscordState(Mutex::new(Some(client))))
             .invoke_handler(tauri::generate_handler![
                 set_discord_presence,

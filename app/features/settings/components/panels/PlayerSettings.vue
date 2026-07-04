@@ -27,6 +27,13 @@ const player = usePlayer();
       </AppSettingsItem>
 
       <AppSettingsItem
+        :title="$t('core.settings.globalShortcuts.title')"
+        :description="$t('core.settings.globalShortcuts.description')"
+        border>
+        <AppToggle v-model="playerStore.globalShortcutsEnabled" />
+      </AppSettingsItem>
+
+      <AppSettingsItem
         :title="$t('core.settings.crossfade.title')"
         :description="$t('core.settings.crossfade.description')"
         border>

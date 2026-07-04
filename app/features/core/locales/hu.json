@@ -50,6 +50,10 @@
     "audioReactiveLyrics": {
       "title": "Zene-Reaktív Dalszöveg",
       "description": "Az aktív dalszöveg sor ugrál és pulzál a zene ritmusára."
+    },
+    "globalShortcuts": {
+      "title": "Globális Gyorsbillentyűk",
+      "description": "Zenevezérlés (Ctrl+Alt+Space/Balra/Jobbra) akkor is, ha épp egy játékkal játszol vagy más programot használsz."
     }
   }
 }
