@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { OfflineTrack } from '@/features/offline/types/offline.types';
-
 definePageMeta({
   layout: 'music'
 });
@@ -20,31 +18,44 @@ useHead({
 
 const totalSizeMb = computed(() => (offlineStore.totalSizeBytes / (1024 * 1024)).toFixed(1));
 
-async function playTrack(track: OfflineTrack): Promise<void> {
-  const objectUrl = await offlineStore.getObjectUrl(track.videoId);
+async function playTrackFromList(trackItem: {
+  id: string;
+  title: string;
+  artist: string;
+  thumbnailUrl?: string | null;
+  durationSeconds: number;
+}): Promise<void> {
+  const objectUrl = await offlineStore.getObjectUrl(trackItem.id);
   const trackData = {
-    videoId: track.videoId,
-    title: track.title,
-    artist: track.artist,
-    thumbnailUrl: track.thumbnailUrl,
-    durationSeconds: track.durationSeconds
+    videoId: trackItem.id,
+    title: trackItem.title,
+    artist: trackItem.artist,
+    thumbnailUrl: trackItem.thumbnailUrl || '',
+    durationSeconds: trackItem.durationSeconds
   };
   if (objectUrl) {
     player.playTrack(trackData);
   }
 }
 
+function removeTrackFromList(trackItem: { id: string }): void {
+  offlineStore.removeTrack(trackItem.id);
+}
+
+const mappedTracks = computed(() => {
+  return offlineStore.downloadedTracks.map((track) => ({
+    id: track.videoId,
+    title: track.title,
+    artist: track.artist,
+    thumbnailUrl: track.thumbnailUrl,
+    durationSeconds: track.durationSeconds,
+    addedAt: track.downloadedAt
+  }));
+});
+
 async function confirmDeleteAll(): Promise<void> {
   await offlineStore.removeAll();
   showDeleteConfirm.value = false;
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('hu-HU', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  });
 }
 
 function formatSize(bytes: number): string {
@@ -54,83 +65,64 @@ function formatSize(bytes: number): string {
 </script>
 
 <template>
-  <AppMusicPage>
-    <template #header>
-      <div class="offline-header">
-        <div class="offline-header__info">
-          <h1 class="offline-header__title">{{ t('offline.title') }}</h1>
-          <p class="offline-header__subtitle">{{ t('offline.description') }}</p>
-        </div>
-        <div v-if="offlineStore.downloadedTracks.length > 0" class="offline-header__actions">
-          <span class="offline-header__size">
-            <AppIcon name="ph:database-duotone" />
-            {{ totalSizeMb }} MB
-          </span>
-          <button class="offline-header__delete-btn" @click="showDeleteConfirm = true">
-            <AppIcon name="ph:trash-duotone" />
-            {{ t('offline.deleteAll') }}
-          </button>
-        </div>
-      </div>
+  <AppMusicPage :title="t('offline.title')" :show-play-button="false">
+    <template #fallback-icon>
+      <AppIcon name="ph:wifi-slash-duotone" />
     </template>
 
-    <div v-if="offlineStore.storageQuotaBytes > 0" class="offline-storage">
-      <div class="offline-storage__info">
-        <span class="offline-storage__used">
-          {{ t('offline.storageUsed', { size: formatSize(offlineStore.totalSizeBytes) }) }}
-        </span>
-        <span class="offline-storage__quota">
-          {{ formatSize(offlineStore.storageQuotaBytes) }} MAX
-        </span>
-      </div>
-      <div class="offline-storage__bar">
-        <div
-          class="offline-storage__fill"
-          :style="{
-            width: `${Math.min(100, (offlineStore.totalSizeBytes / offlineStore.storageQuotaBytes) * 100)}%`
-          }"></div>
-      </div>
-    </div>
+    <template #meta>
+      <span class="offline-header__size">
+        <AppIcon name="ph:database-duotone" />
+        {{ totalSizeMb }} MB
+      </span>
+    </template>
 
-    <div v-if="offlineStore.downloadedTracks.length === 0" class="offline-empty">
-      <AppIcon name="ph:wifi-slash-duotone" class="offline-empty__icon" />
-      <p class="offline-empty__title">{{ t('offline.empty') }}</p>
-      <p class="offline-empty__hint">{{ t('offline.emptyHint') }}</p>
-    </div>
+    <template #actions>
+      <button
+        v-if="offlineStore.downloadedTracks.length > 0"
+        class="offline-header__delete-btn"
+        @click="showDeleteConfirm = true">
+        <AppIcon name="ph:trash-duotone" />
+        {{ t('offline.deleteAll') }}
+      </button>
+    </template>
 
-    <div v-else class="offline-list">
-      <div
-        v-for="track in offlineStore.downloadedTracks"
-        :key="track.videoId"
-        class="offline-track"
-        @click="playTrack(track)">
-        <div class="offline-track__thumb">
-          <NuxtImg
-            v-if="track.thumbnailUrl"
-            :src="track.thumbnailUrl"
-            :alt="track.title"
-            width="48"
-            height="48"
-            format="webp"
-            loading="lazy" />
-          <AppIcon v-else name="ph:music-note-duotone" />
+    <template #tracks>
+      <div class="offline-content">
+        <div v-if="offlineStore.storageQuotaBytes > 0" class="offline-storage">
+          <div class="offline-storage__info">
+            <span class="offline-storage__used">
+              {{ t('offline.storageUsed', { size: formatSize(offlineStore.totalSizeBytes) }) }}
+            </span>
+            <span class="offline-storage__quota">
+              {{ formatSize(offlineStore.storageQuotaBytes) }} MAX
+            </span>
+          </div>
+          <div class="offline-storage__bar">
+            <div
+              class="offline-storage__fill"
+              :style="{
+                width: `${Math.min(100, (offlineStore.totalSizeBytes / offlineStore.storageQuotaBytes) * 100)}%`
+              }"></div>
+          </div>
         </div>
-        <div class="offline-track__info">
-          <span class="offline-track__title">{{ track.title }}</span>
-          <span class="offline-track__artist">{{ track.artist }}</span>
+
+        <div v-if="offlineStore.downloadedTracks.length === 0" class="offline-empty">
+          <AppIcon name="ph:wifi-slash-duotone" class="offline-empty__icon" />
+          <p class="offline-empty__title">{{ t('offline.empty') }}</p>
+          <p class="offline-empty__hint">{{ t('offline.emptyHint') }}</p>
         </div>
-        <div class="offline-track__meta">
-          <span class="offline-track__size">{{ formatSize(track.sizeBytes) }}</span>
-          <span class="offline-track__date">{{ formatDate(track.downloadedAt) }}</span>
-        </div>
-        <button
-          class="offline-track__delete"
-          :aria-label="t('offline.delete')"
-          @click.stop="offlineStore.removeTrack(track.videoId)">
-          <AppIcon name="ph:trash-duotone" />
-        </button>
+
+        <AppTrackList
+          v-else
+          class="offline-track-list"
+          :tracks="mappedTracks"
+          :columns="['index', 'title', 'date', 'time', 'action']"
+          :show-thumbnails="true"
+          @play="playTrackFromList"
+          @remove="removeTrackFromList" />
       </div>
-    </div>
+    </template>
 
     <AppModal
       v-if="showDeleteConfirm"
@@ -151,60 +143,37 @@ function formatSize(bytes: number): string {
 </template>
 
 <style scoped lang="scss">
-.offline-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  flex-wrap: wrap;
-
-  &__title {
-    font-size: 2rem;
-    font-weight: 800;
-    margin: 0;
-    color: var(--color-text-primary);
-  }
-
-  &__subtitle {
-    color: var(--color-text-secondary);
-    margin: var(--space-1) 0 0;
-    font-size: var(--text-sm);
-  }
-
-  &__actions {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-  }
-
-  &__size {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-    color: var(--color-text-secondary);
-    font-size: var(--text-sm);
-  }
-
-  &__delete-btn {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-2) var(--space-3);
-    background: transparent;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    color: var(--color-text-secondary);
-    font-size: var(--text-sm);
-    cursor: pointer;
-    transition: all var(--transition-fast);
-
-    &:hover {
-      border-color: hsl(0, 70%, 55%);
-      color: hsl(0, 70%, 55%);
-    }
-  }
+.offline-content {
+  padding: 0 var(--space-6);
+  padding-bottom: var(--space-8);
 }
 
+.offline-header__size {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.offline-header__delete-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    border-color: hsl(0, 70%, 55%);
+    color: hsl(0, 70%, 55%);
+  }
+}
 .offline-storage {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -276,124 +245,7 @@ function formatSize(bytes: number): string {
   }
 }
 
-.offline-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.offline-track {
-  display: grid;
-  grid-template-columns: 48px 1fr auto 40px;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-2);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: background var(--transition-fast);
-
-  &:hover {
-    background: var(--color-surface-hover);
-
-    .offline-track__delete {
-      opacity: 1;
-    }
-  }
-
-  &__thumb {
-    width: 48px;
-    height: 48px;
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-    background: var(--color-surface-hover);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--color-text-secondary);
-    font-size: 1.5rem;
-    flex-shrink: 0;
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-  }
-
-  &__info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-  }
-
-  &__title {
-    font-size: var(--text-sm);
-    font-weight: 600;
-    color: var(--color-text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  &__artist {
-    font-size: var(--text-xs);
-    color: var(--color-text-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  &__meta {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 2px;
-    flex-shrink: 0;
-  }
-
-  &__size {
-    font-size: var(--text-xs);
-    color: var(--color-primary);
-    font-weight: 500;
-  }
-
-  &__date {
-    font-size: var(--text-xs);
-    color: var(--color-text-secondary);
-  }
-
-  &__delete {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-    border-radius: var(--radius-full);
-    color: var(--color-text-secondary);
-    cursor: pointer;
-    opacity: 0;
-    transition: all var(--transition-fast);
-    flex-shrink: 0;
-
-    &:hover {
-      background: var(--color-surface-hover);
-      color: hsl(0, 70%, 55%);
-    }
-  }
-
-  @media (max-width: 768px) {
-    grid-template-columns: 48px 1fr 40px;
-
-    .offline-track__meta {
-      display: none;
-    }
-
-    .offline-track__delete {
-      opacity: 1;
-    }
-  }
+.offline-track-list {
+  margin-top: var(--space-4);
 }
 </style>

@@ -5,7 +5,7 @@ import type {
   PaginatedSongs
 } from '@/features/search/types/search.types';
 import type { Track } from '@/features/player/types/player.types';
-import type { TrackListItem } from '@/components/shared/AppTrackList.vue';
+import type { TrackListItem } from '@/components/shared/TrackList.vue';
 
 definePageMeta({
   layout: 'music'

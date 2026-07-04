@@ -1,15 +1,13 @@
 {
-  "stats": {
-    "title": "ranzaKord Wrapped",
-    "description": "Your listening statistics and top tracks",
-    "totalListeningTime": "Total Listening Time",
-    "hours": "hours",
-    "minutes": "minutes",
-    "topTracks": "Top Tracks",
-    "topArtists": "Top Artists",
-    "plays": "{count} plays",
-    "clearHistory": "Clear History",
-    "clearConfirm": "Are you sure you want to clear your listening history? This cannot be undone.",
-    "empty": "No listening history yet. Start playing some music to see your stats!"
-  }
+  "title": "ranzaKord Wrapped",
+  "description": "Your listening statistics and top tracks",
+  "totalListeningTime": "Total Listening Time",
+  "hours": "hours",
+  "minutes": "minutes",
+  "topTracks": "Top Tracks",
+  "topArtists": "Top Artists",
+  "plays": "{count} plays",
+  "clearHistory": "Clear History",
+  "clearConfirm": "Are you sure you want to clear your listening history? This cannot be undone.",
+  "empty": "No listening history yet. Start playing some music to see your stats!"
 }

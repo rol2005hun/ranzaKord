@@ -40,6 +40,12 @@ function onSliderChange() {
 
     <AppSettingsSection>
       <AppSettingsItem
+        :title="$t('settings.audio.spatialAudio.title')"
+        :description="$t('settings.audio.spatialAudio.description')">
+        <AppToggle v-model="playerStore.isSpatialAudio" />
+      </AppSettingsItem>
+
+      <AppSettingsItem
         :title="$t('settings.audio.eq.title')"
         :description="$t('settings.audio.eq.description')">
         <AppToggle v-model="playerStore.eqEnabled" />

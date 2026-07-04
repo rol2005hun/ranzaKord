@@ -140,7 +140,13 @@ export default defineNuxtConfig({
   icon: {
     clientBundle: {
       scan: true,
-      sizeLimitKb: 2048
+      sizeLimitKb: 2048,
+      icons: [
+        'ph:house-duotone',
+        'ph:magnifying-glass-duotone',
+        'ph:chart-bar-duotone',
+        'ph:wifi-slash-duotone'
+      ]
     }
   },
 

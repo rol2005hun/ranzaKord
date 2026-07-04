@@ -190,45 +190,42 @@ onClickOutside(moreMenuBtnRef, (e) => {
     <audio ref="audioEl1" preload="metadata" playsinline crossorigin="anonymous" />
     <audio ref="audioEl2" preload="metadata" playsinline crossorigin="anonymous" />
     <aside class="player-bar" :aria-label="$t('player.playerBar')">
-      <div
-        class="player-bar__left"
-        role="button"
-        tabindex="0"
-        @click="toggleLyrics"
-        @keydown.enter="toggleLyrics"
-        @keydown.space.prevent="toggleLyrics">
-        <ClientOnly>
-          <div class="player-bar__artwork">
-            <img
-              v-if="displayTrack?.thumbnailUrl"
-              :src="displayTrack.thumbnailUrl"
-              :alt="displayTrack?.title"
-              class="player-bar__img" />
-            <AppIcon v-else name="ph:music-notes-simple" class="player-bar__img-placeholder" />
-          </div>
-          <template #fallback>
+      <div class="player-bar__left">
+        <div class="player-bar__track-trigger" @click="toggleLyrics">
+          <ClientOnly>
             <div class="player-bar__artwork">
-              <AppSkeleton width="100%" height="100%" />
+              <img
+                v-if="displayTrack?.thumbnailUrl"
+                :src="displayTrack.thumbnailUrl"
+                :alt="displayTrack?.title"
+                class="player-bar__img" />
+              <AppIcon v-else name="ph:music-notes-simple" class="player-bar__img-placeholder" />
             </div>
-          </template>
-        </ClientOnly>
+            <template #fallback>
+              <div class="player-bar__artwork">
+                <AppSkeleton width="100%" height="100%" />
+              </div>
+            </template>
+          </ClientOnly>
 
-        <ClientOnly>
-          <div v-if="displayTrack" class="player-bar__info">
-            <span class="player-bar__title">{{ displayTrack.title }}</span>
-            <AppTrackArtists :track="displayTrack" class="player-bar__artist" />
-          </div>
-          <div v-else class="player-bar__info player-bar__info--empty">
-            <span class="player-bar__title">{{ $t('player.noTrack') }}</span>
-            <span class="player-bar__artist">{{ $t('player.startSomething') }}</span>
-          </div>
-          <template #fallback>
-            <div class="player-bar__info player-bar__info--skeleton">
-              <AppSkeleton height="12px" width="120px" border-radius="var(--radius-sm)" />
-              <AppSkeleton height="10px" width="80px" border-radius="var(--radius-sm)" />
+          <ClientOnly>
+            <div v-if="displayTrack" class="player-bar__info">
+              <span class="player-bar__title">{{ displayTrack.title }}</span>
+              <AppTrackArtists :track="displayTrack" class="player-bar__artist" />
             </div>
-          </template>
-        </ClientOnly>
+            <div v-else class="player-bar__info player-bar__info--empty">
+              <span class="player-bar__title">{{ $t('player.noTrack') }}</span>
+              <span class="player-bar__artist">{{ $t('player.startSomething') }}</span>
+            </div>
+            <template #fallback>
+              <div class="player-bar__info player-bar__info--skeleton">
+                <AppSkeleton height="12px" width="120px" border-radius="var(--radius-sm)" />
+                <AppSkeleton height="10px" width="80px" border-radius="var(--radius-sm)" />
+              </div>
+            </template>
+          </ClientOnly>
+        </div>
+
         <ClientOnly>
           <button
             ref="playlistBtnRef"
@@ -514,6 +511,13 @@ onClickOutside(moreMenuBtnRef, (e) => {
 
   &__left {
     grid-area: left;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+
+  &__track-trigger {
     display: flex;
     align-items: center;
     gap: var(--space-3);

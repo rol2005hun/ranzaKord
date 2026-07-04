@@ -1,10 +1,43 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
 import { useStatsStore } from '../stores/useStatsStore';
+import type { CategorizedSearchResults } from '../../search/types/search.types';
 
 const statsStore = useStatsStore();
 const playerStore = usePlayerStore();
 const { t } = useI18n();
+
+const artistImages = ref<Record<string, string>>({});
+
+watch(
+  () => statsStore.topArtists,
+  async (artists) => {
+    if (!artists || artists.length === 0) return;
+
+    const top10 = artists.slice(0, 10);
+    const fetchImages = async () => {
+      for (const artist of top10) {
+        if (artistImages.value[artist.name]) continue;
+        try {
+          const data = await $fetch<CategorizedSearchResults>(
+            `/api/search?q=${encodeURIComponent(artist.name)}&type=artist`
+          );
+          if (data.artists && data.artists.length > 0 && data.artists[0]) {
+            artistImages.value[artist.name] = data.artists[0].thumbnailUrl;
+          } else if (data.topResult && data.topResult.type === 'artist') {
+            artistImages.value[artist.name] = data.topResult.thumbnailUrl;
+          }
+          // Delay to prevent rate limiting
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        } catch {
+          // Ignore fetch errors
+        }
+      }
+    };
+    fetchImages();
+  },
+  { immediate: true }
+);
 
 onMounted(() => {
   statsStore.fetchStats();
@@ -31,16 +64,15 @@ function playTrack(index: number) {
 </script>
 
 <template>
-  <div class="stats-dashboard">
-    <div class="stats-dashboard__header">
-      <div class="stats-dashboard__header-content">
-        <h1 class="stats-dashboard__title">{{ t('stats.title') }}</h1>
-        <p class="stats-dashboard__subtitle">{{ t('stats.description') }}</p>
-      </div>
+  <AppMusicPage :title="t('stats.title')" :show-play-button="false">
+    <template #fallback-icon>
+      <AppIcon name="ph:chart-bar-duotone" />
+    </template>
 
-      <div class="stats-dashboard__total">
-        <span class="stats-dashboard__total-label">{{ t('stats.totalListeningTime') }}</span>
-        <div class="stats-dashboard__total-value">
+    <template #meta>
+      <div class="stats-header-meta">
+        <span class="stats-header-meta__label">{{ t('stats.totalListeningTime') }}</span>
+        <div class="stats-header-meta__value">
           <span v-if="totalHours > 0">
             {{ totalHours }}
             <small>{{ t('stats.hours') }}</small>
@@ -51,162 +83,138 @@ function playTrack(index: number) {
           </span>
         </div>
       </div>
-    </div>
+    </template>
 
-    <div v-if="statsStore.isLoading" class="stats-dashboard__loading">
-      <AppSpinner size="lg" />
-    </div>
-
-    <div v-else-if="statsStore.topTracks.length === 0" class="stats-dashboard__empty">
-      <AppIcon name="ph:music-notes-simple-duotone" />
-      <p>{{ t('stats.empty') }}</p>
-    </div>
-
-    <div v-else class="stats-dashboard__content">
-      <section class="stats-section stats-section--artists">
-        <h2 class="stats-section__title">
-          <AppIcon name="ph:microphone-stage-duotone" />
-          {{ t('stats.topArtists') }}
-        </h2>
-        <div class="stats-list">
-          <div
-            v-for="(artist, index) in statsStore.topArtists.slice(0, 10)"
-            :key="artist.name"
-            class="stats-artist">
-            <span class="stats-artist__rank">#{{ index + 1 }}</span>
-            <div class="stats-artist__info">
-              <span class="stats-artist__name">{{ artist.name }}</span>
-              <span class="stats-artist__plays">
-                {{ t('stats.plays', { count: artist.playCount }) }}
-              </span>
-            </div>
-          </div>
+    <template #tracks>
+      <div class="stats-dashboard">
+        <div v-if="statsStore.isLoading" class="stats-dashboard__loading">
+          <AppSpinner size="lg" />
         </div>
-      </section>
 
-      <section class="stats-section stats-section--tracks">
-        <h2 class="stats-section__title">
-          <AppIcon name="ph:music-notes-duotone" />
-          {{ t('stats.topTracks') }}
-        </h2>
-        <div class="stats-list">
-          <div
-            v-for="(track, index) in statsStore.topTracks.slice(0, 10)"
-            :key="track.trackId"
-            class="stats-track"
-            @click="playTrack(index)">
-            <span class="stats-track__rank">#{{ index + 1 }}</span>
-            <NuxtImg
-              v-if="track.thumbnailUrl"
-              :src="track.thumbnailUrl"
-              :alt="track.title"
-              class="stats-track__image"
-              width="48"
-              height="48"
-              loading="lazy" />
-            <div v-else class="stats-track__image stats-track__image--placeholder">
-              <AppIcon name="ph:music-note-bold" />
-            </div>
-
-            <div class="stats-track__info">
-              <span class="stats-track__title">{{ track.title }}</span>
-              <span class="stats-track__artist">{{ track.artist }}</span>
-            </div>
-
-            <div class="stats-track__stats">
-              <span class="stats-track__plays">
-                {{ t('stats.plays', { count: track.playCount }) }}
-              </span>
-            </div>
-
-            <button class="stats-track__play-btn">
-              <AppIcon name="ph:play-fill" />
-            </button>
-          </div>
+        <div v-else-if="statsStore.topTracks.length === 0" class="stats-dashboard__empty">
+          <AppIcon name="ph:music-notes-simple-duotone" />
+          <p>{{ t('stats.empty') }}</p>
         </div>
-      </section>
-    </div>
-  </div>
+
+        <div v-else class="stats-dashboard__content">
+          <section class="stats-section stats-section--artists">
+            <h2 class="stats-section__title">
+              <AppIcon name="ph:microphone-stage-duotone" />
+              {{ t('stats.topArtists') }}
+            </h2>
+            <div class="stats-list">
+              <div
+                v-for="(artist, index) in statsStore.topArtists.slice(0, 10)"
+                :key="artist.name"
+                class="stats-artist">
+                <span class="stats-artist__rank">#{{ index + 1 }}</span>
+                <NuxtImg
+                  v-if="artistImages[artist.name]"
+                  :src="artistImages[artist.name]"
+                  :alt="artist.name"
+                  class="stats-artist__image"
+                  width="40"
+                  height="40"
+                  loading="lazy" />
+                <div v-else class="stats-artist__image stats-artist__image--placeholder">
+                  <AppIcon name="ph:microphone-stage-fill" />
+                </div>
+                <div class="stats-artist__info">
+                  <span class="stats-artist__name">{{ artist.name }}</span>
+                  <span class="stats-artist__plays">
+                    {{ t('stats.plays', { count: artist.playCount }) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="stats-section stats-section--tracks">
+            <h2 class="stats-section__title">
+              <AppIcon name="ph:music-notes-duotone" />
+              {{ t('stats.topTracks') }}
+            </h2>
+            <div class="stats-list">
+              <div
+                v-for="(track, index) in statsStore.topTracks.slice(0, 10)"
+                :key="track.trackId"
+                class="stats-track"
+                @click="playTrack(index)">
+                <div class="stats-track__rank-wrapper">
+                  <span class="stats-track__rank">#{{ index + 1 }}</span>
+                  <button class="stats-track__play-btn">
+                    <AppIcon name="ph:play-fill" />
+                  </button>
+                </div>
+                <NuxtImg
+                  v-if="track.thumbnailUrl"
+                  :src="track.thumbnailUrl"
+                  :alt="track.title"
+                  class="stats-track__image"
+                  width="48"
+                  height="48"
+                  loading="lazy" />
+                <div v-else class="stats-track__image stats-track__image--placeholder">
+                  <AppIcon name="ph:music-note-bold" />
+                </div>
+
+                <div class="stats-track__info">
+                  <span class="stats-track__title">{{ track.title }}</span>
+                  <span class="stats-track__artist">{{ track.artist }}</span>
+                </div>
+
+                <div class="stats-track__stats">
+                  <span class="stats-track__plays">
+                    {{ t('stats.plays', { count: track.playCount }) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </template>
+  </AppMusicPage>
 </template>
 
 <style scoped lang="scss">
-.stats-dashboard {
-  padding: var(--space-6) var(--space-8);
-  max-width: 1400px;
-  margin: 0 auto;
-  min-height: 100vh;
+.stats-header-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
 
-  @media (max-width: 768px) {
-    padding: var(--space-4);
-  }
-
-  &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: var(--space-8);
-    background: linear-gradient(135deg, rgba(var(--color-primary-rgb), 0.2) 0%, transparent 100%);
-    padding: var(--space-8);
-    border-radius: var(--radius-2xl);
-    border: 1px solid var(--color-surface-raised);
-
-    @media (max-width: 768px) {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: var(--space-6);
-      padding: var(--space-6);
-    }
-  }
-
-  &__title {
-    font-size: 3rem;
-    font-weight: 800;
-    margin: 0;
-    background: linear-gradient(90deg, var(--color-text-primary), var(--color-primary));
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: -1px;
-  }
-
-  &__subtitle {
-    color: var(--color-text-secondary);
-    font-size: var(--text-lg);
-    margin: var(--space-2) 0 0 0;
-  }
-
-  &__total {
-    text-align: right;
-
-    @media (max-width: 768px) {
-      text-align: left;
-    }
-  }
-
-  &__total-label {
-    display: block;
+  &__label {
     text-transform: uppercase;
     font-size: var(--text-xs);
     font-weight: 700;
     letter-spacing: 1px;
-    color: var(--color-primary);
-    margin-bottom: var(--space-1);
+    color: var(--color-text-secondary);
   }
 
-  &__total-value {
-    font-size: 2.5rem;
+  &__value {
+    font-size: var(--text-base);
     font-weight: 800;
-    line-height: 1;
     display: flex;
     gap: var(--space-2);
     align-items: baseline;
+    color: var(--color-primary);
 
     small {
-      font-size: var(--text-base);
+      font-size: var(--text-sm);
       font-weight: 500;
       color: var(--color-text-secondary);
       margin-left: 2px;
     }
+  }
+}
+
+.stats-dashboard {
+  padding: 0 var(--space-6) var(--space-8);
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    padding: 0 var(--space-4) var(--space-8);
   }
 
   &__loading,
@@ -228,7 +236,9 @@ function playTrack(index: number) {
   &__content {
     display: grid;
     grid-template-columns: 1fr 2fr;
-    gap: var(--space-8);
+    gap: var(--space-6);
+    width: 100%;
+    min-width: 0;
 
     @media (max-width: 1024px) {
       grid-template-columns: 1fr;
@@ -241,6 +251,8 @@ function playTrack(index: number) {
   border-radius: var(--radius-xl);
   padding: var(--space-6);
   border: 1px solid var(--color-surface-raised);
+  min-width: 0;
+  align-self: start;
 
   &__title {
     display: flex;
@@ -312,6 +324,7 @@ function playTrack(index: number) {
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  min-width: 0;
 
   &:hover {
     background: var(--color-surface-raised);
@@ -320,13 +333,26 @@ function playTrack(index: number) {
       opacity: 1;
       transform: scale(1);
     }
+    .stats-track__rank {
+      opacity: 0;
+    }
+  }
+
+  &__rank-wrapper {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
   }
 
   &__rank {
     font-weight: 700;
     color: var(--color-primary);
-    width: 40px;
     font-size: var(--text-lg);
+    transition: opacity 0.2s ease;
   }
 
   &__image {
@@ -370,7 +396,8 @@ function playTrack(index: number) {
   &__stats {
     text-align: right;
     margin-left: var(--space-4);
-    margin-right: var(--space-8);
+    margin-right: var(--space-4);
+    flex-shrink: 0;
 
     @media (max-width: 640px) {
       display: none;
@@ -388,22 +415,21 @@ function playTrack(index: number) {
 
   &__play-btn {
     position: absolute;
-    right: var(--space-4);
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: var(--color-primary);
-    color: var(--color-primary-foreground);
+    inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    color: var(--color-text-primary);
+    background: transparent;
+    border: none;
+    font-size: 1.25rem;
     opacity: 0;
     transform: scale(0.8);
     transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-    border: none;
 
     &:hover {
       transform: scale(1.1);
+      color: var(--color-primary);
     }
   }
 }

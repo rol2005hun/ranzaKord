@@ -45,18 +45,16 @@ onMounted(() => {
         </NuxtLink>
       </template>
 
-      <template #header-bottom>
+      <template #default="{ isExpanded }">
         <div class="music-layout__main-nav">
-          <AppSidebarItem to="/" icon="ph:house-duotone" :label="$t('core.home')" />
+          <AppSidebarItem to="/" icon="ph:house-duotone" :label="$t('core.nav.home')" />
           <AppSidebarItem to="/stats" icon="ph:chart-bar-duotone" :label="$t('stats.title')" />
           <AppSidebarItem
             to="/offline"
             icon="ph:wifi-slash-duotone"
             :label="$t('offline.navLabel')" />
         </div>
-      </template>
 
-      <template #default="{ isExpanded }">
         <div v-if="isAuthenticated" class="music-layout__library">
           <div
             class="music-layout__library-header"
@@ -174,7 +172,14 @@ onMounted(() => {
         <div class="mobile-playlists__main-nav">
           <NuxtLink to="/" class="mobile-playlists__nav-item" @click="showMobilePlaylists = false">
             <AppIcon name="ph:house-duotone" />
-            {{ $t('core.home') }}
+            {{ $t('core.nav.home') }}
+          </NuxtLink>
+          <NuxtLink
+            to="/search"
+            class="mobile-playlists__nav-item"
+            @click="showMobilePlaylists = false">
+            <AppIcon name="ph:magnifying-glass-duotone" />
+            {{ $t('core.nav.search') }}
           </NuxtLink>
           <NuxtLink
             to="/stats"
@@ -256,6 +261,10 @@ onMounted(() => {
   box-sizing: border-box;
   padding-bottom: calc(var(--player-height, 90px) + var(--safe-area-bottom));
 
+  @media (max-width: 768px) {
+    padding-bottom: calc(var(--player-height, 90px) + 60px + var(--safe-area-bottom));
+  }
+
   &__content {
     flex: 1;
     display: flex;
@@ -269,6 +278,7 @@ onMounted(() => {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    position: relative;
   }
 
   &__main-nav {

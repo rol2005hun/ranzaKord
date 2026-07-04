@@ -23,18 +23,22 @@ export default defineEventHandler(async (event) => {
 
   const { videoId, currentTime } = body;
 
-  await UserModel.updateOne(
-    { sub: sessionData.user.sub },
-    {
-      $set: {
-        lastPlayback: {
-          videoId,
-          currentTime,
-          updatedAt: new Date()
+  try {
+    await UserModel.updateOne(
+      { sub: sessionData.user.sub },
+      {
+        $set: {
+          lastPlayback: {
+            videoId,
+            currentTime,
+            updatedAt: new Date()
+          }
         }
       }
-    }
-  );
-
-  return { success: true };
+    );
+    return { success: true };
+  } catch (error) {
+    console.warn('[Sync API] Failed to update user playback status:', error);
+    return { success: false };
+  }
 });

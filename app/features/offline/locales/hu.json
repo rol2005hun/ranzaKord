@@ -1,20 +1,18 @@
 {
-  "offline": {
-    "title": "Offline Könyvtár",
-    "description": "Letöltött zenéid, internet nélkül is elérhetőek.",
-    "download": "Letöltés",
-    "downloaded": "Letöltve",
-    "downloading": "Letöltés folyamatban...",
-    "delete": "Offline másolat törlése",
-    "retryDownload": "Letöltés újra",
-    "error": "Sikertelen letöltés",
-    "downloadPlaylist": "Lejátszási lista letöltése",
-    "empty": "Még nincsenek letöltött zenéid.",
-    "emptyHint": "Tölts le zenéket bármelyik lejátszási listából az offline hallgatáshoz.",
-    "totalSize": "Teljes méret",
-    "deleteAll": "Összes törlése",
-    "deleteAllConfirm": "Biztosan törölni szeretnéd az összes letöltött zenét?",
-    "navLabel": "Offline Könyvtár",
-    "storageUsed": "{size} felhasználva"
-  }
+  "title": "Offline Könyvtár",
+  "description": "Letöltött zenéid, internet nélkül is elérhetőek.",
+  "download": "Letöltés",
+  "downloaded": "Letöltve",
+  "downloading": "Letöltés folyamatban...",
+  "delete": "Offline másolat törlése",
+  "retryDownload": "Letöltés újra",
+  "error": "Sikertelen letöltés",
+  "downloadPlaylist": "Lejátszási lista letöltése",
+  "empty": "Még nincsenek letöltött zenéid.",
+  "emptyHint": "Tölts le zenéket bármelyik lejátszási listából az offline hallgatáshoz.",
+  "totalSize": "Teljes méret",
+  "deleteAll": "Összes törlése",
+  "deleteAllConfirm": "Biztosan törölni szeretnéd az összes letöltött zenét?",
+  "navLabel": "Offline Könyvtár",
+  "storageUsed": "{size} felhasználva"
 }

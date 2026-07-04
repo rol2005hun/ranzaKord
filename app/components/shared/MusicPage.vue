@@ -333,26 +333,11 @@ const optimizedBgUrl = computed(() => {
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
-    scrollbar-width: thin;
-    scrollbar-color: var(--color-border) transparent;
     position: relative;
     --tracklist-sticky-top: 64px;
 
     @container (max-width: 768px) {
       padding: 0 0 var(--space-2);
-    }
-
-    &::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: var(--color-border);
-      border-radius: 4px;
     }
   }
 

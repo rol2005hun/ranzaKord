@@ -20,7 +20,10 @@ export function useAdaptiveTheme() {
     }
 
     try {
-      const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(currentTrack.thumbnailUrl)}`;
+      const isGoogleImage = currentTrack.thumbnailUrl.includes('googleusercontent.com');
+      const proxyUrl = isGoogleImage
+        ? currentTrack.thumbnailUrl
+        : `/api/proxy-image?url=${encodeURIComponent(currentTrack.thumbnailUrl)}&cb=${Date.now()}`;
       const color = await getDominantColor(proxyUrl);
 
       if (color) {

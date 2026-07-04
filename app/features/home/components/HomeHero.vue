@@ -261,7 +261,7 @@ function onPlayFromList(track: SearchResult) {
 
   &__skeleton-visual {
     width: 100%;
-    height: 120px;
+    height: 210px; /* matches TopResultCard approx height */
     border-radius: var(--radius-md);
     overflow: hidden;
   }
@@ -275,7 +275,7 @@ function onPlayFromList(track: SearchResult) {
 
   &__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: var(--space-4);
   }
 

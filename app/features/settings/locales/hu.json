@@ -4,7 +4,8 @@
     "account": "Fiók",
     "appearance": "Megjelenés",
     "player": "Lejátszó",
-    "audio": "Hangzás (EQ)"
+    "audio": "Hangzás (EQ)",
+    "info": "Információ"
   },
   "account": {
     "title": "Fiók beállítások",
@@ -41,6 +42,10 @@
   },
   "audio": {
     "title": "Hangzás beállítások",
+    "spatialAudio": {
+      "title": "8D Térhatású Hangzás",
+      "description": "Egy 3D-s, lenyűgöző élményt hoz létre úgy, hogy a hang körbe-körbe mozog a fejed körül."
+    },
     "eq": {
       "title": "Hangszínszabályzó (Equalizer)",
       "description": "Állítsd be a 10-sávos hangszínszabályzót a saját ízlésed szerint.",
@@ -54,6 +59,18 @@
         "rock": "Rock",
         "custom": "Egyéni"
       }
+    }
+  },
+  "info": {
+    "title": "Információ",
+    "description": "Az alkalmazásról és a hasznos billentyűparancsokról.",
+    "shortcutsTitle": "Billentyűparancsok",
+    "shortcutsNote": "A globális parancsok akkor is működnek, ha az alkalmazás a háttérben fut.",
+    "aboutTitle": "Névjegy",
+    "shortcuts": {
+      "playPause": "Lejátszás / Szünet",
+      "next": "Következő szám",
+      "prev": "Előző szám"
     }
   }
 }

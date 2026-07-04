@@ -30,6 +30,7 @@ export const usePlayerStore = defineStore(
     const crossfadeDuration = ref(5);
     const crossfadeType = ref<CrossfadeType>('dj');
     const isKaraoke = ref(false);
+    const isSpatialAudio = ref(false);
     const isAudioReactiveLyrics = ref(true);
     const eqEnabled = ref(false);
     const eqPreset = ref('flat');
@@ -248,7 +249,8 @@ export const usePlayerStore = defineStore(
 
     if (import.meta.client) {
       window.addEventListener('beforeunload', () => {
-        if (currentTrack.value) {
+        const authStore = useAuthStore();
+        if (authStore.isAuthenticated && currentTrack.value) {
           localStorage.setItem('player_currentTimeSeconds', String(currentTimeSeconds.value));
           fetch('/api/player/sync', {
             method: 'POST',
@@ -311,6 +313,7 @@ export const usePlayerStore = defineStore(
       prevTrack,
       syncDiscordPresence,
       isKaraoke,
+      isSpatialAudio,
       isAudioReactiveLyrics,
       eqEnabled,
       eqPreset,
@@ -336,6 +339,7 @@ export const usePlayerStore = defineStore(
           'crossfadeDuration',
           'crossfadeType',
           'isKaraoke',
+          'isSpatialAudio',
           'isAudioReactiveLyrics',
           'eqEnabled',
           'eqPreset',

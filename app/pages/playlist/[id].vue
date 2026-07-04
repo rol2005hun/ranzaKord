@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
 import type { PlaylistDetail, PlaylistTrack } from '@/features/playlists/types/playlists.types';
-import type { TrackListItem } from '@/components/shared/AppTrackList.vue';
+import type { TrackListItem } from '@/components/shared/TrackList.vue';
 import type { Track } from '@/features/player/types/player.types';
 
 definePageMeta({

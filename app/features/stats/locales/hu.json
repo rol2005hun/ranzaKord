@@ -1,0 +1,13 @@
+{
+  "title": "ranzaKord Wrapped",
+  "description": "Hallgatási statisztikáid és kedvenc zenéid",
+  "totalListeningTime": "Összes hallgatási idő",
+  "hours": "óra",
+  "minutes": "perc",
+  "topTracks": "Legtöbbet hallgatott",
+  "topArtists": "Kedvenc előadók",
+  "plays": "{count} lejátszás",
+  "clearHistory": "Előzmények törlése",
+  "clearConfirm": "Biztosan törölni szeretnéd a hallgatási előzményeidet? Ez a művelet nem vonható vissza.",
+  "empty": "Még nincsenek hallgatási előzményeid. Hallgass egy kis zenét, hogy lásd a statisztikáidat!"
+}
