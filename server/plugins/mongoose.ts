@@ -7,5 +7,12 @@ export default defineNitroPlugin(async () => {
 
   if (!config.mongodbUri) throw new Error('MONGODB_URI is not set');
 
-  await mongoose.connect(config.mongodbUri);
+  try {
+    await mongoose.connect(config.mongodbUri, {
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000
+    });
+  } catch (err) {
+    console.error('Failed to connect to MongoDB', err);
+  }
 });

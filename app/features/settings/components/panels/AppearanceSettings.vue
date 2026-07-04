@@ -38,7 +38,8 @@ const themes = computed(() =>
 
 const customColorValue = computed({
   get: () =>
-    themeStore.currentCustomColor?.hex || themeStore.DEFAULT_THEME_COLORS[themeStore.themeId],
+    themeStore.currentCustomPalette?.primary.hex ||
+    themeStore.DEFAULT_THEME_COLORS[themeStore.themeId],
   set: (val: string) => themeStore.setCustomColor(val)
 });
 </script>

@@ -1,7 +1,7 @@
 import { watch, onMounted } from 'vue';
 import { usePlayerStore } from '@/features/player/stores/usePlayerStore';
 import { useThemeStore } from '../stores/useThemeStore';
-import { getDominantColor } from '@/utils/colorExtraction';
+import { getPalette } from '@/utils/colorExtraction';
 
 export function useAdaptiveTheme() {
   const playerStore = usePlayerStore();
@@ -9,31 +9,28 @@ export function useAdaptiveTheme() {
 
   async function updateAdaptiveColor() {
     if (!themeStore.isAdaptiveThemeEnabled) {
-      themeStore.adaptiveColorHex = null;
+      themeStore.adaptivePalette = null;
       return;
     }
 
     const currentTrack = playerStore.currentTrack;
     if (!currentTrack || !currentTrack.thumbnailUrl) {
-      themeStore.adaptiveColorHex = null;
+      themeStore.adaptivePalette = null;
       return;
     }
 
     try {
-      const isGoogleImage = currentTrack.thumbnailUrl.includes('googleusercontent.com');
-      const proxyUrl = isGoogleImage
-        ? currentTrack.thumbnailUrl
-        : `/api/proxy-image?url=${encodeURIComponent(currentTrack.thumbnailUrl)}&cb=${Date.now()}`;
-      const color = await getDominantColor(proxyUrl);
+      const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(currentTrack.thumbnailUrl)}&cb=${Date.now()}`;
+      const palette = await getPalette(proxyUrl);
 
-      if (color) {
-        themeStore.adaptiveColorHex = color;
+      if (palette) {
+        themeStore.adaptivePalette = palette;
       } else {
-        themeStore.adaptiveColorHex = null;
+        themeStore.adaptivePalette = null;
       }
     } catch (error) {
       console.warn('Failed to update adaptive color:', error);
-      themeStore.adaptiveColorHex = null;
+      themeStore.adaptivePalette = null;
     }
   }
 

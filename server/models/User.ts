@@ -17,6 +17,7 @@ export interface IUser extends Document {
     crossfadeType?: string;
     isKaraoke?: boolean;
     isAudioReactiveLyrics?: boolean;
+    isAdaptiveThemeEnabled?: boolean;
     theme?: string;
     customColor?: string;
     customColors?: Record<string, string>;
@@ -48,6 +49,7 @@ const userSchema = new Schema<IUser>(
       crossfadeType: { type: String },
       isKaraoke: { type: Boolean },
       isAudioReactiveLyrics: { type: Boolean },
+      isAdaptiveThemeEnabled: { type: Boolean },
       theme: { type: String },
       customColor: { type: String },
       customColors: { type: Map, of: String },

@@ -18,8 +18,9 @@ const handleError = () => {
 const themeDataAttr = computed(() => themeStore.themeId || 'wc2026');
 
 const customColorStyle = computed(() => {
-  const cc = themeStore.currentCustomColor;
-  if (!cc) return '';
+  const palette = themeStore.currentCustomPalette;
+  if (!palette) return '';
+  const cc = palette.primary;
   return `:root { --color-primary-h: ${cc.h}; --color-primary-s: ${cc.s}%; --color-primary-l: ${cc.l}%; }`;
 });
 
@@ -30,16 +31,14 @@ useHead(() => ({
   style: [{ innerHTML: customColorStyle.value, id: 'theme-custom-color' }]
 }));
 
-const is404 = computed(() => props.error.statusCode === 404);
+const is404 = computed(() => props.error.status === 404 || props.error.statusCode === 404);
 
 const errorTitle = computed(() =>
   is404.value ? t('core.error.notFound') : t('core.error.fatalTitle')
 );
 
 const errorDesc = computed(() =>
-  is404.value
-    ? 'Úgy tűnik, ez az oldal elvándorolt, vagy sosem létezett. Ellenőrizd az URL-t!'
-    : t('core.error.fatalDescription')
+  is404.value ? t('core.error.notFoundDesc') : t('core.error.fatalDescription')
 );
 </script>
 
@@ -53,7 +52,13 @@ const errorDesc = computed(() =>
         <AppIcon v-if="is404" name="ph:file-search" size="18" class="header-icon" />
         <AppIcon v-else name="ph:warning-circle" size="18" class="header-icon" />
         <span class="header-text">
-          {{ is404 ? '404 - Not Found' : (error.statusCode || '500') + ' - System Error' }}
+          {{
+            is404
+              ? t('core.error.notFoundHeader')
+              : t('core.error.systemErrorHeader', {
+                  statusCode: error.status || error.statusCode || '500'
+                })
+          }}
         </span>
       </div>
 

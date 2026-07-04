@@ -4,7 +4,7 @@ import { useStatsStore } from '../stores/useStatsStore';
 import type { CategorizedSearchResults } from '../../search/types/search.types';
 
 const statsStore = useStatsStore();
-const playerStore = usePlayerStore();
+
 const { t } = useI18n();
 
 const artistImages = ref<Record<string, string>>({});
@@ -46,20 +46,17 @@ onMounted(() => {
 const totalHours = computed(() => Math.floor(statsStore.totalListeningSeconds / 3600));
 const totalMinutes = computed(() => Math.floor((statsStore.totalListeningSeconds % 3600) / 60));
 
+const { playQueue } = usePlayer();
+
 function playTrack(index: number) {
   const tracksToPlay = statsStore.topTracks.map((t) => ({
     videoId: t.trackId,
     title: t.title,
     artist: t.artist,
     thumbnailUrl: t.thumbnailUrl || '',
-    durationSeconds: t.totalDurationSeconds
+    durationSeconds: t.durationSeconds
   }));
-  playerStore.setQueue(tracksToPlay);
-  const track = tracksToPlay[index];
-  if (track) {
-    playerStore.setTrack(track);
-    playerStore.isPlaying = true;
-  }
+  playQueue(tracksToPlay, index);
 }
 </script>
 
@@ -283,6 +280,7 @@ function playTrack(index: number) {
   border-radius: var(--radius-lg);
   background: rgba(255, 255, 255, 0.02);
   transition: all 0.2s ease;
+  min-width: 0;
 
   &:hover {
     background: var(--color-surface-raised);
@@ -306,10 +304,30 @@ function playTrack(index: number) {
   &__name {
     font-weight: 600;
     font-size: var(--text-base);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   &__plays {
     font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+  }
+}
+
+.stats-artist__image {
+  border-radius: var(--radius-full);
+  margin-right: var(--space-4);
+  object-fit: cover;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+
+  &--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-surface-raised);
     color: var(--color-text-secondary);
   }
 }
@@ -359,6 +377,9 @@ function playTrack(index: number) {
     border-radius: var(--radius-md);
     margin-right: var(--space-4);
     object-fit: cover;
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
 
     &--placeholder {
       display: flex;
@@ -366,6 +387,9 @@ function playTrack(index: number) {
       justify-content: center;
       background: var(--color-surface-raised);
       color: var(--color-text-secondary);
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
     }
   }
 

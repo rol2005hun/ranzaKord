@@ -22,9 +22,9 @@ let primaryS = '0';
 
 function syncThemeColors() {
   if (!import.meta.client) return;
-  if (themeStore.currentCustomColor) {
-    primaryH = String(themeStore.currentCustomColor.h);
-    primaryS = String(themeStore.currentCustomColor.s) + '%';
+  if (themeStore.currentCustomPalette) {
+    primaryH = String(themeStore.currentCustomPalette.primary.h);
+    primaryS = String(themeStore.currentCustomPalette.primary.s) + '%';
   } else {
     const raw = themeStore.DEFAULT_THEME_COLORS[themeStore.themeId] || '158 85% 65%';
     const m = raw.match(/(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%/);

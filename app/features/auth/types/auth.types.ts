@@ -9,6 +9,7 @@ export interface UserSettings {
   crossfadeType?: string;
   isKaraoke?: boolean;
   isAudioReactiveLyrics?: boolean;
+  isAdaptiveThemeEnabled?: boolean;
   eqEnabled?: boolean;
   eqPreset?: string;
   eqBands?: number[];

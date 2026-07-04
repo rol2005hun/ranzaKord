@@ -73,9 +73,9 @@ if (isAuthenticated.value) {
         <span class="login-page__logo-text">{{ $t('core.appName') }}</span>
       </div>
 
-      <component :is="themeStore.themeId === 'wc2026' ? 'div' : 'h1'" class="login-page__title">
+      <h1 class="login-page__title">
         {{ $t('auth.login.title') }}
-      </component>
+      </h1>
       <p class="login-page__subtitle">{{ $t('auth.login.subtitle') }}</p>
 
       <div class="login-page__remember">

@@ -24,6 +24,10 @@ export default defineNuxtPlugin((nuxtApp) => {
             themeStore.customColors[s.theme] = s.customColor;
           }
 
+          if (s.isAdaptiveThemeEnabled !== undefined) {
+            themeStore.isAdaptiveThemeEnabled = s.isAdaptiveThemeEnabled;
+          }
+
           if (s.crossfadeEnabled !== undefined) playerStore.crossfadeEnabled = s.crossfadeEnabled;
           if (s.crossfadeDuration !== undefined)
             playerStore.crossfadeDuration = s.crossfadeDuration;
@@ -53,6 +57,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       const settings = {
         theme: themeStore.themeId,
         customColors: themeStore.customColors,
+        isAdaptiveThemeEnabled: themeStore.isAdaptiveThemeEnabled,
         crossfadeEnabled: playerStore.crossfadeEnabled,
         crossfadeDuration: playerStore.crossfadeDuration,
         crossfadeType: playerStore.crossfadeType,
@@ -79,6 +84,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       () => [
         themeStore.themeId,
         themeStore.customColors,
+        themeStore.isAdaptiveThemeEnabled,
         playerStore.crossfadeEnabled,
         playerStore.crossfadeDuration,
         playerStore.crossfadeType,

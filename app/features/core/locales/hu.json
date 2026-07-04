@@ -6,7 +6,10 @@
     "notFound": "Az oldal nem található.",
     "fatalTitle": "VÉGZETES HIBA (Hiba történt!)",
     "fatalDescription": "A Nuxt/Vue összeomlott. Kérlek másold ki ezt a hibaüzenetet:",
-    "fatalHomeBtn": "Kezdőlap"
+    "fatalHomeBtn": "Kezdőlap",
+    "notFoundDesc": "Úgy tűnik, ez az oldal elvándorolt, vagy sosem létezett. Ellenőrizd az URL-t!",
+    "notFoundHeader": "404 - Nem található",
+    "systemErrorHeader": "{statusCode} - Rendszerhiba"
   },
   "nav": {
     "signIn": "Bejelentkezés",

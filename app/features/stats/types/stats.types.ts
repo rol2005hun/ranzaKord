@@ -4,7 +4,7 @@ export interface TopTrackAggregated {
   artist: string;
   thumbnailUrl?: string;
   playCount: number;
-  totalDurationSeconds: number;
+  durationSeconds: number;
 }
 
 export interface TopArtistAggregated {
