@@ -341,6 +341,9 @@ async function downloadPlaylist(): Promise<void> {
   }
   isDownloadingPlaylist.value = false;
 }
+
+const showMobileMenu = ref(false);
+const showStickyMobileMenu = ref(false);
 </script>
 
 <template>
@@ -371,7 +374,8 @@ async function downloadPlaylist(): Promise<void> {
         <div
           v-if="(playlist?.trackCount ?? 0) > 0 || debouncedSearch"
           class="playlist-page__search-bar">
-          <AppIcon name="ph:magnifying-glass" class="playlist-page__search-icon" />
+          <AppIcon v-if="status === 'pending' && playlist" name="ph:spinner-gap" class="playlist-page__search-icon spin" />
+          <AppIcon v-else name="ph:magnifying-glass" class="playlist-page__search-icon" />
           <input
             id="playlist-search-input"
             v-model="searchQuery"
@@ -381,9 +385,6 @@ async function downloadPlaylist(): Promise<void> {
             class="playlist-page__search-input" />
 
           <div class="playlist-page__search-actions">
-            <div v-if="status === 'pending' && playlist" class="playlist-page__inline-loader">
-              <AppIcon name="ph:spinner-gap" class="spin" />
-            </div>
             <button
               v-if="searchQuery"
               class="playlist-page__search-clear"
@@ -400,49 +401,121 @@ async function downloadPlaylist(): Promise<void> {
       </template>
 
       <template #sticky-actions>
-        <button
-          class="playlist-page__action-btn"
-          :title="$t('search.placeholder')"
-          @click="focusSearch">
-          <AppIcon name="ph:magnifying-glass" />
-        </button>
-        <button
-          class="playlist-page__action-btn"
-          :title="$t('playlists.editPlaylist')"
-          @click="showEditModal = true">
-          <AppIcon name="ph:pencil-simple" />
-        </button>
-        <button
-          class="playlist-page__action-btn playlist-page__action-btn--danger"
-          :title="$t('playlists.deletePlaylist')"
-          :disabled="isDeleting"
-          @click="showDeleteConfirm = true">
-          <AppIcon name="ph:trash" />
-        </button>
+        <div class="playlist-page__actions-desktop">
+          <button
+            class="playlist-page__action-btn"
+            :title="$t('search.placeholder')"
+            @click="focusSearch">
+            <AppIcon name="ph:magnifying-glass" />
+          </button>
+          <button
+            class="playlist-page__action-btn"
+            :title="$t('playlists.editPlaylist')"
+            @click="showEditModal = true">
+            <AppIcon name="ph:pencil-simple" />
+          </button>
+          <button
+            class="playlist-page__action-btn playlist-page__action-btn--danger"
+            :title="$t('playlists.deletePlaylist')"
+            :disabled="isDeleting"
+            @click="showDeleteConfirm = true">
+            <AppIcon name="ph:trash" />
+          </button>
+        </div>
+        <div class="playlist-page__actions-mobile">
+          <button
+            class="playlist-page__action-btn"
+            :title="$t('search.placeholder')"
+            @click="focusSearch">
+            <AppIcon name="ph:magnifying-glass" />
+          </button>
+          <div class="playlist-page__more-container">
+            <button
+              class="playlist-page__action-btn"
+              @click="showStickyMobileMenu = !showStickyMobileMenu">
+              <AppIcon name="ph:dots-three-vertical-bold" />
+            </button>
+            <div v-if="showStickyMobileMenu" class="playlist-page__dropdown-overlay" @click="showStickyMobileMenu = false"></div>
+            <Transition name="dropdown">
+              <div v-if="showStickyMobileMenu" class="playlist-page__dropdown">
+                <button
+                  class="playlist-page__dropdown-item"
+                  @click="showStickyMobileMenu = false; showEditModal = true">
+                  <AppIcon name="ph:pencil-simple" />
+                  {{ $t('playlists.editPlaylist') }}
+                </button>
+                <button
+                  class="playlist-page__dropdown-item playlist-page__dropdown-item--danger"
+                  :disabled="isDeleting"
+                  @click="showStickyMobileMenu = false; showDeleteConfirm = true">
+                  <AppIcon name="ph:trash" />
+                  {{ $t('playlists.deletePlaylist') }}
+                </button>
+              </div>
+            </Transition>
+          </div>
+        </div>
       </template>
 
       <template #actions>
-        <button
-          class="playlist-page__action-btn"
-          :title="$t('offline.downloadPlaylist')"
-          :disabled="isDownloadingPlaylist"
-          @click="downloadPlaylist">
-          <AppSpinner v-if="isDownloadingPlaylist" size="sm" />
-          <AppIcon v-else name="ph:arrow-circle-down-duotone" />
-        </button>
-        <button
-          class="playlist-page__action-btn"
-          :title="$t('playlists.editPlaylist')"
-          @click="showEditModal = true">
-          <AppIcon name="ph:pencil-simple" />
-        </button>
-        <button
-          class="playlist-page__action-btn playlist-page__action-btn--danger"
-          :title="$t('playlists.deletePlaylist')"
-          :disabled="isDeleting"
-          @click="showDeleteConfirm = true">
-          <AppIcon name="ph:trash" />
-        </button>
+        <div class="playlist-page__actions-desktop">
+          <button
+            class="playlist-page__action-btn"
+            :title="$t('offline.downloadPlaylist')"
+            :disabled="isDownloadingPlaylist"
+            @click="downloadPlaylist">
+            <AppSpinner v-if="isDownloadingPlaylist" size="sm" />
+            <AppIcon v-else name="ph:arrow-circle-down-duotone" />
+          </button>
+          <button
+            class="playlist-page__action-btn"
+            :title="$t('playlists.editPlaylist')"
+            @click="showEditModal = true">
+            <AppIcon name="ph:pencil-simple" />
+          </button>
+          <button
+            class="playlist-page__action-btn playlist-page__action-btn--danger"
+            :title="$t('playlists.deletePlaylist')"
+            :disabled="isDeleting"
+            @click="showDeleteConfirm = true">
+            <AppIcon name="ph:trash" />
+          </button>
+        </div>
+        <div class="playlist-page__actions-mobile">
+          <div class="playlist-page__more-container">
+            <button
+              class="playlist-page__action-btn playlist-page__action-btn--more"
+              @click="showMobileMenu = !showMobileMenu">
+              <AppIcon name="ph:dots-three-vertical-bold" />
+            </button>
+            <div v-if="showMobileMenu" class="playlist-page__dropdown-overlay" @click="showMobileMenu = false"></div>
+            <Transition name="dropdown">
+              <div v-if="showMobileMenu" class="playlist-page__dropdown">
+                <button
+                  class="playlist-page__dropdown-item"
+                  :disabled="isDownloadingPlaylist"
+                  @click="showMobileMenu = false; downloadPlaylist()">
+                  <AppSpinner v-if="isDownloadingPlaylist" size="sm" />
+                  <AppIcon v-else name="ph:arrow-circle-down-duotone" />
+                  {{ $t('offline.downloadPlaylist') }}
+                </button>
+                <button
+                  class="playlist-page__dropdown-item"
+                  @click="showMobileMenu = false; showEditModal = true">
+                  <AppIcon name="ph:pencil-simple" />
+                  {{ $t('playlists.editPlaylist') }}
+                </button>
+                <button
+                  class="playlist-page__dropdown-item playlist-page__dropdown-item--danger"
+                  :disabled="isDeleting"
+                  @click="showMobileMenu = false; showDeleteConfirm = true">
+                  <AppIcon name="ph:trash" />
+                  {{ $t('playlists.deletePlaylist') }}
+                </button>
+              </div>
+            </Transition>
+          </div>
+        </div>
       </template>
 
       <template #skeleton-center-header>
@@ -580,6 +653,94 @@ async function downloadPlaylist(): Promise<void> {
     }
   }
 
+  &__actions-desktop {
+    display: flex;
+    align-items: center;
+    gap: inherit;
+    
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
+
+  &__actions-mobile {
+    display: none;
+    align-items: center;
+    gap: inherit;
+    
+    @media (max-width: 768px) {
+      display: flex;
+    }
+  }
+
+  &__more-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  &__dropdown-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    background: transparent;
+  }
+
+  &__dropdown {
+    position: absolute;
+    top: calc(100% + var(--space-2));
+    right: 0;
+    z-index: 100;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-2);
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  }
+
+  &__dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+    padding: var(--space-3);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    text-align: left;
+    transition: background var(--transition-fast);
+
+    &:hover {
+      background: var(--color-surface-hover);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &--danger {
+      color: hsl(0, 65%, 65%);
+      
+      &:hover {
+        background: color-mix(in srgb, hsl(0, 65%, 50%) 15%, transparent);
+        color: hsl(0, 65%, 65%);
+      }
+    }
+    
+    svg {
+      font-size: 1.25rem;
+    }
+  }
+
   &__confirm-overlay {
     position: fixed;
     inset: 0;
@@ -675,8 +836,7 @@ async function downloadPlaylist(): Promise<void> {
 
   &__search-input {
     width: 100%;
-    padding: var(--space-3) calc(var(--space-4) * 2 + 3rem) var(--space-3)
-      calc(var(--space-4) + 1.5rem + var(--space-2));
+    padding: var(--space-3) 2.5rem var(--space-3) calc(var(--space-4) + 1.5rem + var(--space-2));
     background: color-mix(in srgb, var(--color-surface-raised) 80%, transparent);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-full);
@@ -776,5 +936,16 @@ async function downloadPlaylist(): Promise<void> {
 .modal-enter-from,
 .modal-leave-to {
   opacity: 0;
+}
+
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-5px) scale(0.95);
 }
 </style>

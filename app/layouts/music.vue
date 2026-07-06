@@ -21,14 +21,22 @@ useAsyncData(
   }
 );
 
-function onPlaylistCreated(id: string): void {
+async function onPlaylistCreated(id: string): Promise<void> {
   showCreateModal.value = false;
-  navigateTo(`/playlist/${id}`);
+  if (route.path === `/playlist/${id}`) {
+    await refreshNuxtData(`playlist-${id}`);
+  } else {
+    await navigateTo(`/playlist/${id}`);
+  }
 }
 
-function onPlaylistImported(id: string): void {
+async function onPlaylistImported(id: string): Promise<void> {
   showImportModal.value = false;
-  navigateTo(`/playlist/${id}`);
+  if (route.path === `/playlist/${id}`) {
+    await refreshNuxtData(`playlist-${id}`);
+  } else {
+    await navigateTo(`/playlist/${id}`);
+  }
 }
 const isHydrated = ref(false);
 onMounted(() => {
@@ -193,7 +201,7 @@ onMounted(() => {
             @click="showMobilePlaylists = false">
             <div style="position: relative; display: inline-flex">
               <AppIcon name="ph:chart-bar-duotone" />
-              <span class="app-sidebar-item__new-badge" style="top: -2px; right: -8px">Új</span>
+              <span class="app-sidebar-item__new-badge" style="top: -2px; right: -8px">{{ $t('core.nav.new') }}</span>
             </div>
             {{ $t('stats.title') }}
           </NuxtLink>
@@ -271,7 +279,7 @@ onMounted(() => {
   padding-bottom: calc(var(--player-height, 90px) + var(--safe-area-bottom));
 
   @media (max-width: 768px) {
-    padding-bottom: calc(var(--player-height, 90px) + 60px + var(--safe-area-bottom));
+    padding-bottom: calc(var(--player-height, 90px) + var(--safe-area-bottom));
   }
 
   &__content {

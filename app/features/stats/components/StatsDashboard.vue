@@ -163,9 +163,7 @@ function playTrack(index: number) {
                       player.currentTrack.value?.videoId === track.trackId && player.isPlaying.value
                     "
                     class="stats-track__playing-indicator">
-                    <span class="bar" />
-                    <span class="bar" />
-                    <span class="bar" />
+                    <AppPlayingIndicator />
                   </div>
                   <span
                     v-else
@@ -180,7 +178,13 @@ function playTrack(index: number) {
                     <template v-else>#{{ index + 1 }}</template>
                   </span>
 
-                  <button class="stats-track__play-btn">
+                  <button
+                    class="stats-track__play-btn"
+                    :aria-label="
+                      player.currentTrack.value?.videoId === track.trackId && player.isPlaying.value
+                        ? t('player.pause')
+                        : t('player.play')
+                    ">
                     <AppSpinner
                       v-if="
                         player.currentTrack.value?.videoId === track.trackId &&
@@ -444,7 +448,7 @@ function playTrack(index: number) {
   min-width: 0;
 
   &:hover {
-    background: var(--color-surface-raised);
+    background: var(--color-surface-hover);
 
     .stats-track__play-btn {
       opacity: 1;
@@ -471,40 +475,7 @@ function playTrack(index: number) {
 
   &__playing-indicator {
     display: flex;
-    align-items: flex-end;
-    gap: 2px;
-    height: 16px;
     transition: opacity 0.2s ease;
-
-    .bar {
-      width: 4px;
-      background-color: var(--color-primary);
-      border-radius: 1px;
-      animation: playing-bar 1s ease-in-out infinite;
-
-      &:nth-child(1) {
-        animation-delay: 0s;
-        height: 8px;
-      }
-      &:nth-child(2) {
-        animation-delay: 0.15s;
-        height: 16px;
-      }
-      &:nth-child(3) {
-        animation-delay: 0.3s;
-        height: 12px;
-      }
-    }
-  }
-
-  @keyframes playing-bar {
-    0%,
-    100% {
-      transform: scaleY(0.5);
-    }
-    50% {
-      transform: scaleY(1);
-    }
   }
 
   &__rank {

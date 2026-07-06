@@ -70,31 +70,29 @@ const customColorValue = computed({
         :title="$t('settings.appearance.customColor.title')"
         :description="$t('settings.appearance.customColor.description')"
         border>
-        <template #info>
-          <div class="color-picker-wrap">
-            <input
-              v-model="customColorValue"
-              type="color"
-              class="color-picker"
-              :disabled="themeStore.isAdaptiveThemeEnabled"
-              :class="{
-                'color-picker--unselected':
-                  !themeStore.customColors[themeStore.themeId] || themeStore.isAdaptiveThemeEnabled
-              }" />
-            <AppButton
-              variant="secondary"
-              size="sm"
-              :disabled="
+        <div class="color-picker-wrap">
+          <input
+            v-model="customColorValue"
+            type="color"
+            class="color-picker"
+            :disabled="themeStore.isAdaptiveThemeEnabled"
+            :class="{
+              'color-picker--unselected':
                 !themeStore.customColors[themeStore.themeId] || themeStore.isAdaptiveThemeEnabled
-              "
-              @click="themeStore.resetCustomColor()">
-              <template #icon>
-                <AppIcon name="ph:arrow-counter-clockwise" />
-              </template>
-              {{ $t('settings.appearance.customColor.reset') }}
-            </AppButton>
-          </div>
-        </template>
+            }" />
+          <AppButton
+            variant="secondary"
+            size="sm"
+            :disabled="
+              !themeStore.customColors[themeStore.themeId] || themeStore.isAdaptiveThemeEnabled
+            "
+            @click="themeStore.resetCustomColor()">
+            <template #icon>
+              <AppIcon name="ph:arrow-counter-clockwise" />
+            </template>
+            {{ $t('settings.appearance.customColor.reset') }}
+          </AppButton>
+        </div>
       </AppSettingsItem>
 
       <AppSettingsItem

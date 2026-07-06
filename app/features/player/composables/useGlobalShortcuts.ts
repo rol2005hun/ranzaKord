@@ -13,10 +13,36 @@ export function useGlobalShortcuts() {
     PREVIOUS: 'CommandOrControl+Alt+Left'
   };
 
+  function handleWebKeydown(e: KeyboardEvent) {
+    if (!playerStore.globalShortcutsEnabled) return;
+    
+    const isMac = navigator.userAgent.toLowerCase().includes('mac');
+    const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
+    
+    if (cmdOrCtrl && e.altKey) {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        player.togglePlay();
+      } else if (e.code === 'ArrowRight') {
+        e.preventDefault();
+        player.playNext();
+      } else if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        player.playPrev();
+      }
+    }
+  }
+
   async function registerShortcuts() {
     if (!import.meta.client) return;
     try {
-      if (!(await isTauri())) return;
+      if (!(await isTauri())) {
+        window.removeEventListener('keydown', handleWebKeydown);
+        if (playerStore.globalShortcutsEnabled) {
+          window.addEventListener('keydown', handleWebKeydown);
+        }
+        return;
+      }
 
       await unregisterAll();
 
@@ -52,6 +78,8 @@ export function useGlobalShortcuts() {
     try {
       if (await isTauri()) {
         await unregisterAll();
+      } else {
+        window.removeEventListener('keydown', handleWebKeydown);
       }
     } catch (error) {
       console.error('Failed to unregister global shortcuts:', error);

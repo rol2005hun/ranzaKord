@@ -253,9 +253,8 @@ onMounted(() => {
                       :class="{
                         'app-track-list__track-num--playing': isHydrated && track.isPlaying
                       }">
-                      <AppIcon
+                      <AppPlayingIndicator
                         v-if="isHydrated && track.isPlaying"
-                        name="ph:speaker-high-fill"
                         data-allow-mismatch
                         class="text-primary" />
                       <template v-else>{{ index + 1 }}</template>

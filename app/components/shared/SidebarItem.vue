@@ -16,12 +16,13 @@ defineProps<Props>();
   <component
     :is="to ? NuxtLink : 'button'"
     :to="to"
+    :aria-label="label"
     class="app-sidebar-item"
     :class="{ 'app-sidebar-item--active': active }"
     exact-active-class="app-sidebar-item--active">
     <div class="app-sidebar-item__icon-wrapper">
       <AppIcon v-if="icon" :name="icon" class="app-sidebar-item__icon" />
-      <span v-if="isNew" class="app-sidebar-item__new-badge">Új</span>
+      <span v-if="isNew" class="app-sidebar-item__new-badge">{{ $t('core.nav.new') }}</span>
     </div>
     <span class="app-sidebar__text">{{ label }}</span>
   </component>

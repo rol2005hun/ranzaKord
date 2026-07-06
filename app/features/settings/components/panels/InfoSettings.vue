@@ -23,7 +23,7 @@ const shortcuts = [
     </div>
 
     <div class="settings-panel__content">
-      <SettingsSection :title="t('settings.info.shortcutsTitle')">
+      <AppSettingsSection :title="t('settings.info.shortcutsTitle')">
         <div class="shortcuts-list">
           <div v-for="shortcut in shortcuts" :key="shortcut.action" class="shortcut-item">
             <span class="shortcut-item__action">{{ shortcut.action }}</span>
@@ -31,14 +31,14 @@ const shortcuts = [
           </div>
         </div>
         <p class="shortcuts-note">{{ t('settings.info.shortcutsNote') }}</p>
-      </SettingsSection>
+      </AppSettingsSection>
 
-      <SettingsSection :title="t('settings.info.aboutTitle')">
+      <AppSettingsSection :title="t('settings.info.aboutTitle')">
         <div class="about-info">
           <AppBrand />
           <p class="about-info__version">v{{ version }}</p>
         </div>
-      </SettingsSection>
+      </AppSettingsSection>
     </div>
   </div>
 </template>

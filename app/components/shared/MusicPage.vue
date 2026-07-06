@@ -129,10 +129,12 @@ const optimizedBgUrl = computed(() => {
 
       <div class="music-page__scroll-area" @scroll="onContentScroll">
         <div ref="headerRef" class="music-page__header">
-          <div
-            class="music-page__header-bg"
-            :style="optimizedBgUrl ? `background-image: url('${optimizedBgUrl}')` : ''"></div>
-          <div class="music-page__header-overlay"></div>
+          <div class="music-page__header-backgrounds">
+            <div
+              class="music-page__header-bg"
+              :style="optimizedBgUrl ? `background-image: url('${optimizedBgUrl}')` : ''"></div>
+            <div class="music-page__header-overlay"></div>
+          </div>
           <div class="music-page__header-content">
             <div class="music-page__cover" :class="{ 'music-page__cover--rounded': roundedImage }">
               <NuxtImg
@@ -285,8 +287,14 @@ const optimizedBgUrl = computed(() => {
     display: flex;
     align-items: center;
     padding: var(--space-4) var(--space-6);
-    overflow: hidden;
     flex-shrink: 0;
+
+    &-backgrounds {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      z-index: 1;
+    }
 
     &-bg {
       position: absolute;
@@ -294,7 +302,6 @@ const optimizedBgUrl = computed(() => {
       background-size: cover;
       background-position: center;
       filter: blur(40px);
-      z-index: 1;
     }
 
     &-overlay {
@@ -305,7 +312,6 @@ const optimizedBgUrl = computed(() => {
         color-mix(in srgb, var(--color-bg) 50%, transparent) 0%,
         var(--color-bg) 100%
       );
-      z-index: 2;
     }
 
     &-content {

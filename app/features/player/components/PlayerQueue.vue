@@ -154,7 +154,7 @@ onMounted(() => {
                   : playerStore.currentTrack?.videoId === track.videoId
               "
               class="player-queue__playing-icon">
-              <AppIcon name="ph:speaker-high-fill" class="text-primary" />
+              <AppPlayingIndicator class="text-primary" />
             </span>
             <span v-else class="player-queue__num">
               {{ playerStore.visibleQueueStartIndex + index + 1 }}
