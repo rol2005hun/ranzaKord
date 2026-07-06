@@ -81,7 +81,7 @@ export const usePlayerStore = defineStore(
     }
 
     function setQueue(tracks: Track[]) {
-      queue.value = tracks.slice(0, 100).map((t) => ({
+      queue.value = tracks.slice(0, 5000).map((t) => ({
         ...t,
         queueId: t.queueId || crypto.randomUUID()
       }));
@@ -93,7 +93,7 @@ export const usePlayerStore = defineStore(
         ...track,
         queueId: track.queueId || crypto.randomUUID()
       });
-      if (newQueue.length > 100) {
+      if (newQueue.length > 5000) {
         newQueue.shift();
       }
       queue.value = newQueue;
@@ -291,6 +291,7 @@ export const usePlayerStore = defineStore(
     return {
       currentTrack,
       queue,
+      playHistory,
       isPlaying,
       volume,
       currentTimeSeconds,

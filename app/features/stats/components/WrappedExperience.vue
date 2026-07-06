@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { TopTrackAggregated, TopArtistAggregated, WrappedSlideId } from '../types/stats.types';
-import type { CategorizedSearchResults } from '../../search/types/search.types';
+import type { SearchResult } from '../../search/types/search.types';
 
 import WrappedSlideIntro from './wrapped/WrappedSlideIntro.vue';
 import WrappedSlideTotalTime from './wrapped/WrappedSlideTotalTime.vue';
@@ -47,13 +47,11 @@ watch(
     for (const artist of artists.slice(0, 5)) {
       if (artistImages.value[artist.name]) continue;
       try {
-        const data = await $fetch<CategorizedSearchResults>(
+        const data = await $fetch<SearchResult[]>(
           `/api/search?q=${encodeURIComponent(artist.name)}&type=artist`
         );
-        if (data.artists && data.artists.length > 0 && data.artists[0]) {
-          artistImages.value[artist.name] = data.artists[0].thumbnailUrl;
-        } else if (data.topResult && data.topResult.type === 'artist') {
-          artistImages.value[artist.name] = data.topResult.thumbnailUrl;
+        if (Array.isArray(data) && data.length > 0 && data[0]) {
+          artistImages.value[artist.name] = data[0].thumbnailUrl;
         }
         await new Promise((resolve) => setTimeout(resolve, 300));
       } catch {

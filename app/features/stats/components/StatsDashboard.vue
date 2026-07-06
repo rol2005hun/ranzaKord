@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useStatsStore } from '../stores/useStatsStore';
-import type { CategorizedSearchResults } from '../../search/types/search.types';
+import type { SearchResult } from '../../search/types/search.types';
 
 import WrappedExperience from './WrappedExperience.vue';
+import StatsCollage from './StatsCollage.vue';
 
 const statsStore = useStatsStore();
 
@@ -23,13 +24,11 @@ watch(
       for (const artist of top10) {
         if (artistImages.value[artist.name]) continue;
         try {
-          const data = await $fetch<CategorizedSearchResults>(
+          const data = await $fetch<SearchResult[]>(
             `/api/search?q=${encodeURIComponent(artist.name)}&type=artist`
           );
-          if (data.artists && data.artists.length > 0 && data.artists[0]) {
-            artistImages.value[artist.name] = data.artists[0].thumbnailUrl;
-          } else if (data.topResult && data.topResult.type === 'artist') {
-            artistImages.value[artist.name] = data.topResult.thumbnailUrl;
+          if (Array.isArray(data) && data.length > 0 && data[0]) {
+            artistImages.value[artist.name] = data[0].thumbnailUrl;
           }
           // Delay to prevent rate limiting
           await new Promise((resolve) => setTimeout(resolve, 500));
@@ -50,7 +49,7 @@ onMounted(() => {
 const totalHours = computed(() => Math.floor(statsStore.totalListeningSeconds / 3600));
 const totalMinutes = computed(() => Math.floor((statsStore.totalListeningSeconds % 3600) / 60));
 
-const { playQueue } = usePlayer();
+const player = usePlayer();
 
 function playTrack(index: number) {
   const tracksToPlay = statsStore.topTracks.map((t) => ({
@@ -60,14 +59,18 @@ function playTrack(index: number) {
     thumbnailUrl: t.thumbnailUrl || '',
     durationSeconds: t.durationSeconds
   }));
-  playQueue(tracksToPlay, index);
+  player.playQueue(tracksToPlay, index);
 }
 </script>
 
 <template>
   <AppMusicPage :title="t('stats.title')" :show-play-button="false">
     <template #fallback-icon>
-      <AppIcon name="ph:chart-bar-duotone" />
+      <StatsCollage
+        v-if="statsStore.topArtists.length > 0"
+        :artists="statsStore.topArtists"
+        :images="artistImages" />
+      <AppIcon v-else name="ph:chart-bar-duotone" />
     </template>
 
     <template #meta>
@@ -147,11 +150,47 @@ function playTrack(index: number) {
                 v-for="(track, index) in statsStore.topTracks.slice(0, 10)"
                 :key="track.trackId"
                 class="stats-track"
+                :class="{
+                  'stats-track--active': player.currentTrack.value?.videoId === track.trackId
+                }"
                 @click="playTrack(index)">
                 <div class="stats-track__rank-wrapper">
-                  <span class="stats-track__rank">#{{ index + 1 }}</span>
+                  <div
+                    v-if="
+                      player.currentTrack.value?.videoId === track.trackId && player.isPlaying.value
+                    "
+                    class="stats-track__playing-indicator">
+                    <span class="bar" />
+                    <span class="bar" />
+                    <span class="bar" />
+                  </div>
+                  <span
+                    v-else
+                    class="stats-track__rank"
+                    :class="{
+                      'stats-track__rank--active':
+                        player.currentTrack.value?.videoId === track.trackId
+                    }">
+                    <template v-if="player.currentTrack.value?.videoId === track.trackId">
+                      <AppIcon name="ph:music-notes" class="text-primary" />
+                    </template>
+                    <template v-else>#{{ index + 1 }}</template>
+                  </span>
+
                   <button class="stats-track__play-btn">
-                    <AppIcon name="ph:play-fill" />
+                    <AppSpinner
+                      v-if="
+                        player.currentTrack.value?.videoId === track.trackId &&
+                        player.isLoading.value
+                      "
+                      size="sm" />
+                    <AppIcon
+                      v-else-if="
+                        player.currentTrack.value?.videoId === track.trackId &&
+                        player.isPlaying.value
+                      "
+                      name="ph:pause-fill" />
+                    <AppIcon v-else name="ph:play-fill" />
                   </button>
                 </div>
                 <NuxtImg
@@ -346,7 +385,8 @@ function playTrack(index: number) {
   &__rank {
     font-weight: 700;
     color: var(--color-primary);
-    width: 40px;
+    width: 48px;
+    margin-right: var(--space-2);
     font-size: var(--text-lg);
   }
 
@@ -410,16 +450,58 @@ function playTrack(index: number) {
     .stats-track__rank {
       opacity: 0;
     }
+    .stats-track__playing-indicator {
+      opacity: 0;
+    }
   }
 
   &__rank-wrapper {
     position: relative;
-    width: 40px;
+    width: 48px;
     height: 40px;
+    margin-right: var(--space-2);
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+  }
+
+  &__playing-indicator {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 16px;
+    transition: opacity 0.2s ease;
+
+    .bar {
+      width: 4px;
+      background-color: var(--color-primary);
+      border-radius: 1px;
+      animation: playing-bar 1s ease-in-out infinite;
+
+      &:nth-child(1) {
+        animation-delay: 0s;
+        height: 8px;
+      }
+      &:nth-child(2) {
+        animation-delay: 0.15s;
+        height: 16px;
+      }
+      &:nth-child(3) {
+        animation-delay: 0.3s;
+        height: 12px;
+      }
+    }
+  }
+
+  @keyframes playing-bar {
+    0%,
+    100% {
+      transform: scaleY(0.5);
+    }
+    50% {
+      transform: scaleY(1);
+    }
   }
 
   &__rank {
@@ -427,6 +509,10 @@ function playTrack(index: number) {
     color: var(--color-primary);
     font-size: var(--text-lg);
     transition: opacity 0.2s ease;
+
+    &--active {
+      color: var(--color-primary);
+    }
   }
 
   &__image {

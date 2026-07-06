@@ -177,6 +177,19 @@ export function useLyrics() {
     error.value = null;
   }
 
+  function resetTranslation() {
+    if (!lyricsData.value) return;
+    if (lyricsData.value.synced) {
+      lyricsData.value.synced = lyricsData.value.synced.map((line) => ({
+        ...line,
+        translatedText: undefined
+      }));
+    } else {
+      lyricsData.value.translatedPlain = undefined;
+    }
+    translatedLanguage.value = null;
+  }
+
   return {
     lyricsData: computed(() => lyricsData.value),
     isLoading: computed(() => isLoading.value),
@@ -185,6 +198,7 @@ export function useLyrics() {
     error: computed(() => error.value),
     fetchLyrics,
     translateLyrics,
+    resetTranslation,
     getActiveLine,
     clearLyrics
   };

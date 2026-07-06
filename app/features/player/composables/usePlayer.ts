@@ -333,7 +333,7 @@ export function usePlayer() {
   let isFetchingMore = false;
 
   async function checkAndFetchMore(track: Track) {
-    if (isFetchingMore || store.playbackOrder !== 'sequential') return;
+    if (isFetchingMore) return;
     const ctx = store.playbackContext;
     if (!ctx || ctx.type === 'none') {
       if (!store.autoplayEnabled) return;
@@ -356,7 +356,12 @@ export function usePlayer() {
       return;
     }
 
-    const tracksRemaining = q.length - 1 - idx;
+    let tracksRemaining = q.length - 1 - idx;
+    if (store.playbackOrder === 'random') {
+      const remainingUnplayed = q.length - store.playHistory.length;
+      tracksRemaining = Math.max(0, remainingUnplayed);
+    }
+
     if (tracksRemaining > 3) return;
 
     isFetchingMore = true;
@@ -588,6 +593,15 @@ export function usePlayer() {
     const { setKaraoke } = useAudioVisualizer();
     setKaraoke(store.isKaraoke);
   }
+
+  watch(
+    () => store.autoplayEnabled,
+    (enabled) => {
+      if (enabled && store.currentTrack) {
+        checkAndFetchMore(store.currentTrack);
+      }
+    }
+  );
 
   return {
     currentTrack: computed(() => store.currentTrack),

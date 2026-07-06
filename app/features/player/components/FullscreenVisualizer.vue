@@ -30,7 +30,16 @@ function toggleLyrics() {
   }
 }
 
-const { lyricsData, isLoading: lyricsLoading, fetchLyrics, getActiveLine } = useLyrics();
+const {
+  lyricsData,
+  isLoading: lyricsLoading,
+  isTranslating,
+  translatedLanguage,
+  fetchLyrics,
+  translateLyrics,
+  resetTranslation,
+  getActiveLine
+} = useLyrics();
 
 watch(
   () => player.currentTrack.value,
@@ -505,6 +514,7 @@ function getStyleIcon(style: string) {
 
           <!-- Right Controls -->
           <div class="fullscreen-visualizer__right-controls">
+            <SleepTimerButton />
             <button
               class="fullscreen-visualizer__action-btn"
               :class="{ 'fullscreen-visualizer__action-btn--active': player.isKaraoke.value }"
@@ -522,6 +532,20 @@ function getStyleIcon(style: string) {
               @click.stop="toggleLyrics()">
               <AppIcon name="ph:microphone-stage" />
             </button>
+
+            <button
+              v-if="(isLyricsActive || layoutStore.isMobileLyricsOpen) && lyricsData"
+              class="fullscreen-visualizer__action-btn"
+              :class="{ 'fullscreen-visualizer__action-btn--active': translatedLanguage }"
+              :disabled="isTranslating"
+              :aria-label="
+                translatedLanguage ? $t('player.showOriginal') : $t('player.translateToHu')
+              "
+              @click.stop="translatedLanguage ? resetTranslation() : translateLyrics('hu')">
+              <AppSpinner v-if="isTranslating" size="sm" />
+              <AppIcon v-else :name="translatedLanguage ? 'ph:arrow-u-up-left' : 'ph:translate'" />
+            </button>
+
             <button
               class="fullscreen-visualizer__action-btn"
               :aria-label="$t('player.mute')"

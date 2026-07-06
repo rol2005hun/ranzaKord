@@ -7,8 +7,10 @@ const {
   lyricsData,
   isLoading: lyricsLoading,
   isTranslating,
+  translatedLanguage,
   fetchLyrics,
   translateLyrics,
+  resetTranslation,
   getActiveLine
 } = useLyrics();
 const { connect: connectVisualizer } = useAudioVisualizer();
@@ -382,9 +384,12 @@ const sidebarStyle = computed(() => ({
           <button
             class="right-sidebar__translate-btn"
             :disabled="isTranslating"
-            @click="translateLyrics('hu')">
-            <AppIcon name="ph:translate" />
+            @click="translatedLanguage ? resetTranslation() : translateLyrics('hu')">
+            <AppIcon :name="translatedLanguage ? 'ph:arrow-u-up-left' : 'ph:translate'" />
             <span v-if="isTranslating">{{ $t('player.translating') }}</span>
+            <span v-else-if="translatedLanguage">
+              {{ $t('player.showOriginal') || 'Eredeti megjelenítése' }}
+            </span>
             <span v-else>{{ $t('player.translateToHu') }}</span>
           </button>
         </div>
