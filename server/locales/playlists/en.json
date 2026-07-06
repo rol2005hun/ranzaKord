@@ -1,9 +1,0 @@
-{
-  "errors": {
-    "missingId": "Missing playlist ID",
-    "notFound": "Playlist not found",
-    "missingParams": "Missing playlist ID or video ID",
-    "missingTrackInfo": "videoId and title are required",
-    "missingName": "Playlist name is required"
-  }
-}

@@ -1,9 +1,0 @@
-{
-  "errors": {
-    "missingQuery": "Hiányzó keresési kifejezés",
-    "missingArtistId": "Hiányzó előadó azonosító",
-    "fetchArtistFailed": "Nem sikerült betölteni az előadót",
-    "missingAlbumId": "Hiányzó album azonosító",
-    "fetchAlbumFailed": "Nem sikerült betölteni az albumot"
-  }
-}

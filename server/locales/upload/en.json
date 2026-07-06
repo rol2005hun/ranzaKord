@@ -1,7 +1,0 @@
-{
-  "errors": {
-    "missingClientId": "Imgur client ID is not configured",
-    "missingImage": "Image is required",
-    "uploadFailed": "Failed to upload image to Imgur"
-  }
-}

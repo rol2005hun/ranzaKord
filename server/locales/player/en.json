@@ -1,9 +1,0 @@
-{
-  "errors": {
-    "missingVideoId": "Missing video ID",
-    "noAudioFormat": "No audio format available",
-    "extractFailed": "Failed to extract stream URL: {msg}",
-    "emptyStream": "Stream URL is empty",
-    "invalidPayload": "Invalid payload"
-  }
-}

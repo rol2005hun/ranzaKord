@@ -1,7 +1,0 @@
-{
-  "errors": {
-    "missingParams": "Missing code or state parameter",
-    "invalidState": "Invalid OAuth state",
-    "sessionExpired": "Session expired"
-  }
-}
