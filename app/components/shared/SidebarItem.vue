@@ -86,7 +86,7 @@ defineProps<Props>();
     padding: 1px 5px;
     border-radius: var(--radius-full);
     text-transform: uppercase;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
     z-index: 10;
     pointer-events: none;
     letter-spacing: 0.5px;

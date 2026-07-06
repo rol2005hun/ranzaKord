@@ -172,8 +172,22 @@ const isCurrentPlaylistLoading = computed(() => {
   );
 });
 
-function playAll(): void {
-  const loadedTracks = virtualTracks.value.filter((t): t is PlaylistTrack => t !== null);
+async function playAll(): Promise<void> {
+  let loadedTracks = virtualTracks.value.filter((t): t is PlaylistTrack => t !== null);
+
+  if (playlist.value && playlist.value.trackCount > loadedTracks.length) {
+    const fullDetail = await store.fetchDetail(id.value, {
+      limit: playlist.value.trackCount,
+      offset: 0,
+      sortBy: sortBy.value || undefined,
+      sortOrder: sortOrder.value,
+      search: debouncedSearch.value || undefined
+    });
+    if (fullDetail?.tracks) {
+      loadedTracks = fullDetail.tracks;
+    }
+  }
+
   if (loadedTracks.length === 0) return;
 
   if (isCurrentPlaylistPlaying.value) {
@@ -206,8 +220,22 @@ function playAll(): void {
   player.playQueue(tracksToPlay, 0);
 }
 
-function onPlaySong(track: TrackListItem, index: number): void {
-  const loadedTracks = virtualTracks.value.filter((t): t is PlaylistTrack => t !== null);
+async function onPlaySong(track: TrackListItem, index: number): Promise<void> {
+  let loadedTracks = virtualTracks.value.filter((t): t is PlaylistTrack => t !== null);
+
+  if (playlist.value && playlist.value.trackCount > loadedTracks.length) {
+    const fullDetail = await store.fetchDetail(id.value, {
+      limit: playlist.value.trackCount,
+      offset: 0,
+      sortBy: sortBy.value || undefined,
+      sortOrder: sortOrder.value,
+      search: debouncedSearch.value || undefined
+    });
+    if (fullDetail?.tracks) {
+      loadedTracks = fullDetail.tracks;
+    }
+  }
+
   const tracksToPlay = loadedTracks.map((t) => ({
     videoId: t.videoId,
     title: t.title,

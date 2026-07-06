@@ -6,7 +6,7 @@
       <div class="slide-intro__aurora-blob slide-intro__aurora-blob--1" />
       <div class="slide-intro__aurora-blob slide-intro__aurora-blob--2" />
     </div>
-    
+
     <div class="slide-intro__particles">
       <span v-for="i in 20" :key="i" class="slide-intro__particle" :style="{ '--i': i }" />
     </div>
@@ -57,7 +57,7 @@
       left: -10%;
       background: hsla(var(--color-primary-h), 80%, 50%, 0.4);
     }
-    
+
     &--2 {
       bottom: -20%;
       right: -10%;
@@ -78,7 +78,12 @@
     width: calc(4px + var(--i) * 2px);
     height: calc(4px + var(--i) * 2px);
     border-radius: 50%;
-    background: hsla(var(--color-primary-h), var(--color-primary-s), 70%, calc(0.05 + var(--i) * 0.02));
+    background: hsla(
+      var(--color-primary-h),
+      var(--color-primary-s),
+      70%,
+      calc(0.05 + var(--i) * 0.02)
+    );
     left: calc(var(--i) * 5%);
     top: calc(var(--i) * 4% + 10%);
     animation: float calc(4s + var(--i) * 0.3s) ease-in-out infinite alternate;
@@ -106,7 +111,8 @@
     width: 140px;
     height: 140px;
     border-radius: var(--radius-full);
-    background: linear-gradient(135deg, 
+    background: linear-gradient(
+      135deg,
       hsla(var(--color-primary-h), 80%, 60%, 0.2),
       hsla(var(--color-primary-h), 60%, 40%, 0.05)
     );
@@ -142,7 +148,11 @@
     color: #fff;
     margin: 0 0 var(--space-4);
     line-height: var(--leading-tight);
-    background: linear-gradient(135deg, #fff 0%, hsl(var(--color-primary-h), var(--color-primary-s), 80%) 100%);
+    background: linear-gradient(
+      135deg,
+      #fff 0%,
+      hsl(var(--color-primary-h), var(--color-primary-s), 80%) 100%
+    );
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -158,27 +168,50 @@
 }
 
 @keyframes float {
-  from { transform: translateY(0) scale(1); }
-  to { transform: translateY(-30px) scale(1.1); }
+  from {
+    transform: translateY(0) scale(1);
+  }
+  to {
+    transform: translateY(-30px) scale(1.1);
+  }
 }
 
 @keyframes float-aurora {
-  0% { transform: translate(0, 0) scale(1); }
-  100% { transform: translate(5%, 5%) scale(1.1); }
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(5%, 5%) scale(1.1);
+  }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { filter: drop-shadow(0 0 20px hsla(var(--color-primary-h), var(--color-primary-s), 60%, 0.3)); }
-  50% { filter: drop-shadow(0 0 60px hsla(var(--color-primary-h), var(--color-primary-s), 60%, 0.6)); }
+  0%,
+  100% {
+    filter: drop-shadow(0 0 20px hsla(var(--color-primary-h), var(--color-primary-s), 60%, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 60px hsla(var(--color-primary-h), var(--color-primary-s), 60%, 0.6));
+  }
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

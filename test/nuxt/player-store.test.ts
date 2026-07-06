@@ -143,10 +143,11 @@ describe('usePlayerStore', () => {
       expect(prev).toBeNull(); // because playbackOrder === 'random' and history is empty (since setTrack resets history? actually setTrack pushes to history if not fromHistory)
 
       // If only one item in queue, returns itself in shuffle? Wait, queue length is > 1.
+      // In the new logic, physical shuffling means nextTrack returns null if there are no more tracks, even in random mode.
       store.setQueue([mockTrack1]);
       store.setTrack(mockTrack1);
       expect(store.hasNext).toBe(false);
-      expect(store.nextTrack()?.videoId).toBe('v1');
+      expect(store.nextTrack()).toBeNull();
     });
   });
 });
