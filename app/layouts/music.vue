@@ -48,7 +48,7 @@ onMounted(() => {
       <template #default="{ isExpanded }">
         <div class="music-layout__main-nav">
           <AppSidebarItem to="/" icon="ph:house-duotone" :label="$t('core.nav.home')" />
-          <AppSidebarItem to="/stats" icon="ph:chart-bar-duotone" :label="$t('stats.title')" />
+          <AppSidebarItem v-if="useAuthStore().currentUser?.role === 'developer'" to="/stats" icon="ph:chart-bar-duotone" :label="$t('stats.title')" />
           <AppSidebarItem
             to="/offline"
             icon="ph:wifi-slash-duotone"
@@ -182,6 +182,7 @@ onMounted(() => {
             {{ $t('core.nav.search') }}
           </NuxtLink>
           <NuxtLink
+            v-if="useAuthStore().currentUser?.role === 'developer'"
             to="/stats"
             class="mobile-playlists__nav-item"
             @click="showMobilePlaylists = false">

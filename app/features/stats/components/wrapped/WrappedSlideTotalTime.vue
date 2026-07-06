@@ -92,7 +92,7 @@ const minutes = computed(() => Math.floor((props.totalSeconds % 3600) / 60));
 
   &__numbers {
     display: flex;
-    gap: var(--space-8);
+    gap: 4rem;
     align-items: flex-end;
     animation: fadeInUp 0.7s 0.15s both;
   }

@@ -67,10 +67,10 @@ function goTo(index: number, dir: 'next' | 'prev') {
   if (index < 0 || index >= slideIds.length) return;
   direction.value = dir;
   isAnimating.value = true;
+  currentIndex.value = index;
   setTimeout(() => {
-    currentIndex.value = index;
     isAnimating.value = false;
-  }, KEY_DURATION);
+  }, KEY_DURATION + 200); // Wait for the new 600ms animation
 }
 
 function next() {
@@ -161,7 +161,7 @@ const slideTransitionName = computed(() =>
       aria-modal="true"
       @touchstart.passive="onTouchStart"
       @touchend.passive="onTouchEnd">
-      <Transition :name="slideTransitionName" mode="out-in">
+      <Transition :name="slideTransitionName">
         <div :key="currentSlide" class="wrapped-experience__slide">
           <WrappedSlideIntro v-if="currentSlide === 'intro'" />
           <WrappedSlideTotalTime
@@ -338,28 +338,28 @@ const slideTransitionName = computed(() =>
 .slide-next-leave-active,
 .slide-prev-enter-active,
 .slide-prev-leave-active {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: absolute;
   inset: 0;
 }
 
 .slide-next-enter-from {
-  transform: translateX(100%);
+  transform: translateX(15%) scale(0.95);
   opacity: 0;
 }
 
 .slide-next-leave-to {
-  transform: translateX(-100%);
+  transform: translateX(-15%) scale(0.95);
   opacity: 0;
 }
 
 .slide-prev-enter-from {
-  transform: translateX(-100%);
+  transform: translateX(-15%) scale(0.95);
   opacity: 0;
 }
 
 .slide-prev-leave-to {
-  transform: translateX(100%);
+  transform: translateX(15%) scale(0.95);
   opacity: 0;
 }
 </style>

@@ -27,6 +27,7 @@ export interface IUser extends Document {
     eqBands?: number[];
     playbackOrder?: string;
   };
+  role?: 'user' | 'developer';
   createdAt: Date;
   updatedAt: Date;
 }

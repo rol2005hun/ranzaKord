@@ -1,6 +1,14 @@
 <script setup lang="ts">
 definePageMeta({
-  layout: 'music'
+  layout: 'music',
+  middleware: [
+    function () {
+      const authStore = useAuthStore();
+      if (authStore.currentUser?.role !== 'developer') {
+        return navigateTo('/');
+      }
+    }
+  ]
 });
 
 useHead({
