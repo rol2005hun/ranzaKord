@@ -1,0 +1,52 @@
+{
+  "title": "ranzaKord Wrapped",
+  "description": "Your listening statistics and top tracks",
+  "totalListeningTime": "Total Listening Time",
+  "hours": "hours",
+  "minutes": "minutes",
+  "topTracks": "Top Tracks",
+  "topArtists": "Top Artists",
+  "plays": "{count} plays",
+  "clearHistory": "Clear History",
+  "clearConfirm": "Are you sure you want to clear your listening history? This cannot be undone.",
+  "empty": "No listening history yet. Start playing some music to see your stats!",
+  "openWrapped": "✨ Open Wrapped",
+  "wrapped": {
+    "intro": {
+      "eyebrow": "Your Year in Music",
+      "title": "ranzaKord Wrapped",
+      "subtitle": "Here's what you've been listening to"
+    },
+    "totalTime": {
+      "eyebrow": "This year you listened for",
+      "hours": "{n} hours",
+      "minutes": "{n} minutes",
+      "suffix": "of pure music"
+    },
+    "topArtist": {
+      "eyebrow": "Your #1 Most Played Artist",
+      "label": "plays"
+    },
+    "topArtists": {
+      "eyebrow": "Your Top Artists",
+      "title": "You loved these artists"
+    },
+    "topTrack": {
+      "eyebrow": "Your Anthem This Year",
+      "label": "plays"
+    },
+    "topTracks": {
+      "eyebrow": "Your Top Tracks",
+      "title": "On repeat, all year long"
+    },
+    "outro": {
+      "eyebrow": "That's a Wrap!",
+      "title": "See you next year 🎶",
+      "playAll": "Play Top Tracks",
+      "close": "Close Wrapped"
+    },
+    "close": "Close",
+    "prev": "Previous",
+    "next": "Next"
+  }
+}

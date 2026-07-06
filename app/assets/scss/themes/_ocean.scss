@@ -1,0 +1,64 @@
+[data-theme='ocean'] {
+  color-scheme: light;
+
+  --color-primary-h: 192;
+  --color-primary-s: 90%;
+  --color-primary-l: 36%;
+
+  --color-primary: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l));
+  --color-primary-hover: hsl(
+    var(--color-primary-h) var(--color-primary-s) calc(var(--color-primary-l) - 6%)
+  );
+  --color-primary-foreground: #ffffff;
+  --color-primary-subtle: hsl(var(--color-primary-h) 75% 92%);
+  --color-primary-glow: hsl(
+    var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.2
+  );
+
+  --color-bg: #edf6fb;
+  --color-surface: #ffffff;
+  --color-surface-hover: #dbeef7;
+  --color-surface-raised: #f4fafd;
+  --color-surface-glass: rgb(255 255 255 / 0.78);
+
+  --color-text-primary: #082030;
+  --color-text-secondary: #2e6a88;
+  --color-text-tertiary: #6eaabf;
+  --color-text-disabled: #b0d8e8;
+
+  --color-border: #b8dced;
+  --color-border-hover: #84c4df;
+  --color-border-focus: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l));
+
+  --color-danger: #ef4444;
+  --color-danger-hover: #dc2626;
+  --color-danger-foreground: #ffffff;
+  --color-danger-light: #fef2f2;
+
+  --color-success: #22c55e;
+  --color-success-hover: #16a34a;
+  --color-success-foreground: #ffffff;
+  --color-success-light: #f0fdf4;
+
+  --color-warning: #f59e0b;
+  --color-warning-hover: #d97706;
+  --color-warning-foreground: #ffffff;
+  --color-warning-light: #fffbeb;
+
+  --color-neutral: #6b7280;
+  --color-neutral-foreground: #ffffff;
+  --color-neutral-light: #f9fafb;
+
+  --color-ring: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.28);
+  --color-overlay: rgb(8 32 48 / 0.38);
+
+  --shadow-sm: 0 1px 3px 0 rgb(20 80 110 / 0.07);
+  --shadow-md: 0 4px 8px -1px rgb(20 80 110 / 0.1), 0 2px 4px -2px rgb(20 80 110 / 0.06);
+  --shadow-lg: 0 10px 20px -3px rgb(20 80 110 / 0.12), 0 4px 8px -4px rgb(20 80 110 / 0.07);
+  --shadow-xl: 0 20px 32px -5px rgb(20 80 110 / 0.14), 0 8px 12px -6px rgb(20 80 110 / 0.08);
+
+  --gradient-hero: linear-gradient(135deg, #dbeef7 0%, #edf6fb 100%);
+  --gradient-card: linear-gradient(transparent 40%, rgb(8 32 48 / 0.6) 100%);
+  --glow-primary: 0 0 20px
+    hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.28);
+}

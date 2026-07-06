@@ -1,0 +1,12 @@
+{
+  "updateAvailable": "Update Available",
+  "title": "Software Update",
+  "mandatory": "Mandatory Update",
+  "newVersion": "New Version",
+  "releaseNotes": "Release Notes",
+  "downloading": "Downloading",
+  "skip": "Skip for Now",
+  "installing": "Installing...",
+  "installAndRestart": "Install & Restart",
+  "downloadApk": "Download Update"
+}

@@ -1,0 +1,73 @@
+{
+  "appName": "ranzaKord",
+  "loading": "Loading…",
+  "error": {
+    "generic": "Something went wrong.",
+    "notFound": "Page not found.",
+    "fatalTitle": "FATAL ERROR (An error occurred!)",
+    "fatalDescription": "Nuxt/Vue has crashed. Please copy this error message:",
+    "fatalHomeBtn": "Home",
+    "notFoundDesc": "Looks like this page migrated or never existed. Check the URL!",
+    "notFoundHeader": "404 - Not Found",
+    "systemErrorHeader": "{statusCode} - System Error"
+  },
+  "nav": {
+    "signIn": "Sign in",
+    "home": "Home",
+    "search": "Search",
+    "library": "Library",
+    "theme": "Theme",
+    "settings": "Settings",
+    "playlists": "Playlists",
+    "language": "Language",
+    "downloadApp": "Get Desktop App",
+    "signOut": "Sign out"
+  },
+  "miniPlayer": "Mini Player",
+  "exitMiniPlayer": "Exit Mini Player",
+  "actions": {
+    "cancel": "Cancel",
+    "stop": "Stop",
+    "save": "Save",
+    "close": "Close",
+    "back": "Back",
+    "settings": "Settings",
+    "more": "More"
+  },
+  "musicDetail": {
+    "titleColumn": "Title",
+    "empty": "No tracks available",
+    "error": "Something went wrong."
+  },
+  "updater": {
+    "updateAvailable": "Update Available",
+    "title": "Software Update",
+    "mandatory": "Mandatory Update",
+    "newVersion": "New Version",
+    "releaseNotes": "Release Notes",
+    "downloading": "Downloading",
+    "skip": "Skip for now",
+    "installing": "Installing...",
+    "installAndRestart": "Install & Restart"
+  },
+  "settings": {
+    "crossfade": {
+      "title": "Crossfade",
+      "description": "Smooth transition between tracks",
+      "duration": "Duration",
+      "type": "Fade Type",
+      "types": {
+        "linear": "Linear",
+        "dj": "DJ (Exponential)"
+      }
+    },
+    "audioReactiveLyrics": {
+      "title": "Audio-Reactive Lyrics",
+      "description": "Make the active lyric line bounce and glow to the beat of the music."
+    },
+    "globalShortcuts": {
+      "title": "Global Shortcuts",
+      "description": "Control playback (Ctrl+Alt+Space/Left/Right) even while playing games or using other apps."
+    }
+  }
+}

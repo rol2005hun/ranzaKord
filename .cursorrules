@@ -1,0 +1,127 @@
+# Nuxt Boilerplate – Coding Rules
+
+## Architecture: Feature-Based
+
+```
+app/features/<name>/
+├── components/    # Components used only within this feature
+├── composables/   # useFeature.ts – logic bridge between store and components
+├── stores/        # useFeatureStore.ts – Pinia setup store
+├── models/        # Pinia ORM entity models
+├── types/         # feature.types.ts – interfaces and types
+└── locales/       # en.json – i18n strings
+```
+
+- Pages are thin: only call feature components, set `definePageMeta`
+- Cross-feature UI → `app/components/shared/` (auto-prefixed as `App*`)
+- Global state → `app/stores/` only (theme, auth session)
+- Global composables → `app/composables/` only (e.g. `useApi`)
+
+## TypeScript
+
+- Use TypeScript only, fully strict types
+- `strict: true` — never disable
+- **No `any`** — define an explicit type or interface instead
+- All function parameters and return values must be typed
+- Feature types → `features/<name>/types/<name>.types.ts`
+- Global types → `app/types/index.ts`, domain types → `app/types/<domain>.types.ts`
+- **Never define inline types in stores, composables, or components** — import from types file
+
+## Imports
+
+- Imports must be grouped into separate blocks separated by a blank line.
+- The required block order is:
+  1. Node module dependencies
+  2. Own custom dependencies
+  3. Types
+  4. Vue components
+- Use `@/` for path aliases instead of `~/` (e.g., `import type { ApiResponse } from '@/types'`).
+
+## No Code Comments
+
+Self-documenting names only. No inline comments, no JSDoc blocks, not even `// TODO:` comments. No exceptions.
+
+## i18n
+
+- All UI strings via `$t()` / `useI18n()` — never hardcode text
+- Locale files: `app/features/<name>/locales/en.json`
+- Locale files are loaded by `app/plugins/i18n-locales.ts` from `app/features/**/locales/**/*.json`
+- Nested locale folders are supported: `app/features/auth/locales/forms/en.json` → `$t('auth.forms.<key>')`
+- Global UI strings: `app/features/core/locales/en.json`
+- Do not use `app/shared/locales` for app i18n messages
+- Auto-namespaced: `auth` feature → `$t('auth.login.title')`
+- English only (`en`)
+
+## Pinia
+
+- Setup store style always: `defineStore('name', () => { ... })`
+- State typed with `ref<Type>`, not `ref(null)` without generic
+- Feature stores → `features/<name>/stores/useFeatureStore.ts`
+- Global stores → `app/stores/useAppStore.ts`
+
+## Pinia ORM
+
+- Entity models → `features/<name>/models/ModelName.ts`
+- Use typed decorators: `@Num(0)`, `@Str('')`, `@Bool(false)`
+- Access via `useRepo(ModelName)` in stores or composables
+
+## SCSS & Theme System
+
+- Themes → `app/assets/scss/themes/`, one file per theme (`_default.scss`, `_dark.scss`, `_ocean.scss`)
+- Each theme uses `[data-theme='<name>']` with HSL primary color tokens (`--color-primary-h/s/l`)
+- `_variables.scss` contains **only** non-color tokens (spacing, typography, radii)
+- User custom color → override `--color-primary-h/s/l` at runtime via `useThemeStore.setCustomColor(hex)`
+- Theme init plugin: `app/plugins/theme.ts`
+- Theme persistence is cookie-based (`useCookie`) for SSR compatibility
+- Adding a theme: create SCSS file → add `ThemeId` union → add to `THEME_OPTIONS` → import in `main.scss`
+- Components: `<style scoped lang="scss">` in this exact order, BEM naming, CSS vars only — no hardcoded values
+
+## Nuxt Auto-Imports (do not import manually)
+
+- Vue: `ref`, `computed`, `reactive`, `watch`, `onMounted`, …
+- Nuxt: `definePageMeta`, `useHead`, `navigateTo`, `useRoute`, `useRouter`, `createError`, `defineNuxtRouteMiddleware`, …
+- Pinia: `defineStore`
+- All composables from `app/composables/` and `app/features/*/composables/`
+- All stores from `app/stores/` and `app/features/*/stores/`
+
+## Server
+
+- `server/api/<name>.<method>.ts` — use `defineEventHandler`
+- Return typed objects only
+
+## Git Commits – Conventional Commits
+
+Format: `type(scope): short description`
+
+| Type       | When to use                              |
+| ---------- | ---------------------------------------- |
+| `feat`     | New feature or page                      |
+| `fix`      | Bug fix                                  |
+| `refactor` | Code change with no behavior change      |
+| `style`    | Formatting only (no logic change)        |
+| `docs`     | Documentation, README, agent rules       |
+| `test`     | Adding or updating tests                 |
+| `chore`    | Tooling, config, dependencies            |
+| `build`    | Build system changes (nuxt.config, vite) |
+| `ci`       | CI/CD pipeline changes                   |
+| `perf`     | Performance improvement                  |
+| `revert`   | Revert a previous commit                 |
+
+**Scope** = affected feature or area (`auth`, `home`, `i18n`, `deps`, `layout`)
+
+```
+feat(auth): add login page and auth store
+fix(home): correct hero subtitle alignment
+chore(deps): update nuxt to 4.4.5
+refactor(auth): extract login logic into useAuth composable
+test(home): add HomeHero component integration test
+build(nuxt): enable pinia-orm module
+```
+
+- Subject: max 72 chars, lowercase, no trailing period
+- Body (optional): explain _why_, not _what_
+- Breaking change: `feat(auth)!: remove legacy session`
+
+## Dependencies
+
+- **Do not delete dependencies:** Only delete a dependency or module if the user explicitly requested it, or if we mutually agreed that it is no longer needed. In case of any errors, it is better to work around or configure the faulty module rather than deleting it without asking.

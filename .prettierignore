@@ -1,0 +1,9 @@
+node_modules
+.nuxt
+dist
+.output
+src-tauri/target
+src-tauri/gen
+public
+pnpm-lock.yaml
+package-lock.json

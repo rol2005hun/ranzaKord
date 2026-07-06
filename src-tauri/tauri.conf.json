@@ -1,0 +1,54 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "ranzaKord",
+  "version": "0.0.2-alpha.19",
+  "identifier": "dev.ranzak.kord",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:3000",
+    "beforeDevCommand": "pnpm dev --host 0.0.0.0",
+    "beforeBuildCommand": "pnpm generate"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "ranzaKord",
+        "label": "main",
+        "visible": true,
+        "width": 800,
+        "height": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "dmg", "app", "deb", "appimage"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "android": {
+      "debugApplicationIdSuffix": ".debug"
+    }
+  },
+  "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": ["ranzakord"]
+      }
+    },
+    "updater": {
+      "endpoints": ["https://kord.ranzak.dev/api/updater"],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDRERTAzQTMzNENGNjI3MzEKUldReEovWk1NenJnVFdBazM3R0lITVJueUdqTlJidmNvWlpldThCSWFNMjFya0NPczFPVFdtKzgK"
+    }
+  }
+}

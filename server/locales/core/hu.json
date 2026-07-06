@@ -1,0 +1,8 @@
+{
+  "errors": {
+    "unauthorized": "Nem jogosult",
+    "missingUrl": "Hiányzó vagy érvénytelen URL",
+    "proxyFailed": "Nem sikerült proxyn keresztül letölteni a képet",
+    "proxyStatus": "{statusText}"
+  }
+}

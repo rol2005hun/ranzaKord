@@ -1,0 +1,9 @@
+{
+  "errors": {
+    "missingQuery": "Missing search query",
+    "missingArtistId": "Missing artist id",
+    "fetchArtistFailed": "Failed to fetch artist",
+    "missingAlbumId": "Missing album id",
+    "fetchAlbumFailed": "Failed to fetch album"
+  }
+}

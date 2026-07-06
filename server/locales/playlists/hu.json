@@ -1,0 +1,9 @@
+{
+  "errors": {
+    "missingId": "Hiányzó lejátszási lista azonosító (ID)",
+    "notFound": "A lejátszási lista nem található",
+    "missingParams": "Hiányzó lejátszási lista ID vagy videó ID",
+    "missingTrackInfo": "A videoId és title mezők kötelezőek",
+    "missingName": "A lejátszási lista neve kötelező"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "login": {
+    "title": "Welcome to ranzaKord",
+    "subtitle": "Sign in to access your music",
+    "button": "Continue with ranzaKonnect",
+    "rememberMe": "Remember me",
+    "redirecting": "Redirecting to ranzaKonnect...",
+    "openingInBrowser": "Opening in browser...",
+    "footer": "Secure authentication powered by ranzaKonnect"
+  },
+  "logout": "Sign out",
+  "profile": "Profile",
+  "loginError": "Authentication failed. Please try again.",
+  "sessionExpired": "Your session has expired. Please sign in again.",
+  "callback": {
+    "loading": "Completing sign in…",
+    "error": "Sign in failed. Please try again.",
+    "successTitle": "Authentication Successful",
+    "successMessage": "You have successfully signed in. You can now close this window and return to the application.",
+    "closeWindow": "Close Window",
+    "openAppManually": "Click here if the app didn't open automatically"
+  },
+  "unauthorized": {
+    "title": "Access Denied",
+    "message": "Sorry, you can't access this application.",
+    "opensource": "However, ranzaKord is completely open-source! You can clone the repository, run it locally, and modify it without any limitations.",
+    "github": "View Source on GitHub"
+  }
+}

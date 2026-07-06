@@ -1,0 +1,230 @@
+<!-- Nuxt SPA Loading Template -->
+<!-- This is shown before Vue hydrates -->
+<script>
+  if (localStorage.getItem('window-maximized') === 'true') {
+    document.documentElement.classList.add('is-maximized');
+  }
+</script>
+<!-- [html-validate-disable element-permitted-content] -->
+<style>
+  /* Base reset for the loading screen */
+  body,
+  html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--color-bg, #09090f);
+  }
+
+  html.is-maximized #spa-icon-maximize {
+    display: none !important;
+  }
+
+  html.is-maximized #spa-icon-restore {
+    display: block !important;
+  }
+
+  .spa-loading-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* Exact Titlebar Styles from Titlebar.vue */
+  #spa-loading-titlebar {
+    display: none;
+    height: var(--titlebar-height, 32px);
+    background: var(--color-surface, #0d0d1e);
+    border-bottom: 1px solid var(--color-border, #1e1e40);
+    user-select: none;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 99999;
+  }
+
+  .spa-tb-left {
+    display: flex;
+    align-items: center;
+    padding-left: var(--space-3, 16px);
+    gap: var(--space-2, 8px);
+    height: 100%;
+    -webkit-app-region: drag;
+  }
+
+  .spa-tb-icon {
+    width: 16px;
+    height: 16px;
+    pointer-events: none;
+  }
+
+  .spa-tb-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-secondary, #9494c7);
+    pointer-events: none;
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  }
+
+  .spa-tb-middle {
+    flex: 1;
+    height: 100%;
+    -webkit-app-region: drag;
+  }
+
+  .spa-tb-right {
+    display: flex;
+    height: 100%;
+  }
+
+  .spa-tb-btn {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 46px;
+    height: 100%;
+    color: var(--color-text-secondary, #9494c7);
+    transition: background 0.1s;
+    cursor: default;
+    font-size: 16px;
+    -webkit-app-region: no-drag;
+  }
+
+  .spa-tb-btn:hover {
+    background: var(--color-surface-hover, #121230);
+    color: var(--color-text-primary, #e8e8ff);
+  }
+
+  .spa-tb-btn.close:hover {
+    background: #e81123;
+    color: #fff;
+  }
+
+  /* Loading Spinner Styles */
+  .spa-loading-content {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: var(--titlebar-height, 32px);
+  }
+
+  html.is-mobile .spa-loading-content {
+    margin-top: 0;
+  }
+
+  .spa-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--color-border, #1e1e40);
+    border-top-color: var(--color-primary, #7c3aed);
+    border-radius: 50%;
+    animation: spa-spin 1s linear infinite;
+  }
+
+  @keyframes spa-spin {
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+</style>
+
+<div class="spa-loading-wrapper">
+  <div id="spa-loading-titlebar" role="region" aria-label="Loading Titlebar">
+    <div class="spa-tb-left" data-tauri-drag-region>
+      <img src="/logo.webp" alt="Logo" class="spa-tb-icon" />
+      <span class="spa-tb-title">ranzaKord</span>
+    </div>
+
+    <div class="spa-tb-middle" data-tauri-drag-region></div>
+
+    <div class="spa-tb-right">
+      <div id="spa-minimize" class="spa-tb-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256">
+          <path
+            fill="currentColor"
+            d="M224 128a8 8 0 0 1-8 8H40a8 8 0 0 1 0-16h176a8 8 0 0 1 8 8" />
+        </svg>
+      </div>
+      <div id="spa-maximize" class="spa-tb-btn">
+        <!-- Maximize icon (square) -->
+        <svg
+          id="spa-icon-maximize"
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 256 256">
+          <path
+            fill="currentColor"
+            d="M208 32H48a16 16 0 0 0-16 16v160a16 16 0 0 0 16 16h160a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16m0 176H48V48h160z" />
+        </svg>
+        <!-- Restore icon (copy) - hidden by default -->
+        <svg
+          id="spa-icon-restore"
+          xmlns="http://www.w3.org/2000/svg"
+          width="20"
+          height="20"
+          viewBox="0 0 256 256"
+          style="display: none">
+          <path
+            fill="currentColor"
+            d="M216 32H88a8 8 0 0 0-8 8v40H40a8 8 0 0 0-8 8v128a8 8 0 0 0 8 8h128a8 8 0 0 0 8-8v-40h40a8 8 0 0 0 8-8V40a8 8 0 0 0-8-8m-56 176H48V96h112Zm48-48h-32V88a8 8 0 0 0-8-8H96V48h112Z" />
+        </svg>
+      </div>
+      <div id="spa-close" class="spa-tb-btn close">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 256 256">
+          <path
+            fill="currentColor"
+            d="M205.66 194.34a8 8 0 0 1-11.32 11.32L128 139.31l-66.34 66.35a8 8 0 0 1-11.32-11.32L116.69 128L50.34 61.66a8 8 0 0 1 11.32-11.32L128 116.69l66.34-66.35a8 8 0 0 1 11.32 11.32L139.31 128Z" />
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="spa-loading-content">
+    <div class="spa-spinner"></div>
+  </div>
+</div>
+
+<script>
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+
+  if (isMobile) {
+    document.documentElement.classList.add('is-mobile');
+  }
+
+  if (window.__TAURI_INTERNALS__ && !isMobile) {
+    document.getElementById('spa-loading-titlebar').style.display = 'flex';
+
+    // Check initial maximized state
+    window.__TAURI_INTERNALS__
+      .invoke('plugin:window|is_maximized', { label: 'main' })
+      .then((isMaximized) => {
+        if (isMaximized) {
+          document.getElementById('spa-icon-maximize').style.display = 'none';
+          document.getElementById('spa-icon-restore').style.display = 'block';
+        }
+      })
+      .catch(() => {});
+
+    document.getElementById('spa-minimize').addEventListener('click', () => {
+      window.__TAURI_INTERNALS__.invoke('plugin:window|minimize', { label: 'main' });
+    });
+
+    document.getElementById('spa-maximize').addEventListener('click', () => {
+      window.__TAURI_INTERNALS__.invoke('plugin:window|toggle_maximize', { label: 'main' });
+    });
+
+    document.getElementById('spa-close').addEventListener('click', () => {
+      window.__TAURI_INTERNALS__.invoke('plugin:window|close', { label: 'main' });
+    });
+  }
+</script>

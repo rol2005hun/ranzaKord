@@ -1,0 +1,9 @@
+{
+  "errors": {
+    "missingVideoId": "Hiányzó videó azonosító (ID)",
+    "noAudioFormat": "Nincs elérhető hangformátum",
+    "extractFailed": "Nem sikerült kinyerni a zene URL-jét: {msg}",
+    "emptyStream": "A stream URL üres",
+    "invalidPayload": "Érvénytelen kérés"
+  }
+}

@@ -1,0 +1,73 @@
+# Nuxt
+# Android keystore (DO NOT COMMIT!)
+*.keystore
+*.keystore.b64.txt
+
+.nuxt
+.output
+.data
+.nitro
+.cache
+dist
+.prerender
+
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+.netlify
+
+# Logs and databases
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Testing
+coverage
+.nyc_output
+playwright-report
+test-results
+blob-report
+youtube-oauth-token.json
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs and Editors
+.idea
+.project
+.classpath
+.cproject
+.settings/
+*.launch
+.fleet
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Caches
+.eslintcache
+.stylelintcache
+.vite

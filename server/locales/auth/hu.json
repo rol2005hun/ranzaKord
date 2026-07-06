@@ -1,0 +1,7 @@
+{
+  "errors": {
+    "missingParams": "Hiányzó kód vagy állapot paraméter",
+    "invalidState": "Érvénytelen OAuth állapot",
+    "sessionExpired": "A munkamenet lejárt"
+  }
+}

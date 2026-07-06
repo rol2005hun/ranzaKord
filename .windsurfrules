@@ -1,0 +1,116 @@
+# Nuxt Boilerplate – Coding Rules
+
+## Architecture: Feature-Based
+
+```
+app/features/<name>/
+  components/   feature-local Vue components
+  composables/  useFeature.ts  (logic bridge)
+  stores/       useFeatureStore.ts (Pinia setup store)
+  models/       Pinia ORM entity models
+  types/        feature.types.ts
+  locales/      en.json
+```
+
+Pages are thin wrappers. Global stuff goes in `app/components/shared/`, `app/stores/`, `app/composables/`.
+
+## Rules
+
+**TypeScript**
+
+- Use TypeScript only, fully strict types
+- No `any` — ever. Define an explicit type.
+- All params and return types must be typed.
+- `interface` for objects, `type` for unions.
+- Feature types: `features/<name>/types/<name>.types.ts`; global: `app/types/<domain>.types.ts`
+- Never define inline types in stores, composables, or components.
+
+**Imports**
+
+- Imports must be grouped into separate blocks separated by a blank line.
+- The required block order is:
+  1. Node module dependencies
+  2. Own custom dependencies
+  3. Types
+  4. Vue components
+- Use `@/` for path aliases instead of `~/`.
+
+**No Comments**
+
+- No inline comments, no JSDoc.
+- Name things clearly instead.
+- Absolutely no comments are allowed in the code, not even `// TODO:` comments. No exceptions.
+
+**i18n**
+
+- All UI strings via `$t()` — never hardcode text.
+- Locale files live in `app/features/<name>/locales/en.json` → `$t('<name>.key')`
+- Locale files are loaded by `app/plugins/i18n-locales.ts` from `app/features/**/locales/**/*.json`
+- Nested locale folders are supported: `app/features/auth/locales/forms/en.json` → `$t('auth.forms.<key>')`
+- Global UI strings go into `app/features/core/locales/en.json` (e.g. `$t('core.appName')`)
+- Do not use `app/shared/locales` for app i18n messages
+- English only.
+
+**Pinia**
+
+- Setup store style always: `defineStore('id', () => { ... })`
+- Explicit generics on state: `ref<Type>(default)`
+
+**Pinia ORM**
+
+- Models in `features/<name>/models/`
+- Decorators: `@Num(0)`, `@Str('')`, `@Bool(false)`
+
+**SCSS & Theme System**
+
+- Themes → `app/assets/scss/themes/` (one file each: `_default`, `_dark`, `_ocean`)
+- Theme selector: `[data-theme='<name>']` with HSL primary (`--color-primary-h/s/l`)
+- `_variables.scss` = spacing, typography, radii only — never colors
+- User custom color: `useThemeStore.setCustomColor(hex)` → overrides H/S/L on `<html>`
+- `app/plugins/theme.ts` initializes theme state
+- Theme persistence uses cookies (`useCookie`) so server-side rendering can read the selected theme
+- Components: `<style scoped lang="scss">` in this exact order, BEM naming, CSS vars only
+
+**Auto-Imports — do not import manually**
+
+- Vue: `ref`, `computed`, `reactive`, `watch`, `readonly`, etc.
+- Nuxt: `definePageMeta`, `navigateTo`, `useRouter`, `createError`, etc.
+- Pinia: `defineStore`
+- All from `app/composables/`, `app/stores/`, `app/features/*/composables/`, `app/features/*/stores/`
+
+## Git Commits – Conventional Commits
+
+Format: `type(scope): short description`
+
+| Type       | When to use                              |
+| ---------- | ---------------------------------------- |
+| `feat`     | New feature or page                      |
+| `fix`      | Bug fix                                  |
+| `refactor` | Code change with no behavior change      |
+| `style`    | Formatting only (no logic change)        |
+| `docs`     | Documentation, README, agent rules       |
+| `test`     | Adding or updating tests                 |
+| `chore`    | Tooling, config, dependencies            |
+| `build`    | Build system changes (nuxt.config, vite) |
+| `ci`       | CI/CD pipeline changes                   |
+| `perf`     | Performance improvement                  |
+| `revert`   | Revert a previous commit                 |
+
+**Scope** = affected feature or area (`auth`, `home`, `i18n`, `deps`, `layout`)
+
+```
+feat(auth): add login page and auth store
+fix(home): correct hero subtitle alignment
+chore(deps): update nuxt to 4.4.5
+refactor(auth): extract login logic into useAuth composable
+test(home): add HomeHero component integration test
+build(nuxt): enable pinia-orm module
+```
+
+- Subject: max 72 chars, lowercase, no trailing period
+- Body (optional): explain _why_, not _what_
+- Breaking change: `feat(auth)!: remove legacy session`
+
+## Dependencies
+
+- **Do not delete dependencies:** Only delete a dependency or module if the user explicitly requested it, or if we mutually agreed that it is no longer needed. In case of any errors, it is better to work around or configure the faulty module rather than deleting it without asking.
