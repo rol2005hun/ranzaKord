@@ -11,6 +11,7 @@ export interface OAuthUser {
   name: string;
   email: string;
   picture?: string;
+  roles?: string | string[];
 }
 
 export interface ServerSession {

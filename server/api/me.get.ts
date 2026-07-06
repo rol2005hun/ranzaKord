@@ -7,7 +7,7 @@ export interface MeResponse {
   email: string;
   picture: string;
   hasAccess: boolean;
-  role?: string;
+  roles?: string[];
   settings?: Record<string, unknown>;
 }
 
@@ -39,6 +39,6 @@ export default defineEventHandler(async (event): Promise<MeResponse> => {
     picture: sessionData.user.picture ?? '',
     hasAccess: userDoc?.hasAccess ?? false,
     settings: userDoc?.settings,
-    role: userDoc?.role ?? 'user'
+    roles: userDoc?.roles ?? ['user']
   };
 });

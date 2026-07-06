@@ -22,7 +22,7 @@ export interface OAuthUser {
   email: string;
   picture?: string;
   hasAccess: boolean;
-  role?: string;
+  roles?: string[];
   settings?: UserSettings;
 }
 

@@ -27,7 +27,7 @@ export interface IUser extends Document {
     eqBands?: number[];
     playbackOrder?: string;
   };
-  role?: 'user' | 'developer';
+  roles?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -59,7 +59,8 @@ const userSchema = new Schema<IUser>(
       eqPreset: { type: String },
       eqBands: { type: [Number] },
       playbackOrder: { type: String, enum: ['sequential', 'random', 'reverse'] }
-    }
+    },
+    roles: { type: [String], default: ['user'] }
   },
   { timestamps: true }
 );

@@ -87,7 +87,7 @@ function playTrack(index: number) {
           </span>
         </div>
         <button
-          v-if="statsStore.topTracks.length > 0 && useAuthStore().currentUser?.role === 'developer'"
+          v-if="statsStore.topTracks.length > 0 && useAuthStore().currentUser?.roles?.includes('ranzaKreator')"
           id="open-wrapped-btn"
           class="stats-header-meta__wrapped-btn"
           @click="isWrappedOpen = true">

@@ -4,7 +4,7 @@ definePageMeta({
   middleware: [
     function () {
       const authStore = useAuthStore();
-      if (authStore.currentUser?.role !== 'developer') {
+      if (!authStore.currentUser?.roles?.includes('ranzaKreator')) {
         return navigateTo('/');
       }
     }

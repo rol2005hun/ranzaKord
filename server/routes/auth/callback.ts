@@ -53,13 +53,20 @@ export default defineEventHandler(async (event) => {
     }
   );
 
+  const parsedRoles = Array.isArray(userInfo.roles)
+    ? userInfo.roles
+    : typeof userInfo.roles === 'string'
+      ? userInfo.roles.split(',').map((r) => r.trim())
+      : ['user'];
+
   await UserModel.findOneAndUpdate(
     { sub: userInfo.sub },
     {
       sub: userInfo.sub,
       name: userInfo.name,
       email: userInfo.email,
-      picture: userInfo.picture ?? ''
+      picture: userInfo.picture ?? '',
+      roles: parsedRoles
     },
     { upsert: true, returnDocument: 'after' }
   );
@@ -81,7 +88,8 @@ export default defineEventHandler(async (event) => {
       sub: userInfo.sub,
       name: userInfo.name,
       email: userInfo.email,
-      picture: userInfo.picture ?? ''
+      picture: userInfo.picture ?? '',
+      roles: parsedRoles
     }
   });
 
