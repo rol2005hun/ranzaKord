@@ -178,7 +178,7 @@ onMounted(() => {
                 }">
                 {{ track.title }}
               </span>
-              <span class="player-queue__track-artist">{{ track.artist }}</span>
+              <AppTrackArtists :track="track" class="player-queue__track-artist" />
             </div>
           </div>
 

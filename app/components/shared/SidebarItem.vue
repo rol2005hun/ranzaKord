@@ -6,6 +6,7 @@ interface Props {
   icon?: string;
   label: string;
   active?: boolean;
+  isNew?: boolean;
 }
 
 defineProps<Props>();
@@ -18,7 +19,10 @@ defineProps<Props>();
     class="app-sidebar-item"
     :class="{ 'app-sidebar-item--active': active }"
     exact-active-class="app-sidebar-item--active">
-    <AppIcon v-if="icon" :name="icon" class="app-sidebar-item__icon" />
+    <div class="app-sidebar-item__icon-wrapper">
+      <AppIcon v-if="icon" :name="icon" class="app-sidebar-item__icon" />
+      <span v-if="isNew" class="app-sidebar-item__new-badge">Új</span>
+    </div>
     <span class="app-sidebar__text">{{ label }}</span>
   </component>
 </template>
@@ -42,7 +46,7 @@ defineProps<Props>();
   font-size: var(--text-sm);
   font-weight: var(--font-weight-medium);
   white-space: nowrap;
-  overflow: hidden;
+  overflow: visible;
   transition:
     width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
     background-color var(--transition-fast),
@@ -59,9 +63,34 @@ defineProps<Props>();
     font-weight: var(--font-weight-bold);
   }
 
+  &__icon-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   &__icon {
     font-size: 1.5rem;
     flex-shrink: 0;
+  }
+
+  &__new-badge {
+    position: absolute;
+    top: -4px;
+    right: -12px;
+    background-color: var(--color-brand, #7c3aed);
+    color: #ffffff;
+    font-size: 0.5rem;
+    font-weight: 800;
+    padding: 1px 5px;
+    border-radius: var(--radius-full);
+    text-transform: uppercase;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+    z-index: 10;
+    pointer-events: none;
+    letter-spacing: 0.5px;
+    border: 1px solid color-mix(in srgb, var(--color-surface) 50%, transparent);
   }
 
   @media (max-width: 768px) {

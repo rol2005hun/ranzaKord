@@ -290,7 +290,7 @@ provide('sidebarExpanded', isExpanded);
   font-size: var(--text-sm);
   font-weight: var(--font-weight-medium);
   white-space: nowrap;
-  overflow: hidden;
+  overflow: visible;
   transition:
     background-color var(--transition-fast),
     color var(--transition-fast);
