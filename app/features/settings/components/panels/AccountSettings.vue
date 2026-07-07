@@ -1,7 +1,39 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue';
 import { useAuth } from '../../../auth/composables/useAuth';
 
-const { currentUser, isAuthenticated, logout } = useAuth();
+const { currentUser, isAuthenticated, logout, fetchUser } = useAuth();
+const toast = useToast();
+
+const isPublicProfile = ref(true);
+const showPlaylists = ref(true);
+
+watch(
+  () => currentUser.value,
+  (user) => {
+    if (user) {
+      isPublicProfile.value = user.isPublicProfile ?? true;
+      showPlaylists.value = user.showPlaylists ?? true;
+    }
+  },
+  { immediate: true }
+);
+
+const updatePrivacySettings = async () => {
+  try {
+    await $fetch('/api/me/settings', {
+      method: 'PATCH',
+      body: {
+        isPublicProfile: isPublicProfile.value,
+        showPlaylists: showPlaylists.value
+      }
+    });
+    await fetchUser();
+    toast.success('Adatvédelmi beállítások elmentve');
+  } catch {
+    toast.danger('Hiba történt a mentés során');
+  }
+};
 </script>
 
 <template>
@@ -42,6 +74,22 @@ const { currentUser, isAuthenticated, logout } = useAuth();
         </div>
       </template>
     </AppSettingsSection>
+
+    <template v-if="isAuthenticated && currentUser">
+      <h2 class="settings-panel__title" style="margin-top: 2rem">Adatvédelem</h2>
+      <AppSettingsSection>
+        <AppSettingsItem
+          title="Publikus profil"
+          description="Mások megtekinthetik a profilodat és követhetnek téged">
+          <AppToggle v-model="isPublicProfile" @update:model-value="updatePrivacySettings" />
+        </AppSettingsItem>
+        <AppSettingsItem
+          title="Lejátszási listák mutatása"
+          description="Mások láthatják a publikus lejátszási listáidat a profilodon">
+          <AppToggle v-model="showPlaylists" @update:model-value="updatePrivacySettings" />
+        </AppSettingsItem>
+      </AppSettingsSection>
+    </template>
   </div>
 </template>
 

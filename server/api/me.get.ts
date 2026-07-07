@@ -9,6 +9,8 @@ export interface MeResponse {
   hasAccess: boolean;
   roles?: string[];
   settings?: Record<string, unknown>;
+  isPublicProfile?: boolean;
+  showPlaylists?: boolean;
 }
 
 export default defineEventHandler(async (event): Promise<MeResponse> => {
@@ -38,7 +40,9 @@ export default defineEventHandler(async (event): Promise<MeResponse> => {
     email: sessionData.user.email,
     picture: sessionData.user.picture ?? '',
     hasAccess: userDoc?.hasAccess ?? false,
-    settings: userDoc?.settings,
-    roles: userDoc?.roles ?? ['user']
+    roles: userDoc?.roles ?? [],
+    settings: userDoc?.settings ?? {},
+    isPublicProfile: userDoc?.isPublicProfile ?? true,
+    showPlaylists: userDoc?.showPlaylists ?? true
   };
 });

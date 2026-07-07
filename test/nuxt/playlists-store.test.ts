@@ -61,7 +61,7 @@ describe('usePlaylistsStore', () => {
 
   describe('fetchAll', () => {
     it('fetches all playlists successfully', async () => {
-      fetchMock.mockResolvedValue([mockPlaylist]);
+      fetchMock.mockResolvedValue({ myPlaylists: [mockPlaylist], sharedPlaylists: [] });
       const store = usePlaylistsStore();
       await store.fetchAll();
       expect(store.playlists).toEqual([mockPlaylist]);

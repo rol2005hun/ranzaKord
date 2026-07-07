@@ -24,6 +24,12 @@ export interface PlaylistTrackArtist {
   channelId?: string;
 }
 
+export interface UserProfileMin {
+  sub: string;
+  name: string;
+  picture: string;
+}
+
 export interface PlaylistTrack {
   videoId: string;
   title: string;
@@ -33,7 +39,7 @@ export interface PlaylistTrack {
   thumbnailUrl: string;
   durationMs: number;
   addedAt: string;
-  addedBy?: string;
+  addedBy?: UserProfileMin | string;
 }
 
 export interface PlaylistDetail extends PlaylistSummary {
@@ -41,7 +47,7 @@ export interface PlaylistDetail extends PlaylistSummary {
   tracks: PlaylistTrack[];
   isPublic?: boolean;
   ownerId?: string;
-  collaborators?: string[];
+  collaborators?: UserProfileMin[];
 }
 
 export interface PlaylistDetailQuery {

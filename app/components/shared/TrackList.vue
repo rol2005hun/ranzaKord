@@ -18,7 +18,7 @@ export interface TrackListItem {
   thumbnailUrl?: string | null;
   durationSeconds: number;
   addedAt?: string;
-  addedBy?: string;
+  addedBy?: { sub: string; name: string; picture: string } | string;
   isPlaying?: boolean;
 }
 
@@ -306,7 +306,23 @@ onMounted(() => {
 
               <div v-if="hasDateColumn" class="app-track-list__track-date">
                 <span>{{ formatDate(track.addedAt) }}</span>
-                <span v-if="track.addedBy" class="app-track-list__track-added">
+                <NuxtLink
+                  v-if="track.addedBy && typeof track.addedBy === 'object'"
+                  :to="`/user/${track.addedBy.sub}`"
+                  class="app-track-list__track-added group relative cursor-pointer"
+                  @click.stop>
+                  <img
+                    v-if="track.addedBy.picture"
+                    :src="track.addedBy.picture"
+                    :alt="track.addedBy.name"
+                    class="w-5 h-5 rounded-full object-cover" />
+                  <AppIcon v-else name="ph:user-circle" class="text-xl" />
+                  <span
+                    class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 text-xs bg-[var(--color-bg-elevated)] text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 border border-[var(--color-border)] shadow-lg">
+                    Hozzáadta: {{ track.addedBy.name }}
+                  </span>
+                </NuxtLink>
+                <span v-else-if="track.addedBy" class="app-track-list__track-added">
                   <AppIcon name="ph:user" />
                   {{ track.addedBy }}
                 </span>
@@ -421,7 +437,23 @@ onMounted(() => {
 
         <div v-if="hasDateColumn" class="app-track-list__track-date">
           <span>{{ formatDate(track.addedAt) }}</span>
-          <span v-if="track.addedBy" class="app-track-list__track-added">
+          <NuxtLink
+            v-if="track.addedBy && typeof track.addedBy === 'object'"
+            :to="`/user/${track.addedBy.sub}`"
+            class="app-track-list__track-added group relative cursor-pointer"
+            @click.stop>
+            <img
+              v-if="track.addedBy.picture"
+              :src="track.addedBy.picture"
+              :alt="track.addedBy.name"
+              class="w-5 h-5 rounded-full object-cover" />
+            <AppIcon v-else name="ph:user-circle" class="text-xl" />
+            <span
+              class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 text-xs bg-[var(--color-bg-elevated)] text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 border border-[var(--color-border)] shadow-lg">
+              Hozzáadta: {{ track.addedBy.name }}
+            </span>
+          </NuxtLink>
+          <span v-else-if="track.addedBy" class="app-track-list__track-added">
             <AppIcon name="ph:user" />
             {{ track.addedBy }}
           </span>

@@ -116,7 +116,9 @@ onMounted(() => {
 
           <template v-else>
             <div
-              v-if="playlistsStore.playlists.length === 0"
+              v-if="
+                playlistsStore.playlists.length === 0 && playlistsStore.sharedPlaylists.length === 0
+              "
               class="music-layout__library-empty app-sidebar__text">
               <div class="music-layout__library-empty-content">
                 <AppIcon
@@ -130,25 +132,59 @@ onMounted(() => {
               </div>
             </div>
 
-            <NuxtLink
-              v-for="playlist in playlistsStore.playlists"
-              :key="playlist.id"
-              :to="`/playlist/${playlist.id}`"
-              class="app-sidebar-item music-layout__playlist-item"
-              :class="{
-                'app-sidebar-item--active': route.path === `/playlist/${playlist.id}`
-              }">
-              <div class="music-layout__playlist-cover">
-                <img v-if="playlist.imageUrl" :src="playlist.imageUrl" :alt="playlist.name" />
-                <AppIcon v-else name="ph:music-notes-fill" />
+            <template v-if="playlistsStore.playlists.length > 0">
+              <div
+                v-if="playlistsStore.sharedPlaylists.length > 0"
+                class="app-sidebar__section-title app-sidebar__text">
+                Saját listák
               </div>
-              <div class="music-layout__playlist-info app-sidebar__text">
-                <span class="music-layout__playlist-name">{{ playlist.name }}</span>
-                <span class="music-layout__playlist-count">
-                  {{ $t('playlists.trackCount', { count: playlist.trackCount }) }}
-                </span>
+              <NuxtLink
+                v-for="playlist in playlistsStore.playlists"
+                :key="playlist.id"
+                :to="`/playlist/${playlist.id}`"
+                class="app-sidebar-item music-layout__playlist-item"
+                :class="{
+                  'app-sidebar-item--active': route.path === `/playlist/${playlist.id}`
+                }">
+                <div class="music-layout__playlist-cover">
+                  <img v-if="playlist.imageUrl" :src="playlist.imageUrl" :alt="playlist.name" />
+                  <AppIcon v-else name="ph:music-notes-fill" />
+                </div>
+                <div class="music-layout__playlist-info app-sidebar__text">
+                  <span class="music-layout__playlist-name">{{ playlist.name }}</span>
+                  <span class="music-layout__playlist-count">
+                    {{ $t('playlists.trackCount', { count: playlist.trackCount }) }}
+                  </span>
+                </div>
+              </NuxtLink>
+            </template>
+
+            <template v-if="playlistsStore.sharedPlaylists.length > 0">
+              <div
+                class="app-sidebar__section-title app-sidebar__text"
+                :style="{ marginTop: '1rem' }">
+                Közös listák
               </div>
-            </NuxtLink>
+              <NuxtLink
+                v-for="playlist in playlistsStore.sharedPlaylists"
+                :key="playlist.id"
+                :to="`/playlist/${playlist.id}`"
+                class="app-sidebar-item music-layout__playlist-item"
+                :class="{
+                  'app-sidebar-item--active': route.path === `/playlist/${playlist.id}`
+                }">
+                <div class="music-layout__playlist-cover">
+                  <img v-if="playlist.imageUrl" :src="playlist.imageUrl" :alt="playlist.name" />
+                  <AppIcon v-else name="ph:users-fill" />
+                </div>
+                <div class="music-layout__playlist-info app-sidebar__text">
+                  <span class="music-layout__playlist-name">{{ playlist.name }}</span>
+                  <span class="music-layout__playlist-count">
+                    {{ $t('playlists.trackCount', { count: playlist.trackCount }) }}
+                  </span>
+                </div>
+              </NuxtLink>
+            </template>
           </template>
         </div>
       </template>
@@ -242,27 +278,75 @@ onMounted(() => {
         <div v-if="playlistsStore.isLoading" class="mobile-playlists__list">
           <AppSpinner />
         </div>
-        <div v-else-if="playlistsStore.playlists.length === 0" class="mobile-playlists__empty">
-          {{ $t('playlists.noPlaylists') }}
+        <div
+          v-else-if="
+            playlistsStore.playlists.length === 0 && playlistsStore.sharedPlaylists.length === 0
+          "
+          class="mobile-playlists__empty">
+          <p>{{ $t('playlists.noPlaylists') }}</p>
+          <button @click="showCreateModal = true">{{ $t('playlists.newPlaylist') }}</button>
         </div>
         <div v-else class="mobile-playlists__list">
-          <NuxtLink
-            v-for="playlist in playlistsStore.playlists"
-            :key="playlist.id"
-            :to="`/playlist/${playlist.id}`"
-            class="mobile-playlists__item"
-            @click="showMobilePlaylists = false">
-            <div class="mobile-playlists__cover">
-              <img v-if="playlist.imageUrl" :src="playlist.imageUrl" :alt="playlist.name" />
-              <AppIcon v-else name="ph:music-notes-fill" />
+          <template v-if="playlistsStore.playlists.length > 0">
+            <div
+              v-if="playlistsStore.sharedPlaylists.length > 0"
+              class="app-sidebar__section-title"
+              :style="{ color: 'var(--color-text-secondary)', padding: '0.5rem 1rem 0' }">
+              Saját listák
             </div>
-            <div class="mobile-playlists__info">
-              <span class="mobile-playlists__name">{{ playlist.name }}</span>
-              <span class="mobile-playlists__count">
-                {{ $t('playlists.trackCount', { count: playlist.trackCount }) }}
-              </span>
+            <NuxtLink
+              v-for="playlist in playlistsStore.playlists"
+              :key="playlist.id"
+              :to="`/playlist/${playlist.id}`"
+              class="mobile-playlists__item"
+              :class="{
+                'mobile-playlists__item--active': route.path === `/playlist/${playlist.id}`
+              }"
+              @click="showMobilePlaylists = false">
+              <div class="mobile-playlists__cover">
+                <img v-if="playlist.imageUrl" :src="playlist.imageUrl" :alt="playlist.name" />
+                <AppIcon v-else name="ph:music-notes-fill" />
+              </div>
+              <div class="mobile-playlists__info">
+                <span class="mobile-playlists__name">{{ playlist.name }}</span>
+                <span class="mobile-playlists__count">
+                  {{ $t('playlists.trackCount', { count: playlist.trackCount }) }}
+                </span>
+              </div>
+            </NuxtLink>
+          </template>
+
+          <template v-if="playlistsStore.sharedPlaylists.length > 0">
+            <div
+              class="app-sidebar__section-title"
+              :style="{
+                color: 'var(--color-text-secondary)',
+                padding: '0.5rem 1rem 0',
+                marginTop: '1rem'
+              }">
+              Közös listák
             </div>
-          </NuxtLink>
+            <NuxtLink
+              v-for="playlist in playlistsStore.sharedPlaylists"
+              :key="playlist.id"
+              :to="`/playlist/${playlist.id}`"
+              class="mobile-playlists__item"
+              :class="{
+                'mobile-playlists__item--active': route.path === `/playlist/${playlist.id}`
+              }"
+              @click="showMobilePlaylists = false">
+              <div class="mobile-playlists__cover">
+                <img v-if="playlist.imageUrl" :src="playlist.imageUrl" :alt="playlist.name" />
+                <AppIcon v-else name="ph:users-fill" />
+              </div>
+              <div class="mobile-playlists__info">
+                <span class="mobile-playlists__name">{{ playlist.name }}</span>
+                <span class="mobile-playlists__count">
+                  {{ $t('playlists.trackCount', { count: playlist.trackCount }) }}
+                </span>
+              </div>
+            </NuxtLink>
+          </template>
         </div>
       </div>
     </AppModal>

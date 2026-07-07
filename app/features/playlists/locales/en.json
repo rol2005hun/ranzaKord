@@ -54,6 +54,9 @@
     "delete": "Failed to delete playlist"
   },
   "myPlaylist": "My Playlist",
+  "collaboratorAdded": "Collaborator added",
+  "collaboratorRemoved": "Collaborator removed",
+  "confirmRemove": "Are you sure you want to remove this collaborator?",
   "sort": {
     "default": "Default Order",
     "titleAsc": "Title (A-Z)",

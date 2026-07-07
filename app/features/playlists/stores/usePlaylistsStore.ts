@@ -12,6 +12,7 @@ import type { SearchResult } from '@/features/search/types/search.types';
 
 export const usePlaylistsStore = defineStore('playlists', () => {
   const playlists = ref<PlaylistSummary[]>([]);
+  const sharedPlaylists = ref<PlaylistSummary[]>([]);
   const isLoading = ref(true);
   const hasLoaded = ref(false);
   const error = ref<string | null>(null);
@@ -27,12 +28,12 @@ export const usePlaylistsStore = defineStore('playlists', () => {
   const reqHeaders = import.meta.server ? useRequestHeaders(['cookie']) : { cookie: '' };
 
   function isTrackInPlaylist(playlistId: string, videoId: string): boolean {
-    const p = playlists.value.find((x) => x.id === playlistId);
+    const p = [...playlists.value, ...sharedPlaylists.value].find((x) => x.id === playlistId);
     return p ? p.trackIds.includes(videoId) : false;
   }
 
   function isTrackInAnyPlaylist(videoId: string): boolean {
-    return playlists.value.some((p) => p.trackIds.includes(videoId));
+    return [...playlists.value, ...sharedPlaylists.value].some((p) => p.trackIds.includes(videoId));
   }
 
   async function fetchAll(force = false): Promise<void> {
@@ -49,7 +50,12 @@ export const usePlaylistsStore = defineStore('playlists', () => {
           fetchOptions.headers = { cookie: reqHeaders.cookie };
         }
       }
-      playlists.value = await $fetch<PlaylistSummary[]>('/api/playlists', fetchOptions);
+      const response = await $fetch<{
+        myPlaylists: PlaylistSummary[];
+        sharedPlaylists: PlaylistSummary[];
+      }>('/api/playlists', fetchOptions);
+      playlists.value = response.myPlaylists;
+      sharedPlaylists.value = response.sharedPlaylists;
       hasLoaded.value = true;
     } catch {
       error.value = t('playlists.errors.load');
@@ -458,6 +464,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
 
   return {
     playlists,
+    sharedPlaylists,
     isLoading,
     error,
     importProgress,

@@ -24,6 +24,8 @@ export interface OAuthUser {
   hasAccess: boolean;
   roles?: string[];
   isDemo?: boolean;
+  isPublicProfile?: boolean;
+  showPlaylists?: boolean;
   settings?: UserSettings;
 }
 

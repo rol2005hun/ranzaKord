@@ -8,6 +8,12 @@ export interface PlaylistTrackArtist {
   channelId?: string;
 }
 
+export interface UserProfileMin {
+  sub: string;
+  name: string;
+  picture: string;
+}
+
 export interface PlaylistTrackResponse {
   videoId: string;
   title: string;
@@ -17,7 +23,7 @@ export interface PlaylistTrackResponse {
   thumbnailUrl: string;
   durationMs: number;
   addedAt: string;
-  addedBy?: string;
+  addedBy?: UserProfileMin;
 }
 
 export interface PlaylistDetailResponse {
@@ -31,7 +37,7 @@ export interface PlaylistDetailResponse {
   createdAt: string;
   updatedAt: string;
   isPublic?: boolean;
-  collaborators?: string[];
+  collaborators?: UserProfileMin[];
   ownerId?: string;
 }
 
@@ -138,11 +144,17 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
     typeof limit === 'number' ? filteredItems.slice(offset, offset + limit) : filteredItems;
 
   const addedBySubs = Array.from(
-    new Set(tracks.map((t: IPlaylistItem) => t.addedBy).filter((sub): sub is string => !!sub))
+    new Set([
+      ...tracks.map((t: IPlaylistItem) => t.addedBy).filter((sub): sub is string => !!sub),
+      ...(playlist.collaborators || [])
+    ])
   );
   const { UserModel } = await import('../../models/User');
   const users = await UserModel.find({ sub: { $in: addedBySubs } }).lean();
-  const userMap = new Map(users.map((u) => [u.sub, u.name]));
+
+  const userMap = new Map(
+    users.map((u) => [u.sub, { sub: u.sub, name: u.name, picture: u.picture || '' }])
+  );
 
   return {
     id: (playlist._id as { toString(): string }).toString(),
@@ -158,14 +170,16 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
       thumbnailUrl: item.thumbnailUrl,
       durationMs: item.durationMs,
       addedAt: item.addedAt.toISOString(),
-      addedBy: item.addedBy ? userMap.get(item.addedBy) || 'Unknown' : undefined
+      addedBy: item.addedBy ? userMap.get(item.addedBy) : undefined
     })),
     trackCount: filteredItems.length,
     trackIds: filteredItems.map((i: IPlaylistItem) => i.videoId),
     createdAt: playlist.createdAt.toISOString(),
     updatedAt: playlist.updatedAt.toISOString(),
     isPublic: playlist.isPublic !== false,
-    collaborators: playlist.collaborators || [],
+    collaborators: (playlist.collaborators || [])
+      .map((sub) => userMap.get(sub))
+      .filter((u): u is UserProfileMin => !!u),
     ownerId: playlist.userId
   };
 });

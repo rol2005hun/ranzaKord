@@ -26,7 +26,17 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: 'User not found' });
   }
 
-  // Merge existing settings with new settings
+  // Update privacy settings if they exist in body
+  if ('isPublicProfile' in body) {
+    user.isPublicProfile = Boolean(body.isPublicProfile);
+    delete body.isPublicProfile;
+  }
+  if ('showPlaylists' in body) {
+    user.showPlaylists = Boolean(body.showPlaylists);
+    delete body.showPlaylists;
+  }
+
+  // Merge remaining fields as existing settings
   user.settings = {
     ...user.settings,
     ...body
@@ -34,5 +44,10 @@ export default defineEventHandler(async (event) => {
 
   await user.save();
 
-  return { success: true, settings: user.settings };
+  return {
+    success: true,
+    settings: user.settings,
+    isPublicProfile: user.isPublicProfile,
+    showPlaylists: user.showPlaylists
+  };
 });
