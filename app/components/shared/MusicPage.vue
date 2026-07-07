@@ -158,6 +158,9 @@ const optimizedBgUrl = computed(() => {
               <div class="music-page__meta">
                 <slot name="meta" />
               </div>
+              <div class="music-page__description">
+                <slot name="description" />
+              </div>
             </div>
 
             <div class="music-page__center-header">
@@ -500,6 +503,19 @@ const optimizedBgUrl = computed(() => {
     @container (max-width: 768px) {
       justify-content: flex-start;
     }
+  }
+
+  &__description {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    margin-top: var(--space-2);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+    max-width: 800px;
   }
 
   &__center-header {

@@ -78,18 +78,21 @@ function onPlayAlbumSong(result: SearchResult): void {
 }
 
 function onPlayArtist(): void {
-  if (!artist.value || allSongs.value.length === 0) return;
+  if (!artist.value) return;
+
+  const sourceSongs = artist.value.topSongs?.length > 0 ? artist.value.topSongs.slice(0, 10) : allSongs.value;
+  if (sourceSongs.length === 0) return;
 
   if (
     isArtistPlaying.value ||
     (currentTrack.value &&
-      allSongs.value.some((t: SearchResult) => t.id === currentTrack.value?.videoId))
+      sourceSongs.some((t: SearchResult) => t.id === currentTrack.value?.videoId))
   ) {
     togglePlay();
     return;
   }
 
-  const queue: Track[] = allSongs.value.map((t: SearchResult) => ({
+  const queue: Track[] = sourceSongs.map((t: SearchResult) => ({
     videoId: t.id,
     title: t.title,
     artist: t.artist,
@@ -141,6 +144,19 @@ async function loadSongs() {
   }
 }
 
+const mappedTopSongs = computed<TrackListItem[]>(() => {
+  if (!artist.value?.topSongs) return [];
+  return artist.value.topSongs.slice(0, 10).map((song) => ({
+    id: song.id,
+    title: song.title,
+    artist: song.artist,
+    artistId: song.artistId,
+    thumbnailUrl: song.thumbnailUrl,
+    durationSeconds: song.durationSeconds || 0,
+    isPlaying: isPlaying.value && currentTrack.value?.videoId === song.id
+  }));
+});
+
 const mappedSongs = computed<TrackListItem[]>(() => {
   return allSongs.value.map((song) => ({
     id: song.id,
@@ -152,6 +168,22 @@ const mappedSongs = computed<TrackListItem[]>(() => {
     isPlaying: isPlaying.value && currentTrack.value?.videoId === song.id
   }));
 });
+
+function onPlayTopSong(track: TrackListItem, index: number): void {
+  if (!artist.value?.topSongs) return;
+  const tracksToPlay: Track[] = artist.value.topSongs.slice(0, 10).map((t: SearchResult) => ({
+    videoId: t.id,
+    title: t.title,
+    artist: t.artist,
+    artists: t.artists,
+    artistId: t.artistId,
+    thumbnailUrl: t.thumbnailUrl,
+    durationSeconds: t.durationSeconds || 0
+  }));
+
+  const resolvedIndex = tracksToPlay.findIndex((t) => t.videoId === track.id);
+  playQueue(tracksToPlay, resolvedIndex >= 0 ? resolvedIndex : index);
+}
 
 watch(
   artist,
@@ -188,6 +220,10 @@ function onScroll(event: Event): void {
       :disable-play-button="!artist || allSongs.length === 0"
       @play-all="onPlayArtist"
       @scroll="onScroll">
+      <template v-if="artist?.description" #description>
+        {{ artist.description }}
+      </template>
+
       <template #fallback-icon>
         <AppIcon name="ph:user" />
       </template>
@@ -202,7 +238,7 @@ function onScroll(event: Event): void {
       <template #tracks>
         <template v-if="artist">
           <div
-            v-if="allSongs.length === 0 && !isLoadingSongs && artist.albums.length === 0"
+            v-if="allSongs.length === 0 && !isLoadingSongs && artist.albums.length === 0 && (!artist.topSongs || artist.topSongs.length === 0)"
             class="music-page__empty">
             <AppIcon name="ph:music-notes-plus" class="music-page__empty-icon" />
             <p>{{ $t('core.musicDetail.empty') }}</p>
@@ -211,14 +247,19 @@ function onScroll(event: Event): void {
             </NuxtLink>
           </div>
           <template v-else>
-            <AppTrackList
-              v-if="allSongs.length > 0 || isLoadingSongs"
-              :tracks="mappedSongs"
-              :is-loading="isLoadingSongs"
-              :columns="['index', 'title', 'time']"
-              :show-thumbnails="true"
-              @play="onPlaySong" />
+            <!-- Top Songs -->
+            <AppMusicSection
+              v-if="mappedTopSongs.length > 0"
+              title="Népszerű">
+              <AppTrackList
+                :tracks="mappedTopSongs"
+                :is-loading="false"
+                :columns="['index', 'title', 'time']"
+                :show-thumbnails="true"
+                @play="onPlayTopSong" />
+            </AppMusicSection>
 
+            <!-- Albums -->
             <AppMusicSection
               v-if="artist.albums.length > 0"
               :title="$t('search.artist.albums')"
@@ -228,6 +269,18 @@ function onScroll(event: Event): void {
                 :key="album.id"
                 :result="album"
                 @play="onPlayAlbumSong" />
+            </AppMusicSection>
+
+            <!-- All Songs -->
+            <AppMusicSection
+              v-if="allSongs.length > 0 || isLoadingSongs"
+              title="Összes dal">
+              <AppTrackList
+                :tracks="mappedSongs"
+                :is-loading="isLoadingSongs"
+                :columns="['index', 'title', 'time']"
+                :show-thumbnails="true"
+                @play="onPlaySong" />
             </AppMusicSection>
           </template>
         </template>
