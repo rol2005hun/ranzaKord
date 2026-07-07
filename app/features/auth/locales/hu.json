@@ -7,7 +7,12 @@
     "rememberMe": "Maradjak bejelentkezve",
     "redirecting": "Átirányítás a ranzaKonnect-re...",
     "openingInBrowser": "Megnyitás a böngészőben...",
-    "footer": "Biztonságos bejelentkezés ranzaKonnect segítségével"
+    "footer": "Biztonságos bejelentkezés ranzaKonnect segítségével",
+    "termsText": "Elfogadom a {terms} és az {privacy} dokumentumokat.",
+    "termsLink": "Felhasználási Feltételeket",
+    "privacyLink": "Adatvédelmi Irányelveket",
+    "termsRequired": "A folytatáshoz el kell fogadnod a felhasználási feltételeket.",
+    "termsModalTitle": "Felhasználási Feltételek és Adatvédelem"
   },
   "logout": "Kijelentkezés",
   "profile": "Profil",

@@ -37,9 +37,16 @@ export default defineEventHandler(async (event): Promise<{ success: boolean }> =
     throw createError({ statusCode: 400, statusMessage: t('playlists.errors.missingTrackInfo') });
   }
 
-  const playlist = await PlaylistModel.findOne({ _id: id, userId: sessionData.user.sub });
+  const playlist = await PlaylistModel.findOne({ _id: id });
   if (!playlist)
     throw createError({ statusCode: 404, statusMessage: t('playlists.errors.notFound') });
+
+  const isOwner = playlist.userId === sessionData.user.sub;
+  const isCollaborator = playlist.collaborators?.includes(sessionData.user.sub);
+
+  if (!isOwner && !isCollaborator) {
+    throw createError({ statusCode: 403, statusMessage: t('core.errors.unauthorized') });
+  }
 
   const alreadyExists = playlist.items.some((item) => item.videoId === body.videoId);
   if (!alreadyExists) {
@@ -51,7 +58,8 @@ export default defineEventHandler(async (event): Promise<{ success: boolean }> =
       artists: body.artists ?? [],
       thumbnailUrl: body.thumbnailUrl || '',
       durationMs: body.durationMs || 0,
-      addedAt: new Date()
+      addedAt: new Date(),
+      addedBy: sessionData.user.sub
     });
     await playlist.save();
   }

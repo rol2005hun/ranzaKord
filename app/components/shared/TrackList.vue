@@ -18,6 +18,7 @@ export interface TrackListItem {
   thumbnailUrl?: string | null;
   durationSeconds: number;
   addedAt?: string;
+  addedBy?: string;
   isPlaying?: boolean;
 }
 
@@ -304,7 +305,11 @@ onMounted(() => {
               </div>
 
               <div v-if="hasDateColumn" class="app-track-list__track-date">
-                {{ formatDate(track.addedAt) }}
+                <span>{{ formatDate(track.addedAt) }}</span>
+                <span v-if="track.addedBy" class="app-track-list__track-added">
+                  <AppIcon name="ph:user" />
+                  {{ track.addedBy }}
+                </span>
               </div>
 
               <span class="app-track-list__track-duration">
@@ -415,7 +420,11 @@ onMounted(() => {
         </div>
 
         <div v-if="hasDateColumn" class="app-track-list__track-date">
-          {{ formatDate(track.addedAt) }}
+          <span>{{ formatDate(track.addedAt) }}</span>
+          <span v-if="track.addedBy" class="app-track-list__track-added">
+            <AppIcon name="ph:user" />
+            {{ track.addedBy }}
+          </span>
         </div>
 
         <span class="app-track-list__track-duration">
@@ -684,7 +693,11 @@ onMounted(() => {
 
   &__track-date {
     color: var(--color-text-secondary);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     font-size: var(--text-sm);
+    gap: 4px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -696,6 +709,18 @@ onMounted(() => {
     align-items: center;
     font-size: var(--text-sm);
     font-variant-numeric: tabular-nums;
+  }
+
+  &__track-added {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    background: var(--color-surface);
+    padding: 2px 6px;
+    border-radius: var(--radius-full);
+    width: fit-content;
   }
 
   &__track-action {

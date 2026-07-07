@@ -28,6 +28,10 @@ export interface IUser extends Document {
     playbackOrder?: string;
   };
   roles?: string[];
+  isPublicProfile?: boolean;
+  showPlaylists?: boolean;
+  followers?: string[];
+  following?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -60,7 +64,11 @@ const userSchema = new Schema<IUser>(
       eqBands: { type: [Number] },
       playbackOrder: { type: String, enum: ['sequential', 'random', 'reverse'] }
     },
-    roles: { type: [String], default: ['user'] }
+    roles: { type: [String], default: ['user'] },
+    isPublicProfile: { type: Boolean, default: true },
+    showPlaylists: { type: Boolean, default: true },
+    followers: { type: [String], default: [] },
+    following: { type: [String], default: [] }
   },
   { timestamps: true }
 );

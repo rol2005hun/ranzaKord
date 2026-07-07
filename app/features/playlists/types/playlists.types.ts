@@ -33,10 +33,15 @@ export interface PlaylistTrack {
   thumbnailUrl: string;
   durationMs: number;
   addedAt: string;
+  addedBy?: string;
 }
 
 export interface PlaylistDetail extends PlaylistSummary {
+  description: string;
   tracks: PlaylistTrack[];
+  isPublic?: boolean;
+  ownerId?: string;
+  collaborators?: string[];
 }
 
 export interface PlaylistDetailQuery {

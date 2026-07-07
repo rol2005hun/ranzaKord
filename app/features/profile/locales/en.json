@@ -1,0 +1,10 @@
+{
+  "title": "User Profile",
+  "private": "This profile is private.",
+  "followers": "Followers",
+  "following": "Following",
+  "follow": "Follow",
+  "unfollow": "Unfollow",
+  "playlists": "Public Playlists",
+  "noPlaylists": "This user hasn't created any public playlists yet."
+}

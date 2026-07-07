@@ -28,6 +28,12 @@ describe('LoginPage', () => {
   it('calls loginWithRanzaKonnect and sets redirecting state on click', async () => {
     const wrapper = await mountSuspended(LoginPage);
     await wrapper.find('#login-with-ranzakonnect').trigger('click');
+    
+    // Accept terms
+    const checkbox = wrapper.find('#terms-checkbox');
+    await checkbox.setValue(true);
+    await wrapper.find('#accept-terms-btn').trigger('click');
+
     expect(mockLoginWithRanzaKonnect).toHaveBeenCalled();
   });
 

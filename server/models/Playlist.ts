@@ -14,6 +14,7 @@ export interface IPlaylistItem {
   thumbnailUrl: string;
   durationMs: number;
   addedAt: Date;
+  addedBy?: string;
 }
 
 export interface IPlaylist extends Document {
@@ -21,6 +22,8 @@ export interface IPlaylist extends Document {
   name: string;
   description: string;
   imageUrl: string;
+  isPublic?: boolean;
+  collaborators?: string[];
   items: IPlaylistItem[];
   createdAt: Date;
   updatedAt: Date;
@@ -38,7 +41,8 @@ const playlistItemSchema = new Schema<IPlaylistItem>(
     },
     thumbnailUrl: { type: String, default: '' },
     durationMs: { type: Number, default: 0 },
-    addedAt: { type: Date, default: Date.now }
+    addedAt: { type: Date, default: Date.now },
+    addedBy: { type: String }
   },
   { _id: false }
 );
@@ -49,6 +53,8 @@ const playlistSchema = new Schema<IPlaylist>(
     name: { type: String, required: true },
     description: { type: String, default: '' },
     imageUrl: { type: String, default: '' },
+    isPublic: { type: Boolean, default: true },
+    collaborators: { type: [String], default: [] },
     items: { type: [playlistItemSchema], default: [] }
   },
   { timestamps: true }

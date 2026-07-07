@@ -7,7 +7,12 @@
     "rememberMe": "Keep me signed in",
     "redirecting": "Redirecting to ranzaKonnect...",
     "openingInBrowser": "Opening in browser...",
-    "footer": "Secure authentication powered by ranzaKonnect"
+    "footer": "Secure authentication powered by ranzaKonnect",
+    "termsText": "I agree to the {terms} and {privacy}.",
+    "termsLink": "Terms and Conditions",
+    "privacyLink": "Privacy Policy",
+    "termsRequired": "You must accept the terms and conditions to continue.",
+    "termsModalTitle": "Terms and Conditions & Privacy Policy"
   },
   "logout": "Sign out",
   "profile": "Profile",

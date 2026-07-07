@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import TermsModal from '@/features/auth/components/TermsModal.vue';
 
 definePageMeta({
   layout: 'auth'
@@ -12,12 +13,19 @@ const { loginWithRanzaKonnect, isAuthenticated, isTauri } = useAuth();
 const themeStore = useThemeStore();
 const isRedirecting = ref(false);
 const rememberMe = ref(false);
+const acceptedTerms = ref(false);
+const showTermsModal = ref(false);
 
 const redirectingText = computed(() =>
   isTauri.value ? t('auth.login.openingInBrowser') : t('auth.login.redirecting')
 );
 
 const handleLogin = () => {
+  if (!acceptedTerms.value) {
+    const toast = useToast();
+    toast.danger(t('auth.login.termsRequired'));
+    return;
+  }
   isRedirecting.value = true;
   loginWithRanzaKonnect(rememberMe.value);
 };
@@ -91,6 +99,26 @@ if (isAuthenticated.value) {
         </label>
       </div>
 
+      <div class="login-page__terms">
+        <label class="login-page__terms-label">
+          <input v-model="acceptedTerms" type="checkbox" class="login-page__terms-checkbox" />
+          <span class="login-page__terms-text">
+            <i18n-t keypath="auth.login.termsText" tag="span">
+              <template #terms>
+                <a href="#" class="login-page__terms-link" @click.prevent="showTermsModal = true">
+                  {{ $t('auth.login.termsLink') }}
+                </a>
+              </template>
+              <template #privacy>
+                <a href="#" class="login-page__terms-link" @click.prevent="showTermsModal = true">
+                  {{ $t('auth.login.privacyLink') }}
+                </a>
+              </template>
+            </i18n-t>
+          </span>
+        </label>
+      </div>
+
       <AppButton
         id="login-with-ranzakonnect"
         class="login-page__btn"
@@ -125,6 +153,26 @@ if (isAuthenticated.value) {
         <label class="login-page__remember-label">
           <input v-model="rememberMe" type="checkbox" class="login-page__remember-checkbox" />
           <span>{{ $t('auth.login.rememberMe') }}</span>
+        </label>
+      </div>
+
+      <div class="login-page__terms login-page__terms--wc">
+        <label class="login-page__terms-label">
+          <input v-model="acceptedTerms" type="checkbox" class="login-page__terms-checkbox" />
+          <span class="login-page__terms-text">
+            <i18n-t keypath="auth.login.termsText" tag="span">
+              <template #terms>
+                <a href="#" class="login-page__terms-link" @click.prevent="showTermsModal = true">
+                  {{ $t('auth.login.termsLink') }}
+                </a>
+              </template>
+              <template #privacy>
+                <a href="#" class="login-page__terms-link" @click.prevent="showTermsModal = true">
+                  {{ $t('auth.login.privacyLink') }}
+                </a>
+              </template>
+            </i18n-t>
+          </span>
         </label>
       </div>
       <AppButton
@@ -235,6 +283,8 @@ if (isAuthenticated.value) {
         <div class="wc-stadium__spotlight wc-stadium__spotlight--4" />
       </div>
     </div>
+
+    <TermsModal v-if="showTermsModal" @close="showTermsModal = false" />
   </div>
 </template>
 
@@ -287,6 +337,60 @@ if (isAuthenticated.value) {
     height: 16px;
     cursor: pointer;
     accent-color: var(--color-primary);
+  }
+
+  &__terms {
+    width: 100%;
+    margin-bottom: var(--space-4);
+
+    &--wc {
+      margin-bottom: var(--space-4);
+      .login-page__terms-label {
+        color: rgba(255, 255, 255, 0.85);
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+      }
+      .login-page__terms-link {
+        color: rgba(255, 255, 255, 0.95);
+        &:hover {
+          color: white;
+        }
+      }
+    }
+  }
+
+  &__terms-label {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    user-select: none;
+    text-align: left;
+  }
+
+  &__terms-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--color-primary);
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  &__terms-text {
+    line-height: 1.4;
+  }
+
+  &__terms-link {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: var(--font-weight-medium);
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
 
   &__card {

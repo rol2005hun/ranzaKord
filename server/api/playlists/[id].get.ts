@@ -17,6 +17,7 @@ export interface PlaylistTrackResponse {
   thumbnailUrl: string;
   durationMs: number;
   addedAt: string;
+  addedBy?: string;
 }
 
 export interface PlaylistDetailResponse {
@@ -29,6 +30,9 @@ export interface PlaylistDetailResponse {
   trackIds: string[];
   createdAt: string;
   updatedAt: string;
+  isPublic?: boolean;
+  collaborators?: string[];
+  ownerId?: string;
 }
 
 function parseNonNegativeInteger(value: unknown): number | undefined {
@@ -72,13 +76,18 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
     throw createError({ statusCode: 404, statusMessage: t('playlists.errors.notFound') });
   }
 
-  const playlist = await PlaylistModel.findOne({
-    _id: id,
-    userId: sessionData.user.sub
-  }).lean();
+  const playlist = await PlaylistModel.findOne({ _id: id }).lean();
 
   if (!playlist) {
     throw createError({ statusCode: 404, statusMessage: t('playlists.errors.notFound') });
+  }
+
+  const isOwner = playlist.userId === sessionData.user.sub;
+  const isCollaborator = playlist.collaborators?.includes(sessionData.user.sub);
+  const isPublic = playlist.isPublic !== false;
+
+  if (!isOwner && !isCollaborator && !isPublic) {
+    throw createError({ statusCode: 403, statusMessage: t('core.errors.unauthorized') });
   }
 
   const query = getQuery(event);
@@ -128,6 +137,13 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
   const tracks =
     typeof limit === 'number' ? filteredItems.slice(offset, offset + limit) : filteredItems;
 
+  const addedBySubs = Array.from(
+    new Set(tracks.map((t: IPlaylistItem) => t.addedBy).filter((sub): sub is string => !!sub))
+  );
+  const { UserModel } = await import('../../models/User');
+  const users = await UserModel.find({ sub: { $in: addedBySubs } }).lean();
+  const userMap = new Map(users.map((u) => [u.sub, u.name]));
+
   return {
     id: (playlist._id as { toString(): string }).toString(),
     name: playlist.name,
@@ -141,11 +157,15 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
       artists: item.artists ?? [],
       thumbnailUrl: item.thumbnailUrl,
       durationMs: item.durationMs,
-      addedAt: item.addedAt.toISOString()
+      addedAt: item.addedAt.toISOString(),
+      addedBy: item.addedBy ? userMap.get(item.addedBy) || 'Unknown' : undefined
     })),
     trackCount: filteredItems.length,
     trackIds: filteredItems.map((i: IPlaylistItem) => i.videoId),
     createdAt: playlist.createdAt.toISOString(),
-    updatedAt: playlist.updatedAt.toISOString()
+    updatedAt: playlist.updatedAt.toISOString(),
+    isPublic: playlist.isPublic !== false,
+    collaborators: playlist.collaborators || [],
+    ownerId: playlist.userId
   };
 });

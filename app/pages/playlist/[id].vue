@@ -27,6 +27,7 @@ const playlist = ref<PlaylistDetail | null>(null);
 const isLoading = ref(true);
 const isDeleting = ref(false);
 const showEditModal = ref(false);
+const showCollaboratorModal = ref(false);
 const showDeleteConfirm = ref(false);
 
 const searchQuery = ref('');
@@ -162,6 +163,11 @@ const isCurrentPlaylistPlaying = computed(() => {
   return virtualTracks.value.some(
     (t) => t !== null && t.videoId === player.currentTrack.value?.videoId
   );
+});
+
+const auth = useAuthStore();
+const isOwner = computed(() => {
+  return auth.user?.sub && playlist.value?.ownerId === auth.user.sub;
 });
 
 const isCurrentPlaylistLoading = computed(() => {
@@ -418,6 +424,13 @@ const showStickyMobileMenu = ref(false);
             <AppIcon name="ph:pencil-simple" />
           </button>
           <button
+            v-if="isOwner"
+            class="playlist-page__action-btn"
+            title="Kollaborátorok"
+            @click="showCollaboratorModal = true">
+            <AppIcon name="ph:users" />
+          </button>
+          <button
             class="playlist-page__action-btn playlist-page__action-btn--danger"
             :title="$t('playlists.deletePlaylist')"
             :disabled="isDeleting"
@@ -454,6 +467,16 @@ const showStickyMobileMenu = ref(false);
                   {{ $t('playlists.editPlaylist') }}
                 </button>
                 <button
+                  v-if="isOwner"
+                  class="playlist-page__dropdown-item"
+                  @click="
+                    showStickyMobileMenu = false;
+                    showCollaboratorModal = true;
+                  ">
+                  <AppIcon name="ph:users" />
+                  Kollaborátorok
+                </button>
+                <button
                   class="playlist-page__dropdown-item playlist-page__dropdown-item--danger"
                   :disabled="isDeleting"
                   @click="
@@ -484,6 +507,13 @@ const showStickyMobileMenu = ref(false);
             :title="$t('playlists.editPlaylist')"
             @click="showEditModal = true">
             <AppIcon name="ph:pencil-simple" />
+          </button>
+          <button
+            v-if="isOwner"
+            class="playlist-page__action-btn"
+            title="Kollaborátorok"
+            @click="showCollaboratorModal = true">
+            <AppIcon name="ph:users" />
           </button>
           <button
             class="playlist-page__action-btn playlist-page__action-btn--danger"
@@ -525,6 +555,16 @@ const showStickyMobileMenu = ref(false);
                   ">
                   <AppIcon name="ph:pencil-simple" />
                   {{ $t('playlists.editPlaylist') }}
+                </button>
+                <button
+                  v-if="isOwner"
+                  class="playlist-page__dropdown-item"
+                  @click="
+                    showMobileMenu = false;
+                    showCollaboratorModal = true;
+                  ">
+                  <AppIcon name="ph:users" />
+                  Kollaborátorok
                 </button>
                 <button
                   class="playlist-page__dropdown-item playlist-page__dropdown-item--danger"
@@ -604,6 +644,13 @@ const showStickyMobileMenu = ref(false);
       @saved="refresh()"
       @close="showEditModal = false"
       @created="showEditModal = false" />
+
+    <CollaboratorModal
+      v-if="playlist && isOwner"
+      v-model="showCollaboratorModal"
+      :playlist-id="id"
+      :collaborators="playlist.collaborators || []"
+      @saved="refresh()" />
 
     <ClientOnly>
       <Teleport to="body">

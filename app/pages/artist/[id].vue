@@ -80,7 +80,8 @@ function onPlayAlbumSong(result: SearchResult): void {
 function onPlayArtist(): void {
   if (!artist.value) return;
 
-  const sourceSongs = artist.value.topSongs?.length > 0 ? artist.value.topSongs.slice(0, 10) : allSongs.value;
+  const sourceSongs =
+    artist.value.topSongs?.length > 0 ? artist.value.topSongs.slice(0, 10) : allSongs.value;
   if (sourceSongs.length === 0) return;
 
   if (
@@ -238,7 +239,12 @@ function onScroll(event: Event): void {
       <template #tracks>
         <template v-if="artist">
           <div
-            v-if="allSongs.length === 0 && !isLoadingSongs && artist.albums.length === 0 && (!artist.topSongs || artist.topSongs.length === 0)"
+            v-if="
+              allSongs.length === 0 &&
+              !isLoadingSongs &&
+              artist.albums.length === 0 &&
+              (!artist.topSongs || artist.topSongs.length === 0)
+            "
             class="music-page__empty">
             <AppIcon name="ph:music-notes-plus" class="music-page__empty-icon" />
             <p>{{ $t('core.musicDetail.empty') }}</p>
@@ -248,9 +254,7 @@ function onScroll(event: Event): void {
           </div>
           <template v-else>
             <!-- Top Songs -->
-            <AppMusicSection
-              v-if="mappedTopSongs.length > 0"
-              title="Népszerű">
+            <AppMusicSection v-if="mappedTopSongs.length > 0" title="Népszerű">
               <AppTrackList
                 :tracks="mappedTopSongs"
                 :is-loading="false"
@@ -272,9 +276,7 @@ function onScroll(event: Event): void {
             </AppMusicSection>
 
             <!-- All Songs -->
-            <AppMusicSection
-              v-if="allSongs.length > 0 || isLoadingSongs"
-              title="Összes dal">
+            <AppMusicSection v-if="allSongs.length > 0 || isLoadingSongs" title="Összes dal">
               <AppTrackList
                 :tracks="mappedSongs"
                 :is-loading="isLoadingSongs"
