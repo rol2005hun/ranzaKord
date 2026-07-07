@@ -22,6 +22,12 @@ const handleLogin = () => {
   loginWithRanzaKonnect(rememberMe.value);
 };
 
+const handleDemoLogin = async () => {
+  const authStore = useAuthStore();
+  authStore.loginAsDemo();
+  await navigateTo('/');
+};
+
 const handleWindowFocus = () => {
   if (isRedirecting.value && isTauri.value) {
     isRedirecting.value = false;
@@ -101,6 +107,16 @@ if (isAuthenticated.value) {
         </template>
       </AppButton>
 
+      <AppButton
+        id="login-demo"
+        class="login-page__btn login-page__btn--demo"
+        variant="secondary"
+        size="lg"
+        @click="handleDemoLogin">
+        <AppIcon name="ph:play-circle-duotone" />
+        {{ $t('auth.login.demoButton', 'Próbáld ki a Demo-t') }}
+      </AppButton>
+
       <p class="login-page__footer">{{ $t('auth.login.footer') }}</p>
     </div>
 
@@ -125,6 +141,16 @@ if (isAuthenticated.value) {
           <AppIcon name="ph:key-fill" />
           {{ $t('auth.login.button') }}
         </template>
+      </AppButton>
+
+      <AppButton
+        id="login-demo-wc"
+        class="wc-stadium__cta-btn login-page__btn--demo"
+        variant="secondary"
+        size="lg"
+        @click="handleDemoLogin">
+        <AppIcon name="ph:play-circle-duotone" />
+        {{ $t('auth.login.demoButton', 'Próbáld ki a Demo-t') }}
       </AppButton>
     </div>
 
@@ -318,6 +344,10 @@ if (isAuthenticated.value) {
 
   &__btn {
     width: 100%;
+
+    &--demo {
+      margin-top: calc(var(--space-2) * -1);
+    }
   }
 
   &__spinner {

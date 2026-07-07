@@ -14,5 +14,17 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null;
   }
 
-  return { user, isAuthenticated, currentUser, setUser, clearSession };
+  function loginAsDemo() {
+    user.value = {
+      sub: 'demo-user-id',
+      name: 'Demo Felhasználó',
+      email: 'demo@ranzakord.app',
+      picture: '',
+      hasAccess: true,
+      roles: ['user'],
+      isDemo: true
+    };
+  }
+
+  return { user, isAuthenticated, currentUser, setUser, clearSession, loginAsDemo };
 });

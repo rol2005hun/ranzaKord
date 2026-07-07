@@ -68,7 +68,9 @@
     },
     "globalShortcuts": {
       "title": "Global Shortcuts",
-      "description": "Control playback (Ctrl+Alt+Space/Left/Right) even while playing games or using other apps."
+      "description": "Control playback (Ctrl+Alt+Space/Left/Right) even while gaming or using other apps."
     }
-  }
+  },
+  "demoModeToast": "Changes are not saved in Demo mode.",
+  "demoModeAudioToast": "For legal reasons, only royalty-free (NCS) music is playable in Demo mode."
 }

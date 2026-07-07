@@ -3,7 +3,8 @@
     "title": "Welcome to ranzaKord",
     "subtitle": "Sign in to access your music",
     "button": "Continue with ranzaKonnect",
-    "rememberMe": "Remember me",
+    "demoButton": "Try Demo Mode",
+    "rememberMe": "Keep me signed in",
     "redirecting": "Redirecting to ranzaKonnect...",
     "openingInBrowser": "Opening in browser...",
     "footer": "Secure authentication powered by ranzaKonnect"

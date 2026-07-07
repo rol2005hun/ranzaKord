@@ -44,14 +44,29 @@ export function usePlayer() {
   }
 
   async function getStreamUrl(videoId: string): Promise<string> {
+    const authStore = useAuthStore();
+    let finalVideoId = videoId;
+
+    if (authStore.currentUser?.isDemo) {
+      const { DEMO_ALLOWED_VIDEO_IDS } = await import('@/features/core/utils/demoData');
+      if (!DEMO_ALLOWED_VIDEO_IDS.includes(videoId)) {
+        finalVideoId = DEMO_ALLOWED_VIDEO_IDS[Math.floor(Math.random() * DEMO_ALLOWED_VIDEO_IDS.length)];
+        
+        if (import.meta.client) {
+          const { $toast, $i18n } = useNuxtApp();
+          $toast?.info($i18n.t('core.demoModeAudioToast', 'Jogi okokból Demo módban csak jogtiszta (NCS) zenék hallgathatóak!'));
+        }
+      }
+    }
+
     if (import.meta.client) {
       const { useOfflineStore } = await import('@/features/offline/stores/useOfflineStore');
       const { $pinia } = useNuxtApp();
       const offlineStore = useOfflineStore($pinia);
-      const objectUrl = await offlineStore.getObjectUrl(videoId);
+      const objectUrl = await offlineStore.getObjectUrl(finalVideoId);
       if (objectUrl) return objectUrl;
     }
-    return getApiUrl(`/api/stream?v=${videoId}`);
+    return getApiUrl(`/api/stream?v=${finalVideoId}`);
   }
 
   let isRestoring = false;

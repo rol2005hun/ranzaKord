@@ -23,6 +23,7 @@ export interface OAuthUser {
   picture?: string;
   hasAccess: boolean;
   roles?: string[];
+  isDemo?: boolean;
   settings?: UserSettings;
 }
 

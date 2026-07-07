@@ -60,5 +60,7 @@
       "title": "Globális Gyorsbillentyűk",
       "description": "Zenevezérlés (Ctrl+Alt+Space/Balra/Jobbra) akkor is, ha épp egy játékkal játszol vagy más programot használsz."
     }
-  }
+  },
+  "demoModeToast": "Demo módban a módosítások nem kerülnek mentésre.",
+  "demoModeAudioToast": "Jogi okokból Demo módban csak jogtiszta (NCS) zenék hallgathatóak!"
 }
