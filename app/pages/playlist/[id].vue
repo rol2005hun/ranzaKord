@@ -374,7 +374,10 @@ const showStickyMobileMenu = ref(false);
         <div
           v-if="(playlist?.trackCount ?? 0) > 0 || debouncedSearch"
           class="playlist-page__search-bar">
-          <AppIcon v-if="status === 'pending' && playlist" name="ph:spinner-gap" class="playlist-page__search-icon spin" />
+          <AppIcon
+            v-if="status === 'pending' && playlist"
+            name="ph:spinner-gap"
+            class="playlist-page__search-icon spin" />
           <AppIcon v-else name="ph:magnifying-glass" class="playlist-page__search-icon" />
           <input
             id="playlist-search-input"
@@ -435,19 +438,28 @@ const showStickyMobileMenu = ref(false);
               @click="showStickyMobileMenu = !showStickyMobileMenu">
               <AppIcon name="ph:dots-three-vertical-bold" />
             </button>
-            <div v-if="showStickyMobileMenu" class="playlist-page__dropdown-overlay" @click="showStickyMobileMenu = false"></div>
+            <div
+              v-if="showStickyMobileMenu"
+              class="playlist-page__dropdown-overlay"
+              @click="showStickyMobileMenu = false"></div>
             <Transition name="dropdown">
               <div v-if="showStickyMobileMenu" class="playlist-page__dropdown">
                 <button
                   class="playlist-page__dropdown-item"
-                  @click="showStickyMobileMenu = false; showEditModal = true">
+                  @click="
+                    showStickyMobileMenu = false;
+                    showEditModal = true;
+                  ">
                   <AppIcon name="ph:pencil-simple" />
                   {{ $t('playlists.editPlaylist') }}
                 </button>
                 <button
                   class="playlist-page__dropdown-item playlist-page__dropdown-item--danger"
                   :disabled="isDeleting"
-                  @click="showStickyMobileMenu = false; showDeleteConfirm = true">
+                  @click="
+                    showStickyMobileMenu = false;
+                    showDeleteConfirm = true;
+                  ">
                   <AppIcon name="ph:trash" />
                   {{ $t('playlists.deletePlaylist') }}
                 </button>
@@ -488,27 +500,39 @@ const showStickyMobileMenu = ref(false);
               @click="showMobileMenu = !showMobileMenu">
               <AppIcon name="ph:dots-three-vertical-bold" />
             </button>
-            <div v-if="showMobileMenu" class="playlist-page__dropdown-overlay" @click="showMobileMenu = false"></div>
+            <div
+              v-if="showMobileMenu"
+              class="playlist-page__dropdown-overlay"
+              @click="showMobileMenu = false"></div>
             <Transition name="dropdown">
               <div v-if="showMobileMenu" class="playlist-page__dropdown">
                 <button
                   class="playlist-page__dropdown-item"
                   :disabled="isDownloadingPlaylist"
-                  @click="showMobileMenu = false; downloadPlaylist()">
+                  @click="
+                    showMobileMenu = false;
+                    downloadPlaylist();
+                  ">
                   <AppSpinner v-if="isDownloadingPlaylist" size="sm" />
                   <AppIcon v-else name="ph:arrow-circle-down-duotone" />
                   {{ $t('offline.downloadPlaylist') }}
                 </button>
                 <button
                   class="playlist-page__dropdown-item"
-                  @click="showMobileMenu = false; showEditModal = true">
+                  @click="
+                    showMobileMenu = false;
+                    showEditModal = true;
+                  ">
                   <AppIcon name="ph:pencil-simple" />
                   {{ $t('playlists.editPlaylist') }}
                 </button>
                 <button
                   class="playlist-page__dropdown-item playlist-page__dropdown-item--danger"
                   :disabled="isDeleting"
-                  @click="showMobileMenu = false; showDeleteConfirm = true">
+                  @click="
+                    showMobileMenu = false;
+                    showDeleteConfirm = true;
+                  ">
                   <AppIcon name="ph:trash" />
                   {{ $t('playlists.deletePlaylist') }}
                 </button>
@@ -657,7 +681,7 @@ const showStickyMobileMenu = ref(false);
     display: flex;
     align-items: center;
     gap: inherit;
-    
+
     @media (max-width: 768px) {
       display: none;
     }
@@ -667,7 +691,7 @@ const showStickyMobileMenu = ref(false);
     display: none;
     align-items: center;
     gap: inherit;
-    
+
     @media (max-width: 768px) {
       display: flex;
     }
@@ -729,13 +753,13 @@ const showStickyMobileMenu = ref(false);
 
     &--danger {
       color: hsl(0, 65%, 65%);
-      
+
       &:hover {
         background: color-mix(in srgb, hsl(0, 65%, 50%) 15%, transparent);
         color: hsl(0, 65%, 65%);
       }
     }
-    
+
     svg {
       font-size: 1.25rem;
     }
@@ -940,7 +964,9 @@ const showStickyMobileMenu = ref(false);
 
 .dropdown-enter-active,
 .dropdown-leave-active {
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .dropdown-enter-from,

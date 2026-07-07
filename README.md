@@ -10,6 +10,7 @@
 
 > [!WARNING]
 > **Legal Disclaimer:** This project is intended strictly for **personal, private, and educational use only**. Commercial use, public distribution, or hosting this as a public streaming service may violate the Terms of Service of third-party platforms (such as YouTube or Spotify) and relevant copyright laws. If you wish to use, explore, or modify this application, please **clone the repository and run it locally on your own machine**. The creator of this repository assumes no liability for how this code is utilized.
+
 ## ✨ Features
 
 - **Cross-Platform**: Available as a native desktop app (Windows, macOS, Linux) and mobile app (Android, iOS) via Tauri, plus accessible via the web.

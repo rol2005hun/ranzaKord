@@ -15,10 +15,10 @@ export function useGlobalShortcuts() {
 
   function handleWebKeydown(e: KeyboardEvent) {
     if (!playerStore.globalShortcutsEnabled) return;
-    
+
     const isMac = navigator.userAgent.toLowerCase().includes('mac');
     const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
-    
+
     if (cmdOrCtrl && e.altKey) {
       if (e.code === 'Space') {
         e.preventDefault();

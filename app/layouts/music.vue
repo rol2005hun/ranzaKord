@@ -201,7 +201,9 @@ onMounted(() => {
             @click="showMobilePlaylists = false">
             <div style="position: relative; display: inline-flex">
               <AppIcon name="ph:chart-bar-duotone" />
-              <span class="app-sidebar-item__new-badge" style="top: -2px; right: -8px">{{ $t('core.nav.new') }}</span>
+              <span class="app-sidebar-item__new-badge" style="top: -2px; right: -8px">
+                {{ $t('core.nav.new') }}
+              </span>
             </div>
             {{ $t('stats.title') }}
           </NuxtLink>

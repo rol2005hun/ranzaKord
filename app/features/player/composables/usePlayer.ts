@@ -50,11 +50,14 @@ export function usePlayer() {
     if (authStore.currentUser?.isDemo) {
       const { DEMO_ALLOWED_VIDEO_IDS } = await import('@/features/core/utils/demoData');
       if (!DEMO_ALLOWED_VIDEO_IDS.includes(videoId)) {
-        finalVideoId = DEMO_ALLOWED_VIDEO_IDS[Math.floor(Math.random() * DEMO_ALLOWED_VIDEO_IDS.length)];
-        
+        finalVideoId =
+          DEMO_ALLOWED_VIDEO_IDS[Math.floor(Math.random() * DEMO_ALLOWED_VIDEO_IDS.length)] ??
+          videoId;
+
         if (import.meta.client) {
-          const { $toast, $i18n } = useNuxtApp();
-          $toast?.info($i18n.t('core.demoModeAudioToast', 'Jogi okokból Demo módban csak jogtiszta (NCS) zenék hallgathatóak!'));
+          const { $i18n } = useNuxtApp();
+          const toast = useToast();
+          toast.info($i18n.t('core.demoModeAudioToast'));
         }
       }
     }
