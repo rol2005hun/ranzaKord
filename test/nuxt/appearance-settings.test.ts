@@ -81,11 +81,9 @@ describe('AppearanceSettings.vue', () => {
     const wrapper = await mountComponent();
     // Assuming the first toggle is for adaptive theme
     const toggles = wrapper.findAll('input[type="checkbox"]');
-    const adaptiveToggle = toggles[0]!;
-    await adaptiveToggle.setValue(true);
-    // Since AppToggle v-model directly mutates the store in tests with createTestingPinia it might just trigger the setter, or we check if the toggle works.
-    // In our test, the store is mocked, we can just assume v-model works.
-    expect(adaptiveToggle.exists()).toBe(true);
+    const adaptiveToggle = toggles[0];
+    if (adaptiveToggle) await adaptiveToggle.setValue(true);
+    expect(adaptiveToggle?.exists()).toBe(true);
   });
 
   it('calls resetCustomColor when reset button is clicked', async () => {

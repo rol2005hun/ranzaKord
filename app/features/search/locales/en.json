@@ -26,7 +26,11 @@
     "badge": "ARTIST",
     "loadError": "Failed to load artist.",
     "topSongs": "Top Songs",
-    "albums": "Albums"
+    "albums": "Albums",
+    "allSongs": "All Songs",
+    "bio": "About",
+    "singles": "Singles",
+    "discography": "Discography"
   },
   "list": {
     "song": "Song",

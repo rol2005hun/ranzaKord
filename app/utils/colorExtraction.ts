@@ -75,10 +75,13 @@ export function getPalette(imageUrl: string): Promise<ColorPalette | null> {
           const hue = rgbToHue(red, green, blue);
           const bucketIndex = Math.floor(hue / 10) % 36;
 
-          buckets[bucketIndex]!.r += red;
-          buckets[bucketIndex]!.g += green;
-          buckets[bucketIndex]!.b += blue;
-          buckets[bucketIndex]!.count++;
+          const bucket = buckets[bucketIndex];
+          if (bucket) {
+            bucket.r += red;
+            bucket.g += green;
+            bucket.b += blue;
+            bucket.count++;
+          }
           totalCount++;
         }
 
@@ -105,7 +108,11 @@ export function getPalette(imageUrl: string): Promise<ColorPalette | null> {
 
         buckets.sort((a, b) => b.count - a.count);
 
-        const primaryBucket = buckets[0]!;
+        const primaryBucket = buckets[0];
+        if (!primaryBucket) {
+          resolve(null);
+          return;
+        }
         const primaryHex = rgbToHex(
           Math.round(primaryBucket.r / primaryBucket.count),
           Math.round(primaryBucket.g / primaryBucket.count),
@@ -122,12 +129,13 @@ export function getPalette(imageUrl: string): Promise<ColorPalette | null> {
         );
 
         for (let i = 1; i < buckets.length; i++) {
-          if (buckets[i]!.count < totalCount * 0.05) continue; // must be at least 5% of pixels
+          const bucket = buckets[i];
+          if (!bucket || bucket.count < totalCount * 0.05) continue;
 
           const secHue = rgbToHue(
-            buckets[i]!.r / buckets[i]!.count,
-            buckets[i]!.g / buckets[i]!.count,
-            buckets[i]!.b / buckets[i]!.count
+            bucket.r / bucket.count,
+            bucket.g / bucket.count,
+            bucket.b / bucket.count
           );
 
           let diff = Math.abs(primaryHue - secHue);
@@ -135,9 +143,9 @@ export function getPalette(imageUrl: string): Promise<ColorPalette | null> {
 
           if (diff >= 30) {
             secondaryHex = rgbToHex(
-              Math.round(buckets[i]!.r / buckets[i]!.count),
-              Math.round(buckets[i]!.g / buckets[i]!.count),
-              Math.round(buckets[i]!.b / buckets[i]!.count)
+              Math.round(bucket.r / bucket.count),
+              Math.round(bucket.g / bucket.count),
+              Math.round(bucket.b / bucket.count)
             );
             break;
           }

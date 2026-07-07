@@ -26,7 +26,11 @@
     "badge": "ELŐADÓ",
     "loadError": "Előadó betöltése sikertelen.",
     "topSongs": "Legnépszerűbb zenék",
-    "albums": "Albumok"
+    "albums": "Albumok",
+    "allSongs": "Összes dal",
+    "bio": "Névjegy",
+    "singles": "Kislemezek",
+    "discography": "Diszkográfia"
   },
   "list": {
     "song": "Zene",

@@ -28,6 +28,7 @@ export interface ArtistDetail {
   id: string;
   name: string;
   thumbnailUrl: string;
+  bannerUrl?: string;
   description?: string;
   topSongs: SearchResult[];
   albums: SearchResult[];
