@@ -12,6 +12,9 @@ export const useAuthStore = defineStore('auth', () => {
 
   function clearSession() {
     user.value = null;
+    if (import.meta.client) {
+      localStorage.removeItem('ranzakord_demo_session');
+    }
   }
 
   function loginAsDemo() {
@@ -24,6 +27,9 @@ export const useAuthStore = defineStore('auth', () => {
       roles: ['user'],
       isDemo: true
     };
+    if (import.meta.client) {
+      localStorage.setItem('ranzakord_demo_session', 'true');
+    }
   }
 
   return { user, isAuthenticated, currentUser, setUser, clearSession, loginAsDemo };

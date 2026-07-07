@@ -1,7 +1,14 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 import { setActivePinia, createPinia } from 'pinia';
+
 import { useAuthStore } from '../../app/features/auth/stores/useAuthStore';
 import { useAuth } from '../../app/features/auth/composables/useAuth';
+
+const { mockNavigateTo } = vi.hoisted(() => ({
+  mockNavigateTo: vi.fn()
+}));
+mockNuxtImport('navigateTo', () => mockNavigateTo);
 
 describe('Auth Module', () => {
   let fetchMock: ReturnType<typeof vi.fn>;
@@ -82,11 +89,12 @@ describe('Auth Module', () => {
     it('logout fetches logout endpoint and hard reloads to login', async () => {
       fetchMock.mockResolvedValue(null);
       const { logout } = useAuth();
+      mockNavigateTo.mockClear();
 
       await logout();
 
       expect(globalThis.$fetch).toHaveBeenCalledWith('/auth/logout', { method: 'POST' });
-      expect(window.location.href).toBe('/login');
+      expect(mockNavigateTo).toHaveBeenCalledWith('/login');
     });
 
     it('fetchUser sets user on success', async () => {

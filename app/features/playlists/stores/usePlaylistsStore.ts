@@ -5,10 +5,13 @@ import type {
   PlaylistDetailQuery,
   ImportResult,
   FailedTrack,
-  SkippedTrackEntry
+  SkippedTrackEntry,
+  PlaylistTrack,
+  PlaylistTrackArtist
 } from '../types/playlists.types';
 import type { Track } from '../../player/types/player.types';
 import type { SearchResult } from '@/features/search/types/search.types';
+import { getDemoTrackDetail } from '@/utils/demoData';
 
 export const usePlaylistsStore = defineStore('playlists', () => {
   const playlists = ref<PlaylistSummary[]>([]);
@@ -43,6 +46,21 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     }
     isLoading.value = true;
     error.value = null;
+
+    const authStore = useAuthStore();
+    if (authStore.currentUser?.isDemo) {
+      if (import.meta.client) {
+        const stored = localStorage.getItem('ranzakord_demo_playlists');
+        playlists.value = stored ? JSON.parse(stored) : [];
+      } else {
+        playlists.value = [];
+      }
+      sharedPlaylists.value = [];
+      hasLoaded.value = true;
+      isLoading.value = false;
+      return;
+    }
+
     try {
       const fetchOptions: { headers?: Record<string, string> } = {};
       if (import.meta.server) {
@@ -65,6 +83,25 @@ export const usePlaylistsStore = defineStore('playlists', () => {
   }
 
   async function create(payload: CreatePlaylistPayload): Promise<PlaylistSummary | null> {
+    const authStore = useAuthStore();
+    if (authStore.currentUser?.isDemo) {
+      const created: PlaylistSummary = {
+        id: `demo_${Date.now()}`,
+        name: payload.name,
+        description: payload.description || '',
+        imageUrl: payload.imageUrl || '',
+        trackCount: 0,
+        trackIds: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      playlists.value.unshift(created);
+      if (import.meta.client) {
+        localStorage.setItem('ranzakord_demo_playlists', JSON.stringify(playlists.value));
+      }
+      return created;
+    }
+
     try {
       const created = await $fetch<PlaylistSummary>('/api/playlists', {
         method: 'POST',
@@ -79,6 +116,21 @@ export const usePlaylistsStore = defineStore('playlists', () => {
   }
 
   async function update(id: string, payload: Partial<CreatePlaylistPayload>): Promise<void> {
+    const authStore = useAuthStore();
+    if (authStore.currentUser?.isDemo) {
+      const p = playlists.value.find((x) => x.id === id);
+      if (p) {
+        if (payload.name !== undefined) p.name = payload.name;
+        if (payload.description !== undefined) p.description = payload.description;
+        if (payload.imageUrl !== undefined) p.imageUrl = payload.imageUrl;
+        p.updatedAt = new Date().toISOString();
+        if (import.meta.client) {
+          localStorage.setItem('ranzakord_demo_playlists', JSON.stringify(playlists.value));
+        }
+      }
+      return;
+    }
+
     try {
       await $fetch(`/api/playlists/${id}`, { method: 'PATCH', body: payload });
       await fetchAll(true);
@@ -88,6 +140,15 @@ export const usePlaylistsStore = defineStore('playlists', () => {
   }
 
   async function remove(id: string): Promise<boolean> {
+    const authStore = useAuthStore();
+    if (authStore.currentUser?.isDemo) {
+      playlists.value = playlists.value.filter((p) => p.id !== id);
+      if (import.meta.client) {
+        localStorage.setItem('ranzakord_demo_playlists', JSON.stringify(playlists.value));
+      }
+      return true;
+    }
+
     try {
       await $fetch(`/api/playlists/${id}`, { method: 'DELETE' });
       playlists.value = playlists.value.filter((p) => p.id !== id);
@@ -110,6 +171,34 @@ export const usePlaylistsStore = defineStore('playlists', () => {
       durationMs: number;
     }
   ): Promise<void> {
+    const authStore = useAuthStore();
+    if (authStore.currentUser?.isDemo) {
+      const playlist = playlists.value.find((p) => p.id === playlistId);
+      if (playlist) {
+        if (!playlist.trackIds.includes(track.videoId)) {
+          playlist.trackIds.push(track.videoId);
+          playlist.trackCount++;
+          if (import.meta.client) {
+            localStorage.setItem('ranzakord_demo_playlists', JSON.stringify(playlists.value));
+
+            // Save full track details so we can reconstruct the playlist details
+            const storedTracks = localStorage.getItem('ranzakord_demo_tracks');
+            const demoTracks: Record<string, Track> = storedTracks ? JSON.parse(storedTracks) : {};
+            demoTracks[track.videoId] = {
+              videoId: track.videoId,
+              title: track.title,
+              artist: track.artist,
+              artists: track.artists || [{ name: track.artist }],
+              thumbnailUrl: track.thumbnailUrl,
+              durationSeconds: Math.floor(track.durationMs / 1000)
+            };
+            localStorage.setItem('ranzakord_demo_tracks', JSON.stringify(demoTracks));
+          }
+        }
+      }
+      return;
+    }
+
     await $fetch(`/api/playlists/${playlistId}/tracks`, { method: 'POST', body: track });
     const playlist = playlists.value.find((p) => p.id === playlistId);
     if (playlist) {
@@ -121,6 +210,19 @@ export const usePlaylistsStore = defineStore('playlists', () => {
   }
 
   async function removeTrack(playlistId: string, videoId: string): Promise<void> {
+    const authStore = useAuthStore();
+    if (authStore.currentUser?.isDemo) {
+      const playlist = playlists.value.find((p) => p.id === playlistId);
+      if (playlist) {
+        playlist.trackCount = Math.max(0, playlist.trackCount - 1);
+        playlist.trackIds = playlist.trackIds.filter((id) => id !== videoId);
+        if (import.meta.client) {
+          localStorage.setItem('ranzakord_demo_playlists', JSON.stringify(playlists.value));
+        }
+      }
+      return;
+    }
+
     await $fetch(`/api/playlists/${playlistId}/tracks/${videoId}`, { method: 'DELETE' });
     const playlist = playlists.value.find((p) => p.id === playlistId);
     if (playlist) {
@@ -133,6 +235,37 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     id: string,
     query?: PlaylistDetailQuery
   ): Promise<PlaylistDetail | null> {
+    const authStore = useAuthStore();
+    if (authStore.currentUser?.isDemo) {
+      if (!import.meta.client) return null;
+      const playlist = playlists.value.find((p) => p.id === id);
+      if (!playlist) return null;
+
+      const storedTracks = localStorage.getItem('ranzakord_demo_tracks');
+      const demoTracks: Record<string, Track> = storedTracks ? JSON.parse(storedTracks) : {};
+
+      const tracks = playlist.trackIds
+        .map((tid) => {
+          const tr = demoTracks[tid] || getDemoTrackDetail(tid);
+          if (!tr) return null;
+          return {
+            videoId: tid,
+            title: tr.title,
+            artist: tr.artist,
+            artists: tr.artists as PlaylistTrackArtist[] | undefined,
+            thumbnailUrl: tr.thumbnailUrl,
+            durationMs: tr.durationSeconds * 1000,
+            addedAt: new Date().toISOString()
+          } as PlaylistTrack;
+        })
+        .filter((t): t is PlaylistTrack => t !== null);
+
+      return {
+        ...playlist,
+        tracks
+      };
+    }
+
     try {
       const fetchOptions: { headers?: Record<string, string> } = {};
       if (import.meta.server) {

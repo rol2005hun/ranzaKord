@@ -18,29 +18,27 @@ const emit = defineEmits<{
 const { t } = useI18n();
 
 const isBioExpanded = ref(false);
-const scrollY = ref(0);
+const bgRef = ref<HTMLElement | null>(null);
+const contentRef = ref<HTMLElement | null>(null);
 
 function onContainerScroll(e: Event) {
-  scrollY.value = (e.target as HTMLElement).scrollTop;
+  const y = (e.target as HTMLElement).scrollTop;
+  if (bgRef.value) {
+    bgRef.value.style.transform = `translateY(${y * 0.4}px)`;
+  }
+  if (contentRef.value) {
+    const maxScroll = 300;
+    const opacity = Math.max(0, 1 - y / maxScroll);
+    contentRef.value.style.opacity = opacity.toString();
+  }
 }
-
-const parallaxStyle = computed(() => ({
-  transform: `translateY(${scrollY.value * 0.4}px)`,
-  transition: 'transform 0.05s linear'
-}));
-
-const headerOpacity = computed(() => {
-  const maxScroll = 300;
-  const opacity = Math.max(0, 1 - scrollY.value / maxScroll);
-  return { opacity };
-});
 
 defineExpose({ onContainerScroll });
 </script>
 
 <template>
   <div class="artist-header">
-    <div class="artist-header__bg" :style="parallaxStyle">
+    <div ref="bgRef" class="artist-header__bg">
       <img
         v-if="bannerUrl || thumbnailUrl"
         :src="bannerUrl || thumbnailUrl"
@@ -49,7 +47,7 @@ defineExpose({ onContainerScroll });
       <div class="artist-header__bg-overlay" />
     </div>
 
-    <div class="artist-header__content" :style="headerOpacity">
+    <div ref="contentRef" class="artist-header__content">
       <div class="artist-header__avatar-wrap">
         <img v-if="thumbnailUrl" :src="thumbnailUrl" :alt="name" class="artist-header__avatar" />
         <div v-else class="artist-header__avatar artist-header__avatar--placeholder">

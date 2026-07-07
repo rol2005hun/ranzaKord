@@ -34,7 +34,8 @@
     "close": "Bezárás",
     "back": "Vissza",
     "settings": "Beállítások",
-    "more": "Továbbiak"
+    "more": "Továbbiak",
+    "confirm": "Megerősítés"
   },
   "musicDetail": {
     "titleColumn": "Cím",

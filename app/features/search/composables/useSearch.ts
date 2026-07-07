@@ -28,6 +28,26 @@ export function useSearch() {
     const performSearch = async () => {
       store.setError(null);
 
+      const authStore = useAuthStore();
+      if (authStore.currentUser?.isDemo) {
+        const lowerQ = q.toLowerCase();
+        const filtered = DEMO_TRACKS.filter(
+          (t) => t.title.toLowerCase().includes(lowerQ) || t.artist.toLowerCase().includes(lowerQ)
+        );
+
+        if (type === 'all') {
+          store.setCategorizedResults({
+            songs: filtered,
+            albums: [],
+            artists: []
+          });
+        } else {
+          store.setResults(filtered);
+        }
+        store.setLoading(false);
+        return;
+      }
+
       try {
         const fetchUrl =
           type === 'all'

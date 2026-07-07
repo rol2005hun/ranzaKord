@@ -15,17 +15,12 @@ let crossfadeGain2 = 0.0;
 let isCrossfading = false;
 let crossfadeTriggered = false;
 let crossfadeRafId: number | null = null;
-let crossfadeIntervalId: ReturnType<typeof setInterval> | null = null;
 let audioAbortController: AbortController | null = null;
 
 function stopCrossfadeTimers() {
   if (crossfadeRafId !== null) {
     cancelAnimationFrame(crossfadeRafId);
     crossfadeRafId = null;
-  }
-  if (crossfadeIntervalId !== null) {
-    clearInterval(crossfadeIntervalId);
-    crossfadeIntervalId = null;
   }
 }
 
@@ -34,6 +29,7 @@ export function usePlayer() {
   const nuxtApp = useNuxtApp();
   const t = nuxtApp.$i18n.t;
   const config = useRuntimeConfig();
+  const toast = useToast();
 
   function getApiUrl(path: string) {
     if (path.startsWith('http://') || path.startsWith('https://')) return path;
@@ -45,21 +41,14 @@ export function usePlayer() {
 
   async function getStreamUrl(videoId: string): Promise<string> {
     const authStore = useAuthStore();
-    let finalVideoId = videoId;
+    const finalVideoId = videoId;
 
     if (authStore.currentUser?.isDemo) {
-      const { DEMO_ALLOWED_VIDEO_IDS } = await import('@/features/core/utils/demoData');
-      if (!DEMO_ALLOWED_VIDEO_IDS.includes(videoId)) {
-        finalVideoId =
-          DEMO_ALLOWED_VIDEO_IDS[Math.floor(Math.random() * DEMO_ALLOWED_VIDEO_IDS.length)] ??
-          videoId;
-
-        if (import.meta.client) {
-          const { $i18n } = useNuxtApp();
-          const toast = useToast();
-          toast.info($i18n.t('core.demoModeAudioToast'));
-        }
+      if (import.meta.client) {
+        toast.info(t('core.demoModeAudioToast') || 'Demo mode: Playing sample audio');
       }
+
+      return 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Example.ogg';
     }
 
     if (import.meta.client) {
@@ -329,10 +318,12 @@ export function usePlayer() {
 
     stopCrossfadeTimers();
     crossfadeRafId = requestAnimationFrame(loop);
-    crossfadeIntervalId = setInterval(() => step(), 100);
   }
 
   function recordTrackStat(track: Track, listeningSeconds: number, skipped: boolean) {
+    const authStore = useAuthStore();
+    if (authStore.currentUser?.isDemo) return;
+
     const payload: TrackStatPayload = {
       trackId: track.videoId,
       title: track.title,
@@ -430,6 +421,9 @@ export function usePlayer() {
   }
 
   async function fetchRadioNext(videoId: string): Promise<Track | null> {
+    const authStore = useAuthStore();
+    if (authStore.currentUser?.isDemo) return null;
+
     const res = await $fetch<Track[]>(`/api/search/related?videoId=${videoId}`).catch(() => []);
     if (res && res.length > 0) {
       const filtered = res

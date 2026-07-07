@@ -12,6 +12,15 @@ interface DrawContext {
 }
 
 export function useCanvasVisualizer() {
+  const particles: Array<{
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    life: number;
+    color: string;
+    size: number;
+  }> = [];
   function drawVisualizer({
     ctx,
     width: W,
@@ -152,12 +161,8 @@ export function useCanvasVisualizer() {
       const x = i * (barWidth + gap) + gap / 2;
       const y = H - barH;
 
-      const gradient = ctx.createLinearGradient(x, H, x, y);
-      gradient.addColorStop(0, `hsla(${primaryH}, ${primaryS}, 50%, 0.8)`);
-      gradient.addColorStop(1, `hsla(${primaryH}, ${primaryS}, 70%, 1)`);
-
-      ctx.fillStyle = gradient;
-      // Retro rounded top
+      const lightness = 50 + amplitude * 20;
+      ctx.fillStyle = `hsla(${primaryH}, ${primaryS}, ${lightness}%, ${0.7 + amplitude * 0.3})`;
       ctx.beginPath();
       ctx.roundRect(x, y, barWidth, barH, [barWidth / 2, barWidth / 2, 0, 0]);
       ctx.fill();
@@ -213,15 +218,6 @@ export function useCanvasVisualizer() {
   }
 
   // Very simple particle system state for the visualizer
-  const particles: Array<{
-    x: number;
-    y: number;
-    vx: number;
-    vy: number;
-    life: number;
-    color: string;
-    size: number;
-  }> = [];
 
   function drawParticles(
     ctx: CanvasRenderingContext2D,

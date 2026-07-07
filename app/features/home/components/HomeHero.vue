@@ -37,6 +37,7 @@ const {
 watch(
   [isWalker, isWc2026],
   ([walker, wc]) => {
+    if (currentUser.value?.isDemo) return;
     if (walker) {
       executeTopTracks();
     } else if (wc) {
@@ -49,6 +50,26 @@ watch(
 );
 
 const featuredTracks: Ref<SearchResult[] | null> = computed(() => {
+  if (currentUser.value?.isDemo) {
+    return [
+      {
+        id: 'dQw4w9WgXcQ',
+        title: 'Demo Track 1 (NCS)',
+        artist: 'NCS Release',
+        thumbnailUrl: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+        durationSeconds: 212,
+        type: 'song'
+      },
+      {
+        id: '2Vv-BfVoq4g',
+        title: 'Demo Track 2 (Ed Sheeran Perfect Cover)',
+        artist: 'Cover',
+        thumbnailUrl: 'https://i.ytimg.com/vi/2Vv-BfVoq4g/hqdefault.jpg',
+        durationSeconds: 260,
+        type: 'song'
+      }
+    ];
+  }
   if (isWalker.value) return topTracks.value ?? null;
   if (isWc2026.value) return wcTracks.value ?? null;
   return featuredTracksData.value ?? null;

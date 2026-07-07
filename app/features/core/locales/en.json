@@ -33,7 +33,8 @@
     "close": "Close",
     "back": "Back",
     "settings": "Settings",
-    "more": "More"
+    "more": "More",
+    "confirm": "Confirm"
   },
   "musicDetail": {
     "titleColumn": "Title",

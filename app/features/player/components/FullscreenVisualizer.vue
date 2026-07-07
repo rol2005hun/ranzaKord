@@ -208,13 +208,18 @@ function handleResize() {
 }
 
 function drawFrame() {
-  animId = requestAnimationFrame(drawFrame);
   if (!layoutStore.isFullscreenVisualizer) return;
 
   const canvas = canvasRef.value;
-  if (!canvas) return;
+  if (!canvas) {
+    animId = requestAnimationFrame(drawFrame);
+    return;
+  }
   const ctx = canvas.getContext('2d');
-  if (!ctx) return;
+  if (!ctx) {
+    animId = requestAnimationFrame(drawFrame);
+    return;
+  }
 
   const audio1 = player.audioElement1.value;
   const audio2 = player.audioElement2.value;
@@ -246,6 +251,8 @@ function drawFrame() {
   if (containerRef.value) {
     containerRef.value.style.setProperty('--bass-scale', bassScale.toString());
   }
+
+  animId = requestAnimationFrame(drawFrame);
 }
 
 onMounted(() => {
@@ -266,8 +273,19 @@ onUnmounted(() => {
   }
   if (ro) {
     ro.disconnect();
+    ro = null;
   }
 });
+
+watch(
+  () => [useThemeStore().themeId, useThemeStore().currentCustomPalette],
+  () => {
+    // Wait for DOM to update CSS vars
+    nextTick(() => {
+      syncThemeColors();
+    });
+  }
+);
 
 function closeFullscreen() {
   layoutStore.toggleFullscreenVisualizer();
@@ -497,12 +515,14 @@ function getStyleIcon(style: string) {
                 min="0"
                 :max="player.durationSeconds.value || 1"
                 :value="player.currentTimeSeconds.value"
-                step="1"
+                step="any"
                 :aria-label="$t('player.seek')"
                 :style="{
                   '--progress':
                     (player.currentTimeSeconds.value / (player.durationSeconds.value || 1)) * 100 +
-                    '%'
+                    '%',
+                  '--progress-ratio':
+                    player.currentTimeSeconds.value / (player.durationSeconds.value || 1)
                 }"
                 @input="onSeekInput" />
               <AppSkeleton v-else height="4px" class="fullscreen-visualizer__slider--seek" />
@@ -561,7 +581,10 @@ function getStyleIcon(style: string) {
               :value="player.volume.value"
               step="0.01"
               :aria-label="$t('player.volume')"
-              :style="{ '--progress': player.volume.value * 100 + '%' }"
+              :style="{
+                '--progress': player.volume.value * 100 + '%',
+                '--progress-ratio': player.volume.value
+              }"
               @input.stop="onVolumeInput" />
           </div>
         </div>
@@ -1109,8 +1132,14 @@ function getStyleIcon(style: string) {
     &::-webkit-slider-runnable-track {
       background: linear-gradient(
         to right,
-        var(--color-primary) var(--progress, 0%),
-        rgba(255, 255, 255, 0.2) var(--progress, 0%)
+        var(--color-primary)
+          calc(
+            var(--thumb-radius, 7px) + var(--progress-ratio, 0) * (100% - var(--thumb-width, 14px))
+          ),
+        rgba(255, 255, 255, 0.2)
+          calc(
+            var(--thumb-radius, 7px) + var(--progress-ratio, 0) * (100% - var(--thumb-width, 14px))
+          )
       );
       border-radius: var(--radius-full);
       height: 4px;

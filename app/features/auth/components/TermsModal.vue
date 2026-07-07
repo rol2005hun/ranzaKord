@@ -14,35 +14,25 @@ const emit = defineEmits<{
         </button>
       </div>
       <div class="terms-modal__content">
-        <h3>1. Introduction</h3>
-        <p>
-          Welcome to ranzaKord. By using this application, you agree to these Terms and Conditions.
-          Please read them carefully.
-        </p>
+        <h3>{{ $t('auth.login.terms.introTitle') }}</h3>
+        <p>{{ $t('auth.login.terms.introText') }}</p>
 
-        <h3>2. Usage of the Service</h3>
-        <p>
-          You agree to use the service only for lawful purposes. You are responsible for all
-          activities that occur under your account.
-        </p>
+        <h3>{{ $t('auth.login.terms.usageTitle') }}</h3>
+        <p>{{ $t('auth.login.terms.usageText') }}</p>
 
-        <h3>3. User Content and Privacy</h3>
-        <p>
-          We respect your privacy. Any data collected (such as your playlists and listening history)
-          is solely for the purpose of improving your experience and enabling social features. You
-          can manage your privacy settings in the application.
-        </p>
+        <h3>{{ $t('auth.login.terms.privacyTitle') }}</h3>
+        <p>{{ $t('auth.login.terms.privacyText') }}</p>
 
-        <h3>4. Disclaimer</h3>
-        <p>
-          This service is provided "as is" without any warranties. The developers are not
-          responsible for any issues arising from the use of this application.
-        </p>
+        <h3>{{ $t('auth.login.terms.disclaimerTitle') }}</h3>
+        <p>{{ $t('auth.login.terms.disclaimerText') }}</p>
 
-        <p><i>(These are placeholder terms and conditions for demonstration purposes.)</i></p>
+        <!-- Placeholder disclaimer text -->
+        <p>
+          <i>{{ $t('auth.login.terms.placeholder') }}</i>
+        </p>
       </div>
       <div class="terms-modal__footer">
-        <AppButton @click="emit('close')">{{ $t('core.confirm') }}</AppButton>
+        <AppButton @click="emit('close')">{{ $t('core.actions.confirm') }}</AppButton>
       </div>
     </div>
   </div>

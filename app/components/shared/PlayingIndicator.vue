@@ -1,7 +1,9 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+const playerStore = usePlayerStore();
+</script>
 
 <template>
-  <div class="playing-indicator">
+  <div class="playing-indicator" :class="{ 'playing-indicator--paused': !playerStore.isPlaying }">
     <span class="playing-indicator__bar" />
     <span class="playing-indicator__bar" />
     <span class="playing-indicator__bar" />
@@ -34,6 +36,10 @@
       animation-delay: 0.3s;
       height: 12px;
     }
+  }
+
+  &--paused &__bar {
+    animation-play-state: paused;
   }
 }
 

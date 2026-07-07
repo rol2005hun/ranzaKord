@@ -32,7 +32,8 @@ export function useAuth(): UseAuthReturn {
   }
 
   async function logout() {
-    await $fetch('/auth/logout', { method: 'POST' }).catch(() => null);
+    navigateTo('/login');
+    store.clearSession();
 
     if (import.meta.client) {
       localStorage.removeItem('auth_token');
@@ -42,13 +43,17 @@ export function useAuth(): UseAuthReturn {
           .replace(/^ +/, '')
           .replace(/=.*/, `=;expires=${new Date(0).toUTCString()};path=/`);
       });
-      window.location.href = '/login';
-    } else {
-      store.clearSession();
     }
+
+    $fetch('/auth/logout', { method: 'POST' }).catch(() => null);
   }
 
   async function fetchUser() {
+    if (import.meta.client && localStorage.getItem('ranzakord_demo_session') === 'true') {
+      store.loginAsDemo();
+      return;
+    }
+    if (store.currentUser?.isDemo) return;
     try {
       const fetcher = import.meta.server && requestFetch ? requestFetch : globalFetch;
       const user = (await fetcher('/api/me')) as unknown;

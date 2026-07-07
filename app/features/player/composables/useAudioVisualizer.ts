@@ -192,16 +192,16 @@ export function useAudioVisualizer() {
   const dataArray = new Uint8Array(512);
   let smoothedBass = 0;
   let lastSetBass = '';
+  let cachedPlayerStore: ReturnType<typeof usePlayerStore> | null = null;
 
   function startAudioReactiveLoop() {
     if (rAFId) return;
+    cachedPlayerStore = usePlayerStore();
     function loop() {
       if (analyserNode && isConnected) {
         let rawBass = 0;
 
-        // Only calculate bass if audio is actually playing, otherwise snap to 0 immediately
-        const playerStore = usePlayerStore();
-        if (playerStore.isPlaying) {
+        if (cachedPlayerStore?.isPlaying) {
           analyserNode.getByteFrequencyData(dataArray);
 
           let bassSum = 0;
@@ -225,15 +225,15 @@ export function useAudioVisualizer() {
           smoothedBass = 0;
         }
 
-        const bassString = smoothedBass.toString();
+        const bassRounded = Math.round(smoothedBass * 1000) / 1000;
+        const bassString = bassRounded.toString();
         if (bassString !== lastSetBass) {
           document.documentElement.style.setProperty('--audio-bass', bassString);
           lastSetBass = bassString;
         }
 
-        // 8D Spatial Audio Rotation
         if (spatialPannerNode) {
-          if (playerStore.isSpatialAudio) {
+          if (cachedPlayerStore?.isSpatialAudio) {
             const speed = 2000; // 2 seconds per radian = ~12.5s full rotation
             const t = performance.now() / speed;
             const x = Math.sin(t) * 2;

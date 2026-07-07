@@ -321,10 +321,11 @@ onClickOutside(moreMenuBtnRef, (e) => {
             :max="displayDuration || 1"
             :value="displayTime"
             :disabled="!displayTrack"
-            step="1"
+            step="any"
             :aria-label="$t('player.seek')"
             :style="{
-              '--progress': (displayTime / (displayDuration || 1)) * 100 + '%'
+              '--progress': (displayTime / (displayDuration || 1)) * 100 + '%',
+              '--progress-ratio': displayTime / (displayDuration || 1)
             }"
             data-allow-mismatch
             @input="onSeekInput"
@@ -402,7 +403,10 @@ onClickOutside(moreMenuBtnRef, (e) => {
             :value="displayVolume"
             step="0.01"
             :aria-label="$t('player.volume')"
-            :style="{ '--progress': displayVolume * 100 + '%' }"
+            :style="{
+              '--progress': displayVolume * 100 + '%',
+              '--progress-ratio': displayVolume
+            }"
             data-allow-mismatch
             @input="onVolumeInput" />
           <AppSkeleton v-else height="4px" width="100px" class="player-bar__slider--volume" />
@@ -779,8 +783,14 @@ onClickOutside(moreMenuBtnRef, (e) => {
     &::-webkit-slider-runnable-track {
       background: linear-gradient(
         to right,
-        var(--color-primary) var(--progress, 0%),
-        #535353 var(--progress, 0%)
+        var(--color-primary)
+          calc(
+            var(--thumb-radius, 6px) + var(--progress-ratio, 0) * (100% - var(--thumb-width, 12px))
+          ),
+        #535353
+          calc(
+            var(--thumb-radius, 6px) + var(--progress-ratio, 0) * (100% - var(--thumb-width, 12px))
+          )
       );
       border-radius: var(--radius-full);
       height: 4px;
@@ -790,8 +800,16 @@ onClickOutside(moreMenuBtnRef, (e) => {
       &::-webkit-slider-runnable-track {
         background: linear-gradient(
           to right,
-          var(--color-primary-hover) var(--progress, 0%),
-          #666 var(--progress, 0%)
+          var(--color-primary-hover)
+            calc(
+              var(--thumb-radius, 6px) + var(--progress-ratio, 0) *
+                (100% - var(--thumb-width, 12px))
+            ),
+          #666
+            calc(
+              var(--thumb-radius, 6px) + var(--progress-ratio, 0) *
+                (100% - var(--thumb-width, 12px))
+            )
         );
       }
     }

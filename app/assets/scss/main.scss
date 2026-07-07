@@ -102,6 +102,8 @@ body.has-open-modal {
 input[type='range'] {
   --thumb-offset-y: -4px;
   --thumb-offset-x: 0px;
+  --thumb-width: 12px;
+  --thumb-radius: 6px;
   -webkit-appearance: none;
   appearance: none;
   background: transparent;

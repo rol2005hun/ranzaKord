@@ -12,7 +12,18 @@
     "termsLink": "Felhasználási Feltételeket",
     "privacyLink": "Adatvédelmi Irányelveket",
     "termsRequired": "A folytatáshoz el kell fogadnod a felhasználási feltételeket.",
-    "termsModalTitle": "Felhasználási Feltételek és Adatvédelem"
+    "termsModalTitle": "Felhasználási Feltételek és Adatvédelem",
+    "terms": {
+      "introTitle": "1. Bevezetés",
+      "introText": "Üdvözöl a ranzaKord. Az alkalmazás használatával elfogadod ezeket a Felhasználási Feltételeket. Kérjük, olvasd el figyelmesen.",
+      "usageTitle": "2. A Szolgáltatás Használata",
+      "usageText": "Kijelented, hogy a szolgáltatást kizárólag törvényes célokra használod. Te felelsz minden olyan tevékenységért, amely a fiókod alatt történik.",
+      "privacyTitle": "3. Felhasználói Tartalom és Adatvédelem",
+      "privacyText": "Tiszteletben tartjuk az adatvédelmedet. Minden gyűjtött adat (mint például a lejátszási listáid és hallgatási előzményeid) kizárólag a felhasználói élmény javítását és a közösségi funkciók engedélyezését szolgálja. Az adatvédelmi beállításaidat az alkalmazáson belül kezelheted.",
+      "disclaimerTitle": "4. Felelősségkizárás",
+      "disclaimerText": "Ezt a szolgáltatást \"ahogy van\" nyújtjuk, bármiféle garancia nélkül. A fejlesztők nem vállalnak felelősséget az alkalmazás használatából eredő problémákért.",
+      "placeholder": "(Ezek a felhasználási feltételek csupán demonstrációs célokat szolgálnak.)"
+    }
   },
   "logout": "Kijelentkezés",
   "profile": "Profil",
