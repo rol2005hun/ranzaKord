@@ -326,11 +326,10 @@ const optimizedBgUrl = computed(() => {
       width: 100%;
 
       @container (max-width: 768px) {
-        flex-direction: row;
-        flex-wrap: wrap;
-        text-align: left;
-        gap: var(--space-5) var(--space-3);
-        padding-top: var(--space-2);
+        flex-direction: column;
+        text-align: center;
+        gap: var(--space-4);
+        padding-top: var(--space-4);
       }
     }
   }
@@ -443,9 +442,9 @@ const optimizedBgUrl = computed(() => {
     }
 
     @container (max-width: 768px) {
-      width: 80px;
-      height: 80px;
-      font-size: 2rem;
+      width: 140px;
+      height: 140px;
+      font-size: 2.5rem;
     }
 
     img {
@@ -463,9 +462,9 @@ const optimizedBgUrl = computed(() => {
     min-width: 0;
 
     @container (max-width: 768px) {
-      align-items: flex-start;
-      flex: 0 0 calc(100% - 80px - var(--space-3));
-      max-width: calc(100% - 80px - var(--space-3));
+      align-items: center;
+      flex: none;
+      max-width: 100%;
     }
   }
 
@@ -501,7 +500,7 @@ const optimizedBgUrl = computed(() => {
     flex-wrap: wrap;
 
     @container (max-width: 768px) {
-      justify-content: flex-start;
+      justify-content: center;
     }
   }
 
@@ -524,6 +523,11 @@ const optimizedBgUrl = computed(() => {
     justify-content: center;
     align-items: center;
     min-width: 0;
+
+    @container (max-width: 768px) {
+      flex: none;
+      width: 100%;
+    }
   }
 
   &__actions {
@@ -531,6 +535,12 @@ const optimizedBgUrl = computed(() => {
     align-items: center;
     gap: var(--space-4);
     flex-shrink: 0;
+
+    @container (max-width: 768px) {
+      width: 100%;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
   }
 
   &__play-btn {

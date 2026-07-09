@@ -30,12 +30,18 @@ const player = usePlayer();
 const { playTrack, togglePlay, isPlaying, currentTrack } = player;
 
 const isAlbumPlaying = computed(() => {
+  if (playerStore.playbackContext?.type === 'album' && playerStore.playbackContext?.sourceId === id) {
+    return isPlaying.value;
+  }
   if (!album.value || album.value.tracks.length === 0) return false;
   if (!isPlaying.value) return false;
   return album.value.tracks.some((t: SearchResult) => t.id === currentTrack.value?.videoId);
 });
 
 const isAlbumLoading = computed(() => {
+  if (playerStore.playbackContext?.type === 'album' && playerStore.playbackContext?.sourceId === id) {
+    return playerStore.isLoading;
+  }
   if (!album.value || album.value.tracks.length === 0) return false;
   if (!playerStore.isLoading) return false;
   return album.value.tracks.some((t: SearchResult) => t.id === currentTrack.value?.videoId);
@@ -55,6 +61,12 @@ const mappedTracks = computed<MusicTrack[]>(() => {
 });
 
 function onPlaySong(track: MusicTrack): void {
+  playerStore.playbackContext = {
+    type: 'album',
+    sourceId: id,
+    currentOffset: album.value?.tracks.length || 0,
+    totalItems: album.value?.tracks.length || 0
+  };
   playTrack({
     videoId: track.id,
     title: track.title,
@@ -68,11 +80,7 @@ function onPlaySong(track: MusicTrack): void {
 function onPlayAlbum(): void {
   if (!album.value || album.value.tracks.length === 0) return;
 
-  if (
-    isAlbumPlaying.value ||
-    (currentTrack.value &&
-      album.value.tracks.some((t: SearchResult) => t.id === currentTrack.value?.videoId))
-  ) {
+  if (isAlbumPlaying.value) {
     togglePlay();
     return;
   }
@@ -86,6 +94,13 @@ function onPlayAlbum(): void {
     durationSeconds: t.durationSeconds || 0
   }));
 
+  playerStore.playbackContext = {
+    type: 'album',
+    sourceId: id,
+    currentOffset: queue.length,
+    totalItems: queue.length
+  };
+  
   playerStore.setQueue(queue);
   if (queue[0]) playTrack(queue[0]);
 }

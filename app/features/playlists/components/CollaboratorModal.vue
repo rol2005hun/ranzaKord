@@ -97,86 +97,85 @@ const removeCollaborator = async (sub: string) => {
     title="Kollaborátorok kezelése"
     @update:model-value="(val) => emit('update:modelValue', val)">
     <div class="collaborator-modal">
-      <div class="collaborator-modal__add relative">
+      <div class="collaborator-modal__add">
         <AppInput
           v-model="searchQuery"
           placeholder="Keresés név alapján..."
           :disabled="isSaving"
-          class="w-full" />
+          class="collaborator-modal__input" />
 
         <div
           v-if="searchQuery.length >= 2"
-          class="collaborator-modal__search-results absolute top-full left-0 w-full mt-2 bg-[var(--color-bg-elevated)] border border-[var(--color-border)] rounded-lg shadow-xl z-10 max-h-60 overflow-y-auto">
+          class="collaborator-modal__search-results">
           <div
             v-if="isSearching"
-            class="p-4 text-center text-sm text-[var(--color-text-secondary)]">
+            class="collaborator-modal__search-status">
             Keresés...
           </div>
           <div
             v-else-if="searchResults.length === 0"
-            class="p-4 text-center text-sm text-[var(--color-text-secondary)]">
+            class="collaborator-modal__search-status">
             Nem található felhasználó. (Csak publikus profilok!)
           </div>
           <div
             v-for="user in searchResults"
             v-else
             :key="user.sub"
-            class="flex items-center justify-between p-3 hover:bg-[var(--color-bg-hover)] transition-colors cursor-pointer border-b border-[var(--color-border)] last:border-b-0"
+            class="collaborator-modal__search-item"
             @click="addCollaborator(user.sub)">
-            <div class="flex items-center gap-3">
+            <div class="collaborator-modal__user-info">
               <img
                 v-if="user.picture"
                 :src="user.picture"
-                class="w-8 h-8 rounded-full object-cover" />
+                class="collaborator-modal__avatar" />
               <div
                 v-else
-                class="w-8 h-8 rounded-full bg-[var(--color-bg-soft)] flex items-center justify-center">
-                <AppIcon name="ph:user-fill" class="text-xs" />
+                class="collaborator-modal__avatar">
+                <AppIcon name="ph:user-fill" class="collaborator-modal__avatar-icon" />
               </div>
-              <span class="font-medium text-[var(--color-text-primary)]">{{ user.name }}</span>
+              <span class="collaborator-modal__name">{{ user.name }}</span>
             </div>
             <AppButton
               variant="ghost"
               size="sm"
-              class="text-[var(--color-primary)] font-bold shrink-0">
+              class="collaborator-modal__add-btn">
               Hozzáadás
             </AppButton>
           </div>
         </div>
       </div>
 
-      <div class="collaborator-modal__list mt-6">
-        <h4
-          class="text-sm uppercase font-bold text-[var(--color-text-secondary)] tracking-wider mb-4">
+      <div class="collaborator-modal__list">
+        <h4 class="collaborator-modal__title">
           Jelenlegi kollaborátorok
         </h4>
         <div
           v-if="collaborators.length === 0"
-          class="text-sm text-[var(--color-text-secondary)] p-4 text-center bg-[var(--color-bg-soft)] rounded-lg">
+          class="collaborator-modal__empty">
           Nincsenek kollaborátorok. Keresd meg a barátaidat fentebb!
         </div>
         <div
           v-for="user in collaborators"
           :key="user.sub"
-          class="flex items-center justify-between p-3 bg-[var(--color-bg-soft)] rounded-lg mb-2">
+          class="collaborator-modal__collaborator">
           <NuxtLink
             :to="`/user/${user.sub}`"
-            class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+            class="collaborator-modal__link">
             <img
               v-if="user.picture"
               :src="user.picture"
-              class="w-10 h-10 rounded-full object-cover" />
+              class="collaborator-modal__collab-avatar" />
             <div
               v-else
-              class="w-10 h-10 rounded-full bg-[var(--color-bg-elevated)] flex items-center justify-center">
+              class="collaborator-modal__collab-avatar">
               <AppIcon name="ph:user-fill" />
             </div>
-            <span class="font-medium text-[var(--color-text-primary)]">{{ user.name }}</span>
+            <span class="collaborator-modal__name">{{ user.name }}</span>
           </NuxtLink>
           <AppButton
             variant="ghost"
             size="sm"
-            class="text-danger hover:bg-danger/10"
+            class="collaborator-modal__remove-btn"
             @click="removeCollaborator(user.sub)">
             <AppIcon name="ph:trash" />
           </AppButton>
@@ -191,5 +190,148 @@ const removeCollaborator = async (sub: string) => {
   display: flex;
   flex-direction: column;
   min-height: 350px;
+
+  &__add {
+    position: relative;
+    margin-bottom: 2rem;
+  }
+
+  &__input {
+    width: 100%;
+  }
+
+  &__search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    margin-top: 0.5rem;
+    background-color: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md, 0.5rem);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+
+  &__search-status {
+    padding: 1rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+  }
+
+  &__search-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    transition: background-color 0.2s;
+    cursor: pointer;
+    border-bottom: 1px solid var(--color-border);
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background-color: var(--color-bg-hover);
+    }
+  }
+
+  &__user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__avatar {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: var(--color-bg-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &-icon {
+      font-size: 0.75rem;
+    }
+  }
+
+  &__name {
+    font-weight: 500;
+    color: var(--color-text-primary);
+  }
+
+  &__add-btn {
+    color: var(--color-primary) !important;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  &__list {
+    margin-top: auto;
+  }
+
+  &__title {
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+    letter-spacing: 0.05em;
+    margin-bottom: 1rem;
+  }
+
+  &__empty {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    padding: 1rem;
+    text-align: center;
+    background-color: var(--color-bg-soft);
+    border-radius: var(--radius-md, 0.5rem);
+  }
+
+  &__collaborator {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    background-color: var(--color-bg-soft);
+    border-radius: var(--radius-md, 0.5rem);
+    margin-bottom: 0.5rem;
+  }
+
+  &__link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: opacity 0.2s;
+
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+
+  &__collab-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: var(--color-bg-elevated);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__remove-btn {
+    color: #ef4444 !important;
+    
+    &:hover {
+      background-color: rgba(239, 68, 68, 0.1) !important;
+    }
+  }
 }
 </style>

@@ -13,7 +13,7 @@ export default defineCachedEventHandler(
     const { t } = useServerTranslation(event);
 
     if (!q) {
-      throw createError({ statusCode: 400, statusMessage: t('search.errors.missingQuery') });
+      throw createError({ statusCode: 400, message: t('search.errors.missingQuery') });
     }
 
     const innertube = await createInnertube(false);

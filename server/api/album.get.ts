@@ -8,7 +8,7 @@ export default defineCachedEventHandler(
     const { t } = useServerTranslation(event);
 
     if (!id) {
-      throw createError({ statusCode: 400, statusMessage: t('search.errors.missingAlbumId') });
+      throw createError({ statusCode: 400, message: t('search.errors.missingAlbumId') });
     }
 
     const innertube = await createInnertube(false);
@@ -116,7 +116,7 @@ export default defineCachedEventHandler(
         tracks
       };
     } catch {
-      throw createError({ statusCode: 500, statusMessage: t('search.errors.fetchAlbumFailed') });
+      throw createError({ statusCode: 500, message: t('search.errors.fetchAlbumFailed') });
     }
   },
   {

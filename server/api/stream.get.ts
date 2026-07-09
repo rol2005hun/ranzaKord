@@ -15,10 +15,10 @@ export default defineEventHandler(async (event) => {
   const { t } = useServerTranslation(event);
 
   if (!videoId || videoId.trim().length === 0) {
-    throw createError({ statusCode: 400, statusMessage: t('player.errors.missingVideoId') });
+    throw createError({ statusCode: 400, message: t('player.errors.missingVideoId') });
   }
 
-  const innertube = await createInnertube(true);
+  const innertube = await createInnertube(false);
   const debugInfo: Record<string, string> = {};
 
   let resolvedStreamUrl: string | undefined;
@@ -98,7 +98,7 @@ export default defineEventHandler(async (event) => {
   if (!resolvedStreamUrl) {
     throw createError({
       statusCode: 500,
-      statusMessage: t('player.errors.extractFailed', { msg: 'All clients failed' }),
+      message: t('player.errors.extractFailed', { msg: 'All clients failed' }),
       data: { debugInfo }
     });
   }

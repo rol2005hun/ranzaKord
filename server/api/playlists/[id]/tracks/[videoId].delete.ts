@@ -28,24 +28,24 @@ export default defineEventHandler(async (event): Promise<{ success: boolean }> =
   const { t } = useServerTranslation(event);
 
   if (!sessionData.accessToken || !sessionData.user) {
-    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
+    throw createError({ statusCode: 401, message: t('core.errors.unauthorized') });
   }
 
   const id = resolveParam(event, 'id');
   const videoId = resolveParam(event, 'videoId');
   if (!id || !videoId) {
-    throw createError({ statusCode: 400, statusMessage: t('playlists.errors.missingParams') });
+    throw createError({ statusCode: 400, message: t('playlists.errors.missingParams') });
   }
 
   const playlist = await PlaylistModel.findOne({ _id: id });
   if (!playlist)
-    throw createError({ statusCode: 404, statusMessage: t('playlists.errors.notFound') });
+    throw createError({ statusCode: 404, message: t('playlists.errors.notFound') });
 
   const isOwner = playlist.userId === sessionData.user.sub;
   const isCollaborator = playlist.collaborators?.includes(sessionData.user.sub);
 
   if (!isOwner && !isCollaborator) {
-    throw createError({ statusCode: 403, statusMessage: t('core.errors.unauthorized') });
+    throw createError({ statusCode: 403, message: t('core.errors.unauthorized') });
   }
 
   // Find the track
@@ -61,7 +61,7 @@ export default defineEventHandler(async (event): Promise<{ success: boolean }> =
 
   // Collaborators can only delete their own tracks
   if (!isOwner && track.addedBy !== sessionData.user.sub) {
-    throw createError({ statusCode: 403, statusMessage: t('core.errors.unauthorized') });
+    throw createError({ statusCode: 403, message: t('core.errors.unauthorized') });
   }
 
   playlist.items.splice(trackIndex, 1);

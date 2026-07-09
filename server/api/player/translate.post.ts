@@ -7,13 +7,13 @@ export default defineEventHandler(async (event) => {
   const { t } = useServerTranslation(event);
 
   if (!sessionData.user) {
-    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
+    throw createError({ statusCode: 401, message: t('core.errors.unauthorized') });
   }
 
   const body = await readBody<{ text: string; targetLang?: string }>(event);
 
   if (!body || typeof body.text !== 'string' || body.text.trim() === '') {
-    throw createError({ statusCode: 400, statusMessage: t('core.errors.invalidInput') });
+    throw createError({ statusCode: 400, message: t('core.errors.invalidInput') });
   }
 
   const targetLang = body.targetLang || 'hu';
@@ -35,6 +35,6 @@ export default defineEventHandler(async (event) => {
     throw new Error('Invalid translation response format');
   } catch (error) {
     console.error('Translation error:', error);
-    throw createError({ statusCode: 500, statusMessage: 'Translation failed' });
+    throw createError({ statusCode: 500, message: 'Translation failed' });
   }
 });

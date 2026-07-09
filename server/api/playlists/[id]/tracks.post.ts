@@ -26,26 +26,26 @@ export default defineEventHandler(async (event): Promise<{ success: boolean }> =
   const { t } = useServerTranslation(event);
 
   if (!sessionData.accessToken || !sessionData.user) {
-    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
+    throw createError({ statusCode: 401, message: t('core.errors.unauthorized') });
   }
 
   const id = getRouterParam(event, 'id');
-  if (!id) throw createError({ statusCode: 400, statusMessage: t('playlists.errors.missingId') });
+  if (!id) throw createError({ statusCode: 400, message: t('playlists.errors.missingId') });
 
   const body = await readBody<Partial<AddTrackBody>>(event);
   if (!body?.videoId || !body.title) {
-    throw createError({ statusCode: 400, statusMessage: t('playlists.errors.missingTrackInfo') });
+    throw createError({ statusCode: 400, message: t('playlists.errors.missingTrackInfo') });
   }
 
   const playlist = await PlaylistModel.findOne({ _id: id });
   if (!playlist)
-    throw createError({ statusCode: 404, statusMessage: t('playlists.errors.notFound') });
+    throw createError({ statusCode: 404, message: t('playlists.errors.notFound') });
 
   const isOwner = playlist.userId === sessionData.user.sub;
   const isCollaborator = playlist.collaborators?.includes(sessionData.user.sub);
 
   if (!isOwner && !isCollaborator) {
-    throw createError({ statusCode: 403, statusMessage: t('core.errors.unauthorized') });
+    throw createError({ statusCode: 403, message: t('core.errors.unauthorized') });
   }
 
   const alreadyExists = playlist.items.some((item) => item.videoId === body.videoId);

@@ -18,13 +18,13 @@ export default defineEventHandler(async (event): Promise<PlaylistResponse> => {
   const { t } = useServerTranslation(event);
 
   if (!sessionData.accessToken || !sessionData.user) {
-    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
+    throw createError({ statusCode: 401, message: t('core.errors.unauthorized') });
   }
 
   const body = await readBody<Partial<CreatePlaylistBody>>(event);
 
   if (!body?.name) {
-    throw createError({ statusCode: 400, statusMessage: t('playlists.errors.missingName') });
+    throw createError({ statusCode: 400, message: t('playlists.errors.missingName') });
   }
 
   const playlist = await PlaylistModel.create({

@@ -72,20 +72,20 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
   const { t } = useServerTranslation(event);
 
   if (!sessionData.accessToken || !sessionData.user) {
-    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
+    throw createError({ statusCode: 401, message: t('core.errors.unauthorized') });
   }
 
   const id = resolvePlaylistId(event);
-  if (!id) throw createError({ statusCode: 400, statusMessage: t('playlists.errors.missingId') });
+  if (!id) throw createError({ statusCode: 400, message: t('playlists.errors.missingId') });
 
   if (!mongoose.isValidObjectId(id)) {
-    throw createError({ statusCode: 404, statusMessage: t('playlists.errors.notFound') });
+    throw createError({ statusCode: 404, message: t('playlists.errors.notFound') });
   }
 
   const playlist = await PlaylistModel.findOne({ _id: id }).lean();
 
   if (!playlist) {
-    throw createError({ statusCode: 404, statusMessage: t('playlists.errors.notFound') });
+    throw createError({ statusCode: 404, message: t('playlists.errors.notFound') });
   }
 
   const isOwner = playlist.userId === sessionData.user.sub;
@@ -93,7 +93,7 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
   const isPublic = playlist.isPublic !== false;
 
   if (!isOwner && !isCollaborator && !isPublic) {
-    throw createError({ statusCode: 403, statusMessage: t('core.errors.unauthorized') });
+    throw createError({ statusCode: 403, message: t('core.errors.unauthorized') });
   }
 
   const query = getQuery(event);

@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
   if (!url) {
     throw createError({
       statusCode: 400,
-      statusMessage: t('playlists.errors.missingUrl')
+      message: t('playlists.errors.missingUrl')
     });
   }
 
@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
     if (!playlistId) {
       throw createError({
         statusCode: 400,
-        statusMessage: t('playlists.errors.missingUrl')
+        message: t('playlists.errors.missingUrl')
       });
     }
 
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
     if (!playlist || !playlist.items) {
       throw createError({
         statusCode: 404,
-        statusMessage: t('playlists.errors.notFound')
+        message: t('playlists.errors.notFound')
       });
     }
 
@@ -189,7 +189,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to import YouTube playlist:', err);
     throw createError({
       statusCode: err.statusCode || 500,
-      statusMessage: err.statusMessage || err.message || t('playlists.errors.import')
+      message: err.statusMessage || err.message || t('playlists.errors.import')
     });
   }
 });

@@ -18,11 +18,11 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
   const { t } = useServerTranslation(event);
 
   if (!sessionData.accessToken || !sessionData.user) {
-    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
+    throw createError({ statusCode: 401, message: t('core.errors.unauthorized') });
   }
 
   const id = getRouterParam(event, 'id');
-  if (!id) throw createError({ statusCode: 400, statusMessage: t('playlists.errors.missingId') });
+  if (!id) throw createError({ statusCode: 400, message: t('playlists.errors.missingId') });
 
   const body = await readBody<UpdatePlaylistBody>(event);
   const updates: Record<string, string> = {};
@@ -37,7 +37,7 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
   ).lean();
 
   if (!playlist) {
-    throw createError({ statusCode: 404, statusMessage: t('playlists.errors.notFound') });
+    throw createError({ statusCode: 404, message: t('playlists.errors.notFound') });
   }
 
   return {

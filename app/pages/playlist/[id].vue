@@ -158,6 +158,11 @@ useHead({
 const isReorderable = computed(() => !debouncedSearch.value && !sortBy.value);
 
 const isCurrentPlaylistPlaying = computed(() => {
+  const pStore = usePlayerStore();
+  if (pStore.playbackContext?.type === 'playlist' && pStore.playbackContext?.sourceId === id.value) {
+    return player.isPlaying.value;
+  }
+
   if (!playlist.value || virtualTracks.value.length === 0) return false;
   if (!player.isPlaying.value) return false;
   return virtualTracks.value.some(
@@ -171,6 +176,11 @@ const isOwner = computed(() => {
 });
 
 const isCurrentPlaylistLoading = computed(() => {
+  const pStore = usePlayerStore();
+  if (pStore.playbackContext?.type === 'playlist' && pStore.playbackContext?.sourceId === id.value) {
+    return player.isLoading.value;
+  }
+
   if (!playlist.value || virtualTracks.value.length === 0) return false;
   if (!player.isLoading.value) return false;
   return virtualTracks.value.some(

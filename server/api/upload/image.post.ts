@@ -10,18 +10,18 @@ export default defineEventHandler(async (event): Promise<{ url: string }> => {
   const { t } = useServerTranslation(event);
 
   if (!sessionData.accessToken || !sessionData.user) {
-    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
+    throw createError({ statusCode: 401, message: t('core.errors.unauthorized') });
   }
 
   if (!config.imgurClientId) {
-    throw createError({ statusCode: 500, statusMessage: t('upload.errors.missingClientId') });
+    throw createError({ statusCode: 500, message: t('upload.errors.missingClientId') });
   }
 
   const body = await readBody<{ image?: string }>(event);
   const image = body?.image;
 
   if (!image)
-    throw createError({ statusCode: 400, statusMessage: t('upload.errors.missingImage') });
+    throw createError({ statusCode: 400, message: t('upload.errors.missingImage') });
 
   try {
     const base64Data = image.replace(/^data:image\/[a-z]+;base64,/, '');
@@ -41,13 +41,13 @@ export default defineEventHandler(async (event): Promise<{ url: string }> => {
     );
 
     if (!response.success) {
-      throw createError({ statusCode: 500, statusMessage: t('upload.errors.uploadFailed') });
+      throw createError({ statusCode: 500, message: t('upload.errors.uploadFailed') });
     }
 
     return { url: response.data.link };
   } catch (error: unknown) {
     const err = error as { data?: unknown; message?: string };
     console.error('Imgur upload error:', err.data || err.message);
-    throw createError({ statusCode: 500, statusMessage: t('upload.errors.uploadFailed') });
+    throw createError({ statusCode: 500, message: t('upload.errors.uploadFailed') });
   }
 });

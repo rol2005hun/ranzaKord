@@ -11,30 +11,30 @@ export default defineEventHandler(async (event) => {
   const { t } = useServerTranslation(event);
 
   if (!sessionData.accessToken || !sessionData.user) {
-    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
+    throw createError({ statusCode: 401, message: t('core.errors.unauthorized') });
   }
 
   const targetSub = getRouterParam(event, 'sub');
-  if (!targetSub) throw createError({ statusCode: 400, statusMessage: 'Missing target sub' });
+  if (!targetSub) throw createError({ statusCode: 400, message: 'Missing target sub' });
 
   if (targetSub === sessionData.user.sub) {
-    throw createError({ statusCode: 400, statusMessage: 'Cannot follow yourself' });
+    throw createError({ statusCode: 400, message: 'Cannot follow yourself' });
   }
 
   const body = await readBody<{ action: 'follow' | 'unfollow' }>(event);
   if (!body || !['follow', 'unfollow'].includes(body.action)) {
-    throw createError({ statusCode: 400, statusMessage: 'Invalid action' });
+    throw createError({ statusCode: 400, message: 'Invalid action' });
   }
 
   const currentUser = await UserModel.findOne({ sub: sessionData.user.sub });
   const targetUser = await UserModel.findOne({ sub: targetSub });
 
   if (!currentUser || !targetUser) {
-    throw createError({ statusCode: 404, statusMessage: 'User not found' });
+    throw createError({ statusCode: 404, message: 'User not found' });
   }
 
   if (!targetUser.isPublicProfile) {
-    throw createError({ statusCode: 403, statusMessage: 'Profile is private' });
+    throw createError({ statusCode: 403, message: 'Profile is private' });
   }
 
   if (body.action === 'follow') {

@@ -13,19 +13,19 @@ export default defineEventHandler(async () => {
       'https://api.github.com/repos/rol2005hun/ranzaKord/releases'
     );
     if (!releases || !releases.length) {
-      throw createError({ statusCode: 404, statusMessage: 'No releases found' });
+      throw createError({ statusCode: 404, message: 'No releases found' });
     }
 
     const latestRelease = releases[0];
     if (!latestRelease) {
-      throw createError({ statusCode: 404, statusMessage: 'No latest release found' });
+      throw createError({ statusCode: 404, message: 'No latest release found' });
     }
 
     const latestJsonAsset = latestRelease.assets.find((a: GithubAsset) => a.name === 'latest.json');
     if (!latestJsonAsset) {
       throw createError({
         statusCode: 404,
-        statusMessage: 'latest.json not found in the latest release assets'
+        message: 'latest.json not found in the latest release assets'
       });
     }
 
@@ -35,7 +35,7 @@ export default defineEventHandler(async () => {
     console.error('Updater proxy error:', e);
     throw createError({
       statusCode: 500,
-      statusMessage: 'Failed to fetch latest.json from GitHub'
+      message: 'Failed to fetch latest.json from GitHub'
     });
   }
 });

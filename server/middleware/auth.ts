@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
   if (
     path.startsWith('/api/') &&
     !path.startsWith('/api/health') &&
-    !path.startsWith('/api/image') &&
+    !path.startsWith('/api/proxy-image') &&
     !path.startsWith('/api/stream') &&
     !path.startsWith('/api/updater')
   ) {
@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
     const { t } = useServerTranslation(event);
 
     if (!sessionData.accessToken || !sessionData.user) {
-      throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
+      throw createError({ statusCode: 401, message: t('core.errors.unauthorized') });
     }
   }
 });

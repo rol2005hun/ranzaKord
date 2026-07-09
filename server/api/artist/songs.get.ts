@@ -10,7 +10,7 @@ export default defineCachedEventHandler(
     const { t } = useServerTranslation(event);
 
     if (!q && !continuation) {
-      throw createError({ statusCode: 400, statusMessage: t('search.errors.missingQuery') });
+      throw createError({ statusCode: 400, message: t('search.errors.missingQuery') });
     }
 
     const innertube = await createInnertube(false);
@@ -203,7 +203,7 @@ export default defineCachedEventHandler(
       console.error('artist/songs.get.ts error:', error);
       throw createError({
         statusCode: 500,
-        statusMessage: 'Failed to fetch artist songs.'
+        message: 'Failed to fetch artist songs.'
       });
     }
   },

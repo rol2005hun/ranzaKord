@@ -3,7 +3,7 @@ export default defineEventHandler(async (event) => {
   const url = query.url as string;
 
   if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) {
-    throw createError({ statusCode: 400, statusMessage: 'Invalid URL' });
+    throw createError({ statusCode: 400, message: 'Invalid URL' });
   }
 
   try {
@@ -24,6 +24,6 @@ export default defineEventHandler(async (event) => {
     return Buffer.from(buffer);
   } catch (error) {
     console.error('Failed to proxy image:', error);
-    throw createError({ statusCode: 500, statusMessage: 'Failed to proxy image' });
+    throw createError({ statusCode: 500, message: 'Failed to proxy image' });
   }
 });

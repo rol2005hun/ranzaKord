@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
   const { t } = useServerTranslation(event);
 
   if (!sessionData.accessToken || !sessionData.user) {
-    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
+    throw createError({ statusCode: 401, message: t('core.errors.unauthorized') });
   }
 
   const query = getQuery(event);
@@ -23,6 +23,7 @@ export default defineEventHandler(async (event) => {
 
   const users = await UserModel.find({
     isPublicProfile: true,
+    sub: { $ne: sessionData.user.sub },
     name: { $regex: search, $options: 'i' }
   })
     .select('sub name picture')

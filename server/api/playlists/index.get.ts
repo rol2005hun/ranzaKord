@@ -27,7 +27,7 @@ export default defineEventHandler(async (event): Promise<PlaylistsIndexResponse>
   const { t } = useServerTranslation(event);
 
   if (!sessionData.accessToken || !sessionData.user) {
-    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
+    throw createError({ statusCode: 401, message: t('core.errors.unauthorized') });
   }
 
   const userSub = sessionData.user.sub;
