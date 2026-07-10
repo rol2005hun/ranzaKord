@@ -22,8 +22,10 @@ export function useArtist(id: string) {
   const playerStore = usePlayerStore();
 
   const allSongs = ref<SearchResult[]>([]);
+
   const continuation = ref<string | null>(null);
   const isLoadingSongs = ref(false);
+  const retryCount = ref(0);
 
   const isArtistPlaying = computed(() => {
     if (allSongs.value.length === 0) return false;
@@ -39,27 +41,50 @@ export function useArtist(id: string) {
 
   const mappedTopSongs = computed<TrackListItem[]>(() => {
     if (!artist.value?.topSongs) return [];
-    return artist.value.topSongs.slice(0, 10).map((song) => ({
-      id: song.id,
-      title: song.title,
-      artist: song.artist,
-      artistId: song.artistId,
-      thumbnailUrl: song.thumbnailUrl,
-      durationSeconds: song.durationSeconds || 0,
-      isPlaying: isPlaying.value && currentTrack.value?.videoId === song.id
-    }));
+    return artist.value.topSongs.slice(0, 10).map((song) => {
+      let duration = song.durationSeconds;
+      if (!duration) {
+        const found = allSongs.value.find((s) => s.id === song.id);
+        if (found?.durationSeconds) {
+          duration = found.durationSeconds;
+        }
+      }
+      let playsStr = song.plays;
+      if (playsStr) {
+        playsStr = playsStr.split(' ')[0];
+      }
+
+      return {
+        id: song.id,
+        title: song.title,
+        artist: song.artist,
+        artistId: song.artistId,
+        thumbnailUrl: song.thumbnailUrl,
+        durationSeconds: duration || 0,
+        plays: playsStr,
+        isPlaying: isPlaying.value && currentTrack.value?.videoId === song.id
+      };
+    });
   });
 
   const mappedAllSongs = computed<TrackListItem[]>(() =>
-    allSongs.value.map((song) => ({
-      id: song.id,
-      title: song.title,
-      artist: song.artist,
-      artistId: song.artistId,
-      thumbnailUrl: song.thumbnailUrl,
-      durationSeconds: song.durationSeconds || 0,
-      isPlaying: isPlaying.value && currentTrack.value?.videoId === song.id
-    }))
+    allSongs.value.map((song) => {
+      let playsStr = song.plays;
+      if (playsStr) {
+        playsStr = playsStr.split(' ')[0];
+      }
+
+      return {
+        id: song.id,
+        title: song.title,
+        artist: song.artist,
+        artistId: song.artistId,
+        thumbnailUrl: song.thumbnailUrl,
+        durationSeconds: song.durationSeconds || 0,
+        plays: playsStr,
+        isPlaying: isPlaying.value && currentTrack.value?.videoId === song.id
+      };
+    })
   );
 
   async function loadSongs() {
@@ -73,20 +98,29 @@ export function useArtist(id: string) {
         }
       });
       if (data.items) {
-        const newItems = data.items.filter(
-          (item) =>
-            !allSongs.value.some((existing) => existing.id === item.id) &&
-            (item.artistId === id || item.artists?.some((a) => a.id === id))
-        );
+        const newItems = data.items.filter((item) => {
+          if (allSongs.value.some((existing) => existing.id === item.id)) return false;
+          if (item.artistId === id || item.artists?.some((a) => a.id === id)) return true;
+          if (
+            item.artist &&
+            artist.value?.name &&
+            item.artist.toLowerCase().includes(artist.value.name.toLowerCase())
+          ) {
+            return true;
+          }
+          return false;
+        });
         allSongs.value.push(...newItems);
 
-        if (newItems.length === 0 && data.continuation) {
+        if (newItems.length === 0 && data.continuation && retryCount.value < 3) {
           continuation.value = data.continuation;
+          retryCount.value++;
           setTimeout(() => {
             loadSongs();
           }, 50);
           return;
         }
+        retryCount.value = 0;
       }
       continuation.value = data.continuation || null;
     } catch {

@@ -890,7 +890,7 @@ const sidebarStyle = computed(() => ({
   &__lyric-line {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--color-text-secondary);
+    color: var(--color-text-primary);
     opacity: 0.5;
     transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     transform-origin: left center;

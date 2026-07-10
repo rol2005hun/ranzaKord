@@ -20,9 +20,10 @@ export interface TrackListItem {
   addedAt?: string;
   addedBy?: { sub: string; name: string; picture: string } | string;
   isPlaying?: boolean;
+  plays?: string;
 }
 
-export type TrackListColumn = 'index' | 'title' | 'date' | 'time' | 'action' | 'download';
+export type TrackListColumn = 'index' | 'title' | 'date' | 'time' | 'plays' | 'action' | 'download';
 
 export interface VirtualTrackItem {
   index: number;
@@ -127,17 +128,21 @@ function handleDrop(event: DragEvent, toIndex: number) {
 const hasDateColumn = computed(() => props.columns.includes('date'));
 const hasActionColumn = computed(() => props.columns.includes('action'));
 const hasDownloadColumn = computed(() => props.columns.includes('download'));
+const hasTimeColumn = computed(() => props.columns.includes('time'));
+const hasPlaysColumn = computed(() => props.columns.includes('plays'));
 
 const gridColumns = computed(() => {
   const cols = ['var(--track-list-idx, 48px)', '1fr'];
   if (hasDateColumn.value) cols.push('var(--track-list-date, 160px)');
-  cols.push('var(--track-list-time, 60px)');
+  if (hasPlaysColumn.value) cols.push('var(--track-list-plays, 120px)');
+  if (hasTimeColumn.value) cols.push('var(--track-list-time, 60px)');
   if (hasDownloadColumn.value) cols.push('var(--track-list-action, 40px)');
   if (hasActionColumn.value) cols.push('var(--track-list-action, 48px)');
   return cols.join(' ');
 });
 
 function formatDuration(seconds: number): string {
+  if (!seconds || seconds <= 0) return '-';
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60)
     .toString()
@@ -184,7 +189,11 @@ onMounted(() => {
           :name="sortOrder === 'asc' ? 'ph:arrow-up' : 'ph:arrow-down'"
           class="app-track-list__sort-icon" />
       </div>
+      <div v-if="hasPlaysColumn" class="app-track-list__col-plays">
+        <AppIcon name="ph:eye" />
+      </div>
       <div
+        v-if="hasTimeColumn"
         class="app-track-list__col-time app-track-list__col-sortable"
         @click="handleSort('duration')">
         <AppIcon name="ph:clock" />
@@ -208,7 +217,8 @@ onMounted(() => {
             :key="index"
             class="app-track-list__track"
             :class="{
-              'app-track-list__track--playing': isHydrated && track?.isPlaying,
+              'app-track-list__track--playing':
+                isHydrated && track && player.currentTrack.value?.videoId === track.id,
               'app-track-list__track--skeleton': !track,
               'app-track-list__track--dragged': dragIndex === index,
               'app-track-list__track--drag-over': dragOverIndex === index
@@ -240,7 +250,14 @@ onMounted(() => {
                 v-if="hasDateColumn"
                 class="skeleton-box"
                 style="height: 14px; width: 80px"></div>
-              <div class="skeleton-box" style="height: 14px; width: 40px"></div>
+              <div
+                v-if="hasPlaysColumn"
+                class="skeleton-box"
+                style="height: 14px; width: 60px"></div>
+              <div
+                v-if="hasTimeColumn"
+                class="skeleton-box"
+                style="height: 14px; width: 40px"></div>
               <div v-if="hasDownloadColumn"></div>
               <div v-if="hasActionColumn"></div>
             </template>
@@ -252,10 +269,11 @@ onMounted(() => {
                     <span
                       class="app-track-list__track-num"
                       :class="{
-                        'app-track-list__track-num--playing': isHydrated && track.isPlaying
+                        'app-track-list__track-num--playing':
+                          isHydrated && player.currentTrack.value?.videoId === track.id
                       }">
                       <AppPlayingIndicator
-                        v-if="isHydrated && track.isPlaying"
+                        v-if="isHydrated && player.currentTrack.value?.videoId === track.id"
                         data-allow-mismatch
                         class="text-primary" />
                       <template v-else>{{ index + 1 }}</template>
@@ -271,7 +289,13 @@ onMounted(() => {
                       <AppIcon
                         v-else
                         data-allow-mismatch
-                        :name="isHydrated && track.isPlaying ? 'ph:pause-fill' : 'ph:play-fill'" />
+                        :name="
+                          isHydrated &&
+                          player.currentTrack.value?.videoId === track.id &&
+                          player.isPlaying.value
+                            ? 'ph:pause-fill'
+                            : 'ph:play-fill'
+                        " />
                     </div>
                   </div>
                   <template #fallback>
@@ -295,7 +319,9 @@ onMounted(() => {
                 <div class="app-track-list__track-text">
                   <span
                     class="app-track-list__track-title"
-                    :class="{ 'text-primary': isHydrated && track.isPlaying }">
+                    :class="{
+                      'text-primary': isHydrated && player.currentTrack.value?.videoId === track.id
+                    }">
                     {{ track.title }}
                   </span>
                   <div class="app-track-list__track-artist">
@@ -328,7 +354,11 @@ onMounted(() => {
                 </span>
               </div>
 
-              <span class="app-track-list__track-duration">
+              <span v-if="hasPlaysColumn" class="app-track-list__track-plays">
+                {{ track.plays || '-' }}
+              </span>
+
+              <span v-if="hasTimeColumn" class="app-track-list__track-duration">
                 {{ formatDuration(track.durationSeconds) }}
               </span>
 
@@ -368,7 +398,8 @@ onMounted(() => {
         :key="track.id"
         class="app-track-list__track"
         :class="{
-          'app-track-list__track--playing': isHydrated && track.isPlaying,
+          'app-track-list__track--playing':
+            isHydrated && player.currentTrack.value?.videoId === track.id,
           'app-track-list__track--dragged': dragIndex === index,
           'app-track-list__track--drag-over': dragOverIndex === index
         }"
@@ -385,10 +416,12 @@ onMounted(() => {
             <div style="display: contents">
               <span
                 class="app-track-list__track-num"
-                :class="{ 'app-track-list__track-num--playing': isHydrated && track.isPlaying }">
-                <AppIcon
-                  v-if="isHydrated && track.isPlaying"
-                  name="ph:speaker-high-fill"
+                :class="{
+                  'app-track-list__track-num--playing':
+                    isHydrated && player.currentTrack.value?.videoId === track.id
+                }">
+                <AppPlayingIndicator
+                  v-if="isHydrated && player.currentTrack.value?.videoId === track.id"
                   data-allow-mismatch
                   class="text-primary" />
                 <template v-else>{{ index + 1 }}</template>
@@ -404,7 +437,13 @@ onMounted(() => {
                 <AppIcon
                   v-else
                   data-allow-mismatch
-                  :name="isHydrated && track.isPlaying ? 'ph:pause-fill' : 'ph:play-fill'" />
+                  :name="
+                    isHydrated &&
+                    player.currentTrack.value?.videoId === track.id &&
+                    player.isPlaying.value
+                      ? 'ph:pause-fill'
+                      : 'ph:play-fill'
+                  " />
               </div>
             </div>
             <template #fallback>
@@ -426,7 +465,9 @@ onMounted(() => {
           <div class="app-track-list__track-text">
             <span
               class="app-track-list__track-title"
-              :class="{ 'text-primary': isHydrated && track.isPlaying }">
+              :class="{
+                'text-primary': isHydrated && player.currentTrack.value?.videoId === track.id
+              }">
               {{ track.title }}
             </span>
             <div class="app-track-list__track-artist">
@@ -459,7 +500,11 @@ onMounted(() => {
           </span>
         </div>
 
-        <span class="app-track-list__track-duration">
+        <span v-if="hasPlaysColumn" class="app-track-list__track-plays">
+          {{ track.plays || '-' }}
+        </span>
+
+        <span v-if="hasTimeColumn" class="app-track-list__track-duration">
           {{ formatDuration(track.durationSeconds) }}
         </span>
 
@@ -565,6 +610,12 @@ onMounted(() => {
     display: flex;
     align-items: center;
     gap: var(--space-1);
+  }
+
+  &__col-plays {
+    display: flex;
+    align-items: center;
+    padding-top: 1px;
   }
 
   &__virtual-container {
@@ -733,6 +784,13 @@ onMounted(() => {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  &__track-plays {
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    font-size: var(--text-sm);
   }
 
   &__track-duration {

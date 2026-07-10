@@ -155,10 +155,10 @@ const optimizedBgUrl = computed(() => {
             <div class="music-page__info">
               <div v-if="badge" class="music-page__badge">{{ badge }}</div>
               <h1 class="music-page__title">{{ props.title }}</h1>
-              <div class="music-page__meta">
+              <div v-if="$slots.meta" class="music-page__meta">
                 <slot name="meta" />
               </div>
-              <div class="music-page__description">
+              <div v-if="$slots.description" class="music-page__description">
                 <slot name="description" />
               </div>
             </div>

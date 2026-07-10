@@ -15,6 +15,7 @@ export interface SearchResult {
   albumId?: string;
   thumbnailUrl: string;
   durationSeconds?: number;
+  plays?: string;
 }
 
 export interface CategorizedSearchResults {

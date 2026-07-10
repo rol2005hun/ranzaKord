@@ -405,8 +405,8 @@ const showStickyMobileMenu = ref(false);
             id="playlist-search-input"
             v-model="searchQuery"
             type="text"
-            :placeholder="$t('search.placeholder')"
-            :aria-label="$t('search.placeholder')"
+            :placeholder="$t('search.localPlaceholder')"
+            :aria-label="$t('search.localPlaceholder')"
             class="playlist-page__search-input" />
 
           <div class="playlist-page__search-actions">

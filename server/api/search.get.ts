@@ -178,6 +178,23 @@ export default defineCachedEventHandler(
         if (artists.length > 0 && !artistName) {
           artistName = artists.map((a) => a.name).join(', ');
         }
+        if (!artistName) {
+          const rawText = item.flex_columns[1].title.runs
+            .map((r: { text?: string }) => r.text || '')
+            .join('');
+          const parts = rawText.split('•').map((s: string) => s.trim());
+          const firstPart = parts[0];
+          const secondPart = parts[1];
+          if (
+            parts.length > 1 &&
+            firstPart &&
+            (firstPart.toLowerCase() === 'song' || firstPart.toLowerCase() === 'zene')
+          ) {
+            artistName = secondPart || '';
+          } else if (parts.length > 0 && firstPart) {
+            artistName = firstPart;
+          }
+        }
       }
 
       let thumbnail = '';

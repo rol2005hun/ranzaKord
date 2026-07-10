@@ -26,15 +26,21 @@ const emit = defineEmits<{
 }>();
 
 function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
-  if (result.artists && result.artists.length > 0) return result.artists;
+  if (result.artists && result.artists.length > 0) {
+    return result.artists.map((a) => ({ ...a, name: formatArtistName(a.name) }));
+  }
   if (!result.artist) return [];
   const separatorRe = /,\s*|\s+feat\.\s+|\s+ft\.\s+|\s+&\s+/i;
   const parts = result.artist
     .split(separatorRe)
     .map((s) => s.trim())
     .filter(Boolean);
-  if (parts.length <= 1) return [];
-  return parts.map((name) => ({ name }));
+
+  if (parts.length === 1 && result.artistId) {
+    return [{ name: formatArtistName(parts[0] || ''), id: result.artistId }];
+  }
+
+  return parts.map((name) => ({ name: formatArtistName(name) }));
 }
 </script>
 
@@ -101,14 +107,14 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
                 :to="`/artist/${props.result.artistId}`"
                 class="artist-link"
                 @click.stop>
-                {{ props.result.artist }}
+                {{ formatArtistName(props.result.artist!) }}
               </NuxtLink>
               <NuxtLink
                 v-else-if="props.result.artist"
                 :to="`/search?q=${encodeURIComponent(props.result.artist)}&type=artist`"
                 class="artist-link"
                 @click.stop>
-                {{ props.result.artist }}
+                {{ formatArtistName(props.result.artist) }}
               </NuxtLink>
             </template>
           </span>
@@ -178,14 +184,14 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
                 :to="`/artist/${props.result.artistId}`"
                 class="artist-link"
                 @click.stop>
-                {{ props.result.artist }}
+                {{ formatArtistName(props.result.artist!) }}
               </NuxtLink>
               <NuxtLink
                 v-else-if="props.result.artist"
                 :to="`/search?q=${encodeURIComponent(props.result.artist)}&type=artist`"
                 class="artist-link"
                 @click.stop>
-                {{ props.result.artist }}
+                {{ formatArtistName(props.result.artist) }}
               </NuxtLink>
             </template>
           </span>

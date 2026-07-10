@@ -1,5 +1,6 @@
 {
   "placeholder": "Dalok, előadók, profilok...",
+  "localPlaceholder": "Keresés...",
   "clear": "Keresés törlése",
   "noResults": "Nincs találat a következőre: \"{query}\"",
   "title": "Keresés",
@@ -32,7 +33,8 @@
     "allSongs": "Összes dal",
     "bio": "Névjegy",
     "singles": "Kislemezek",
-    "discography": "Diszkográfia"
+    "discography": "Diszkográfia",
+    "plays": "lejátszás"
   },
   "list": {
     "song": "Zene",

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { SearchResult } from '../types/search.types';
-import type { TrackListItem } from '@/components/shared/TrackList.vue';
 
 interface Props {
   artistId: string;
@@ -63,87 +62,189 @@ const isEmpty = computed(
     (!artist.value?.topSongs || artist.value.topSongs.length === 0) &&
     (!artist.value?.albums || artist.value.albums.length === 0)
 );
+
+const searchQuery = ref('');
+const debouncedSearch = ref('');
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+watch(searchQuery, (newVal) => {
+  if (searchTimeout) clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    debouncedSearch.value = newVal;
+  }, 300);
+});
+
+onBeforeUnmount(() => {
+  if (searchTimeout) clearTimeout(searchTimeout);
+});
+
+const filteredMappedTopSongs = computed(() => {
+  if (!debouncedSearch.value) return mappedTopSongs.value;
+  const q = debouncedSearch.value.toLowerCase();
+  return mappedTopSongs.value.filter(
+    (t) => t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q)
+  );
+});
+
+const filteredMappedAllSongs = computed(() => {
+  if (!debouncedSearch.value) return mappedAllSongs.value;
+  const q = debouncedSearch.value.toLowerCase();
+  return mappedAllSongs.value.filter(
+    (t) => t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q)
+  );
+});
+
+function focusSearch() {
+  setTimeout(() => {
+    const searchInput = document.querySelector(
+      '.artist-page__search-input'
+    ) as HTMLInputElement | null;
+    if (searchInput) {
+      searchInput.focus();
+    }
+  }, 100);
+}
 </script>
 
 <template>
-  <div class="artist-page-inner" @scroll="onScroll">
-    <div
-      v-if="status === 'error' || (error && status !== 'pending')"
-      class="artist-page-inner__error">
+  <div class="artist-page">
+    <div v-if="status === 'error' || (error && status !== 'pending')" class="artist-page__error">
       <AppIcon name="ph:warning-circle" />
       <p>{{ t('search.artist.loadError') }}</p>
     </div>
 
     <template v-else>
-      <ArtistHeader
-        v-if="artist || status === 'pending'"
-        :name="artist?.name || ''"
-        :thumbnail-url="artist?.thumbnailUrl || ''"
-        :banner-url="artist?.bannerUrl"
-        :description="artist?.description"
-        :is-playing="isArtistPlaying"
-        :is-loading="isArtistLoading"
-        :disable-play="
+      <AppMusicPage
+        :is-loading="status === 'pending'"
+        :title="artist?.name || ''"
+        :badge="t('search.artist.badge')"
+        :image-url="artist?.thumbnailUrl || ''"
+        :rounded-image="true"
+        :is-list-playing="isArtistPlaying"
+        :is-list-loading="isArtistLoading"
+        :disable-play-button="
           !artist || (allSongs.length === 0 && (!artist.topSongs || artist.topSongs.length === 0))
         "
-        @play="onPlayArtist"
-        @shuffle="onShuffleArtist" />
-
-      <div v-if="status === 'pending'" class="artist-page-inner__skeleton">
-        <div class="artist-page-inner__skeleton-title" />
-        <AppTrackList
-          :is-loading="true"
-          :columns="['index', 'title', 'time']"
-          :show-thumbnails="true" />
-      </div>
-
-      <template v-else-if="artist">
-        <div v-if="isEmpty" class="artist-page-inner__empty">
-          <AppIcon name="ph:music-notes-plus" class="artist-page-inner__empty-icon" />
-          <p>{{ t('core.musicDetail.empty') }}</p>
-          <NuxtLink to="/" class="artist-page-inner__empty-btn">
-            {{ t('playlists.discover') }}
-          </NuxtLink>
-        </div>
-
-        <template v-else>
-          <ArtistTopSongs
-            v-if="mappedTopSongs.length > 0"
-            :tracks="mappedTopSongs"
-            :title="t('search.artist.topSongs')"
-            class="artist-page-inner__section"
-            @play="(track: TrackListItem, index: number) => onPlayTopSong(track, index)" />
-
-          <ArtistDiscography
-            v-if="artist.albums.length > 0"
-            :albums="artist.albums"
-            :title="t('search.artist.discography')"
-            class="artist-page-inner__section"
-            @play="onPlayAlbumSong"
-            @navigate="onNavigateAlbum" />
-
-          <section v-if="allSongs.length > 0 || isLoadingSongs" class="artist-page-inner__section">
-            <h2 class="artist-page-inner__section-title">{{ t('search.artist.allSongs') }}</h2>
-            <AppTrackList
-              :tracks="mappedAllSongs"
-              :is-loading="isLoadingSongs"
-              :columns="['index', 'title', 'time']"
-              :show-thumbnails="true"
-              @play="onPlaySong" />
-          </section>
+        @play-all="onPlayArtist"
+        @scroll="onScroll">
+        <template v-if="artist?.description && artist.description !== 'N/A'" #description>
+          <p class="artist-page__bio">{{ artist.description }}</p>
         </template>
-      </template>
+
+        <template #center-header>
+          <div v-if="artist && !isEmpty" class="artist-page__search-bar">
+            <AppIcon name="ph:magnifying-glass" class="artist-page__search-icon" />
+            <input
+              id="artist-search-input"
+              v-model="searchQuery"
+              type="text"
+              :placeholder="t('search.localPlaceholder')"
+              :aria-label="t('search.localPlaceholder')"
+              class="artist-page__search-input" />
+            <div class="artist-page__search-actions">
+              <button
+                v-if="searchQuery"
+                class="artist-page__search-clear"
+                :aria-label="t('search.clear')"
+                @click="searchQuery = ''">
+                <AppIcon name="ph:x" />
+              </button>
+            </div>
+          </div>
+        </template>
+
+        <template #actions>
+          <button
+            class="artist-page__action-btn artist-page__action-btn--mobile-search"
+            :title="t('search.localPlaceholder')"
+            @click="focusSearch">
+            <AppIcon name="ph:magnifying-glass" />
+          </button>
+          <button
+            class="artist-page__action-btn"
+            :title="t('player.shuffle')"
+            @click="onShuffleArtist">
+            <AppIcon name="ph:shuffle" />
+          </button>
+          <button
+            class="artist-page__action-btn"
+            :title="t('player.offlineDownload')"
+            @click="() => {}">
+            <AppIcon name="ph:download-simple" />
+          </button>
+        </template>
+
+        <template #skeleton-tracks>
+          <div class="artist-page__skeleton">
+            <div class="artist-page__skeleton-title" />
+            <AppTrackList
+              :is-loading="true"
+              :columns="['index', 'title', 'time']"
+              :show-thumbnails="true" />
+          </div>
+        </template>
+
+        <template #tracks>
+          <div v-if="isEmpty" class="artist-page__empty">
+            <AppIcon name="ph:music-notes-plus" class="artist-page__empty-icon" />
+            <p>{{ t('core.musicDetail.empty') }}</p>
+            <NuxtLink to="/" class="artist-page__empty-btn">
+              {{ t('playlists.discover') }}
+            </NuxtLink>
+          </div>
+
+          <template v-else-if="artist">
+            <div
+              v-if="
+                debouncedSearch &&
+                filteredMappedTopSongs.length === 0 &&
+                filteredMappedAllSongs.length === 0
+              "
+              class="artist-page__empty">
+              <AppIcon name="ph:magnifying-glass" class="artist-page__empty-icon" size="4rem" />
+              <p>{{ t('search.page.noResultsQuery', { query: debouncedSearch }) }}</p>
+            </div>
+
+            <template v-else>
+              <section v-if="filteredMappedTopSongs.length > 0" class="artist-page__section">
+                <h2 class="artist-page__section-title">{{ t('search.artist.topSongs') }}</h2>
+                <AppTrackList
+                  :tracks="filteredMappedTopSongs"
+                  :columns="['index', 'title', 'plays', 'time']"
+                  :show-thumbnails="true"
+                  @play="(track, index) => onPlayTopSong(track, index)" />
+              </section>
+
+              <ArtistDiscography
+                v-if="!debouncedSearch && artist.albums.length > 0"
+                :albums="artist.albums"
+                :title="t('search.artist.discography')"
+                class="artist-page__section"
+                @play="onPlayAlbumSong"
+                @navigate="onNavigateAlbum" />
+
+              <section
+                v-if="filteredMappedAllSongs.length > 0 || isLoadingSongs"
+                class="artist-page__section">
+                <h2 class="artist-page__section-title">{{ t('search.artist.allSongs') }}</h2>
+                <AppTrackList
+                  :tracks="filteredMappedAllSongs"
+                  :is-loading="isLoadingSongs"
+                  :columns="['index', 'title', 'plays', 'time']"
+                  :show-thumbnails="true"
+                  @play="onPlaySong" />
+              </section>
+            </template>
+          </template>
+        </template>
+      </AppMusicPage>
     </template>
   </div>
 </template>
 
 <style scoped lang="scss">
-.artist-page-inner {
+.artist-page {
   height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 1.5rem;
-  scrollbar-width: thin;
 
   &__error {
     display: flex;
@@ -160,6 +261,7 @@ const isEmpty = computed(
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
+    padding: 0 var(--space-6);
   }
 
   &__skeleton-title {
@@ -172,6 +274,7 @@ const isEmpty = computed(
 
   &__section {
     margin-bottom: 2.5rem;
+    padding: 0 var(--space-6);
   }
 
   &__section-title {
@@ -204,6 +307,125 @@ const isEmpty = computed(
 
     &:hover {
       text-decoration: underline;
+    }
+  }
+
+  &__bio {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 500px;
+  }
+
+  &__action-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--color-text-secondary);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: color var(--transition-fast);
+
+    &:hover {
+      color: var(--color-text-primary);
+    }
+
+    &--mobile-search {
+      display: none;
+      @media (max-width: 768px) {
+        display: flex;
+      }
+    }
+  }
+
+  &__search-bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 400px;
+    z-index: 10;
+  }
+
+  &__search-icon {
+    position: absolute;
+    left: var(--space-4);
+    color: var(--color-text-secondary);
+    font-size: var(--text-lg);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  &__search-input {
+    width: 100%;
+    padding: var(--space-3) 2.5rem var(--space-3) calc(var(--space-4) + 1.5rem + var(--space-2));
+    background: color-mix(in srgb, var(--color-surface-raised) 80%, transparent);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    color: var(--color-text-primary);
+    font-size: var(--text-base);
+    font-family: var(--font-sans);
+    outline: none;
+    transition:
+      border-color var(--transition-fast),
+      box-shadow var(--transition-fast),
+      background-color var(--transition-fast);
+
+    &::placeholder {
+      color: var(--color-text-secondary);
+    }
+
+    &:focus {
+      border-color: var(--color-border-focus);
+      box-shadow: 0 0 0 3px var(--color-ring);
+      background: var(--color-surface);
+    }
+
+    &::-webkit-search-cancel-button {
+      display: none;
+    }
+  }
+
+  &__search-actions {
+    position: absolute;
+    right: var(--space-2);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    z-index: 2;
+  }
+
+  &__search-clear {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: var(--color-surface-hover);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    transition:
+      color var(--transition-fast),
+      background var(--transition-fast);
+
+    &:hover {
+      color: var(--color-text-primary);
+      background: var(--color-surface-raised);
+    }
+  }
+
+  &__action-btn {
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
     }
   }
 }
