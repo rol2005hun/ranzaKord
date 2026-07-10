@@ -101,7 +101,7 @@ function closeDropdown() {
             ">
             <AppIcon name="ph:gear" class="app-navbar__dropdown-icon" />
             <span class="app-navbar__dropdown-label">
-              {{ $t('core.actions.settings') || 'Settings' }}
+              {{ $t('core.actions.settings') }}
             </span>
           </button>
 

@@ -159,7 +159,10 @@ const isReorderable = computed(() => !debouncedSearch.value && !sortBy.value);
 
 const isCurrentPlaylistPlaying = computed(() => {
   const pStore = usePlayerStore();
-  if (pStore.playbackContext?.type === 'playlist' && pStore.playbackContext?.sourceId === id.value) {
+  if (
+    pStore.playbackContext?.type === 'playlist' &&
+    pStore.playbackContext?.sourceId === id.value
+  ) {
     return player.isPlaying.value;
   }
 
@@ -177,7 +180,10 @@ const isOwner = computed(() => {
 
 const isCurrentPlaylistLoading = computed(() => {
   const pStore = usePlayerStore();
-  if (pStore.playbackContext?.type === 'playlist' && pStore.playbackContext?.sourceId === id.value) {
+  if (
+    pStore.playbackContext?.type === 'playlist' &&
+    pStore.playbackContext?.sourceId === id.value
+  ) {
     return player.isLoading.value;
   }
 

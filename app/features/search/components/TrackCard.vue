@@ -51,7 +51,7 @@ const isInAnyPlaylist = computed(() => playlistsStore.isTrackInAnyPlaylist(props
           <button
             ref="addBtnRef"
             class="track-card__add-btn"
-            :aria-label="$t('playlists.addToPlaylist') || 'Add to playlist'"
+            :aria-label="$t('playlists.addToPlaylist')"
             @click.stop="showAddToPlaylist = !showAddToPlaylist">
             <AppIcon v-if="isInAnyPlaylist" name="ph:check-circle-fill" class="text-success" />
             <AppIcon v-else name="ph:plus-circle" />

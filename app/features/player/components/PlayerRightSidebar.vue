@@ -388,7 +388,7 @@ const sidebarStyle = computed(() => ({
             <AppIcon :name="translatedLanguage ? 'ph:arrow-u-up-left' : 'ph:translate'" />
             <span v-if="isTranslating">{{ $t('player.translating') }}</span>
             <span v-else-if="translatedLanguage">
-              {{ $t('player.showOriginal') || 'Eredeti megjelenítése' }}
+              {{ $t('player.showOriginal') }}
             </span>
             <span v-else>{{ $t('player.translateToHu') }}</span>
           </button>

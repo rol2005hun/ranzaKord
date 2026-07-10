@@ -1,3 +1,4 @@
+import { UserModel } from '../models/User';
 import type {
   CategorizedSearchResults,
   SearchResult,
@@ -213,6 +214,24 @@ export default defineCachedEventHandler(
       };
     };
 
+    if (type === 'profile') {
+      const dbUsers = await UserModel.find({
+        isPublicProfile: true,
+        name: { $regex: q.trim(), $options: 'i' }
+      })
+        .select('sub name picture')
+        .limit(20)
+        .lean();
+
+      return dbUsers.map((u) => ({
+        id: u.sub,
+        type: 'profile',
+        title: u.name,
+        artist: 'ranzaKord Profil',
+        thumbnailUrl: u.picture || ''
+      }));
+    }
+
     if (type === 'song' || type === 'artist' || type === 'album') {
       const results = await innertube.music.search(q.trim(), { type });
       const items: SearchResult[] = [];
@@ -233,7 +252,8 @@ export default defineCachedEventHandler(
     const response: CategorizedSearchResults = {
       songs: [],
       artists: [],
-      albums: []
+      albums: [],
+      profiles: []
     };
 
     if (results.contents) {
@@ -273,7 +293,25 @@ export default defineCachedEventHandler(
       }
     }
 
-    if (!response.topResult && response.songs.length > 0) {
+    const dbUsers = await UserModel.find({
+      isPublicProfile: true,
+      name: { $regex: q.trim(), $options: 'i' }
+    })
+      .select('sub name picture')
+      .limit(5)
+      .lean();
+
+    response.profiles = dbUsers.map((u) => ({
+      id: u.sub,
+      type: 'profile',
+      title: u.name,
+      artist: 'ranzaKord Profil',
+      thumbnailUrl: u.picture || ''
+    }));
+
+    if (!response.topResult && response.profiles.length > 0) {
+      response.topResult = response.profiles[0];
+    } else if (!response.topResult && response.songs.length > 0) {
       response.topResult = response.songs[0];
     }
 

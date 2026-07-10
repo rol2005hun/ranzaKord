@@ -39,7 +39,8 @@ export function useSearch() {
           store.setCategorizedResults({
             songs: filtered,
             albums: [],
-            artists: []
+            artists: [],
+            profiles: []
           });
         } else {
           store.setResults(filtered);

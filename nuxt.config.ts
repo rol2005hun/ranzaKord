@@ -199,6 +199,7 @@ export default defineNuxtConfig({
         '@tauri-apps/plugin-updater',
         '@tauri-apps/plugin-deep-link',
         '@tauri-apps/plugin-opener',
+        '@tauri-apps/plugin-global-shortcut',
         ...(process.env.NUXT_SSR === 'true' ? ['@unhead/schema-org/vue'] : [])
       ]
     },

@@ -51,7 +51,7 @@ async function close() {
   <div v-if="isTauriApp && !isMobile" class="titlebar" role="region" aria-label="Window Titlebar">
     <div class="titlebar-left" data-tauri-drag-region @dblclick="toggleMaximize">
       <img src="/logo.webp" alt="Logo" class="titlebar-icon" />
-      <span class="titlebar-title">{{ $t('core.appName') || 'ranzaKord' }}</span>
+      <span class="titlebar-title">{{ $t('core.appName') }}</span>
     </div>
 
     <div class="titlebar-middle" data-tauri-drag-region @dblclick="toggleMaximize"></div>

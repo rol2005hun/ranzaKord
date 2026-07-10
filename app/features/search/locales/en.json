@@ -1,5 +1,5 @@
 {
-  "placeholder": "Search songs, artists…",
+  "placeholder": "Search songs, artists, profiles...",
   "clear": "Clear search",
   "noResults": "No results found for \"{query}\"",
   "title": "Search",
@@ -14,7 +14,9 @@
     "artists": "Artists",
     "albums": "Albums",
     "noResultsQuery": "No results for: \"{query}\"",
-    "noResultsCategory": "No results for: \"{query}\" in this category."
+    "noResultsCategory": "No results for: \"{query}\" in this category.",
+    "all": "All",
+    "profiles": "Profiles"
   },
   "album": {
     "badge": "ALBUM",
@@ -38,5 +40,11 @@
     "album": "Album",
     "options": "Options",
     "addToPlaylist": "Add to playlist"
+  },
+  "badge": {
+    "song": "Song",
+    "artist": "Artist",
+    "album": "Album",
+    "profile": "Profile"
   }
 }

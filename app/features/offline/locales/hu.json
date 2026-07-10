@@ -1,5 +1,5 @@
 {
-  "title": "Offline Könyvtár",
+  "title": "Offline könyvtár",
   "description": "Letöltött zenéid, internet nélkül is elérhetőek.",
   "download": "Letöltés",
   "downloaded": "Letöltve",
@@ -13,6 +13,6 @@
   "totalSize": "Teljes méret",
   "deleteAll": "Összes törlése",
   "deleteAllConfirm": "Biztosan törölni szeretnéd az összes letöltött zenét?",
-  "navLabel": "Offline Könyvtár",
+  "navLabel": "Offline könyvtár",
   "storageUsed": "{size} felhasználva"
 }

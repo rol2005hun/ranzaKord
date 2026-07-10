@@ -9,12 +9,15 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: 'all' | SearchResultType): void;
 }>();
 
-const tabs = [
-  { value: 'all', label: 'All' },
-  { value: 'song', label: 'Songs' },
-  { value: 'artist', label: 'Artists' },
-  { value: 'album', label: 'Albums' }
-];
+const { t } = useI18n();
+
+const tabs = computed(() => [
+  { value: 'all', label: t('search.page.all') },
+  { value: 'song', label: t('search.page.songs') },
+  { value: 'artist', label: t('search.page.artists') },
+  { value: 'album', label: t('search.page.albums') },
+  { value: 'profile', label: t('search.page.profiles') }
+]);
 </script>
 
 <template>

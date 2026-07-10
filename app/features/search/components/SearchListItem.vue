@@ -43,6 +43,8 @@ function onClick() {
     router.push(`/album/${props.track.id}`);
   } else if (props.track.type === 'playlist') {
     router.push(`/playlist/${props.track.id}`);
+  } else if (props.track.type === 'profile') {
+    router.push(`/user/${props.track.id}`);
   }
 }
 

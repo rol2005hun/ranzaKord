@@ -28,7 +28,7 @@ describe('useSearchStore', () => {
 
   it('setResults updates results and clears categorized', () => {
     const store = useSearchStore();
-    store.setCategorizedResults({ songs: [], artists: [], albums: [] });
+    store.setCategorizedResults({ songs: [], artists: [], albums: [], profiles: [] });
     store.setResults([
       { id: '1', title: 'Test', artist: 'Artist', type: 'song', thumbnailUrl: '' }
     ]);
@@ -41,7 +41,7 @@ describe('useSearchStore', () => {
     store.setResults([
       { id: '1', title: 'Test', artist: 'Artist', type: 'song', thumbnailUrl: '' }
     ]);
-    store.setCategorizedResults({ songs: [], artists: [], albums: [] });
+    store.setCategorizedResults({ songs: [], artists: [], albums: [], profiles: [] });
     expect(store.categorizedResults).not.toBeNull();
     expect(store.results.length).toBe(0);
   });
@@ -63,7 +63,7 @@ describe('useSearchStore', () => {
     store.setResults([
       { id: '1', title: 'Test', artist: 'Artist', type: 'song', thumbnailUrl: '' }
     ]);
-    store.setCategorizedResults({ songs: [], artists: [], albums: [] });
+    store.setCategorizedResults({ songs: [], artists: [], albums: [], profiles: [] });
     store.setError('Error');
     store.clearResults();
     expect(store.results.length).toBe(0);

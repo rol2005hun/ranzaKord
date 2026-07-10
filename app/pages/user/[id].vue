@@ -24,163 +24,384 @@ const playlists = computed(() => data.value?.playlists || []);
 const isSelf = computed(() => authStore.currentUser?.sub === userId);
 
 useHead(() => ({
-  title: profile.value ? `${profile.value.name} - RanzaKord` : 'RanzaKord'
+  title: profile.value ? profile.value.name : 'Profil'
 }));
 
+const isFollowLoading = ref(false);
+
 const toggleFollow = async () => {
-  if (!profile.value || isSelf.value) return;
-  const action = profile.value.isFollowing ? 'unfollow' : 'follow';
+  if (!data.value?.profile || isSelf.value || isFollowLoading.value) return;
+  const action = data.value.profile.isFollowing ? 'unfollow' : 'follow';
+
+  isFollowLoading.value = true;
   try {
-    await $fetch(`/api/user/${userId}/follow`, {
+    await $fetch(`/api/user/follow`, {
       method: 'POST',
-      body: { action }
+      body: { action, targetSub: userId }
     });
     // Optimistic UI update
-    profile.value.isFollowing = !profile.value.isFollowing;
-    if (profile.value.isFollowing) {
-      profile.value.followersCount++;
+    data.value.profile.isFollowing = !data.value.profile.isFollowing;
+    if (data.value.profile.isFollowing) {
+      data.value.profile.followersCount++;
     } else {
-      profile.value.followersCount--;
+      data.value.profile.followersCount--;
     }
-    toast.success(profile.value.isFollowing ? 'Felhasználó követve' : 'Követés visszavonva');
-  } catch {
+  } catch (err) {
+    console.error('Follow error:', err);
     toast.danger('Hiba történt a művelet során.');
+  } finally {
+    isFollowLoading.value = false;
   }
 };
 </script>
 
 <template>
-  <div class="user-page p-6 pb-24">
-    <div v-if="pending" class="flex justify-center items-center h-48">
-      <AppSpinner size="lg" />
-    </div>
+  <div class="user-page">
+    <AppMusicPage
+      :is-loading="pending"
+      :is-error="!!error || (!profile && !pending)"
+      error-text="Profil nem található. Lehet, hogy privát vagy nem létezik."
+      :title="profile?.name"
+      badge="Profil"
+      :image-url="profile?.picture"
+      :rounded-image="true"
+      :show-play-button="false">
+      <template #fallback-icon>
+        <AppIcon name="ph:user-fill" />
+      </template>
 
-    <div v-else-if="error || !profile" class="text-center text-[var(--color-text-secondary)] mt-12">
-      <AppIcon name="ph:user-circle-dashed-duotone" class="text-6xl mb-4 opacity-50 mx-auto" />
-      <h2 class="text-2xl font-bold mb-2">Profil nem található</h2>
-      <p>A felhasználó nem létezik, vagy a profilja privát.</p>
-    </div>
-
-    <div v-else class="user-page__content">
-      <div
-        class="user-page__header flex flex-col md:flex-row items-center md:items-end gap-6 mb-12">
-        <div class="user-page__avatar relative group shrink-0">
-          <img
-            v-if="profile.picture"
-            :src="profile.picture"
-            :alt="profile.name"
-            class="w-32 h-32 md:w-48 md:h-48 rounded-full object-cover shadow-2xl border-4 border-[var(--color-bg-elevated)]" />
-          <div
-            v-else
-            class="w-32 h-32 md:w-48 md:h-48 rounded-full bg-[var(--color-bg-elevated)] flex items-center justify-center shadow-2xl border-4 border-[var(--color-bg-elevated)]">
-            <AppIcon
-              name="ph:user-fill"
-              class="text-6xl md:text-8xl text-[var(--color-text-muted)]" />
+      <template #skeleton-tracks>
+        <div class="user-page__content">
+          <h2 class="user-page__section-title">Publikus listák</h2>
+          <div class="user-page__grid">
+            <div
+              v-for="i in 6"
+              :key="`sk-pl-${i}`"
+              class="user-page__playlist-card"
+              style="pointer-events: none">
+              <div
+                class="user-page__playlist-cover"
+                style="
+                  background: var(--color-surface-raised);
+                  animation: pulse 1.5s infinite ease-in-out;
+                "></div>
+              <div
+                style="
+                  width: 80%;
+                  height: 16px;
+                  background: var(--color-surface-raised);
+                  margin-bottom: 8px;
+                  border-radius: var(--radius-sm);
+                  animation: pulse 1.5s infinite ease-in-out;
+                "></div>
+              <div
+                style="
+                  width: 40%;
+                  height: 12px;
+                  background: var(--color-surface-raised);
+                  border-radius: var(--radius-sm);
+                  animation: pulse 1.5s infinite ease-in-out;
+                "></div>
+            </div>
           </div>
         </div>
+      </template>
 
-        <div class="user-page__info text-center md:text-left flex-1">
-          <span
-            class="text-sm uppercase tracking-widest font-bold text-[var(--color-text-secondary)] mb-2 block">
-            Profil
-          </span>
-          <h1
-            class="text-4xl md:text-6xl lg:text-7xl font-extrabold mb-4 tracking-tight leading-none">
-            {{ profile.name }}
-          </h1>
-          <div
-            class="flex items-center justify-center md:justify-start gap-4 text-sm text-[var(--color-text-secondary)] font-medium">
-            <span>{{ profile.followersCount }} Követő</span>
-            <span class="w-1 h-1 rounded-full bg-[var(--color-text-muted)]"></span>
-            <span>{{ profile.followingCount }} Követett</span>
-            <span class="w-1 h-1 rounded-full bg-[var(--color-text-muted)]"></span>
-            <span>{{ playlists.length }} Publikus lista</span>
-          </div>
-        </div>
-      </div>
+      <template #meta>
+        <span class="user-page__stat">{{ profile?.followersCount || 0 }} Követő</span>
+        <span class="user-page__stat-dot">•</span>
+        <span class="user-page__stat">{{ profile?.followingCount || 0 }} Követett</span>
+        <span class="user-page__stat-dot">•</span>
+        <span class="user-page__stat">{{ playlists.length }} Publikus lista</span>
+      </template>
 
-      <div class="user-page__actions flex items-center justify-center md:justify-start gap-4 mb-10">
-        <AppButton
-          v-if="!isSelf"
-          :variant="profile.isFollowing ? 'secondary' : 'primary'"
-          size="lg"
-          class="font-bold min-w-[140px]"
+      <template #actions>
+        <button
+          v-if="!isSelf && profile"
+          class="user-page__follow-btn"
+          :class="{
+            'user-page__follow-btn--following': profile.isFollowing,
+            'is-loading': isFollowLoading
+          }"
+          :disabled="isFollowLoading"
           @click="toggleFollow">
-          {{ profile.isFollowing ? 'Követés visszavonása' : 'Követés' }}
-        </AppButton>
-        <AppButton
-          variant="ghost"
-          size="sm"
-          class="rounded-full w-10 h-10 p-0 flex items-center justify-center text-[var(--color-text-secondary)] hover:text-white"
-          @click="refresh">
+          <div class="user-page__follow-content">
+            <AppSpinner v-if="isFollowLoading" size="sm" />
+            <template v-else>
+              <AppIcon
+                v-if="profile.isFollowing"
+                name="ph:check-bold"
+                class="user-page__follow-icon" />
+              <span>{{ profile.isFollowing ? 'Követve' : 'Követés' }}</span>
+            </template>
+          </div>
+        </button>
+        <AppButton variant="ghost" size="sm" class="user-page__refresh-btn" @click="refresh">
           <AppIcon name="ph:arrows-clockwise" class="text-xl" />
         </AppButton>
-      </div>
+      </template>
 
-      <div class="user-page__playlists">
-        <h2 class="text-2xl font-bold mb-6">Publikus listák</h2>
+      <template #tracks>
+        <div class="user-page__content">
+          <h2 class="user-page__section-title">Publikus listák</h2>
 
-        <div
-          v-if="playlists.length === 0"
-          class="text-[var(--color-text-secondary)] py-8 text-center bg-[var(--color-bg-elevated)] rounded-xl border border-[var(--color-border)]">
-          Nincsenek publikus lejátszási listák.
-        </div>
+          <div v-if="playlists.length === 0 && !pending" class="user-page__empty">
+            <AppIcon name="ph:books" class="user-page__empty-icon" />
+            <p>Nincsenek publikus lejátszási listák.</p>
+          </div>
 
-        <div
-          v-else
-          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-          <NuxtLink
-            v-for="playlist in playlists"
-            :key="playlist.id"
-            :to="`/playlist/${playlist.id}`"
-            class="bg-[var(--color-bg-elevated)] p-4 rounded-xl hover:bg-[var(--color-bg-hover)] transition-all duration-300 group cursor-pointer border border-transparent hover:border-[var(--color-border)] shadow-md hover:shadow-xl">
-            <div
-              class="aspect-square rounded-lg bg-[var(--color-bg-soft)] mb-4 overflow-hidden relative shadow-lg">
-              <img
-                v-if="playlist.imageUrl"
-                :src="playlist.imageUrl"
-                :alt="playlist.name"
-                class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-              <div
-                v-else
-                class="w-full h-full flex items-center justify-center text-[var(--color-text-muted)]">
-                <AppIcon name="ph:music-notes-fill" class="text-4xl" />
-              </div>
-              <div
-                class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <div
-                  class="w-12 h-12 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-white shadow-xl transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                  <AppIcon name="ph:play-fill" class="text-xl ml-1" />
+          <div v-else class="user-page__grid">
+            <NuxtLink
+              v-for="playlist in playlists"
+              :key="playlist.id"
+              :to="`/playlist/${playlist.id}`"
+              class="user-page__playlist-card">
+              <div class="user-page__playlist-cover">
+                <img v-if="playlist.imageUrl" :src="playlist.imageUrl" :alt="playlist.name" />
+                <div v-else class="user-page__playlist-fallback">
+                  <AppIcon name="ph:music-notes-fill" />
+                </div>
+                <div class="user-page__playlist-overlay">
+                  <div class="user-page__playlist-play">
+                    <AppIcon name="ph:play-fill" />
+                  </div>
                 </div>
               </div>
-            </div>
-            <h3
-              class="font-bold text-[var(--color-text-primary)] truncate text-base mb-1 group-hover:text-[var(--color-primary)] transition-colors">
-              {{ playlist.name }}
-            </h3>
-            <p class="text-sm text-[var(--color-text-secondary)] truncate">
-              {{ playlist.trackCount }} dal
-            </p>
-          </NuxtLink>
+              <h3 class="user-page__playlist-name">{{ playlist.name }}</h3>
+              <p class="user-page__playlist-count">{{ playlist.trackCount }} dal</p>
+            </NuxtLink>
+          </div>
         </div>
-      </div>
-    </div>
+      </template>
+    </AppMusicPage>
   </div>
 </template>
 
 <style scoped lang="scss">
 .user-page {
-  animation: fade-in 0.3s ease-out;
-}
+  height: 100%;
 
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+  &__stat {
+    font-weight: var(--font-weight-medium);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  &__stat-dot {
+    color: var(--color-text-muted);
+    font-size: 0.8em;
+  }
+
+  &__follow-btn {
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--text-sm);
+    padding: 0 var(--space-5);
+    min-width: 120px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    border: 1px solid transparent;
+    background: var(--color-primary);
+    color: #000;
+    transition: all 0.2s ease;
+    overflow: hidden;
+    cursor: pointer;
+
+    &:hover {
+      transform: scale(1.04);
+    }
+
+    &--following {
+      background-color: transparent;
+      border-color: rgba(255, 255, 255, 0.4);
+      color: var(--color-text-primary);
+
+      &:hover {
+        border-color: var(--color-text-danger);
+        color: var(--color-text-danger);
+
+        .user-page__follow-content span {
+          display: none;
+        }
+        .user-page__follow-content::after {
+          content: 'Kikövetés';
+          display: block;
+        }
+        .user-page__follow-icon {
+          display: none;
+        }
+      }
+    }
+  }
+
+  &__follow-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  &__follow-icon {
+    font-size: 1.1em;
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+
+  @keyframes popIn {
+    0% {
+      transform: scale(0) rotate(-45deg);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1) rotate(0);
+      opacity: 1;
+    }
+  }
+
+  &__refresh-btn {
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-secondary);
+
+    &:hover {
+      color: var(--color-text-primary);
+      background-color: var(--color-surface-hover);
+    }
+  }
+
+  &__content {
+    padding: var(--space-6);
+  }
+
+  &__section-title {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-6);
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-12) 0;
+    color: var(--color-text-secondary);
+    background: var(--color-surface);
+    border-radius: var(--radius-xl);
+    border: 1px dashed var(--color-border);
+    gap: var(--space-3);
+  }
+
+  &__empty-icon {
+    font-size: 4rem;
+    opacity: 0.5;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--space-6);
+  }
+
+  &__playlist-card {
+    background: var(--color-surface);
+    padding: var(--space-4);
+    border-radius: var(--radius-xl);
+    transition: all var(--transition-normal);
+    text-decoration: none;
+    border: 1px solid transparent;
+
+    &:hover {
+      background: var(--color-surface-hover);
+      border-color: var(--color-border);
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+
+      .user-page__playlist-overlay {
+        opacity: 1;
+      }
+
+      .user-page__playlist-play {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+  }
+
+  &__playlist-cover {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: var(--space-4);
+    position: relative;
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-md);
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__playlist-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted);
+    font-size: 4rem;
+  }
+
+  &__playlist-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__playlist-play {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transform: translateY(10px);
+    opacity: 0;
+    transition: all var(--transition-fast) cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+
+    svg {
+      margin-left: 2px;
+    }
+  }
+
+  &__playlist-name {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin: 0 0 var(--space-1) 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__playlist-count {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    margin: 0;
   }
 }
 </style>

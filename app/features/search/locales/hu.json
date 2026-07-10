@@ -1,5 +1,5 @@
 {
-  "placeholder": "Zenék, előadók keresése…",
+  "placeholder": "Dalok, előadók, profilok...",
   "clear": "Keresés törlése",
   "noResults": "Nincs találat a következőre: \"{query}\"",
   "title": "Keresés",
@@ -14,7 +14,9 @@
     "artists": "Előadók",
     "albums": "Albumok",
     "noResultsQuery": "Nincs találat: \"{query}\"",
-    "noResultsCategory": "Nincs találat: \"{query}\" ebben a kategóriában."
+    "noResultsCategory": "Nincs találat: \"{query}\" ebben a kategóriában.",
+    "all": "Összes",
+    "profiles": "Profilok"
   },
   "album": {
     "badge": "ALBUM",
@@ -38,5 +40,12 @@
     "album": "Album",
     "options": "Opciók",
     "addToPlaylist": "Hozzáadás lejátszási listához"
+  },
+  "badge": {
+    "song": "Zene",
+    "artist": "Előadó",
+    "album": "Album",
+    "profile": "Profil",
+    "playlist": "Lejátszási lista"
   }
 }

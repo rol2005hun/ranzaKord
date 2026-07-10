@@ -20,8 +20,7 @@ export default defineEventHandler(async (event): Promise<{ url: string }> => {
   const body = await readBody<{ image?: string }>(event);
   const image = body?.image;
 
-  if (!image)
-    throw createError({ statusCode: 400, message: t('upload.errors.missingImage') });
+  if (!image) throw createError({ statusCode: 400, message: t('upload.errors.missingImage') });
 
   try {
     const base64Data = image.replace(/^data:image\/[a-z]+;base64,/, '');

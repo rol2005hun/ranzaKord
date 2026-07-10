@@ -104,17 +104,9 @@ const removeCollaborator = async (sub: string) => {
           :disabled="isSaving"
           class="collaborator-modal__input" />
 
-        <div
-          v-if="searchQuery.length >= 2"
-          class="collaborator-modal__search-results">
-          <div
-            v-if="isSearching"
-            class="collaborator-modal__search-status">
-            Keresés...
-          </div>
-          <div
-            v-else-if="searchResults.length === 0"
-            class="collaborator-modal__search-status">
+        <div v-if="searchQuery.length >= 2" class="collaborator-modal__search-results">
+          <div v-if="isSearching" class="collaborator-modal__search-status">Keresés...</div>
+          <div v-else-if="searchResults.length === 0" class="collaborator-modal__search-status">
             Nem található felhasználó. (Csak publikus profilok!)
           </div>
           <div
@@ -124,21 +116,13 @@ const removeCollaborator = async (sub: string) => {
             class="collaborator-modal__search-item"
             @click="addCollaborator(user.sub)">
             <div class="collaborator-modal__user-info">
-              <img
-                v-if="user.picture"
-                :src="user.picture"
-                class="collaborator-modal__avatar" />
-              <div
-                v-else
-                class="collaborator-modal__avatar">
+              <img v-if="user.picture" :src="user.picture" class="collaborator-modal__avatar" />
+              <div v-else class="collaborator-modal__avatar">
                 <AppIcon name="ph:user-fill" class="collaborator-modal__avatar-icon" />
               </div>
               <span class="collaborator-modal__name">{{ user.name }}</span>
             </div>
-            <AppButton
-              variant="ghost"
-              size="sm"
-              class="collaborator-modal__add-btn">
+            <AppButton variant="ghost" size="sm" class="collaborator-modal__add-btn">
               Hozzáadás
             </AppButton>
           </div>
@@ -146,28 +130,17 @@ const removeCollaborator = async (sub: string) => {
       </div>
 
       <div class="collaborator-modal__list">
-        <h4 class="collaborator-modal__title">
-          Jelenlegi kollaborátorok
-        </h4>
-        <div
-          v-if="collaborators.length === 0"
-          class="collaborator-modal__empty">
+        <h4 class="collaborator-modal__title">Jelenlegi kollaborátorok</h4>
+        <div v-if="collaborators.length === 0" class="collaborator-modal__empty">
           Nincsenek kollaborátorok. Keresd meg a barátaidat fentebb!
         </div>
-        <div
-          v-for="user in collaborators"
-          :key="user.sub"
-          class="collaborator-modal__collaborator">
-          <NuxtLink
-            :to="`/user/${user.sub}`"
-            class="collaborator-modal__link">
+        <div v-for="user in collaborators" :key="user.sub" class="collaborator-modal__collaborator">
+          <NuxtLink :to="`/user/${user.sub}`" class="collaborator-modal__link">
             <img
               v-if="user.picture"
               :src="user.picture"
               class="collaborator-modal__collab-avatar" />
-            <div
-              v-else
-              class="collaborator-modal__collab-avatar">
+            <div v-else class="collaborator-modal__collab-avatar">
               <AppIcon name="ph:user-fill" />
             </div>
             <span class="collaborator-modal__name">{{ user.name }}</span>
@@ -328,7 +301,7 @@ const removeCollaborator = async (sub: string) => {
 
   &__remove-btn {
     color: #ef4444 !important;
-    
+
     &:hover {
       background-color: rgba(239, 68, 68, 0.1) !important;
     }

@@ -38,8 +38,7 @@ export default defineEventHandler(async (event): Promise<{ success: boolean }> =
   }
 
   const playlist = await PlaylistModel.findOne({ _id: id });
-  if (!playlist)
-    throw createError({ statusCode: 404, message: t('playlists.errors.notFound') });
+  if (!playlist) throw createError({ statusCode: 404, message: t('playlists.errors.notFound') });
 
   const isOwner = playlist.userId === sessionData.user.sub;
   const isCollaborator = playlist.collaborators?.includes(sessionData.user.sub);

@@ -7,7 +7,13 @@ definePageMeta({
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 const { search, query, results, categorizedResults, searchType, isLoading, error } = useSearch();
+
+useHead({
+  title: () =>
+    query.value ? t('search.page.titleWithQuery', { query: query.value }) : t('search.page.title')
+});
 
 const currentTab = ref<'all' | SearchResultType>(
   (route.query.type as 'all' | SearchResultType) || 'all'
@@ -71,6 +77,11 @@ onMounted(() => {
 const { playQueue } = usePlayer();
 
 function onPlay(track: SearchResult) {
+  if (track.type === 'profile') {
+    router.push(`/user/${track.id}`);
+    return;
+  }
+
   let tracksToQueue: SearchResult[] = [];
   if (currentTab.value === 'all' && categorizedResults.value) {
     tracksToQueue = categorizedResults.value.songs || [];
@@ -235,12 +246,27 @@ function onPlay(track: SearchResult) {
         </div>
       </div>
 
+      <!-- Profiles -->
+      <div
+        v-if="categorizedResults.profiles && categorizedResults.profiles.length > 0"
+        class="search-page__section">
+        <h2 class="search-page__section-title">Profilok</h2>
+        <div class="search-page__grid">
+          <TopResultCard
+            v-for="profile in categorizedResults.profiles.slice(0, 5)"
+            :key="profile.id"
+            :result="profile"
+            @play="onPlay" />
+        </div>
+      </div>
+
       <div
         v-if="
           !categorizedResults.topResult &&
           categorizedResults.songs.length === 0 &&
           categorizedResults.artists.length === 0 &&
-          categorizedResults.albums.length === 0
+          categorizedResults.albums.length === 0 &&
+          (!categorizedResults.profiles || categorizedResults.profiles.length === 0)
         "
         class="search-page__empty">
         <p>{{ $t('search.page.noResultsQuery', { query }) }}</p>

@@ -252,7 +252,7 @@ onClickOutside(moreMenuBtnRef, (e) => {
                 : false
             }"
             :disabled="!displayTrack"
-            :aria-label="$t('player.shuffle') || 'Shuffle'"
+            :aria-label="$t('player.shuffle')"
             @click="player.toggleShuffle()">
             <AppIcon name="ph:shuffle" />
           </button>
@@ -298,7 +298,7 @@ onClickOutside(moreMenuBtnRef, (e) => {
               'player-bar__btn--active': isHydrated ? player.repeatMode.value !== 'off' : false
             }"
             :disabled="!displayTrack"
-            :aria-label="$t('player.repeat') || 'Repeat'"
+            :aria-label="$t('player.repeat')"
             @click="player.toggleRepeat()">
             <AppIcon
               data-allow-mismatch

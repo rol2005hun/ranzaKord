@@ -133,11 +133,6 @@ onMounted(() => {
             </div>
 
             <template v-if="playlistsStore.playlists.length > 0">
-              <div
-                v-if="playlistsStore.sharedPlaylists.length > 0"
-                class="app-sidebar__section-title app-sidebar__text">
-                Saját listák
-              </div>
               <NuxtLink
                 v-for="playlist in playlistsStore.playlists"
                 :key="playlist.id"
@@ -159,12 +154,31 @@ onMounted(() => {
               </NuxtLink>
             </template>
 
+            <div
+              v-if="
+                isExpanded &&
+                playlistsStore.playlists.length === 0 &&
+                playlistsStore.sharedPlaylists.length > 0
+              "
+              class="music-layout__mini-empty"
+              :title="$t('playlists.noPlaylists')">
+              <div class="music-layout__mini-empty-content app-sidebar__text">
+                <span class="music-layout__mini-empty-text">{{ $t('playlists.noPlaylists') }}</span>
+                <button class="music-layout__mini-empty-btn" @click="showCreateModal = true">
+                  {{ $t('playlists.newPlaylist') }}
+                </button>
+              </div>
+            </div>
             <template v-if="playlistsStore.sharedPlaylists.length > 0">
               <div
-                class="app-sidebar__section-title app-sidebar__text"
-                :style="{ marginTop: '1rem' }">
-                Közös listák
+                v-if="isExpanded"
+                class="music-layout__library-header music-layout__library-header--expanded"
+                :style="{ marginTop: '0.5rem', marginBottom: '0.25rem' }">
+                <div class="music-layout__library-title-wrapper" style="display: flex">
+                  <span class="music-layout__library-title app-sidebar__text">Közös listák</span>
+                </div>
               </div>
+              <div v-else class="app-sidebar__divider" :style="{ marginTop: '1rem' }"></div>
               <NuxtLink
                 v-for="playlist in playlistsStore.sharedPlaylists"
                 :key="playlist.id"
@@ -215,7 +229,7 @@ onMounted(() => {
 
     <AppModal
       :model-value="showMobilePlaylists"
-      :title="$t('core.nav.menu') || 'Menu'"
+      :title="$t('core.nav.menu')"
       @update:model-value="showMobilePlaylists = false">
       <div class="mobile-playlists">
         <div class="mobile-playlists__main-nav">
@@ -223,13 +237,7 @@ onMounted(() => {
             <AppIcon name="ph:house-duotone" />
             {{ $t('core.nav.home') }}
           </NuxtLink>
-          <NuxtLink
-            to="/search"
-            class="mobile-playlists__nav-item"
-            @click="showMobilePlaylists = false">
-            <AppIcon name="ph:magnifying-glass-duotone" />
-            {{ $t('core.nav.search') }}
-          </NuxtLink>
+
           <NuxtLink
             v-if="useAuthStore().currentUser?.roles?.includes('ranzaKreator')"
             to="/stats"
@@ -288,12 +296,6 @@ onMounted(() => {
         </div>
         <div v-else class="mobile-playlists__list">
           <template v-if="playlistsStore.playlists.length > 0">
-            <div
-              v-if="playlistsStore.sharedPlaylists.length > 0"
-              class="app-sidebar__section-title"
-              :style="{ color: 'var(--color-text-secondary)', padding: '0.5rem 1rem 0' }">
-              Saját listák
-            </div>
             <NuxtLink
               v-for="playlist in playlistsStore.playlists"
               :key="playlist.id"
@@ -318,9 +320,13 @@ onMounted(() => {
 
           <template v-if="playlistsStore.sharedPlaylists.length > 0">
             <div
-              class="app-sidebar__section-title"
+              class="mobile-playlists__section-title"
               :style="{
-                color: 'var(--color-text-secondary)',
+                color: 'inherit',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                fontSize: 'var(--text-xs)',
+                fontWeight: 'var(--font-weight-semibold)',
                 padding: '0.5rem 1rem 0',
                 marginTop: '1rem'
               }">
@@ -571,6 +577,55 @@ onMounted(() => {
     &:hover {
       transform: scale(1.05);
       background: var(--color-text-secondary);
+    }
+  }
+
+  &__mini-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: var(--space-2) var(--space-3);
+    margin: 0;
+    color: var(--color-text-muted);
+    transition: all var(--transition-fast);
+
+    &--collapsed {
+      align-items: center;
+      padding: var(--space-2);
+    }
+  }
+
+  &__mini-empty-icon {
+    font-size: 1.25rem;
+    opacity: 0.5;
+  }
+
+  &__mini-empty-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 4px;
+    padding-left: 6px; /* align with playlist items */
+  }
+
+  &__mini-empty-text {
+    font-size: var(--text-xs);
+  }
+
+  &__mini-empty-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-text-primary);
+    padding: 0;
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-bold);
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    transition: text-decoration-color var(--transition-fast);
+
+    &:hover {
+      text-decoration-color: var(--color-text-primary);
     }
   }
 

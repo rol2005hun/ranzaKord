@@ -146,7 +146,7 @@ function onPlayFromList(track: SearchResult) {
 
       <ClientOnly>
         <div v-if="pending" class="home-dashboard__grid">
-          <div v-for="i in 8" :key="i" class="home-dashboard__skeleton">
+          <div v-for="i in 18" :key="i" class="home-dashboard__skeleton">
             <div class="skeleton skeleton--thumb" />
             <div class="home-dashboard__skeleton-info">
               <div class="skeleton skeleton--title" />
@@ -164,7 +164,7 @@ function onPlayFromList(track: SearchResult) {
 
         <template #fallback>
           <div class="home-dashboard__grid">
-            <div v-for="i in 8" :key="i" class="home-dashboard__skeleton">
+            <div v-for="i in 18" :key="i" class="home-dashboard__skeleton">
               <div class="skeleton skeleton--thumb" />
               <div class="home-dashboard__skeleton-info">
                 <div class="skeleton skeleton--title" />

@@ -58,10 +58,10 @@ const optimizedBgUrl = computed(() => {
           :class="{ 'music-page__skeleton-cover--rounded': roundedImage }"></div>
         <div class="music-page__skeleton-info">
           <div class="skeleton-line skeleton-line--badge"></div>
-          <div class="skeleton-line skeleton-line--title"></div>
+          <h1 class="skeleton-line skeleton-line--title"></h1>
           <div class="skeleton-line skeleton-line--meta"></div>
         </div>
-        <div class="music-page__skeleton-center-header">
+        <div v-if="$slots['skeleton-center-header']" class="music-page__skeleton-center-header">
           <slot name="skeleton-center-header" />
         </div>
         <div class="music-page__skeleton-actions">
@@ -163,7 +163,7 @@ const optimizedBgUrl = computed(() => {
               </div>
             </div>
 
-            <div class="music-page__center-header">
+            <div v-if="$slots['center-header']" class="music-page__center-header">
               <slot name="center-header" />
             </div>
 
@@ -487,6 +487,7 @@ const optimizedBgUrl = computed(() => {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    word-break: break-word;
   }
 
   &__meta {

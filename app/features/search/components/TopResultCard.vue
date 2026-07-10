@@ -11,6 +11,7 @@ const routeTo = computed(() => {
   if (props.result.type === 'artist') return `/artist/${props.result.id}`;
   if (props.result.type === 'album') return `/album/${props.result.id}`;
   if (props.result.type === 'playlist') return `/playlist/${props.result.id}`;
+  if (props.result.type === 'profile') return `/user/${props.result.id}`;
   return undefined;
 });
 
@@ -111,7 +112,7 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
               </NuxtLink>
             </template>
           </span>
-          <span class="top-result-card__badge">{{ props.result.type }}</span>
+          <span class="top-result-card__badge">{{ $t(`search.badge.${props.result.type}`) }}</span>
         </div>
       </div>
     </NuxtLink>
@@ -188,13 +189,13 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
               </NuxtLink>
             </template>
           </span>
-          <span class="top-result-card__badge">{{ props.result.type }}</span>
+          <span class="top-result-card__badge">{{ $t(`search.badge.${props.result.type}`) }}</span>
         </div>
       </div>
       <button
         v-if="props.result.type === 'song'"
         class="top-result-card__play-btn"
-        :aria-label="$t('player.play') || 'Lejátszás'"
+        :aria-label="$t('player.play')"
         @click.prevent="emit('play', props.result)">
         <ClientOnly>
           <AppIcon v-if="isPlaying" name="ph:pause-fill" data-allow-mismatch />

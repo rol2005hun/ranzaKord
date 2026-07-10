@@ -30,7 +30,10 @@ const player = usePlayer();
 const { playTrack, togglePlay, isPlaying, currentTrack } = player;
 
 const isAlbumPlaying = computed(() => {
-  if (playerStore.playbackContext?.type === 'album' && playerStore.playbackContext?.sourceId === id) {
+  if (
+    playerStore.playbackContext?.type === 'album' &&
+    playerStore.playbackContext?.sourceId === id
+  ) {
     return isPlaying.value;
   }
   if (!album.value || album.value.tracks.length === 0) return false;
@@ -39,7 +42,10 @@ const isAlbumPlaying = computed(() => {
 });
 
 const isAlbumLoading = computed(() => {
-  if (playerStore.playbackContext?.type === 'album' && playerStore.playbackContext?.sourceId === id) {
+  if (
+    playerStore.playbackContext?.type === 'album' &&
+    playerStore.playbackContext?.sourceId === id
+  ) {
     return playerStore.isLoading;
   }
   if (!album.value || album.value.tracks.length === 0) return false;
@@ -100,7 +106,7 @@ function onPlayAlbum(): void {
     currentOffset: queue.length,
     totalItems: queue.length
   };
-  
+
   playerStore.setQueue(queue);
   if (queue[0]) playTrack(queue[0]);
 }
