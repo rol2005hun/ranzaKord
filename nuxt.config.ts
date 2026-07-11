@@ -117,9 +117,8 @@ export default defineNuxtConfig({
   },
 
   sitemap: {
-    // Disable prerendering for sitemap to avoid H3 v2 node-mock-http crash
     exclude: ['/api/**'],
-    zeroRuntime: true
+    zeroRuntime: false
   },
 
   ogImage: {
