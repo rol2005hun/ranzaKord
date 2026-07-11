@@ -6,5 +6,12 @@
   "follow": "Follow",
   "unfollow": "Unfollow",
   "playlists": "Public Playlists",
-  "noPlaylists": "This user hasn't created any public playlists yet."
+  "noPlaylists": "This user hasn't created any public playlists yet.",
+  "connectionsModalTitle": {
+    "followers": "Followers",
+    "following": "Following"
+  },
+  "anonymousCount": "...and {count} private profile | ...and {count} private profiles",
+  "anonymousCountOnly": "{count} private profile | {count} private profiles",
+  "noConnections": "No users to display."
 }

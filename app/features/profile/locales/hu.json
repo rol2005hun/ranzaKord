@@ -6,5 +6,12 @@
   "follow": "Követés",
   "unfollow": "Kikövetés",
   "playlists": "Publikus Lejátszási Listák",
-  "noPlaylists": "Ez a felhasználó még nem hozott létre publikus lejátszási listákat."
+  "noPlaylists": "Ez a felhasználó még nem hozott létre publikus lejátszási listákat.",
+  "connectionsModalTitle": {
+    "followers": "Követők",
+    "following": "Követettek"
+  },
+  "anonymousCount": "...és további {count} privát profil",
+  "anonymousCountOnly": "{count} privát profil",
+  "noConnections": "Nincsenek megjeleníthető felhasználók."
 }

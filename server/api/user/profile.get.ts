@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
   };
 
   if (!isPublic && !isSelf) {
-    return { profile: profileInfo, playlists: [] };
+    throw createError({ statusCode: 404, message: 'Profile not found' });
   }
 
   const showPlaylists = user.showPlaylists !== false;

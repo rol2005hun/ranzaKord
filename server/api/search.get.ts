@@ -5,11 +5,16 @@ import type {
   SearchResultType
 } from '../../app/features/search/types/search.types';
 
-export default defineCachedEventHandler(
+import { useAppSession } from '../utils/session';
+
+export default defineEventHandler(
   async (event): Promise<CategorizedSearchResults | SearchResult[]> => {
     const query = getQuery(event);
     const q = query['q'] as string | undefined;
     const type = query['type'] as string | undefined;
+
+    const session = await useAppSession(event);
+    const currentUserSub = session.data?.user?.sub;
 
     const { t } = useServerTranslation(event);
 
@@ -233,7 +238,8 @@ export default defineCachedEventHandler(
 
     if (type === 'profile') {
       const dbUsers = await UserModel.find({
-        isPublicProfile: true,
+        isPublicProfile: { $ne: false },
+        sub: { $ne: currentUserSub },
         name: { $regex: q.trim(), $options: 'i' }
       })
         .select('sub name picture')
@@ -311,7 +317,8 @@ export default defineCachedEventHandler(
     }
 
     const dbUsers = await UserModel.find({
-      isPublicProfile: true,
+      isPublicProfile: { $ne: false },
+      sub: { $ne: currentUserSub },
       name: { $regex: q.trim(), $options: 'i' }
     })
       .select('sub name picture')
@@ -337,17 +344,5 @@ export default defineCachedEventHandler(
     response.albums = response.albums.slice(0, 10);
 
     return response;
-  },
-  {
-    maxAge: 60 * 60 * 12,
-    name: 'youtube-search',
-    getKey: (event) => {
-      const query = getQuery(event);
-      const q = String(query['q'] || '')
-        .trim()
-        .toLowerCase();
-      const type = String(query['type'] || 'all');
-      return `${q}-${type}-v3`;
-    }
   }
 );

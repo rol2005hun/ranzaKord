@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const users = await UserModel.find({
-    isPublicProfile: true,
+    isPublicProfile: { $ne: false },
     sub: { $ne: sessionData.user.sub },
     name: { $regex: search, $options: 'i' }
   })

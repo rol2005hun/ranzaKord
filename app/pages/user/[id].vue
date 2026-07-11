@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
 import type { UserProfileResponse } from '@/features/profile/types/profile.types';
+import ConnectionsModal from '@/features/profile/components/ConnectionsModal.vue';
 
 definePageMeta({
   layout: 'music'
@@ -52,6 +53,19 @@ const toggleFollow = async () => {
   } finally {
     isFollowLoading.value = false;
   }
+};
+
+const isConnectionsModalOpen = ref(false);
+const connectionsModalType = ref<'followers' | 'following'>('followers');
+
+const openConnections = (type: 'followers' | 'following') => {
+  const count =
+    type === 'followers' ? profile.value?.followersCount : profile.value?.followingCount;
+
+  if (!count) return;
+
+  connectionsModalType.value = type;
+  isConnectionsModalOpen.value = true;
 };
 </script>
 
@@ -108,11 +122,21 @@ const toggleFollow = async () => {
       </template>
 
       <template #meta>
-        <span class="user-page__stat">{{ profile?.followersCount || 0 }} Követő</span>
+        <span
+          class="user-page__stat"
+          :class="{ 'user-page__stat--clickable': profile?.followersCount }"
+          @click="openConnections('followers')">
+          {{ profile?.followersCount || 0 }} {{ $t('profile.followers') }}
+        </span>
         <span class="user-page__stat-dot">•</span>
-        <span class="user-page__stat">{{ profile?.followingCount || 0 }} Követett</span>
+        <span
+          class="user-page__stat"
+          :class="{ 'user-page__stat--clickable': profile?.followingCount }"
+          @click="openConnections('following')">
+          {{ profile?.followingCount || 0 }} {{ $t('profile.following') }}
+        </span>
         <span class="user-page__stat-dot">•</span>
-        <span class="user-page__stat">{{ playlists.length }} Publikus lista</span>
+        <span class="user-page__stat">{{ playlists.length }} {{ $t('profile.playlists') }}</span>
       </template>
 
       <template #actions>
@@ -174,6 +198,11 @@ const toggleFollow = async () => {
         </div>
       </template>
     </AppMusicPage>
+
+    <ConnectionsModal
+      v-model="isConnectionsModalOpen"
+      :user-id="userId"
+      :type="connectionsModalType" />
   </div>
 </template>
 
@@ -183,6 +212,16 @@ const toggleFollow = async () => {
 
   &__stat {
     font-weight: var(--font-weight-medium);
+
+    &--clickable {
+      cursor: pointer;
+      transition: color var(--transition-fast);
+
+      &:hover {
+        color: var(--color-primary);
+        text-decoration: underline;
+      }
+    }
   }
 
   &__stat-dot {
