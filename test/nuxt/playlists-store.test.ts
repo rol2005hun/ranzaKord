@@ -252,5 +252,76 @@ describe('usePlaylistsStore', () => {
       const res = await store.importPlaylist('http://yt', 'youtube');
       expect(res).toBeNull();
     });
+
+    it('handles addTrack errors during import', async () => {
+      const mockResult = {
+        name: 'YT Import',
+        description: 'desc',
+        imageUrl: 'img',
+        tracks: [
+          { title: 't1', artist: 'a1', videoId: 'v1', durationSeconds: 10 },
+          { title: 't2', artist: 'a2', videoId: null, durationSeconds: 10 }, // No video ID
+          { title: 't3', artist: 'a3', videoId: 'v3', durationSeconds: 10 }
+        ]
+      };
+
+      fetchMock.mockImplementation(async (url, options) => {
+        if (typeof url === 'string' && url.includes('/api/import/youtube')) return mockResult;
+        if (typeof url === 'string' && url.includes('/api/playlists') && !url.includes('/tracks')) {
+          return { id: 'p3', name: 'YT Import', trackIds: [], tracks: [] };
+        }
+        if (typeof url === 'string' && url.includes('/tracks')) {
+          if (options?.body?.videoId === 'v3') {
+            throw new Error('addTrack failed');
+          }
+          return { success: true };
+        }
+        return {};
+      });
+
+      const store = usePlaylistsStore();
+      const res = await store.importPlaylist('http://yt', 'youtube');
+
+      expect(res?.id).toBe('p3');
+      expect(store.importResult?.success).toBe(1); // v1
+      expect(store.importResult?.failed).toBe(2); // v2 (no ID), v3 (error)
+    });
+
+    it('can cancel import', () => {
+      const store = usePlaylistsStore();
+      expect(store.importCancelled).toBe(false);
+      store.cancelImport();
+      expect(store.importCancelled).toBe(true);
+    });
+  });
+
+  describe('reorderTrack', () => {
+    it('returns true if fromIndex equals toIndex', async () => {
+      const store = usePlaylistsStore();
+      const result = await store.reorderTrack('p1', 1, 1);
+      expect(result).toBe(true);
+      expect(globalThis.$fetch).not.toHaveBeenCalled();
+    });
+
+    it('calls API and returns success', async () => {
+      fetchMock.mockResolvedValue({ success: true });
+      const store = usePlaylistsStore();
+
+      const result = await store.reorderTrack('p1', 0, 2);
+
+      expect(result).toBe(true);
+      expect(globalThis.$fetch).toHaveBeenCalledWith('/api/playlists/p1/reorder', {
+        method: 'PATCH',
+        body: { fromIndex: 0, toIndex: 2 }
+      });
+    });
+
+    it('returns false on error', async () => {
+      fetchMock.mockRejectedValue(new Error());
+      const store = usePlaylistsStore();
+
+      const result = await store.reorderTrack('p1', 0, 2);
+      expect(result).toBe(false);
+    });
   });
 });

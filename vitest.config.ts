@@ -27,7 +27,8 @@ export default defineConfig({
               domEnvironment: 'happy-dom'
             }
           },
-          setupFiles: ['./test/setup.ts']
+          setupFiles: ['./test/setup.ts'],
+          pool: 'forks'
         }
       })
     ],

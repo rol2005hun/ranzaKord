@@ -215,9 +215,10 @@ const optimizedBgUrl = computed(() => {
     min-height: 160px;
 
     @container (max-width: 768px) {
-      flex-direction: row;
-      flex-wrap: wrap;
-      gap: var(--space-5) var(--space-3);
+      flex-direction: column;
+      text-align: center;
+      gap: var(--space-4);
+      padding-top: var(--space-4);
     }
   }
 
@@ -232,8 +233,9 @@ const optimizedBgUrl = computed(() => {
     }
 
     @container (max-width: 768px) {
-      width: 80px;
-      height: 80px;
+      width: 160px;
+      height: 160px;
+      margin: 0 auto;
     }
   }
 
@@ -244,8 +246,9 @@ const optimizedBgUrl = computed(() => {
     flex: 1;
 
     @container (max-width: 768px) {
-      flex: 0 0 calc(100% - 80px - var(--space-3));
-      max-width: calc(100% - 80px - var(--space-3));
+      align-items: center;
+      flex: none;
+      width: 100%;
     }
   }
 
@@ -255,6 +258,11 @@ const optimizedBgUrl = computed(() => {
     justify-content: center;
     align-items: center;
     min-width: 0;
+
+    @container (max-width: 768px) {
+      flex: none;
+      width: 100%;
+    }
   }
 
   &__skeleton-actions {
@@ -262,6 +270,12 @@ const optimizedBgUrl = computed(() => {
     align-items: center;
     gap: var(--space-4);
     padding: var(--space-2) 0;
+
+    @container (max-width: 768px) {
+      width: 100%;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
   }
 
   &__skeleton-tracks {

@@ -69,6 +69,18 @@ describe('Auth Module', () => {
       // Cookie is cleared by setting expires in the past. Hard to test exact value of document.cookie
       // because JSDOM cookie handling is complex, but we can verify it ran without errors.
     });
+
+    it('logs in as demo user', () => {
+      const store = useAuthStore();
+      store.loginAsDemo();
+
+      expect(store.user).not.toBeNull();
+      expect(store.user?.isDemo).toBe(true);
+      expect(store.user?.sub).toBe('demo-user-id');
+      expect(store.isAuthenticated).toBe(true);
+      // It should also set localStorage
+      expect(localStorage.getItem('ranzakord_demo_session')).toBe('true');
+    });
   });
 
   describe('useAuth', () => {

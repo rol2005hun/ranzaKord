@@ -160,7 +160,12 @@ const openConnections = (type: 'followers' | 'following') => {
             </template>
           </div>
         </button>
-        <AppButton variant="ghost" size="sm" class="user-page__refresh-btn" @click="refresh">
+        <AppButton
+          variant="ghost"
+          size="sm"
+          class="user-page__refresh-btn"
+          aria-label="Frissítés"
+          @click="refresh">
           <AppIcon name="ph:arrows-clockwise" class="text-xl" />
         </AppButton>
       </template>
