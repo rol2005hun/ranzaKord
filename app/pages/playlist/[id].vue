@@ -657,6 +657,7 @@ const showStickyMobileMenu = ref(false);
       :initial-name="playlist.name"
       :initial-description="playlist.description"
       :initial-image-url="playlist.imageUrl"
+      :initial-is-public="playlist.isPublic"
       @saved="refresh()"
       @close="showEditModal = false"
       @created="showEditModal = false" />

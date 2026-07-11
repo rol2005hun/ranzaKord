@@ -7,6 +7,7 @@ export interface PlaylistSummary {
   trackIds: string[];
   createdAt: string;
   updatedAt: string;
+  isPublic?: boolean;
 }
 
 export interface MusicTrack {
@@ -62,6 +63,7 @@ export interface CreatePlaylistPayload {
   name: string;
   description: string;
   imageUrl: string;
+  isPublic?: boolean;
 }
 
 export interface FailedTrack {

@@ -78,6 +78,8 @@ function handleSort(column: string): void {
   }
 }
 
+const hoveredTrackId = ref<string | null>(null);
+
 const dragIndex = ref<number | null>(null);
 const dragOverIndex = ref<number | null>(null);
 
@@ -136,8 +138,7 @@ const gridColumns = computed(() => {
   if (hasDateColumn.value) cols.push('var(--track-list-date, 160px)');
   if (hasPlaysColumn.value) cols.push('var(--track-list-plays, 120px)');
   if (hasTimeColumn.value) cols.push('var(--track-list-time, 60px)');
-  if (hasDownloadColumn.value) cols.push('var(--track-list-action, 40px)');
-  if (hasActionColumn.value) cols.push('var(--track-list-action, 48px)');
+  if (hasDownloadColumn.value || hasActionColumn.value) cols.push('auto');
   return cols.join(' ');
 });
 
@@ -230,7 +231,9 @@ onMounted(() => {
             @dragover="track && handleDragOver($event, index)"
             @dragend="track && handleDragEnd()"
             @drop="track && handleDrop($event, index)"
-            @click="track && emit('play', track, index)">
+            @click="track && emit('play', track, index)"
+            @mouseenter="track && (hoveredTrackId = track.id)"
+            @mouseleave="hoveredTrackId = null">
             <template v-if="!track">
               <div class="app-track-list__track-num-wrapper">
                 <div class="skeleton-box" style="height: 14px; width: 16px"></div>
@@ -362,29 +365,38 @@ onMounted(() => {
                 {{ formatDuration(track.durationSeconds) }}
               </span>
 
-              <div v-if="hasDownloadColumn" class="app-track-list__track-action" @click.stop>
-                <ClientOnly>
-                  <OfflineDownloadButton
-                    v-if="track"
-                    :track="{
-                      videoId: track.id,
-                      title: track.title,
-                      artist: track.artist,
-                      thumbnailUrl: track.thumbnailUrl || '',
-                      durationSeconds: track.durationSeconds
-                    }"
-                    size="sm" />
-                </ClientOnly>
-              </div>
-              <div v-if="hasActionColumn" class="app-track-list__track-action">
-                <button
-                  v-if="track"
-                  class="app-track-list__action-btn"
-                  :aria-label="$t('playlists.delete')"
-                  @click.stop="emit('remove', track, index)">
-                  <AppIcon name="ph:trash" />
-                </button>
-              </div>
+              <Transition name="action-slide">
+                <div
+                  v-if="(hasDownloadColumn || hasActionColumn) && hoveredTrackId === track.id"
+                  class="app-track-list__actions-wrapper"
+                  @click.stop>
+                  <div class="app-track-list__actions-inner">
+                    <div v-if="hasDownloadColumn" class="app-track-list__track-action">
+                      <ClientOnly>
+                        <OfflineDownloadButton
+                          v-if="track"
+                          :track="{
+                            videoId: track.id,
+                            title: track.title,
+                            artist: track.artist,
+                            thumbnailUrl: track.thumbnailUrl || '',
+                            durationSeconds: track.durationSeconds
+                          }"
+                          size="sm" />
+                      </ClientOnly>
+                    </div>
+                    <div v-if="hasActionColumn" class="app-track-list__track-action">
+                      <button
+                        v-if="track"
+                        class="app-track-list__action-btn"
+                        :aria-label="$t('playlists.delete')"
+                        @click.stop="emit('remove', track, index)">
+                        <AppIcon name="ph:trash" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </Transition>
             </template>
           </div>
         </div>
@@ -410,7 +422,9 @@ onMounted(() => {
         @dragover="track && handleDragOver($event, index)"
         @dragend="track && handleDragEnd()"
         @drop="track && handleDrop($event, index)"
-        @click="emit('play', track, index)">
+        @click="emit('play', track, index)"
+        @mouseenter="track && (hoveredTrackId = track.id)"
+        @mouseleave="hoveredTrackId = null">
         <div class="app-track-list__track-num-wrapper">
           <ClientOnly>
             <div style="display: contents">
@@ -508,27 +522,36 @@ onMounted(() => {
           {{ formatDuration(track.durationSeconds) }}
         </span>
 
-        <div v-if="hasDownloadColumn" class="app-track-list__track-action" @click.stop>
-          <ClientOnly>
-            <OfflineDownloadButton
-              :track="{
-                videoId: track.id,
-                title: track.title,
-                artist: track.artist,
-                thumbnailUrl: track.thumbnailUrl || '',
-                durationSeconds: track.durationSeconds
-              }"
-              size="sm" />
-          </ClientOnly>
-        </div>
-        <div v-if="hasActionColumn" class="app-track-list__track-action">
-          <button
-            class="app-track-list__action-btn"
-            :aria-label="$t('playlists.delete')"
-            @click.stop="emit('remove', track, index)">
-            <AppIcon name="ph:trash" />
-          </button>
-        </div>
+        <Transition name="action-slide">
+          <div
+            v-if="(hasDownloadColumn || hasActionColumn) && hoveredTrackId === track.id"
+            class="app-track-list__actions-wrapper"
+            @click.stop>
+            <div class="app-track-list__actions-inner">
+              <div v-if="hasDownloadColumn" class="app-track-list__track-action">
+                <ClientOnly>
+                  <OfflineDownloadButton
+                    :track="{
+                      videoId: track.id,
+                      title: track.title,
+                      artist: track.artist,
+                      thumbnailUrl: track.thumbnailUrl || '',
+                      durationSeconds: track.durationSeconds
+                    }"
+                    size="sm" />
+                </ClientOnly>
+              </div>
+              <div v-if="hasActionColumn" class="app-track-list__track-action">
+                <button
+                  class="app-track-list__action-btn"
+                  :aria-label="$t('playlists.delete')"
+                  @click.stop="emit('remove', track, index)">
+                  <AppIcon name="ph:trash" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </Transition>
       </div>
       <template v-if="isLoading">
         <div
@@ -885,5 +908,39 @@ onMounted(() => {
       opacity: 1;
     }
   }
+}
+
+.app-track-list__actions-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  overflow: hidden;
+  height: 100%;
+}
+
+.app-track-list__actions-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.action-slide-enter-active,
+.action-slide-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.action-slide-enter-from,
+.action-slide-leave-to {
+  opacity: 0;
+  max-width: 0;
+  transform: translateX(10px);
+}
+
+.action-slide-enter-to,
+.action-slide-leave-from {
+  opacity: 1;
+  max-width: 120px;
+  transform: translateX(0);
 }
 </style>

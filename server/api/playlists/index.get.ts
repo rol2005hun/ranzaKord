@@ -10,6 +10,7 @@ export interface PlaylistResponse {
   trackIds: string[];
   createdAt: string;
   updatedAt: string;
+  isPublic?: boolean;
 }
 
 export interface PlaylistsIndexResponse {
@@ -51,7 +52,8 @@ export default defineEventHandler(async (event): Promise<PlaylistsIndexResponse>
       trackCount: p.items.length,
       trackIds: p.items.map((i: { videoId: string }) => i.videoId),
       createdAt: p.createdAt.toISOString(),
-      updatedAt: p.updatedAt.toISOString()
+      updatedAt: p.updatedAt.toISOString(),
+      isPublic: p.isPublic !== false
     };
 
     if (isOwner) {

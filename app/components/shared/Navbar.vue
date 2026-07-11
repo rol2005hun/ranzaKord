@@ -91,6 +91,15 @@ function closeDropdown() {
           @click="closeDropdown"></div>
 
         <div v-if="isDropdownOpen" class="app-navbar__dropdown">
+          <NuxtLink
+            v-if="currentUser?.sub"
+            :to="`/user/${currentUser.sub}`"
+            class="app-navbar__dropdown-item"
+            @click="closeDropdown">
+            <AppIcon name="ph:user" class="app-navbar__dropdown-icon" />
+            <span class="app-navbar__dropdown-label">{{ $t('auth.profile') }}</span>
+          </NuxtLink>
+
           <button
             class="app-navbar__dropdown-item"
             @click="

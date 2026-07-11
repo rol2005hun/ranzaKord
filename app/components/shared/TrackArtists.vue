@@ -43,7 +43,7 @@ const artists = computed(() => getTrackArtists(props.track || undefined));
     </template>
     <template v-else>
       <span class="app-track-artists__text" data-allow-mismatch>
-        {{ $t('player.startSomething') }}
+        {{ track ? $t('player.unknownArtist') : $t('player.startSomething') }}
       </span>
     </template>
   </span>

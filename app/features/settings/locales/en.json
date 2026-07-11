@@ -66,6 +66,8 @@
     "description": "About the application and useful keyboard shortcuts.",
     "shortcutsTitle": "Keyboard Shortcuts",
     "shortcutsNote": "Global shortcuts work even when the app is in the background.",
+    "changelogTitle": "Changelog",
+    "roadmapTitle": "Roadmap",
     "aboutTitle": "About",
     "shortcuts": {
       "playPause": "Play / Pause",

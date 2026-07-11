@@ -5,10 +5,6 @@ definePageMeta({
 
 const route = useRoute();
 const id = route.params.id as string;
-
-useHead({
-  title: 'Artist'
-});
 </script>
 
 <template>

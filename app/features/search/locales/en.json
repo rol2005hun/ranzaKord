@@ -32,6 +32,7 @@
     "albums": "Albums",
     "allSongs": "All Songs",
     "bio": "About",
+    "titleFallback": "Artist",
     "singles": "Singles",
     "discography": "Discography",
     "plays": "plays"

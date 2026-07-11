@@ -8,6 +8,7 @@
   "playlistName": "Playlist Name",
   "playlistDescription": "Description",
   "playlistImage": "Cover Image",
+  "isPublicLabel": "Public Playlist",
   "uploadImage": "Upload Image",
   "changeImage": "Change Image",
   "trackCount": "{count} songs",

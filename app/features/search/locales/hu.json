@@ -32,6 +32,7 @@
     "albums": "Albumok",
     "allSongs": "Összes dal",
     "bio": "Névjegy",
+    "titleFallback": "Előadó",
     "singles": "Kislemezek",
     "discography": "Diszkográfia",
     "plays": "lejátszás"

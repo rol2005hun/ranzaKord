@@ -53,7 +53,7 @@ const playlistSchema = new Schema<IPlaylist>(
     name: { type: String, required: true },
     description: { type: String, default: '' },
     imageUrl: { type: String, default: '' },
-    isPublic: { type: Boolean, default: true },
+    isPublic: { type: Boolean, default: false },
     collaborators: { type: [String], default: [] },
     items: { type: [playlistItemSchema], default: [] }
   },

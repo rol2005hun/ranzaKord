@@ -30,6 +30,10 @@ const {
 const { playTrack } = usePlayer();
 const playerStore = usePlayerStore();
 
+useHead({
+  title: computed(() => artist.value?.name || t('search.artist.titleFallback'))
+});
+
 function onShuffleArtist() {
   if (!artist.value) return;
   const sourceSongs =

@@ -136,6 +136,7 @@ describe('playlist/[id].vue', () => {
     const wrapper = mountPage();
     await new Promise((r) => setTimeout(r, 0));
 
+    await wrapper.find('.app-track-list__track').trigger('mouseenter');
     await wrapper.find('.app-track-list__action-btn').trigger('click');
     expect(mockRemoveTrack).toHaveBeenCalledWith('p1', 't1');
   });

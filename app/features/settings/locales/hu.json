@@ -66,6 +66,8 @@
     "description": "Az alkalmazásról és a hasznos billentyűparancsokról.",
     "shortcutsTitle": "Billentyűparancsok",
     "shortcutsNote": "A globális parancsok akkor is működnek, ha az alkalmazás a háttérben fut.",
+    "changelogTitle": "Változások naplója (Changelog)",
+    "roadmapTitle": "Fejlesztési tervezet (Roadmap)",
     "aboutTitle": "Névjegy",
     "shortcuts": {
       "playPause": "Lejátszás / Szünet",

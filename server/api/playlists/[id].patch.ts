@@ -6,6 +6,7 @@ interface UpdatePlaylistBody {
   name?: string;
   description?: string;
   imageUrl?: string;
+  isPublic?: boolean;
 }
 
 export default defineEventHandler(async (event): Promise<PlaylistDetailResponse> => {
@@ -25,10 +26,11 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
   if (!id) throw createError({ statusCode: 400, message: t('playlists.errors.missingId') });
 
   const body = await readBody<UpdatePlaylistBody>(event);
-  const updates: Record<string, string> = {};
+  const updates: Record<string, string | boolean> = {};
   if (body?.name !== undefined) updates['name'] = body.name.trim();
   if (body?.description !== undefined) updates['description'] = body.description.trim();
   if (body?.imageUrl !== undefined) updates['imageUrl'] = body.imageUrl;
+  if (body?.isPublic !== undefined) updates['isPublic'] = body.isPublic;
 
   const playlist = await PlaylistModel.findOneAndUpdate(
     { _id: id, userId: sessionData.user.sub },
@@ -56,6 +58,7 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
     trackCount: playlist.items.length,
     trackIds: playlist.items.map((i: { videoId: string }) => i.videoId),
     createdAt: playlist.createdAt.toISOString(),
-    updatedAt: playlist.updatedAt.toISOString()
+    updatedAt: playlist.updatedAt.toISOString(),
+    isPublic: playlist.isPublic !== false
   };
 });

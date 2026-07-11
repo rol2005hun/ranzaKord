@@ -38,15 +38,7 @@ function resizeCanvas() {
   canvas.style.height = `${height}px`;
 }
 
-let primaryH = '250';
-let primaryS = '80%';
-
-function syncThemeColors() {
-  if (typeof window === 'undefined') return;
-  const s = getComputedStyle(document.documentElement);
-  primaryH = s.getPropertyValue('--color-primary-h').trim() || '250';
-  primaryS = s.getPropertyValue('--color-primary-s').trim() || '80%';
-}
+const themeStore = useThemeStore();
 
 function drawFrame() {
   animId = requestAnimationFrame(drawFrame);
@@ -71,6 +63,9 @@ function drawFrame() {
 
   const W = canvas.width;
   const H = canvas.height;
+
+  const primaryH = themeStore.currentCustomPalette?.primary.h.toString() || '250';
+  const primaryS = (themeStore.currentCustomPalette?.primary.s.toString() || '80') + '%';
 
   const time = performance.now();
   const bassScale = drawVisualizer({
@@ -97,7 +92,6 @@ onMounted(() => {
   ro = new ResizeObserver(resizeCanvas);
   if (vizWrapRef.value) ro.observe(vizWrapRef.value);
   nextTick(() => {
-    syncThemeColors();
     resizeCanvas();
     drawFrame();
   });

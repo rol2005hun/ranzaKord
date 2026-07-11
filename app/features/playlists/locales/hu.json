@@ -7,6 +7,7 @@
   "playlistName": "Lista neve",
   "playlistDescription": "Leírás",
   "playlistImage": "Borítókép",
+  "isPublicLabel": "Publikus lejátszási lista",
   "uploadImage": "Kép feltöltése",
   "changeImage": "Kép módosítása",
   "trackCount": "{count} dal",

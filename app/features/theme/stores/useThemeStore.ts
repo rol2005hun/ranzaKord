@@ -164,8 +164,8 @@ export const useThemeStore = defineStore('theme', () => {
   }
 
   function resetCustomColor() {
-    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-    delete customColors.value[themeId.value];
+    const { [themeId.value]: _removed, ...rest } = customColors.value;
+    customColors.value = rest;
     if (import.meta.client) {
       if (currentCustomPalette.value) {
         applyPaletteToDom(currentCustomPalette.value);

@@ -7,13 +7,15 @@ interface Props {
   initialName?: string;
   initialDescription?: string;
   initialImageUrl?: string;
+  initialIsPublic?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   editId: undefined,
   initialName: '',
   initialDescription: '',
-  initialImageUrl: ''
+  initialImageUrl: '',
+  initialIsPublic: false
 });
 
 const emit = defineEmits<{
@@ -28,6 +30,7 @@ const name = ref(props.initialName);
 const description = ref(props.initialDescription);
 const imageUrl = ref(props.initialImageUrl);
 const imagePreview = ref(props.initialImageUrl);
+const isPublic = ref(props.initialIsPublic);
 const isUploading = ref(false);
 const isSaving = ref(false);
 
@@ -39,6 +42,7 @@ watch(
       description.value = props.initialDescription;
       imageUrl.value = props.initialImageUrl;
       imagePreview.value = props.initialImageUrl;
+      isPublic.value = props.initialIsPublic;
     }
   }
 );
@@ -75,7 +79,8 @@ async function submit(): Promise<void> {
     const payload: CreatePlaylistPayload = {
       name: name.value,
       description: description.value,
-      imageUrl: imageUrl.value
+      imageUrl: imageUrl.value,
+      isPublic: isPublic.value
     };
 
     if (props.editId) {
@@ -154,6 +159,12 @@ async function submit(): Promise<void> {
             :placeholder="$t('playlists.descriptionPlaceholder')"
             rows="3"
             maxlength="300" />
+        </div>
+        <div class="playlist-modal__field playlist-modal__field--row">
+          <label class="playlist-modal__label" for="playlist-public-toggle">
+            {{ $t('playlists.isPublicLabel') }}
+          </label>
+          <AppToggle id="playlist-public-toggle" v-model="isPublic" />
         </div>
       </div>
     </div>
@@ -285,6 +296,17 @@ async function submit(): Promise<void> {
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
+
+    &--row {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: var(--space-2);
+
+      .playlist-modal__label {
+        margin-bottom: 0;
+      }
+    }
   }
 
   &__label {
