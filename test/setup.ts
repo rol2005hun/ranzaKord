@@ -1,4 +1,4 @@
-import { beforeAll } from 'vitest';
+import { beforeAll, vi } from 'vitest';
 
 beforeAll(() => {
   const localStorageMock = (() => {
@@ -17,10 +17,20 @@ beforeAll(() => {
     };
   })();
 
+  const indexedDBMock = {
+    open: vi.fn().mockReturnValue({
+      onupgradeneeded: null,
+      onsuccess: null,
+      onerror: null
+    })
+  };
+
   if (typeof globalThis !== 'undefined') {
     Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, writable: true });
+    Object.defineProperty(globalThis, 'indexedDB', { value: indexedDBMock, writable: true });
   }
   if (typeof window !== 'undefined') {
     Object.defineProperty(window, 'localStorage', { value: localStorageMock, writable: true });
+    Object.defineProperty(window, 'indexedDB', { value: indexedDBMock, writable: true });
   }
 });

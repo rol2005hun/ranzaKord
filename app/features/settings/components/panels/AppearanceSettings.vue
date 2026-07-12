@@ -38,7 +38,8 @@ const themes = computed(() =>
 
 const customColorValue = computed({
   get: () =>
-    themeStore.currentCustomColor?.hex || themeStore.DEFAULT_THEME_COLORS[themeStore.themeId],
+    themeStore.currentCustomPalette?.primary.hex ||
+    themeStore.DEFAULT_THEME_COLORS[themeStore.themeId],
   set: (val: string) => themeStore.setCustomColor(val)
 });
 </script>
@@ -59,30 +60,39 @@ const customColorValue = computed({
       </AppSettingsItem>
 
       <AppSettingsItem
+        :title="$t('settings.appearance.adaptiveTheme.title')"
+        :description="$t('settings.appearance.adaptiveTheme.description')"
+        border>
+        <AppToggle v-model="themeStore.isAdaptiveThemeEnabled" />
+      </AppSettingsItem>
+
+      <AppSettingsItem
         :title="$t('settings.appearance.customColor.title')"
         :description="$t('settings.appearance.customColor.description')"
         border>
-        <template #info>
-          <div class="color-picker-wrap">
-            <input
-              v-model="customColorValue"
-              type="color"
-              class="color-picker"
-              :class="{
-                'color-picker--unselected': !themeStore.customColors[themeStore.themeId]
-              }" />
-            <AppButton
-              variant="secondary"
-              size="sm"
-              :disabled="!themeStore.customColors[themeStore.themeId]"
-              @click="themeStore.resetCustomColor()">
-              <template #icon>
-                <AppIcon name="ph:arrow-counter-clockwise" />
-              </template>
-              {{ $t('settings.appearance.customColor.reset') }}
-            </AppButton>
-          </div>
-        </template>
+        <div class="color-picker-wrap">
+          <input
+            v-model="customColorValue"
+            type="color"
+            class="color-picker"
+            :disabled="themeStore.isAdaptiveThemeEnabled"
+            :class="{
+              'color-picker--unselected':
+                !themeStore.customColors[themeStore.themeId] || themeStore.isAdaptiveThemeEnabled
+            }" />
+          <AppButton
+            variant="secondary"
+            size="sm"
+            :disabled="
+              !themeStore.customColors[themeStore.themeId] || themeStore.isAdaptiveThemeEnabled
+            "
+            @click="themeStore.resetCustomColor()">
+            <template #icon>
+              <AppIcon name="ph:arrow-counter-clockwise" />
+            </template>
+            {{ $t('settings.appearance.customColor.reset') }}
+          </AppButton>
+        </div>
       </AppSettingsItem>
 
       <AppSettingsItem
@@ -160,6 +170,11 @@ const customColorValue = computed({
   &::-webkit-color-swatch {
     border: none;
     border-radius: var(--radius-md);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 }
 </style>

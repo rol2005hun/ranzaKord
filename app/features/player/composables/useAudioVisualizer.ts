@@ -7,6 +7,7 @@ let crossfadeGain2: GainNode | null = null;
 let masterGainNode: GainNode | null = null;
 let dryGainNode: GainNode | null = null;
 let wetGainNode: GainNode | null = null;
+let spatialPannerNode: PannerNode | null = null;
 let eqFilters: BiquadFilterNode[] = [];
 let isConnected = false;
 
@@ -57,8 +58,25 @@ export function useAudioVisualizer() {
         wetGainNode.gain.value = 0;
 
         karaokeInput.connect(dryGainNode);
-        dryGainNode.connect(masterGainNode);
-        wetGainNode.connect(masterGainNode);
+
+        spatialPannerNode = audioCtx.createPanner();
+        spatialPannerNode.panningModel = 'HRTF';
+        spatialPannerNode.distanceModel = 'inverse';
+        spatialPannerNode.refDistance = 1;
+        spatialPannerNode.maxDistance = 10000;
+        spatialPannerNode.rolloffFactor = 1;
+
+        if (audioCtx.listener.positionX) {
+          audioCtx.listener.positionX.value = 0;
+          audioCtx.listener.positionY.value = 0;
+          audioCtx.listener.positionZ.value = 0;
+        } else {
+          audioCtx.listener.setPosition(0, 0, 0);
+        }
+
+        dryGainNode.connect(spatialPannerNode);
+        wetGainNode.connect(spatialPannerNode);
+        spatialPannerNode.connect(masterGainNode);
 
         // --- Pure Phase Cancellation (L - R) Vocal Remover ---
         // Filters cause phase distortion (comb filtering) when summed.
@@ -173,21 +191,28 @@ export function useAudioVisualizer() {
   let rAFId: number | null = null;
   const dataArray = new Uint8Array(512);
   let smoothedBass = 0;
+  let lastSetBass = '';
+  let cachedPlayerStore: ReturnType<typeof usePlayerStore> | null = null;
 
   function startAudioReactiveLoop() {
     if (rAFId) return;
+    cachedPlayerStore = usePlayerStore();
     function loop() {
       if (analyserNode && isConnected) {
-        analyserNode.getByteFrequencyData(dataArray);
+        let rawBass = 0;
 
-        let bassSum = 0;
-        const bassBins = 8; // First 8 bins (~0-300Hz)
-        for (let i = 0; i < bassBins; i++) {
-          bassSum += dataArray[i] ?? 0;
+        if (cachedPlayerStore?.isPlaying) {
+          analyserNode.getByteFrequencyData(dataArray);
+
+          let bassSum = 0;
+          const bassBins = 8; // First 8 bins (~0-300Hz)
+          for (let i = 0; i < bassBins; i++) {
+            bassSum += dataArray[i] ?? 0;
+          }
+          // Normalize 0..1 and apply a slight curve to make it punchier
+          rawBass = bassSum / bassBins / 255;
+          rawBass = Math.pow(rawBass, 1.5);
         }
-        // Normalize 0..1 and apply a slight curve to make it punchier
-        let rawBass = bassSum / bassBins / 255;
-        rawBass = Math.pow(rawBass, 1.5);
 
         // Fast attack, fast decay for punchier beat syncing
         if (rawBass > smoothedBass) {
@@ -196,7 +221,41 @@ export function useAudioVisualizer() {
           smoothedBass = smoothedBass * 0.7 + rawBass * 0.3;
         }
 
-        document.documentElement.style.setProperty('--audio-bass', smoothedBass.toString());
+        if (smoothedBass < 0.001) {
+          smoothedBass = 0;
+        }
+
+        const bassRounded = Math.round(smoothedBass * 1000) / 1000;
+        const bassString = bassRounded.toString();
+        if (bassString !== lastSetBass) {
+          document.documentElement.style.setProperty('--audio-bass', bassString);
+          lastSetBass = bassString;
+        }
+
+        if (spatialPannerNode) {
+          if (cachedPlayerStore?.isSpatialAudio) {
+            const speed = 2000; // 2 seconds per radian = ~12.5s full rotation
+            const t = performance.now() / speed;
+            const x = Math.sin(t) * 2;
+            const z = Math.cos(t) * 2;
+
+            if (spatialPannerNode.positionX) {
+              const now = audioCtx?.currentTime ?? 0;
+              spatialPannerNode.positionX.setTargetAtTime(x, now, 0.1);
+              spatialPannerNode.positionZ.setTargetAtTime(z, now, 0.1);
+            } else {
+              spatialPannerNode.setPosition(x, 0, z);
+            }
+          } else {
+            if (spatialPannerNode.positionX) {
+              const now = audioCtx?.currentTime ?? 0;
+              spatialPannerNode.positionX.setTargetAtTime(0, now, 0.1);
+              spatialPannerNode.positionZ.setTargetAtTime(-1, now, 0.1);
+            } else {
+              spatialPannerNode.setPosition(0, 0, -1);
+            }
+          }
+        }
       }
       rAFId = requestAnimationFrame(loop);
     }

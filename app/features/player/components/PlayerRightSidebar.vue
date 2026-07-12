@@ -3,7 +3,16 @@ import type { LyricLine } from '../types/sidebar.types';
 
 const player = usePlayer();
 const layoutStore = useLayoutStore();
-const { lyricsData, isLoading: lyricsLoading, fetchLyrics, getActiveLine } = useLyrics();
+const {
+  lyricsData,
+  isLoading: lyricsLoading,
+  isTranslating,
+  translatedLanguage,
+  fetchLyrics,
+  translateLyrics,
+  resetTranslation,
+  getActiveLine
+} = useLyrics();
 const { connect: connectVisualizer } = useAudioVisualizer();
 const { drawVisualizer } = useCanvasVisualizer();
 
@@ -29,15 +38,7 @@ function resizeCanvas() {
   canvas.style.height = `${height}px`;
 }
 
-let primaryH = '250';
-let primaryS = '80%';
-
-function syncThemeColors() {
-  if (typeof window === 'undefined') return;
-  const s = getComputedStyle(document.documentElement);
-  primaryH = s.getPropertyValue('--color-primary-h').trim() || '250';
-  primaryS = s.getPropertyValue('--color-primary-s').trim() || '80%';
-}
+const themeStore = useThemeStore();
 
 function drawFrame() {
   animId = requestAnimationFrame(drawFrame);
@@ -62,6 +63,9 @@ function drawFrame() {
 
   const W = canvas.width;
   const H = canvas.height;
+
+  const primaryH = themeStore.currentCustomPalette?.primary.h.toString() || '250';
+  const primaryS = (themeStore.currentCustomPalette?.primary.s.toString() || '80') + '%';
 
   const time = performance.now();
   const bassScale = drawVisualizer({
@@ -88,7 +92,6 @@ onMounted(() => {
   ro = new ResizeObserver(resizeCanvas);
   if (vizWrapRef.value) ro.observe(vizWrapRef.value);
   nextTick(() => {
-    syncThemeColors();
     resizeCanvas();
     drawFrame();
   });
@@ -370,6 +373,22 @@ const sidebarStyle = computed(() => ({
 
       <div v-else-if="layoutStore.rightSidebarMode === 'lyrics'" class="right-sidebar__lyrics">
         <div
+          v-if="hasAnyLyrics && !lyricsLoading && currentTrack?.videoId === lyricsData?.trackId"
+          class="right-sidebar__lyrics-header">
+          <button
+            class="right-sidebar__translate-btn"
+            :disabled="isTranslating"
+            @click="translatedLanguage ? resetTranslation() : translateLyrics('hu')">
+            <AppIcon :name="translatedLanguage ? 'ph:arrow-u-up-left' : 'ph:translate'" />
+            <span v-if="isTranslating">{{ $t('player.translating') }}</span>
+            <span v-else-if="translatedLanguage">
+              {{ $t('player.showOriginal') }}
+            </span>
+            <span v-else>{{ $t('player.translateToHu') }}</span>
+          </button>
+        </div>
+
+        <div
           v-if="
             !isHydrated ||
             lyricsLoading ||
@@ -432,15 +451,18 @@ const sidebarStyle = computed(() => ({
             ref="lyricsListRef"
             class="right-sidebar__lyrics-list"
             @scroll.passive="onLyricsScroll">
-            <p
+            <div
               v-for="(line, idx) in syncedLines"
               :key="idx"
               :data-line="idx"
               class="right-sidebar__lyric-line"
               :class="{ 'right-sidebar__lyric-line--active': idx === activeLineIndex }"
               @click="player.seek(line.time)">
-              {{ line.text }}
-            </p>
+              <span class="right-sidebar__lyric-text">{{ line.text }}</span>
+              <span v-if="line.translatedText" class="right-sidebar__lyric-translated">
+                {{ line.translatedText }}
+              </span>
+            </div>
           </div>
         </template>
 
@@ -450,7 +472,12 @@ const sidebarStyle = computed(() => ({
               <AppIcon name="ph:warning" />
               {{ $t('player.lyricsNotSynced') }}
             </p>
-            <p class="right-sidebar__plain-lyrics">{{ plainLyrics }}</p>
+            <p class="right-sidebar__plain-lyrics">
+              {{ plainLyrics }}
+            </p>
+            <p v-if="lyricsData?.translatedPlain" class="right-sidebar__plain-translated">
+              {{ lyricsData.translatedPlain }}
+            </p>
           </div>
         </template>
       </div>
@@ -798,6 +825,123 @@ const sidebarStyle = computed(() => ({
     flex-direction: column;
   }
 
+  &__lyrics-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: var(--space-2) var(--space-4);
+    background: color-mix(in srgb, var(--color-surface) 95%, transparent);
+    backdrop-filter: blur(8px);
+    z-index: 10;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  &__translate-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-surface-hover);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+
+    &:hover:not(:disabled) {
+      background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    svg {
+      font-size: 1.1rem;
+    }
+  }
+
+  &__lyrics-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-8) var(--space-4) 50vh;
+    scroll-behavior: smooth;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+    scrollbar-width: none;
+  }
+
+  &__lyric-line {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    opacity: 0.5;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-origin: left center;
+    cursor: pointer;
+    line-height: 1.4;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    &:hover {
+      opacity: 0.8;
+    }
+
+    &--active {
+      color: var(--color-text-primary);
+      opacity: 1;
+      transform: scale(1.05);
+      text-shadow: 0 0 20px color-mix(in srgb, var(--color-primary) 30%, transparent);
+    }
+  }
+
+  &__lyric-text {
+    display: block;
+  }
+
+  &__lyric-translated {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--color-primary);
+    opacity: 0.9;
+  }
+
+  &__plain-lyrics-wrap {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-4);
+  }
+
+  &__plain-lyrics {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--color-text-primary);
+    white-space: pre-wrap;
+    opacity: 0.9;
+  }
+
+  &__plain-translated {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--color-primary);
+    white-space: pre-wrap;
+    opacity: 0.9;
+    margin-top: var(--space-6);
+    padding-top: var(--space-6);
+    border-top: 1px dashed var(--color-border);
+  }
   &__lyrics-loading-skeleton {
     flex: 1;
     display: flex;

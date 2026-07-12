@@ -99,6 +99,7 @@ pub fn run() {
                 // to trigger the onOpenUrl callback in JavaScript on Windows/Linux.
             }))
             .plugin(tauri_plugin_updater::Builder::new().build())
+            .plugin(tauri_plugin_global_shortcut::Builder::new().build())
             .manage(DiscordState(Mutex::new(Some(client))))
             .invoke_handler(tauri::generate_handler![
                 set_discord_presence,
@@ -108,11 +109,11 @@ pub fn run() {
 
     builder
         .plugin(tauri_plugin_deep_link::init())
-        .setup(|app| {
+        .setup(|_app| {
             #[cfg(any(windows, target_os = "linux"))]
             {
                 use tauri_plugin_deep_link::DeepLinkExt;
-                let _ = app.deep_link().register_all();
+                let _ = _app.deep_link().register_all();
             }
             Ok(())
         })

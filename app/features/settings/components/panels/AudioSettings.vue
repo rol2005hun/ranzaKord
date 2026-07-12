@@ -40,6 +40,12 @@ function onSliderChange() {
 
     <AppSettingsSection>
       <AppSettingsItem
+        :title="$t('settings.audio.spatialAudio.title')"
+        :description="$t('settings.audio.spatialAudio.description')">
+        <AppToggle v-model="playerStore.isSpatialAudio" />
+      </AppSettingsItem>
+
+      <AppSettingsItem
         :title="$t('settings.audio.eq.title')"
         :description="$t('settings.audio.eq.description')">
         <AppToggle v-model="playerStore.eqEnabled" />
@@ -174,7 +180,7 @@ function onSliderChange() {
   cursor: pointer;
 
   /* Vertical slider: swap the thumb offsets to center horizontally instead of vertically */
-  --thumb-offset-x: -5px;
+  --thumb-offset-x: -4px;
   --thumb-offset-y: 0px;
 
   &::-webkit-slider-runnable-track {
@@ -200,12 +206,14 @@ function onSliderChange() {
     background: #ffffff;
     border: 2px solid var(--color-primary);
     margin: 0;
-    transform: translateX(-5px); /* Move left to center exactly on the 4px track */
+    transform: translateX(
+      var(--thumb-offset-x, -4px)
+    ); /* Move left to center exactly on the 4px track */
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
   }
 
   &:hover::-webkit-slider-thumb {
-    transform: translateX(-5px) scale(1.2);
+    transform: translateX(var(--thumb-offset-x, -4px)) scale(1.2);
   }
 }
 

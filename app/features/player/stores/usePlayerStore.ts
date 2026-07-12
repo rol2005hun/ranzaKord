@@ -5,10 +5,20 @@ export const usePlayerStore = defineStore(
   () => {
     const currentTrack = ref<Track | null>(null);
     const queue = shallowRef<Track[]>([]);
+    const unshuffledQueue = shallowRef<Track[]>([]);
     const playHistory = shallowRef<Track[]>([]);
     const isPlaying = ref(false);
     const volume = ref(0.8);
     const currentTimeSeconds = ref(0);
+
+    function shuffleArray<T>(array: T[]): T[] {
+      const result = [...array];
+      for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j] as T, result[i] as T];
+      }
+      return result;
+    }
 
     if (import.meta.client) {
       currentTimeSeconds.value = Number(localStorage.getItem('player_currentTimeSeconds')) || 0;
@@ -30,6 +40,7 @@ export const usePlayerStore = defineStore(
     const crossfadeDuration = ref(5);
     const crossfadeType = ref<CrossfadeType>('dj');
     const isKaraoke = ref(false);
+    const isSpatialAudio = ref(false);
     const isAudioReactiveLyrics = ref(true);
     const eqEnabled = ref(false);
     const eqPreset = ref('flat');
@@ -37,25 +48,25 @@ export const usePlayerStore = defineStore(
 
     const playbackContext = ref<PlaybackContext | null>(null);
     const autoplayEnabled = ref(false);
+    const globalShortcutsEnabled = ref(true);
 
     const hasNext = computed(() => {
       const track = currentTrack.value;
       if (!track) return false;
-      if (playbackOrder.value === 'random') return queue.value.length > 1;
       if (repeatMode.value === 'all') return queue.value.length > 0;
       const idx = queue.value.findIndex(
         (t) => (track.queueId && t.queueId === track.queueId) || t.videoId === track.videoId
       );
       if (idx === -1) return false;
       if (playbackOrder.value === 'reverse') return idx > 0;
-      return idx < queue.value.length - 1;
+      if (idx < queue.value.length - 1) return true;
+      return autoplayEnabled.value;
     });
 
     const hasPrev = computed(() => {
       const track = currentTrack.value;
       if (!track) return false;
       if (playHistory.value.length > 0) return true;
-      if (playbackOrder.value === 'random') return false;
       if (repeatMode.value === 'all') return queue.value.length > 0;
       const idx = queue.value.findIndex(
         (t) => (track.queueId && t.queueId === track.queueId) || t.videoId === track.videoId
@@ -78,22 +89,37 @@ export const usePlayerStore = defineStore(
     }
 
     function setQueue(tracks: Track[]) {
-      queue.value = tracks.slice(0, 100).map((t) => ({
+      const q = tracks.slice(0, 5000).map((t) => ({
         ...t,
         queueId: t.queueId || crypto.randomUUID()
       }));
+      unshuffledQueue.value = q;
+
+      if (playbackOrder.value === 'random') {
+        queue.value = shuffleArray(q);
+      } else {
+        queue.value = [...q];
+      }
     }
 
     function addToQueue(track: Track) {
-      const newQueue = [...queue.value];
-      newQueue.push({
+      const newTrack = {
         ...track,
         queueId: track.queueId || crypto.randomUUID()
-      });
-      if (newQueue.length > 100) {
+      };
+      const newQueue = [...queue.value];
+      newQueue.push(newTrack);
+      if (newQueue.length > 5000) {
         newQueue.shift();
       }
       queue.value = newQueue;
+
+      const newUnshuffled = [...unshuffledQueue.value];
+      newUnshuffled.push(newTrack);
+      if (newUnshuffled.length > 5000) {
+        newUnshuffled.shift();
+      }
+      unshuffledQueue.value = newUnshuffled;
     }
 
     function reorderQueue(fromIndex: number, toIndex: number) {
@@ -105,33 +131,33 @@ export const usePlayerStore = defineStore(
         newQueue.splice(toIndex, 0, item);
         queue.value = newQueue;
       }
+      if (playbackOrder.value !== 'random') {
+        unshuffledQueue.value = [...queue.value];
+      }
     }
 
     function removeFromQueue(index: number) {
       if (index >= 0 && index < queue.value.length) {
         const newQueue = [...queue.value];
-        newQueue.splice(index, 1);
+        const removed = newQueue.splice(index, 1)[0];
         queue.value = newQueue;
+        if (removed) {
+          unshuffledQueue.value = unshuffledQueue.value.filter(
+            (t) => t.queueId !== removed.queueId
+          );
+        }
       }
     }
 
     function clearQueue() {
       queue.value = [];
+      unshuffledQueue.value = [];
     }
 
     function nextTrack(): Track | null {
       const track = currentTrack.value;
       if (!track) return null;
       if (queue.value.length === 0) return null;
-
-      if (playbackOrder.value === 'random') {
-        const others = queue.value.filter((t) =>
-          track.queueId ? t.queueId !== track.queueId : t.videoId !== track.videoId
-        );
-        if (others.length === 0) return track;
-        const randomIdx = Math.floor(Math.random() * others.length);
-        return others[randomIdx] ?? null;
-      }
 
       const idx = queue.value.findIndex(
         (t) => (track.queueId && t.queueId === track.queueId) || t.videoId === track.videoId
@@ -164,8 +190,6 @@ export const usePlayerStore = defineStore(
       const track = currentTrack.value;
       if (!track) return null;
       if (queue.value.length === 0) return null;
-
-      if (playbackOrder.value === 'random') return null;
 
       const idx = queue.value.findIndex(
         (t) => (track.queueId && t.queueId === track.queueId) || t.videoId === track.videoId
@@ -238,8 +262,8 @@ export const usePlayerStore = defineStore(
             }
           }
         }
-      } catch (e) {
-        console.error('Discord RPC error:', e);
+      } catch {
+        // Ignore Discord RPC errors (e.g. not supported on mobile)
       }
     };
 
@@ -247,7 +271,8 @@ export const usePlayerStore = defineStore(
 
     if (import.meta.client) {
       window.addEventListener('beforeunload', () => {
-        if (currentTrack.value) {
+        const authStore = useAuthStore();
+        if (authStore.isAuthenticated && currentTrack.value) {
           localStorage.setItem('player_currentTimeSeconds', String(currentTimeSeconds.value));
           fetch('/api/player/sync', {
             method: 'POST',
@@ -282,11 +307,60 @@ export const usePlayerStore = defineStore(
           syncDiscordPresence();
         }
       }, 2000);
+
+      watch(playbackOrder, (newOrder, oldOrder) => {
+        if (newOrder === 'random' && oldOrder !== 'random') {
+          const track = currentTrack.value;
+          const q = [...queue.value];
+          const idx = track
+            ? q.findIndex(
+                (t) => (track.queueId && t.queueId === track.queueId) || t.videoId === track.videoId
+              )
+            : -1;
+
+          if (idx >= 0 && idx < q.length - 1) {
+            const before = q.slice(0, idx + 1);
+            const after = q.slice(idx + 1);
+            queue.value = [...before, ...shuffleArray(after)];
+          } else if (idx === -1) {
+            queue.value = shuffleArray(q);
+          }
+        } else if (newOrder !== 'random' && oldOrder === 'random') {
+          queue.value = [...unshuffledQueue.value];
+        }
+      });
     }
+
+    const visibleQueueStartIndex = computed(() => {
+      const track = currentTrack.value;
+      if (!track) return 0;
+
+      const idx = queue.value.findIndex(
+        (t) => (track.queueId && t.queueId === track.queueId) || t.videoId === track.videoId
+      );
+      if (idx === -1) return 0;
+
+      return Math.max(0, idx - 10);
+    });
+
+    const visibleQueue = computed(() => {
+      const track = currentTrack.value;
+      if (!track) return queue.value.slice(0, 21);
+
+      const idx = queue.value.findIndex(
+        (t) => (track.queueId && t.queueId === track.queueId) || t.videoId === track.videoId
+      );
+      if (idx === -1) return queue.value.slice(0, 21);
+
+      const start = Math.max(0, idx - 10);
+      const end = Math.min(queue.value.length, idx + 10 + 1);
+      return queue.value.slice(start, end);
+    });
 
     return {
       currentTrack,
       queue,
+      playHistory,
       isPlaying,
       volume,
       currentTimeSeconds,
@@ -310,12 +384,16 @@ export const usePlayerStore = defineStore(
       prevTrack,
       syncDiscordPresence,
       isKaraoke,
+      isSpatialAudio,
       isAudioReactiveLyrics,
       eqEnabled,
       eqPreset,
       eqBands,
       playbackContext,
-      autoplayEnabled
+      autoplayEnabled,
+      globalShortcutsEnabled,
+      visibleQueue,
+      visibleQueueStartIndex
     };
   },
   {
@@ -329,17 +407,20 @@ export const usePlayerStore = defineStore(
           'playHistory',
           'repeatMode',
           'queue',
+          'unshuffledQueue',
           'isPlaying',
           'crossfadeEnabled',
           'crossfadeDuration',
           'crossfadeType',
           'isKaraoke',
+          'isSpatialAudio',
           'isAudioReactiveLyrics',
           'eqEnabled',
           'eqPreset',
           'eqBands',
           'playbackContext',
-          'autoplayEnabled'
+          'autoplayEnabled',
+          'globalShortcutsEnabled'
         ],
         storage: piniaPluginPersistedstate.localStorage()
       }

@@ -1,5 +1,6 @@
 {
-  "placeholder": "Zenék, előadók keresése…",
+  "placeholder": "Dalok, előadók, profilok...",
+  "localPlaceholder": "Keresés...",
   "clear": "Keresés törlése",
   "noResults": "Nincs találat a következőre: \"{query}\"",
   "title": "Keresés",
@@ -14,7 +15,9 @@
     "artists": "Előadók",
     "albums": "Albumok",
     "noResultsQuery": "Nincs találat: \"{query}\"",
-    "noResultsCategory": "Nincs találat: \"{query}\" ebben a kategóriában."
+    "noResultsCategory": "Nincs találat: \"{query}\" ebben a kategóriában.",
+    "all": "Összes",
+    "profiles": "Profilok"
   },
   "album": {
     "badge": "ALBUM",
@@ -26,7 +29,13 @@
     "badge": "ELŐADÓ",
     "loadError": "Előadó betöltése sikertelen.",
     "topSongs": "Legnépszerűbb zenék",
-    "albums": "Albumok"
+    "albums": "Albumok",
+    "allSongs": "Összes dal",
+    "bio": "Névjegy",
+    "titleFallback": "Előadó",
+    "singles": "Kislemezek",
+    "discography": "Diszkográfia",
+    "plays": "lejátszás"
   },
   "list": {
     "song": "Zene",
@@ -34,5 +43,12 @@
     "album": "Album",
     "options": "Opciók",
     "addToPlaylist": "Hozzáadás lejátszási listához"
+  },
+  "badge": {
+    "song": "Zene",
+    "artist": "Előadó",
+    "album": "Album",
+    "profile": "Profil",
+    "playlist": "Lejátszási lista"
   }
 }

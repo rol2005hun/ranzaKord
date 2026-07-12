@@ -8,6 +8,12 @@ export interface PlaylistTrackArtist {
   channelId?: string;
 }
 
+export interface UserProfileMin {
+  sub: string;
+  name: string;
+  picture: string;
+}
+
 export interface PlaylistTrackResponse {
   videoId: string;
   title: string;
@@ -17,6 +23,7 @@ export interface PlaylistTrackResponse {
   thumbnailUrl: string;
   durationMs: number;
   addedAt: string;
+  addedBy?: UserProfileMin;
 }
 
 export interface PlaylistDetailResponse {
@@ -29,6 +36,9 @@ export interface PlaylistDetailResponse {
   trackIds: string[];
   createdAt: string;
   updatedAt: string;
+  isPublic?: boolean;
+  collaborators?: UserProfileMin[];
+  ownerId?: string;
 }
 
 function parseNonNegativeInteger(value: unknown): number | undefined {
@@ -62,23 +72,28 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
   const { t } = useServerTranslation(event);
 
   if (!sessionData.accessToken || !sessionData.user) {
-    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
+    throw createError({ statusCode: 401, message: t('core.errors.unauthorized') });
   }
 
   const id = resolvePlaylistId(event);
-  if (!id) throw createError({ statusCode: 400, statusMessage: t('playlists.errors.missingId') });
+  if (!id) throw createError({ statusCode: 400, message: t('playlists.errors.missingId') });
 
   if (!mongoose.isValidObjectId(id)) {
-    throw createError({ statusCode: 404, statusMessage: t('playlists.errors.notFound') });
+    throw createError({ statusCode: 404, message: t('playlists.errors.notFound') });
   }
 
-  const playlist = await PlaylistModel.findOne({
-    _id: id,
-    userId: sessionData.user.sub
-  }).lean();
+  const playlist = await PlaylistModel.findOne({ _id: id }).lean();
 
   if (!playlist) {
-    throw createError({ statusCode: 404, statusMessage: t('playlists.errors.notFound') });
+    throw createError({ statusCode: 404, message: t('playlists.errors.notFound') });
+  }
+
+  const isOwner = playlist.userId === sessionData.user.sub;
+  const isCollaborator = playlist.collaborators?.includes(sessionData.user.sub);
+  const isPublic = playlist.isPublic !== false;
+
+  if (!isOwner && !isCollaborator && !isPublic) {
+    throw createError({ statusCode: 403, message: t('core.errors.unauthorized') });
   }
 
   const query = getQuery(event);
@@ -128,6 +143,19 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
   const tracks =
     typeof limit === 'number' ? filteredItems.slice(offset, offset + limit) : filteredItems;
 
+  const addedBySubs = Array.from(
+    new Set([
+      ...tracks.map((t: IPlaylistItem) => t.addedBy).filter((sub): sub is string => !!sub),
+      ...(playlist.collaborators || [])
+    ])
+  );
+  const { UserModel } = await import('../../models/User');
+  const users = await UserModel.find({ sub: { $in: addedBySubs } }).lean();
+
+  const userMap = new Map(
+    users.map((u) => [u.sub, { sub: u.sub, name: u.name, picture: u.picture || '' }])
+  );
+
   return {
     id: (playlist._id as { toString(): string }).toString(),
     name: playlist.name,
@@ -141,11 +169,17 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
       artists: item.artists ?? [],
       thumbnailUrl: item.thumbnailUrl,
       durationMs: item.durationMs,
-      addedAt: item.addedAt.toISOString()
+      addedAt: item.addedAt.toISOString(),
+      addedBy: item.addedBy ? userMap.get(item.addedBy) : undefined
     })),
     trackCount: filteredItems.length,
     trackIds: filteredItems.map((i: IPlaylistItem) => i.videoId),
     createdAt: playlist.createdAt.toISOString(),
-    updatedAt: playlist.updatedAt.toISOString()
+    updatedAt: playlist.updatedAt.toISOString(),
+    isPublic: playlist.isPublic !== false,
+    collaborators: (playlist.collaborators || [])
+      .map((sub) => userMap.get(sub))
+      .filter((u): u is UserProfileMin => !!u),
+    ownerId: playlist.userId
   };
 });

@@ -64,14 +64,26 @@ function closeDropdown() {
       </a>
 
       <div v-if="isAuthenticated && currentUser" class="app-navbar__user">
-        <button class="app-navbar__avatar" :aria-label="$t('auth.profile')" @click="toggleDropdown">
-          <img
-            v-if="currentUser.picture"
-            :src="currentUser.picture"
-            :alt="currentUser.name"
-            class="app-navbar__avatar-img" />
-          <AppIcon v-else name="ph:user-circle-fill" />
-        </button>
+        <div class="app-navbar__avatar-wrapper">
+          <button
+            class="app-navbar__avatar"
+            :aria-label="$t('auth.profile')"
+            @click="toggleDropdown">
+            <img
+              v-if="currentUser.picture"
+              :src="currentUser.picture"
+              :alt="currentUser.name"
+              class="app-navbar__avatar-img" />
+            <AppIcon v-else name="ph:user-circle-fill" />
+          </button>
+
+          <div
+            v-if="currentUser.roles?.includes('ranzaKreator')"
+            class="app-navbar__dev-badge"
+            title="ranzaKreator">
+            <AppIcon name="ph:code-bold" />
+          </div>
+        </div>
 
         <div
           v-if="isDropdownOpen"
@@ -79,6 +91,15 @@ function closeDropdown() {
           @click="closeDropdown"></div>
 
         <div v-if="isDropdownOpen" class="app-navbar__dropdown">
+          <NuxtLink
+            v-if="currentUser?.sub"
+            :to="`/user/${currentUser.sub}`"
+            class="app-navbar__dropdown-item"
+            @click="closeDropdown">
+            <AppIcon name="ph:user" class="app-navbar__dropdown-icon" />
+            <span class="app-navbar__dropdown-label">{{ $t('auth.profile') }}</span>
+          </NuxtLink>
+
           <button
             class="app-navbar__dropdown-item"
             @click="
@@ -89,7 +110,7 @@ function closeDropdown() {
             ">
             <AppIcon name="ph:gear" class="app-navbar__dropdown-icon" />
             <span class="app-navbar__dropdown-label">
-              {{ $t('core.actions.settings') || 'Settings' }}
+              {{ $t('core.actions.settings') }}
             </span>
           </button>
 
@@ -227,6 +248,31 @@ function closeDropdown() {
     position: relative;
     display: flex;
     align-items: center;
+  }
+
+  &__avatar-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  &__dev-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    background: linear-gradient(135deg, var(--color-primary), #9353d3);
+    color: #ffffff;
+    width: 18px;
+    height: 18px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    border: 2px solid var(--color-surface);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    z-index: 2;
+    pointer-events: none;
   }
 
   &__avatar {
@@ -402,12 +448,12 @@ function closeDropdown() {
 
 @media (max-width: 768px) {
   .app-navbar {
-    padding-top: calc(env(safe-area-inset-top, 0px) + var(--space-2));
+    padding-top: max(var(--safe-area-top, 0px), var(--space-2));
     padding-bottom: var(--space-2);
     padding-left: var(--space-4);
     padding-right: var(--space-4);
     height: auto;
-    min-height: 4rem;
+    min-height: calc(3.5rem + max(var(--safe-area-top, 0px), var(--space-2)));
   }
 }
 </style>

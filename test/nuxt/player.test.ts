@@ -4,6 +4,7 @@ import { usePlayer } from '../../app/features/player/composables/usePlayer';
 import { usePlayerStore } from '../../app/features/player/stores/usePlayerStore';
 import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 import { nextTick } from 'vue';
+import type { Track } from '@/features/player/types/player.types';
 
 mockNuxtImport('useI18n', () => {
   return () => ({
@@ -131,6 +132,7 @@ describe('usePlayer', () => {
     expect(store.isPlaying).toBe(false);
 
     const playSpy = vi.spyOn(mockAudio, 'play').mockResolvedValue();
+    store.currentTrack = { videoId: 'test' } as unknown as Track;
     resume();
     expect(playSpy).toHaveBeenCalled();
 
@@ -214,5 +216,46 @@ describe('usePlayer', () => {
 
     expect(store.queue.length).toBe(2);
     expect(store.currentTrack?.videoId).toBe('v2');
+  });
+
+  it('toggleKaraoke works', () => {
+    const { toggleKaraoke } = usePlayer();
+    const store = usePlayerStore();
+    store.isKaraoke = false;
+    toggleKaraoke();
+    expect(store.isKaraoke).toBe(true);
+  });
+
+  it('playTrack handles play error', async () => {
+    const { playTrack, bindAudio } = usePlayer();
+    const store = usePlayerStore();
+    const mockAudio = new MockAudioElement() as unknown as HTMLAudioElement;
+    const mockAudio2 = new MockAudioElement() as unknown as HTMLAudioElement;
+    vi.spyOn(mockAudio, 'play').mockRejectedValue(new Error('play error'));
+
+    bindAudio(mockAudio, mockAudio2);
+    await playTrack(mockTrack);
+    await nextTick();
+
+    expect(store.error).toBe('Failed to load stream. Are you signed in?');
+  });
+
+  it('autoplay watcher fetches radio next', async () => {
+    usePlayer();
+    const store = usePlayerStore();
+    store.currentTrack = mockTrack;
+
+    // Mock the fetch
+    const fetchMock = vi.fn().mockResolvedValue([{ videoId: 'v10', title: 'Related' }]);
+    global.$fetch = fetchMock as unknown as typeof $fetch;
+
+    store.autoplayEnabled = true;
+    await nextTick();
+    await new Promise((r) => setTimeout(r, 0)); // let promises resolve
+
+    // It should fetch if track is ending, or if autoplay is enabled.
+    // Testing the inner fetchRadioNext indirectly isn't easy without triggering the exact conditions,
+    // but toggling autoplayEnabled triggers it directly in the watcher!
+    expect(fetchMock).toHaveBeenCalled();
   });
 });

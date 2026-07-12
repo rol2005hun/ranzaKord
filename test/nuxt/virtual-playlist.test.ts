@@ -12,7 +12,7 @@ describe('useVirtualPlaylist', () => {
     durationSeconds: 120,
     durationMs: 120000,
     addedAt: new Date().toISOString(),
-    addedBy: { id: '1', name: 'User' }
+    addedBy: 'test-user-id'
   }));
 
   const mockFetchChunk = vi.fn().mockImplementation(async (offset: number, limit: number) => {

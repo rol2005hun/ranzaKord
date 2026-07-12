@@ -6,11 +6,15 @@
     "notFound": "Az oldal nem található.",
     "fatalTitle": "VÉGZETES HIBA (Hiba történt!)",
     "fatalDescription": "A Nuxt/Vue összeomlott. Kérlek másold ki ezt a hibaüzenetet:",
-    "fatalHomeBtn": "Kezdőlap"
+    "fatalHomeBtn": "Kezdőlap",
+    "notFoundDesc": "Úgy tűnik, ez az oldal elvándorolt, vagy sosem létezett. Ellenőrizd az URL-t!",
+    "notFoundHeader": "404 - Nem található",
+    "systemErrorHeader": "{statusCode} - Rendszerhiba"
   },
   "nav": {
     "signIn": "Bejelentkezés",
     "home": "Főoldal",
+    "menu": "Menü",
     "search": "Keresés",
     "library": "Könyvtár",
     "theme": "Téma",
@@ -18,7 +22,8 @@
     "playlists": "Lejátszási listák",
     "language": "Nyelv",
     "downloadApp": "Asztali alkalmazás letöltése",
-    "signOut": "Kijelentkezés"
+    "signOut": "Kijelentkezés",
+    "new": "Új"
   },
   "miniPlayer": "Mini lejátszó",
   "exitMiniPlayer": "Kilépés a mini lejátszóból",
@@ -29,7 +34,8 @@
     "close": "Bezárás",
     "back": "Vissza",
     "settings": "Beállítások",
-    "more": "Továbbiak"
+    "more": "Továbbiak",
+    "confirm": "Megerősítés"
   },
   "musicDetail": {
     "titleColumn": "Cím",
@@ -50,6 +56,12 @@
     "audioReactiveLyrics": {
       "title": "Zene-Reaktív Dalszöveg",
       "description": "Az aktív dalszöveg sor ugrál és pulzál a zene ritmusára."
+    },
+    "globalShortcuts": {
+      "title": "Globális Gyorsbillentyűk",
+      "description": "Zenevezérlés (Ctrl+Alt+Space/Balra/Jobbra) akkor is, ha épp egy játékkal játszol vagy más programot használsz."
     }
-  }
+  },
+  "demoModeToast": "Demo módban a módosítások nem kerülnek mentésre.",
+  "demoModeAudioToast": "Jogi okokból Demo módban csak jogtiszta (NCS) zenék hallgathatóak!"
 }

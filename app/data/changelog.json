@@ -1,0 +1,32 @@
+[
+  {
+    "version": "v0.1.0-alpha.1",
+    "date": "2026-07-11",
+    "changes": {
+      "en": [
+        "Public user profiles",
+        "Playlists can be set to public or private",
+        "Dynamic theme support",
+        "Built-in Equalizer (EQ)",
+        "Collaborative playlists with other users",
+        "Queue system improvements",
+        "Demo mode added",
+        "Changelog and roadmap features added to Settings",
+        "Various page revamps and design improvements",
+        "Bug fixes and performance optimizations"
+      ],
+      "hu": [
+        "Publikus felhasználói profilok",
+        "Publikussá és priváttá tehető lejátszási listák",
+        "Dinamikus téma (alkalmazkodik a dalokhoz)",
+        "Beépített hangszínszabályzó (EQ)",
+        "Közös lejátszási listák szerkesztése más felhasználókkal",
+        "Várólista (queue) kezelésének javítása",
+        "Demó mód bevezetése",
+        "Változások naplója (Changelog) és jövőbeli fejlesztések (Roadmap) megjelenítése",
+        "Számos oldal megújítása és dizájn frissítése",
+        "Hibajavítások és teljesítményoptimalizálás"
+      ]
+    }
+  }
+]

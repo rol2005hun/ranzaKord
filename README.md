@@ -2,11 +2,18 @@
   <img src="public/logo.webp" alt="ranzaKord Logo" width="120" />
   <h1>ranzaKord</h1>
   <p><strong>Premium Music Streaming Experience</strong></p>
+
+  <p>
+    <img alt="Vue.js" src="https://img.shields.io/badge/Nuxt%204-%2300C58E.svg?style=for-the-badge&logo=nuxt.js&logoColor=white" />
+    <img alt="Tauri" src="https://img.shields.io/badge/Tauri%202-%2324C8DB.svg?style=for-the-badge&logo=tauri&logoColor=white" />
+    <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" />
+  </p>
 </div>
 
----
-
 **ranzaKord** is a modern, premium music streaming application built for speed, aesthetics, and cross-platform compatibility. Powered by a robust technology stack featuring **Nuxt 4** and **Tauri**, it delivers a seamless native desktop and web experience.
+
+> [!WARNING]
+> **Legal Disclaimer:** This project is intended strictly for **personal, private, and educational use only**. Commercial use, public distribution, or hosting this as a public streaming service may violate the Terms of Service of third-party platforms (such as YouTube or Spotify) and relevant copyright laws. If you wish to use, explore, or modify this application, please **clone the repository and run it locally on your own machine**. The creator of this repository assumes no liability for how this code is utilized.
 
 ## ✨ Features
 

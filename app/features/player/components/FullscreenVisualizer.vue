@@ -30,7 +30,16 @@ function toggleLyrics() {
   }
 }
 
-const { lyricsData, isLoading: lyricsLoading, fetchLyrics, getActiveLine } = useLyrics();
+const {
+  lyricsData,
+  isLoading: lyricsLoading,
+  isTranslating,
+  translatedLanguage,
+  fetchLyrics,
+  translateLyrics,
+  resetTranslation,
+  getActiveLine
+} = useLyrics();
 
 watch(
   () => player.currentTrack.value,
@@ -199,13 +208,18 @@ function handleResize() {
 }
 
 function drawFrame() {
-  animId = requestAnimationFrame(drawFrame);
   if (!layoutStore.isFullscreenVisualizer) return;
 
   const canvas = canvasRef.value;
-  if (!canvas) return;
+  if (!canvas) {
+    animId = requestAnimationFrame(drawFrame);
+    return;
+  }
   const ctx = canvas.getContext('2d');
-  if (!ctx) return;
+  if (!ctx) {
+    animId = requestAnimationFrame(drawFrame);
+    return;
+  }
 
   const audio1 = player.audioElement1.value;
   const audio2 = player.audioElement2.value;
@@ -237,6 +251,8 @@ function drawFrame() {
   if (containerRef.value) {
     containerRef.value.style.setProperty('--bass-scale', bassScale.toString());
   }
+
+  animId = requestAnimationFrame(drawFrame);
 }
 
 onMounted(() => {
@@ -257,8 +273,19 @@ onUnmounted(() => {
   }
   if (ro) {
     ro.disconnect();
+    ro = null;
   }
 });
+
+watch(
+  () => [useThemeStore().themeId, useThemeStore().currentCustomPalette],
+  () => {
+    // Wait for DOM to update CSS vars
+    nextTick(() => {
+      syncThemeColors();
+    });
+  }
+);
 
 function closeFullscreen() {
   layoutStore.toggleFullscreenVisualizer();
@@ -488,12 +515,14 @@ function getStyleIcon(style: string) {
                 min="0"
                 :max="player.durationSeconds.value || 1"
                 :value="player.currentTimeSeconds.value"
-                step="1"
+                step="any"
                 :aria-label="$t('player.seek')"
                 :style="{
                   '--progress':
                     (player.currentTimeSeconds.value / (player.durationSeconds.value || 1)) * 100 +
-                    '%'
+                    '%',
+                  '--progress-ratio':
+                    player.currentTimeSeconds.value / (player.durationSeconds.value || 1)
                 }"
                 @input="onSeekInput" />
               <AppSkeleton v-else height="4px" class="fullscreen-visualizer__slider--seek" />
@@ -505,6 +534,7 @@ function getStyleIcon(style: string) {
 
           <!-- Right Controls -->
           <div class="fullscreen-visualizer__right-controls">
+            <SleepTimerButton />
             <button
               class="fullscreen-visualizer__action-btn"
               :class="{ 'fullscreen-visualizer__action-btn--active': player.isKaraoke.value }"
@@ -522,6 +552,20 @@ function getStyleIcon(style: string) {
               @click.stop="toggleLyrics()">
               <AppIcon name="ph:microphone-stage" />
             </button>
+
+            <button
+              v-if="(isLyricsActive || layoutStore.isMobileLyricsOpen) && lyricsData"
+              class="fullscreen-visualizer__action-btn"
+              :class="{ 'fullscreen-visualizer__action-btn--active': translatedLanguage }"
+              :disabled="isTranslating"
+              :aria-label="
+                translatedLanguage ? $t('player.showOriginal') : $t('player.translateToHu')
+              "
+              @click.stop="translatedLanguage ? resetTranslation() : translateLyrics('hu')">
+              <AppSpinner v-if="isTranslating" size="sm" />
+              <AppIcon v-else :name="translatedLanguage ? 'ph:arrow-u-up-left' : 'ph:translate'" />
+            </button>
+
             <button
               class="fullscreen-visualizer__action-btn"
               :aria-label="$t('player.mute')"
@@ -537,7 +581,10 @@ function getStyleIcon(style: string) {
               :value="player.volume.value"
               step="0.01"
               :aria-label="$t('player.volume')"
-              :style="{ '--progress': player.volume.value * 100 + '%' }"
+              :style="{
+                '--progress': player.volume.value * 100 + '%',
+                '--progress-ratio': player.volume.value
+              }"
               @input.stop="onVolumeInput" />
           </div>
         </div>
@@ -592,7 +639,7 @@ function getStyleIcon(style: string) {
     align-items: center;
     justify-content: center;
     z-index: 1;
-    padding: 100px 20px;
+    padding: calc(60px + var(--safe-area-top, 0px)) 20px 100px 20px;
     pointer-events: none;
     background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(24px);
@@ -746,7 +793,10 @@ function getStyleIcon(style: string) {
     }
 
     @media (max-width: 768px) {
-      padding: max(1rem, env(safe-area-inset-top)) 1rem max(1rem, env(safe-area-inset-bottom));
+      padding-top: calc(1rem + var(--safe-area-top, 0px));
+      padding-bottom: 1rem;
+      padding-left: 1rem;
+      padding-right: 1rem;
     }
   }
 
@@ -1082,8 +1132,14 @@ function getStyleIcon(style: string) {
     &::-webkit-slider-runnable-track {
       background: linear-gradient(
         to right,
-        var(--color-primary) var(--progress, 0%),
-        rgba(255, 255, 255, 0.2) var(--progress, 0%)
+        var(--color-primary)
+          calc(
+            var(--thumb-radius, 7px) + var(--progress-ratio, 0) * (100% - var(--thumb-width, 14px))
+          ),
+        rgba(255, 255, 255, 0.2)
+          calc(
+            var(--thumb-radius, 7px) + var(--progress-ratio, 0) * (100% - var(--thumb-width, 14px))
+          )
       );
       border-radius: var(--radius-full);
       height: 4px;

@@ -17,6 +17,7 @@ export interface IUser extends Document {
     crossfadeType?: string;
     isKaraoke?: boolean;
     isAudioReactiveLyrics?: boolean;
+    isAdaptiveThemeEnabled?: boolean;
     theme?: string;
     customColor?: string;
     customColors?: Record<string, string>;
@@ -26,6 +27,11 @@ export interface IUser extends Document {
     eqBands?: number[];
     playbackOrder?: string;
   };
+  roles?: string[];
+  isPublicProfile?: boolean;
+  showPlaylists?: boolean;
+  followers?: string[];
+  following?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -48,6 +54,7 @@ const userSchema = new Schema<IUser>(
       crossfadeType: { type: String },
       isKaraoke: { type: Boolean },
       isAudioReactiveLyrics: { type: Boolean },
+      isAdaptiveThemeEnabled: { type: Boolean },
       theme: { type: String },
       customColor: { type: String },
       customColors: { type: Map, of: String },
@@ -56,7 +63,12 @@ const userSchema = new Schema<IUser>(
       eqPreset: { type: String },
       eqBands: { type: [Number] },
       playbackOrder: { type: String, enum: ['sequential', 'random', 'reverse'] }
-    }
+    },
+    roles: { type: [String], default: ['user'] },
+    isPublicProfile: { type: Boolean, default: true },
+    showPlaylists: { type: Boolean, default: true },
+    followers: { type: [String], default: [] },
+    following: { type: [String], default: [] }
   },
   { timestamps: true }
 );

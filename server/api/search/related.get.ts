@@ -8,7 +8,7 @@ export default defineCachedEventHandler(
     const { t } = useServerTranslation(event);
 
     if (!videoId) {
-      throw createError({ statusCode: 400, statusMessage: t('search.errors.missingQuery') });
+      throw createError({ statusCode: 400, message: t('search.errors.missingQuery') });
     }
 
     const innertube = await createInnertube(false);
@@ -113,7 +113,7 @@ export default defineCachedEventHandler(
       console.error('Related API error:', e);
       throw createError({
         statusCode: 500,
-        statusMessage: t('search.errors.failedToFetch')
+        message: t('search.errors.failedToFetch')
       });
     }
   },

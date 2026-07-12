@@ -8,7 +8,7 @@ export default defineCachedEventHandler(
     const { t } = useServerTranslation(event);
 
     if (!id) {
-      throw createError({ statusCode: 400, statusMessage: t('search.errors.missingArtistId') });
+      throw createError({ statusCode: 400, message: t('search.errors.missingArtistId') });
     }
 
     const innertube = await createInnertube(false);
@@ -35,6 +35,9 @@ export default defineCachedEventHandler(
         thumbnails?: Array<{ url: string }>;
         duration?: { seconds?: number };
         type?: string;
+        flex_columns?: Array<{
+          title?: { toString: () => string; runs?: Array<{ text: string }> };
+        }>;
       };
 
       const header = artist.header as YTHeader | undefined;
@@ -67,7 +70,33 @@ export default defineCachedEventHandler(
                 if (!thumbnailUrl && trackThumb) thumbnailUrl = trackThumb;
 
                 let duration = 0;
-                if (item.duration?.seconds) duration = item.duration.seconds;
+                if (item.duration?.seconds) {
+                  duration = item.duration.seconds;
+                }
+
+                let plays = '';
+                if (item.flex_columns) {
+                  for (const col of item.flex_columns) {
+                    const text = col.title?.runs?.[0]?.text || col.title?.toString() || '';
+                    if (
+                      text.toLowerCase().includes('play') ||
+                      text.toLowerCase().includes('megtekintés') ||
+                      text.match(/^\d+[KMB]\s/)
+                    ) {
+                      plays = text;
+                    } else if (text.match(/^\d+:\d+/)) {
+                      const parts = text.split(':');
+                      if (parts.length === 2) {
+                        duration = parseInt(parts[0] || '0') * 60 + parseInt(parts[1] || '0');
+                      } else if (parts.length === 3) {
+                        duration =
+                          parseInt(parts[0] || '0') * 3600 +
+                          parseInt(parts[1] || '0') * 60 +
+                          parseInt(parts[2] || '0');
+                      }
+                    }
+                  }
+                }
 
                 topSongs.push({
                   id: videoId,
@@ -76,7 +105,8 @@ export default defineCachedEventHandler(
                   artist: trackArtist,
                   artistId: trackArtistId,
                   thumbnailUrl: trackThumb,
-                  durationSeconds: duration
+                  durationSeconds: duration,
+                  plays
                 });
               }
             }
@@ -118,13 +148,13 @@ export default defineCachedEventHandler(
       const errorMessage = error instanceof Error ? error.message : String(error);
       throw createError({
         statusCode: 500,
-        statusMessage: errorMessage || t('search.errors.fetchArtistFailed')
+        message: errorMessage || t('search.errors.fetchArtistFailed')
       });
     }
   },
   {
     maxAge: 60 * 60 * 12, // Cache for 12 hours
-    name: 'artist-details',
+    name: 'artist-details-v3',
     getKey: (event) => {
       const query = getQuery(event);
       return String(query['id'] || 'none');

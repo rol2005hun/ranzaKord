@@ -116,71 +116,90 @@ onMounted(() => {
     </div>
 
     <ul v-else class="player-queue__list" @dragend="handleDragEnd">
-      <li
-        v-for="(track, index) in playerStore.queue"
-        :key="track.queueId || track.videoId + '-' + index"
-        draggable="true"
-        class="player-queue__item"
-        :class="{
-          'player-queue__item--dragging': dragIndex === index,
-          'player-queue__item--drag-over': dragOverIndex === index,
-          'player-queue__item--playing': playerStore.currentTrack?.queueId
-            ? playerStore.currentTrack.queueId === track.queueId
-            : playerStore.currentTrack?.videoId === track.videoId
-        }"
-        @dragstart="handleDragStart($event, index)"
-        @dragenter="handleDragEnter($event, index)"
-        @dragover="handleDragOver($event, index)"
-        @drop="handleDrop($event, index)">
-        <div class="player-queue__num-wrapper">
-          <span
-            v-if="
-              playerStore.currentTrack?.queueId
-                ? playerStore.currentTrack.queueId === track.queueId
-                : playerStore.currentTrack?.videoId === track.videoId
-            "
-            class="player-queue__playing-icon">
-            <AppIcon name="ph:speaker-high-fill" class="text-primary" />
-          </span>
-          <span v-else class="player-queue__num">{{ index + 1 }}</span>
-          <div class="player-queue__drag-handle">
-            <AppIcon name="ph:dots-six-vertical" />
-          </div>
-        </div>
-
-        <div class="player-queue__track-info" @click="playQueueTrack(index)">
-          <div class="player-queue__track-thumb">
-            <img
-              v-if="track.thumbnailUrl"
-              :src="track.thumbnailUrl"
-              :alt="track.title"
-              loading="lazy" />
-            <div v-else class="player-queue__track-thumb-placeholder">
-              <AppIcon name="ph:music-notes" />
+      <template
+        v-for="(track, index) in playerStore.visibleQueue"
+        :key="track.queueId || track.videoId + '-' + (playerStore.visibleQueueStartIndex + index)">
+        <li
+          v-if="
+            track.isRadio &&
+            (playerStore.visibleQueueStartIndex + index === 0 ||
+              !playerStore.queue[playerStore.visibleQueueStartIndex + index - 1]?.isRadio)
+          "
+          class="player-queue__radio-divider">
+          <AppIcon name="ph:radio" class="player-queue__radio-divider-icon" />
+          <span>{{ $t('player.radioSection') }}</span>
+        </li>
+        <li
+          draggable="true"
+          class="player-queue__item"
+          :class="{
+            'player-queue__item--dragging':
+              dragIndex === playerStore.visibleQueueStartIndex + index,
+            'player-queue__item--drag-over':
+              dragOverIndex === playerStore.visibleQueueStartIndex + index,
+            'player-queue__item--playing': playerStore.currentTrack?.queueId
+              ? playerStore.currentTrack.queueId === track.queueId
+              : playerStore.currentTrack?.videoId === track.videoId,
+            'player-queue__item--radio': track.isRadio
+          }"
+          @dragstart="handleDragStart($event, playerStore.visibleQueueStartIndex + index)"
+          @dragenter="handleDragEnter($event, playerStore.visibleQueueStartIndex + index)"
+          @dragover="handleDragOver($event, playerStore.visibleQueueStartIndex + index)"
+          @drop="handleDrop($event, playerStore.visibleQueueStartIndex + index)">
+          <div class="player-queue__num-wrapper">
+            <span
+              v-if="
+                playerStore.currentTrack?.queueId
+                  ? playerStore.currentTrack.queueId === track.queueId
+                  : playerStore.currentTrack?.videoId === track.videoId
+              "
+              class="player-queue__playing-icon">
+              <AppPlayingIndicator class="text-primary" />
+            </span>
+            <span v-else class="player-queue__num">
+              {{ playerStore.visibleQueueStartIndex + index + 1 }}
+            </span>
+            <div class="player-queue__drag-handle">
+              <AppIcon name="ph:dots-six-vertical" />
             </div>
           </div>
 
-          <div class="player-queue__track-text">
-            <span
-              class="player-queue__track-title"
-              :class="{
-                'text-primary': playerStore.currentTrack?.queueId
-                  ? playerStore.currentTrack.queueId === track.queueId
-                  : playerStore.currentTrack?.videoId === track.videoId
-              }">
-              {{ track.title }}
-            </span>
-            <span class="player-queue__track-artist">{{ track.artist }}</span>
-          </div>
-        </div>
+          <div
+            class="player-queue__track-info"
+            @click="playQueueTrack(playerStore.visibleQueueStartIndex + index)">
+            <div class="player-queue__track-thumb">
+              <img
+                v-if="track.thumbnailUrl"
+                :src="track.thumbnailUrl"
+                :alt="track.title"
+                loading="lazy" />
+              <div v-else class="player-queue__track-thumb-placeholder">
+                <AppIcon name="ph:music-notes" />
+              </div>
+            </div>
 
-        <button
-          class="player-queue__remove-btn"
-          :title="$t('player.removeFromQueue')"
-          @click.stop="playerStore.removeFromQueue(index)">
-          <AppIcon name="ph:x" />
-        </button>
-      </li>
+            <div class="player-queue__track-text">
+              <span
+                class="player-queue__track-title"
+                :class="{
+                  'text-primary': playerStore.currentTrack?.queueId
+                    ? playerStore.currentTrack.queueId === track.queueId
+                    : playerStore.currentTrack?.videoId === track.videoId
+                }">
+                {{ track.title }}
+              </span>
+              <AppTrackArtists :track="track" class="player-queue__track-artist" />
+            </div>
+          </div>
+
+          <button
+            class="player-queue__remove-btn"
+            :title="$t('player.removeFromQueue')"
+            @click.stop="playerStore.removeFromQueue(playerStore.visibleQueueStartIndex + index)">
+            <AppIcon name="ph:x" />
+          </button>
+        </li>
+      </template>
     </ul>
   </div>
 </template>
@@ -498,5 +517,43 @@ onMounted(() => {
 
 .player-queue__order-select :deep(.select-container) {
   border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+
+.player-queue__radio-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-2) var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  list-style: none;
+
+  &::before {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+  }
+
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+  }
+}
+
+.player-queue__radio-divider-icon {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.player-queue__item--radio {
+  border-left: 2px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+  padding-left: calc(var(--space-2) - 2px);
 }
 </style>

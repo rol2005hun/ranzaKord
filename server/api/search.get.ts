@@ -1,19 +1,25 @@
+import { UserModel } from '../models/User';
 import type {
   CategorizedSearchResults,
   SearchResult,
   SearchResultType
 } from '../../app/features/search/types/search.types';
 
-export default defineCachedEventHandler(
+import { useAppSession } from '../utils/session';
+
+export default defineEventHandler(
   async (event): Promise<CategorizedSearchResults | SearchResult[]> => {
     const query = getQuery(event);
     const q = query['q'] as string | undefined;
     const type = query['type'] as string | undefined;
 
+    const session = await useAppSession(event);
+    const currentUserSub = session.data?.user?.sub;
+
     const { t } = useServerTranslation(event);
 
     if (!q) {
-      throw createError({ statusCode: 400, statusMessage: t('search.errors.missingQuery') });
+      throw createError({ statusCode: 400, message: t('search.errors.missingQuery') });
     }
 
     const innertube = await createInnertube(false);
@@ -177,6 +183,23 @@ export default defineCachedEventHandler(
         if (artists.length > 0 && !artistName) {
           artistName = artists.map((a) => a.name).join(', ');
         }
+        if (!artistName) {
+          const rawText = item.flex_columns[1].title.runs
+            .map((r: { text?: string }) => r.text || '')
+            .join('');
+          const parts = rawText.split('•').map((s: string) => s.trim());
+          const firstPart = parts[0];
+          const secondPart = parts[1];
+          if (
+            parts.length > 1 &&
+            firstPart &&
+            (firstPart.toLowerCase() === 'song' || firstPart.toLowerCase() === 'zene')
+          ) {
+            artistName = secondPart || '';
+          } else if (parts.length > 0 && firstPart) {
+            artistName = firstPart;
+          }
+        }
       }
 
       let thumbnail = '';
@@ -213,6 +236,25 @@ export default defineCachedEventHandler(
       };
     };
 
+    if (type === 'profile') {
+      const dbUsers = await UserModel.find({
+        isPublicProfile: { $ne: false },
+        sub: { $ne: currentUserSub },
+        name: { $regex: q.trim(), $options: 'i' }
+      })
+        .select('sub name picture')
+        .limit(20)
+        .lean();
+
+      return dbUsers.map((u) => ({
+        id: u.sub,
+        type: 'profile',
+        title: u.name,
+        artist: '',
+        thumbnailUrl: u.picture || ''
+      }));
+    }
+
     if (type === 'song' || type === 'artist' || type === 'album') {
       const results = await innertube.music.search(q.trim(), { type });
       const items: SearchResult[] = [];
@@ -233,7 +275,8 @@ export default defineCachedEventHandler(
     const response: CategorizedSearchResults = {
       songs: [],
       artists: [],
-      albums: []
+      albums: [],
+      profiles: []
     };
 
     if (results.contents) {
@@ -273,7 +316,26 @@ export default defineCachedEventHandler(
       }
     }
 
-    if (!response.topResult && response.songs.length > 0) {
+    const dbUsers = await UserModel.find({
+      isPublicProfile: { $ne: false },
+      sub: { $ne: currentUserSub },
+      name: { $regex: q.trim(), $options: 'i' }
+    })
+      .select('sub name picture')
+      .limit(5)
+      .lean();
+
+    response.profiles = dbUsers.map((u) => ({
+      id: u.sub,
+      type: 'profile',
+      title: u.name,
+      artist: 'ranzaKord Profil',
+      thumbnailUrl: u.picture || ''
+    }));
+
+    if (!response.topResult && response.profiles.length > 0) {
+      response.topResult = response.profiles[0];
+    } else if (!response.topResult && response.songs.length > 0) {
       response.topResult = response.songs[0];
     }
 
@@ -282,17 +344,5 @@ export default defineCachedEventHandler(
     response.albums = response.albums.slice(0, 10);
 
     return response;
-  },
-  {
-    maxAge: 60 * 60 * 12,
-    name: 'youtube-search',
-    getKey: (event) => {
-      const query = getQuery(event);
-      const q = String(query['q'] || '')
-        .trim()
-        .toLowerCase();
-      const type = String(query['type'] || 'all');
-      return `${q}-${type}-v3`;
-    }
   }
 );

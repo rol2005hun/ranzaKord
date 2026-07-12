@@ -1,6 +1,7 @@
 import type { UseAuthReturn } from '../types/auth.types';
 
 import { isTauri as checkIsTauri } from '@tauri-apps/api/core';
+import { openUrl } from '@tauri-apps/plugin-opener';
 
 export function useAuth(): UseAuthReturn {
   const store = useAuthStore();
@@ -18,14 +19,12 @@ export function useAuth(): UseAuthReturn {
     const lang = nuxtApp.$i18n?.locale?.value || 'en';
     const desktopAuth = isTauri.value ? '&desktop=1' : '';
     const rememberAuth = rememberMe ? '&remember=1' : '';
-    const isTauriProd = isTauri.value && !import.meta.dev;
-    const baseUrl = isTauriProd ? config.public.baseUrl : window.location.origin;
+    const baseUrl = isTauri.value ? config.public.baseUrl : window.location.origin;
     const loginUrl = isTauri.value
       ? `${baseUrl}/auth/login?source=${origin}&lang=${lang}${desktopAuth}${rememberAuth}`
       : `/auth/login?source=${origin}&lang=${lang}${desktopAuth}${rememberAuth}`;
 
     if (isTauri.value) {
-      const { openUrl } = await import('@tauri-apps/plugin-opener');
       await openUrl(loginUrl);
     } else {
       window.location.assign(loginUrl);
@@ -33,7 +32,8 @@ export function useAuth(): UseAuthReturn {
   }
 
   async function logout() {
-    await $fetch('/auth/logout', { method: 'POST' }).catch(() => null);
+    navigateTo('/login');
+    store.clearSession();
 
     if (import.meta.client) {
       localStorage.removeItem('auth_token');
@@ -43,13 +43,17 @@ export function useAuth(): UseAuthReturn {
           .replace(/^ +/, '')
           .replace(/=.*/, `=;expires=${new Date(0).toUTCString()};path=/`);
       });
-      window.location.href = '/login';
-    } else {
-      store.clearSession();
     }
+
+    $fetch('/auth/logout', { method: 'POST' }).catch(() => null);
   }
 
   async function fetchUser() {
+    if (import.meta.client && localStorage.getItem('ranzakord_demo_session') === 'true') {
+      store.loginAsDemo();
+      return;
+    }
+    if (store.currentUser?.isDemo) return;
     try {
       const fetcher = import.meta.server && requestFetch ? requestFetch : globalFetch;
       const user = (await fetcher('/api/me')) as unknown;

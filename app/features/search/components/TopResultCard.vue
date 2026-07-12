@@ -11,6 +11,7 @@ const routeTo = computed(() => {
   if (props.result.type === 'artist') return `/artist/${props.result.id}`;
   if (props.result.type === 'album') return `/album/${props.result.id}`;
   if (props.result.type === 'playlist') return `/playlist/${props.result.id}`;
+  if (props.result.type === 'profile') return `/user/${props.result.id}`;
   return undefined;
 });
 
@@ -25,15 +26,21 @@ const emit = defineEmits<{
 }>();
 
 function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
-  if (result.artists && result.artists.length > 0) return result.artists;
+  if (result.artists && result.artists.length > 0) {
+    return result.artists.map((a) => ({ ...a, name: formatArtistName(a.name) }));
+  }
   if (!result.artist) return [];
   const separatorRe = /,\s*|\s+feat\.\s+|\s+ft\.\s+|\s+&\s+/i;
   const parts = result.artist
     .split(separatorRe)
     .map((s) => s.trim())
     .filter(Boolean);
-  if (parts.length <= 1) return [];
-  return parts.map((name) => ({ name }));
+
+  if (parts.length === 1 && result.artistId) {
+    return [{ name: formatArtistName(parts[0] || ''), id: result.artistId }];
+  }
+
+  return parts.map((name) => ({ name: formatArtistName(name) }));
 }
 </script>
 
@@ -100,18 +107,18 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
                 :to="`/artist/${props.result.artistId}`"
                 class="artist-link"
                 @click.stop>
-                {{ props.result.artist }}
+                {{ formatArtistName(props.result.artist!) }}
               </NuxtLink>
               <NuxtLink
                 v-else-if="props.result.artist"
                 :to="`/search?q=${encodeURIComponent(props.result.artist)}&type=artist`"
                 class="artist-link"
                 @click.stop>
-                {{ props.result.artist }}
+                {{ formatArtistName(props.result.artist) }}
               </NuxtLink>
             </template>
           </span>
-          <span class="top-result-card__badge">{{ props.result.type }}</span>
+          <span class="top-result-card__badge">{{ $t(`search.badge.${props.result.type}`) }}</span>
         </div>
       </div>
     </NuxtLink>
@@ -177,24 +184,24 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
                 :to="`/artist/${props.result.artistId}`"
                 class="artist-link"
                 @click.stop>
-                {{ props.result.artist }}
+                {{ formatArtistName(props.result.artist!) }}
               </NuxtLink>
               <NuxtLink
                 v-else-if="props.result.artist"
                 :to="`/search?q=${encodeURIComponent(props.result.artist)}&type=artist`"
                 class="artist-link"
                 @click.stop>
-                {{ props.result.artist }}
+                {{ formatArtistName(props.result.artist) }}
               </NuxtLink>
             </template>
           </span>
-          <span class="top-result-card__badge">{{ props.result.type }}</span>
+          <span class="top-result-card__badge">{{ $t(`search.badge.${props.result.type}`) }}</span>
         </div>
       </div>
       <button
         v-if="props.result.type === 'song'"
         class="top-result-card__play-btn"
-        :aria-label="$t('player.play') || 'Lejátszás'"
+        :aria-label="$t('player.play')"
         @click.prevent="emit('play', props.result)">
         <ClientOnly>
           <AppIcon v-if="isPlaying" name="ph:pause-fill" data-allow-mismatch />
@@ -264,6 +271,7 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
+    padding-right: calc(48px + var(--space-2)); /* Reserve space for play button */
   }
 
   &__title {
@@ -277,6 +285,11 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    word-break: break-word;
+
+    @media (max-width: 768px) {
+      font-size: 1.5rem;
+    }
   }
 
   &__meta {

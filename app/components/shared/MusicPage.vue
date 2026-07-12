@@ -58,10 +58,10 @@ const optimizedBgUrl = computed(() => {
           :class="{ 'music-page__skeleton-cover--rounded': roundedImage }"></div>
         <div class="music-page__skeleton-info">
           <div class="skeleton-line skeleton-line--badge"></div>
-          <div class="skeleton-line skeleton-line--title"></div>
+          <h1 class="skeleton-line skeleton-line--title"></h1>
           <div class="skeleton-line skeleton-line--meta"></div>
         </div>
-        <div class="music-page__skeleton-center-header">
+        <div v-if="$slots['skeleton-center-header']" class="music-page__skeleton-center-header">
           <slot name="skeleton-center-header" />
         </div>
         <div class="music-page__skeleton-actions">
@@ -129,10 +129,12 @@ const optimizedBgUrl = computed(() => {
 
       <div class="music-page__scroll-area" @scroll="onContentScroll">
         <div ref="headerRef" class="music-page__header">
-          <div
-            class="music-page__header-bg"
-            :style="optimizedBgUrl ? `background-image: url('${optimizedBgUrl}')` : ''"></div>
-          <div class="music-page__header-overlay"></div>
+          <div class="music-page__header-backgrounds">
+            <div
+              class="music-page__header-bg"
+              :style="optimizedBgUrl ? `background-image: url('${optimizedBgUrl}')` : ''"></div>
+            <div class="music-page__header-overlay"></div>
+          </div>
           <div class="music-page__header-content">
             <div class="music-page__cover" :class="{ 'music-page__cover--rounded': roundedImage }">
               <NuxtImg
@@ -153,12 +155,15 @@ const optimizedBgUrl = computed(() => {
             <div class="music-page__info">
               <div v-if="badge" class="music-page__badge">{{ badge }}</div>
               <h1 class="music-page__title">{{ props.title }}</h1>
-              <div class="music-page__meta">
+              <div v-if="$slots.meta" class="music-page__meta">
                 <slot name="meta" />
+              </div>
+              <div v-if="$slots.description" class="music-page__description">
+                <slot name="description" />
               </div>
             </div>
 
-            <div class="music-page__center-header">
+            <div v-if="$slots['center-header']" class="music-page__center-header">
               <slot name="center-header" />
             </div>
 
@@ -186,6 +191,8 @@ const optimizedBgUrl = computed(() => {
 
 <style scoped lang="scss">
 .music-page {
+  container-type: inline-size;
+  container-name: music-page;
   position: absolute;
   inset: 0;
   max-width: 1600px;
@@ -206,6 +213,13 @@ const optimizedBgUrl = computed(() => {
     gap: var(--space-5);
     padding: var(--space-4) var(--space-6);
     min-height: 160px;
+
+    @container (max-width: 768px) {
+      flex-direction: column;
+      text-align: center;
+      gap: var(--space-4);
+      padding-top: var(--space-4);
+    }
   }
 
   &__skeleton-cover {
@@ -217,6 +231,12 @@ const optimizedBgUrl = computed(() => {
     &--rounded {
       border-radius: 50%;
     }
+
+    @container (max-width: 768px) {
+      width: 160px;
+      height: 160px;
+      margin: 0 auto;
+    }
   }
 
   &__skeleton-info {
@@ -224,6 +244,12 @@ const optimizedBgUrl = computed(() => {
     flex-direction: column;
     gap: var(--space-3);
     flex: 1;
+
+    @container (max-width: 768px) {
+      align-items: center;
+      flex: none;
+      width: 100%;
+    }
   }
 
   &__skeleton-center-header {
@@ -232,6 +258,11 @@ const optimizedBgUrl = computed(() => {
     justify-content: center;
     align-items: center;
     min-width: 0;
+
+    @container (max-width: 768px) {
+      flex: none;
+      width: 100%;
+    }
   }
 
   &__skeleton-actions {
@@ -239,6 +270,12 @@ const optimizedBgUrl = computed(() => {
     align-items: center;
     gap: var(--space-4);
     padding: var(--space-2) 0;
+
+    @container (max-width: 768px) {
+      width: 100%;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
   }
 
   &__skeleton-tracks {
@@ -267,8 +304,14 @@ const optimizedBgUrl = computed(() => {
     display: flex;
     align-items: center;
     padding: var(--space-4) var(--space-6);
-    overflow: hidden;
     flex-shrink: 0;
+
+    &-backgrounds {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      z-index: 1;
+    }
 
     &-bg {
       position: absolute;
@@ -276,7 +319,6 @@ const optimizedBgUrl = computed(() => {
       background-size: cover;
       background-position: center;
       filter: blur(40px);
-      z-index: 1;
     }
 
     &-overlay {
@@ -287,7 +329,6 @@ const optimizedBgUrl = computed(() => {
         color-mix(in srgb, var(--color-bg) 50%, transparent) 0%,
         var(--color-bg) 100%
       );
-      z-index: 2;
     }
 
     &-content {
@@ -298,7 +339,7 @@ const optimizedBgUrl = computed(() => {
       gap: var(--space-5);
       width: 100%;
 
-      @media (max-width: 768px) {
+      @container (max-width: 768px) {
         flex-direction: column;
         text-align: center;
         gap: var(--space-4);
@@ -314,26 +355,11 @@ const optimizedBgUrl = computed(() => {
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
-    scrollbar-width: thin;
-    scrollbar-color: var(--color-border) transparent;
     position: relative;
     --tracklist-sticky-top: 64px;
 
-    @media (max-width: 768px) {
+    @container (max-width: 768px) {
       padding: 0 0 var(--space-2);
-    }
-
-    &::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: var(--color-border);
-      border-radius: 4px;
     }
   }
 
@@ -429,6 +455,12 @@ const optimizedBgUrl = computed(() => {
       border-radius: 50%;
     }
 
+    @container (max-width: 768px) {
+      width: 140px;
+      height: 140px;
+      font-size: 2.5rem;
+    }
+
     img {
       width: 100%;
       height: 100%;
@@ -443,8 +475,10 @@ const optimizedBgUrl = computed(() => {
     flex: 1;
     min-width: 0;
 
-    @media (max-width: 768px) {
+    @container (max-width: 768px) {
       align-items: center;
+      flex: none;
+      max-width: 100%;
     }
   }
 
@@ -461,12 +495,13 @@ const optimizedBgUrl = computed(() => {
     font-weight: var(--font-weight-black);
     color: var(--color-text-primary);
     line-height: 1.1;
-    margin: 0 0 var(--space-2) 0;
+    margin: 0;
     display: -webkit-box;
     line-clamp: 2;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    word-break: break-word;
   }
 
   &__meta {
@@ -479,9 +514,22 @@ const optimizedBgUrl = computed(() => {
     opacity: 0.9;
     flex-wrap: wrap;
 
-    @media (max-width: 768px) {
+    @container (max-width: 768px) {
       justify-content: center;
     }
+  }
+
+  &__description {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    margin-top: var(--space-2);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+    max-width: 800px;
   }
 
   &__center-header {
@@ -490,6 +538,11 @@ const optimizedBgUrl = computed(() => {
     justify-content: center;
     align-items: center;
     min-width: 0;
+
+    @container (max-width: 768px) {
+      flex: none;
+      width: 100%;
+    }
   }
 
   &__actions {
@@ -497,6 +550,12 @@ const optimizedBgUrl = computed(() => {
     align-items: center;
     gap: var(--space-4);
     flex-shrink: 0;
+
+    @container (max-width: 768px) {
+      width: 100%;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
   }
 
   &__play-btn {

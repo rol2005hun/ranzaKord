@@ -15,17 +15,12 @@ let crossfadeGain2 = 0.0;
 let isCrossfading = false;
 let crossfadeTriggered = false;
 let crossfadeRafId: number | null = null;
-let crossfadeIntervalId: ReturnType<typeof setInterval> | null = null;
 let audioAbortController: AbortController | null = null;
 
 function stopCrossfadeTimers() {
   if (crossfadeRafId !== null) {
     cancelAnimationFrame(crossfadeRafId);
     crossfadeRafId = null;
-  }
-  if (crossfadeIntervalId !== null) {
-    clearInterval(crossfadeIntervalId);
-    crossfadeIntervalId = null;
   }
 }
 
@@ -34,6 +29,7 @@ export function usePlayer() {
   const nuxtApp = useNuxtApp();
   const t = nuxtApp.$i18n.t;
   const config = useRuntimeConfig();
+  const toast = useToast();
 
   function getApiUrl(path: string) {
     if (path.startsWith('http://') || path.startsWith('https://')) return path;
@@ -41,6 +37,28 @@ export function usePlayer() {
     const isTauriProd = import.meta.client && '__TAURI_INTERNALS__' in window && !import.meta.dev;
     if (isTauriProd) return `${config.public.baseUrl}${normalizedPath}`;
     return normalizedPath;
+  }
+
+  async function getStreamUrl(videoId: string): Promise<string> {
+    const authStore = useAuthStore();
+    const finalVideoId = videoId;
+
+    if (authStore.currentUser?.isDemo) {
+      if (import.meta.client) {
+        toast.info(t('core.demoModeAudioToast') || 'Demo mode: Playing sample audio');
+      }
+
+      return 'https://upload.wikimedia.org/wikipedia/commons/c/c8/Example.ogg';
+    }
+
+    if (import.meta.client) {
+      const { useOfflineStore } = await import('@/features/offline/stores/useOfflineStore');
+      const { $pinia } = useNuxtApp();
+      const offlineStore = useOfflineStore($pinia);
+      const objectUrl = await offlineStore.getObjectUrl(finalVideoId);
+      if (objectUrl) return objectUrl;
+    }
+    return getApiUrl(`/api/stream?v=${finalVideoId}`);
   }
 
   let isRestoring = false;
@@ -86,6 +104,17 @@ export function usePlayer() {
           if (isRestoring) return;
           if (index === activeAudioIndex.value) {
             store.currentTimeSeconds = el.currentTime;
+            if ('mediaSession' in navigator && isFinite(el.duration) && el.duration > 0) {
+              try {
+                navigator.mediaSession.setPositionState({
+                  duration: el.duration,
+                  playbackRate: el.playbackRate,
+                  position: el.currentTime
+                });
+              } catch {
+                // ignore errors when mediaSession state cannot be updated
+              }
+            }
 
             const actualDuration = store.currentTrack?.durationSeconds || 0;
             if (
@@ -151,7 +180,14 @@ export function usePlayer() {
           } else {
             if (!isCrossfading) {
               const next = store.nextTrack();
-              if (next) playTrack(next);
+              if (next) {
+                playTrack(next);
+              } else if (store.autoplayEnabled && store.currentTrack) {
+                const trackId = store.currentTrack.videoId;
+                fetchRadioNext(trackId).then((firstTrack) => {
+                  if (firstTrack) playTrack(firstTrack);
+                });
+              }
             }
           }
         },
@@ -181,8 +217,10 @@ export function usePlayer() {
       if (savedTime > 0) isRestoring = true;
 
       const el = el1;
-      el.src = getApiUrl(`/api/stream?v=${store.currentTrack.videoId}`);
-      el.load();
+      getStreamUrl(store.currentTrack.videoId).then((url) => {
+        el.src = url;
+        el.load();
+      });
 
       el.addEventListener('loadedmetadata', function onLoaded() {
         if (savedTime > 0) {
@@ -223,9 +261,11 @@ export function usePlayer() {
 
     isCrossfading = true;
 
-    inAudio.src = getApiUrl(`/api/stream?v=${nextTrack.videoId}`);
-    inAudio.load();
-    inAudio.play().catch(() => {});
+    getStreamUrl(nextTrack.videoId).then((url) => {
+      inAudio.src = url;
+      inAudio.load();
+      inAudio.play().catch(() => {});
+    });
 
     store.setTrack(nextTrack);
     store.isPlaying = true;
@@ -278,10 +318,12 @@ export function usePlayer() {
 
     stopCrossfadeTimers();
     crossfadeRafId = requestAnimationFrame(loop);
-    crossfadeIntervalId = setInterval(() => step(), 100);
   }
 
   function recordTrackStat(track: Track, listeningSeconds: number, skipped: boolean) {
+    const authStore = useAuthStore();
+    if (authStore.currentUser?.isDemo) return;
+
     const payload: TrackStatPayload = {
       trackId: track.videoId,
       title: track.title,
@@ -300,7 +342,7 @@ export function usePlayer() {
   let isFetchingMore = false;
 
   async function checkAndFetchMore(track: Track) {
-    if (isFetchingMore || store.playbackOrder !== 'sequential') return;
+    if (isFetchingMore) return;
     const ctx = store.playbackContext;
     if (!ctx || ctx.type === 'none') {
       if (!store.autoplayEnabled) return;
@@ -310,10 +352,25 @@ export function usePlayer() {
     const idx = q.findIndex(
       (t) => (track.queueId && t.queueId === track.queueId) || t.videoId === track.videoId
     );
-    if (idx < 0) return;
 
-    // Check if we are near the end of the queue (e.g. 3 tracks remaining)
-    const tracksRemaining = q.length - 1 - idx;
+    if (idx < 0) {
+      if (store.autoplayEnabled && q.length === 0) {
+        isFetchingMore = true;
+        try {
+          await fetchRadioNext(track.videoId);
+        } finally {
+          isFetchingMore = false;
+        }
+      }
+      return;
+    }
+
+    let tracksRemaining = q.length - 1 - idx;
+    if (store.playbackOrder === 'random') {
+      const remainingUnplayed = q.length - store.playHistory.length;
+      tracksRemaining = Math.max(0, remainingUnplayed);
+    }
+
     if (tracksRemaining > 3) return;
 
     isFetchingMore = true;
@@ -351,7 +408,6 @@ export function usePlayer() {
             }
           }
         } else if (store.autoplayEnabled) {
-          // Playlist finished, fallback to radio if autoplay is enabled
           await fetchRadioNext(track.videoId);
         }
       } else if (store.autoplayEnabled) {
@@ -364,15 +420,21 @@ export function usePlayer() {
     }
   }
 
-  async function fetchRadioNext(videoId: string) {
+  async function fetchRadioNext(videoId: string): Promise<Track | null> {
+    const authStore = useAuthStore();
+    if (authStore.currentUser?.isDemo) return null;
+
     const res = await $fetch<Track[]>(`/api/search/related?videoId=${videoId}`).catch(() => []);
     if (res && res.length > 0) {
-      const filtered = res.filter((rt) => !store.queue.some((qt) => qt.videoId === rt.videoId));
+      const filtered = res
+        .filter((rt) => !store.queue.some((qt) => qt.videoId === rt.videoId))
+        .map((t) => ({ ...t, isRadio: true }));
       if (filtered.length > 0) {
-        // take first 5-10
         filtered.slice(0, 10).forEach((t) => store.addToQueue(t));
+        return filtered[0] ?? null;
       }
     }
+    return null;
   }
 
   async function playTrack(track: Track, fromHistory = false) {
@@ -427,7 +489,7 @@ export function usePlayer() {
         otherEl.currentTime = 0;
       }
 
-      el.src = getApiUrl(`/api/stream?v=${track.videoId}`);
+      el.src = await getStreamUrl(track.videoId);
       el.load();
 
       // Ensure visualizer and audio-reactive loop are connected
@@ -446,21 +508,27 @@ export function usePlayer() {
   }
 
   function pause() {
-    activeAudio.value?.pause();
-    store.isPlaying = false;
+    if (activeAudio.value) {
+      activeAudio.value.pause();
+      store.isPlaying = false;
+      if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+    }
   }
 
   registerPauseCallback(pause);
 
   function resume() {
-    activeAudio.value
-      ?.play()
-      .then(() => {
-        store.isPlaying = true;
-      })
-      .catch(() => {
-        store.isPlaying = false;
-      });
+    if (activeAudio.value && store.currentTrack) {
+      activeAudio.value
+        .play()
+        .then(() => {
+          store.isPlaying = true;
+          if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+        })
+        .catch(() => {
+          store.isPlaying = false;
+        });
+    }
   }
 
   function togglePlay() {
@@ -537,6 +605,15 @@ export function usePlayer() {
     const { setKaraoke } = useAudioVisualizer();
     setKaraoke(store.isKaraoke);
   }
+
+  watch(
+    () => store.autoplayEnabled,
+    (enabled) => {
+      if (enabled && store.currentTrack) {
+        checkAndFetchMore(store.currentTrack);
+      }
+    }
+  );
 
   return {
     currentTrack: computed(() => store.currentTrack),

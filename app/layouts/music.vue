@@ -21,14 +21,22 @@ useAsyncData(
   }
 );
 
-function onPlaylistCreated(id: string): void {
+async function onPlaylistCreated(id: string): Promise<void> {
   showCreateModal.value = false;
-  navigateTo(`/playlist/${id}`);
+  if (route.path === `/playlist/${id}`) {
+    await refreshNuxtData(`playlist-${id}`);
+  } else {
+    await navigateTo(`/playlist/${id}`);
+  }
 }
 
-function onPlaylistImported(id: string): void {
+async function onPlaylistImported(id: string): Promise<void> {
   showImportModal.value = false;
-  navigateTo(`/playlist/${id}`);
+  if (route.path === `/playlist/${id}`) {
+    await refreshNuxtData(`playlist-${id}`);
+  } else {
+    await navigateTo(`/playlist/${id}`);
+  }
 }
 const isHydrated = ref(false);
 onMounted(() => {
@@ -46,6 +54,20 @@ onMounted(() => {
       </template>
 
       <template #default="{ isExpanded }">
+        <div class="music-layout__main-nav">
+          <AppSidebarItem to="/" icon="ph:house-duotone" :label="$t('core.nav.home')" />
+          <AppSidebarItem
+            v-if="useAuthStore().currentUser?.roles?.includes('ranzaKreator')"
+            to="/stats"
+            icon="ph:chart-bar-duotone"
+            :label="$t('stats.title')"
+            is-new />
+          <AppSidebarItem
+            to="/offline"
+            icon="ph:wifi-slash-duotone"
+            :label="$t('offline.navLabel')" />
+        </div>
+
         <div v-if="isAuthenticated" class="music-layout__library">
           <div
             class="music-layout__library-header"
@@ -94,7 +116,9 @@ onMounted(() => {
 
           <template v-else>
             <div
-              v-if="playlistsStore.playlists.length === 0"
+              v-if="
+                playlistsStore.playlists.length === 0 && playlistsStore.sharedPlaylists.length === 0
+              "
               class="music-layout__library-empty app-sidebar__text">
               <div class="music-layout__library-empty-content">
                 <AppIcon
@@ -108,25 +132,73 @@ onMounted(() => {
               </div>
             </div>
 
-            <NuxtLink
-              v-for="playlist in playlistsStore.playlists"
-              :key="playlist.id"
-              :to="`/playlist/${playlist.id}`"
-              class="app-sidebar-item music-layout__playlist-item"
-              :class="{
-                'app-sidebar-item--active': route.path === `/playlist/${playlist.id}`
-              }">
-              <div class="music-layout__playlist-cover">
-                <img v-if="playlist.imageUrl" :src="playlist.imageUrl" :alt="playlist.name" />
-                <AppIcon v-else name="ph:music-notes-fill" />
+            <template v-if="playlistsStore.playlists.length > 0">
+              <NuxtLink
+                v-for="playlist in playlistsStore.playlists"
+                :key="playlist.id"
+                :to="`/playlist/${playlist.id}`"
+                class="app-sidebar-item music-layout__playlist-item"
+                :class="{
+                  'app-sidebar-item--active': route.path === `/playlist/${playlist.id}`
+                }">
+                <div class="music-layout__playlist-cover">
+                  <img v-if="playlist.imageUrl" :src="playlist.imageUrl" :alt="playlist.name" />
+                  <AppIcon v-else name="ph:music-notes-fill" />
+                </div>
+                <div class="music-layout__playlist-info app-sidebar__text">
+                  <span class="music-layout__playlist-name">{{ playlist.name }}</span>
+                  <span class="music-layout__playlist-count">
+                    {{ $t('playlists.trackCount', { count: playlist.trackCount }) }}
+                  </span>
+                </div>
+              </NuxtLink>
+            </template>
+
+            <div
+              v-if="
+                isExpanded &&
+                playlistsStore.playlists.length === 0 &&
+                playlistsStore.sharedPlaylists.length > 0
+              "
+              class="music-layout__mini-empty"
+              :title="$t('playlists.noPlaylists')">
+              <div class="music-layout__mini-empty-content app-sidebar__text">
+                <span class="music-layout__mini-empty-text">{{ $t('playlists.noPlaylists') }}</span>
+                <button class="music-layout__mini-empty-btn" @click="showCreateModal = true">
+                  {{ $t('playlists.newPlaylist') }}
+                </button>
               </div>
-              <div class="music-layout__playlist-info app-sidebar__text">
-                <span class="music-layout__playlist-name">{{ playlist.name }}</span>
-                <span class="music-layout__playlist-count">
-                  {{ $t('playlists.trackCount', { count: playlist.trackCount }) }}
-                </span>
+            </div>
+            <template v-if="playlistsStore.sharedPlaylists.length > 0">
+              <div
+                v-if="isExpanded"
+                class="music-layout__library-header music-layout__library-header--expanded"
+                :style="{ marginTop: '0.5rem', marginBottom: '0.25rem' }">
+                <div class="music-layout__library-title-wrapper" style="display: flex">
+                  <span class="music-layout__library-title app-sidebar__text">Közös listák</span>
+                </div>
               </div>
-            </NuxtLink>
+              <div v-else class="app-sidebar__divider" :style="{ marginTop: '1rem' }"></div>
+              <NuxtLink
+                v-for="playlist in playlistsStore.sharedPlaylists"
+                :key="playlist.id"
+                :to="`/playlist/${playlist.id}`"
+                class="app-sidebar-item music-layout__playlist-item"
+                :class="{
+                  'app-sidebar-item--active': route.path === `/playlist/${playlist.id}`
+                }">
+                <div class="music-layout__playlist-cover">
+                  <img v-if="playlist.imageUrl" :src="playlist.imageUrl" :alt="playlist.name" />
+                  <AppIcon v-else name="ph:users-fill" />
+                </div>
+                <div class="music-layout__playlist-info app-sidebar__text">
+                  <span class="music-layout__playlist-name">{{ playlist.name }}</span>
+                  <span class="music-layout__playlist-count">
+                    {{ $t('playlists.trackCount', { count: playlist.trackCount }) }}
+                  </span>
+                </div>
+              </NuxtLink>
+            </template>
           </template>
         </div>
       </template>
@@ -157,9 +229,39 @@ onMounted(() => {
 
     <AppModal
       :model-value="showMobilePlaylists"
-      :title="$t('playlists.title')"
+      :title="$t('core.nav.menu')"
       @update:model-value="showMobilePlaylists = false">
       <div class="mobile-playlists">
+        <div class="mobile-playlists__main-nav">
+          <NuxtLink to="/" class="mobile-playlists__nav-item" @click="showMobilePlaylists = false">
+            <AppIcon name="ph:house-duotone" />
+            {{ $t('core.nav.home') }}
+          </NuxtLink>
+
+          <NuxtLink
+            v-if="useAuthStore().currentUser?.roles?.includes('ranzaKreator')"
+            to="/stats"
+            class="mobile-playlists__nav-item"
+            @click="showMobilePlaylists = false">
+            <div style="position: relative; display: inline-flex">
+              <AppIcon name="ph:chart-bar-duotone" />
+              <span class="app-sidebar-item__new-badge" style="top: -2px; right: -8px">
+                {{ $t('core.nav.new') }}
+              </span>
+            </div>
+            {{ $t('stats.title') }}
+          </NuxtLink>
+          <NuxtLink
+            to="/offline"
+            class="mobile-playlists__nav-item"
+            @click="showMobilePlaylists = false">
+            <AppIcon name="ph:wifi-slash-duotone" />
+            {{ $t('offline.navLabel') }}
+          </NuxtLink>
+        </div>
+
+        <div class="mobile-playlists__divider"></div>
+
         <div class="mobile-playlists__actions">
           <button
             class="mobile-playlists__btn"
@@ -184,27 +286,73 @@ onMounted(() => {
         <div v-if="playlistsStore.isLoading" class="mobile-playlists__list">
           <AppSpinner />
         </div>
-        <div v-else-if="playlistsStore.playlists.length === 0" class="mobile-playlists__empty">
-          {{ $t('playlists.noPlaylists') }}
+        <div
+          v-else-if="
+            playlistsStore.playlists.length === 0 && playlistsStore.sharedPlaylists.length === 0
+          "
+          class="mobile-playlists__empty">
+          <p>{{ $t('playlists.noPlaylists') }}</p>
+          <button @click="showCreateModal = true">{{ $t('playlists.newPlaylist') }}</button>
         </div>
         <div v-else class="mobile-playlists__list">
-          <NuxtLink
-            v-for="playlist in playlistsStore.playlists"
-            :key="playlist.id"
-            :to="`/playlist/${playlist.id}`"
-            class="mobile-playlists__item"
-            @click="showMobilePlaylists = false">
-            <div class="mobile-playlists__cover">
-              <img v-if="playlist.imageUrl" :src="playlist.imageUrl" :alt="playlist.name" />
-              <AppIcon v-else name="ph:music-notes-fill" />
+          <template v-if="playlistsStore.playlists.length > 0">
+            <NuxtLink
+              v-for="playlist in playlistsStore.playlists"
+              :key="playlist.id"
+              :to="`/playlist/${playlist.id}`"
+              class="mobile-playlists__item"
+              :class="{
+                'mobile-playlists__item--active': route.path === `/playlist/${playlist.id}`
+              }"
+              @click="showMobilePlaylists = false">
+              <div class="mobile-playlists__cover">
+                <img v-if="playlist.imageUrl" :src="playlist.imageUrl" :alt="playlist.name" />
+                <AppIcon v-else name="ph:music-notes-fill" />
+              </div>
+              <div class="mobile-playlists__info">
+                <span class="mobile-playlists__name">{{ playlist.name }}</span>
+                <span class="mobile-playlists__count">
+                  {{ $t('playlists.trackCount', { count: playlist.trackCount }) }}
+                </span>
+              </div>
+            </NuxtLink>
+          </template>
+
+          <template v-if="playlistsStore.sharedPlaylists.length > 0">
+            <div
+              class="mobile-playlists__section-title"
+              :style="{
+                color: 'inherit',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                fontSize: 'var(--text-xs)',
+                fontWeight: 'var(--font-weight-semibold)',
+                padding: '0.5rem 1rem 0',
+                marginTop: '1rem'
+              }">
+              Közös listák
             </div>
-            <div class="mobile-playlists__info">
-              <span class="mobile-playlists__name">{{ playlist.name }}</span>
-              <span class="mobile-playlists__count">
-                {{ $t('playlists.trackCount', { count: playlist.trackCount }) }}
-              </span>
-            </div>
-          </NuxtLink>
+            <NuxtLink
+              v-for="playlist in playlistsStore.sharedPlaylists"
+              :key="playlist.id"
+              :to="`/playlist/${playlist.id}`"
+              class="mobile-playlists__item"
+              :class="{
+                'mobile-playlists__item--active': route.path === `/playlist/${playlist.id}`
+              }"
+              @click="showMobilePlaylists = false">
+              <div class="mobile-playlists__cover">
+                <img v-if="playlist.imageUrl" :src="playlist.imageUrl" :alt="playlist.name" />
+                <AppIcon v-else name="ph:users-fill" />
+              </div>
+              <div class="mobile-playlists__info">
+                <span class="mobile-playlists__name">{{ playlist.name }}</span>
+                <span class="mobile-playlists__count">
+                  {{ $t('playlists.trackCount', { count: playlist.trackCount }) }}
+                </span>
+              </div>
+            </NuxtLink>
+          </template>
         </div>
       </div>
     </AppModal>
@@ -220,7 +368,11 @@ onMounted(() => {
   background: var(--color-bg);
   overflow: hidden;
   box-sizing: border-box;
-  padding-bottom: var(--player-height, 90px);
+  padding-bottom: calc(var(--player-height, 90px) + var(--safe-area-bottom));
+
+  @media (max-width: 768px) {
+    padding-bottom: calc(var(--player-height, 90px) + var(--safe-area-bottom));
+  }
 
   &__content {
     flex: 1;
@@ -235,10 +387,15 @@ onMounted(() => {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    overflow-x: hidden;
+    position: relative;
+  }
+
+  &__main-nav {
     display: flex;
     flex-direction: column;
-    position: relative;
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: var(--space-2);
   }
 
   &__library {
@@ -423,6 +580,55 @@ onMounted(() => {
     }
   }
 
+  &__mini-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: var(--space-2) var(--space-3);
+    margin: 0;
+    color: var(--color-text-muted);
+    transition: all var(--transition-fast);
+
+    &--collapsed {
+      align-items: center;
+      padding: var(--space-2);
+    }
+  }
+
+  &__mini-empty-icon {
+    font-size: 1.25rem;
+    opacity: 0.5;
+  }
+
+  &__mini-empty-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 4px;
+    padding-left: 6px; /* align with playlist items */
+  }
+
+  &__mini-empty-text {
+    font-size: var(--text-xs);
+  }
+
+  &__mini-empty-btn {
+    background: transparent;
+    border: none;
+    color: var(--color-text-primary);
+    padding: 0;
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-bold);
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    transition: text-decoration-color var(--transition-fast);
+
+    &:hover {
+      text-decoration-color: var(--color-text-primary);
+    }
+  }
+
   &__playlist-item {
     padding-left: 6px;
   }
@@ -498,6 +704,37 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+
+  &__main-nav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
+  }
+
+  &__nav-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border-radius: var(--radius-lg);
+    color: var(--color-text-primary);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: var(--text-base);
+    background: var(--color-surface-hover);
+
+    svg {
+      font-size: 1.25rem;
+      color: var(--color-primary);
+    }
+  }
+
+  &__divider {
+    height: 1px;
+    background: var(--color-border);
+    margin: var(--space-2) 0;
+  }
 
   &__actions {
     display: flex;

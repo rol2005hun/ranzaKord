@@ -1,25 +1,26 @@
 import { describe, it, expect } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { mountSuspended } from '@nuxt/test-utils/runtime';
 import SearchCategoryTabs from '../../app/features/search/components/SearchCategoryTabs.vue';
 
 describe('SearchCategoryTabs', () => {
-  it('renders all tabs', () => {
-    const wrapper = mount(SearchCategoryTabs, {
+  it('renders all tabs', async () => {
+    const wrapper = await mountSuspended(SearchCategoryTabs, {
       props: {
         modelValue: 'all'
       }
     });
 
     const buttons = wrapper.findAll('button');
-    expect(buttons.length).toBe(4);
+    expect(buttons.length).toBe(5);
     expect(buttons[0]?.text()).toBe('All');
     expect(buttons[1]?.text()).toBe('Songs');
     expect(buttons[2]?.text()).toBe('Artists');
     expect(buttons[3]?.text()).toBe('Albums');
+    expect(buttons[4]?.text()).toBe('Profiles');
   });
 
-  it('adds active class to selected tab', () => {
-    const wrapper = mount(SearchCategoryTabs, {
+  it('adds active class to selected tab', async () => {
+    const wrapper = await mountSuspended(SearchCategoryTabs, {
       props: {
         modelValue: 'song'
       }
@@ -31,7 +32,7 @@ describe('SearchCategoryTabs', () => {
   });
 
   it('emits update:modelValue when a tab is clicked', async () => {
-    const wrapper = mount(SearchCategoryTabs, {
+    const wrapper = await mountSuspended(SearchCategoryTabs, {
       props: {
         modelValue: 'all'
       }

@@ -10,7 +10,7 @@ export default defineCachedEventHandler(
     const { t } = useServerTranslation(event);
 
     if (!q && !continuation) {
-      throw createError({ statusCode: 400, statusMessage: t('search.errors.missingQuery') });
+      throw createError({ statusCode: 400, message: t('search.errors.missingQuery') });
     }
 
     const innertube = await createInnertube(false);
@@ -34,6 +34,7 @@ export default defineCachedEventHandler(
       duration?: { seconds?: number } | number;
       flex_columns?: Array<{
         title?: {
+          toString?: () => string;
           runs?: Array<{
             text?: string;
             endpoint?: {
@@ -114,6 +115,23 @@ export default defineCachedEventHandler(
         if (artists.length > 0 && !artistName) {
           artistName = artists.map((a) => a.name).join(', ');
         }
+        if (!artistName) {
+          const rawText = item.flex_columns[1].title.runs
+            .map((r: { text?: string }) => r.text || '')
+            .join('');
+          const parts = rawText.split('•').map((s: string) => s.trim());
+          const firstPart = parts[0];
+          const secondPart = parts[1];
+          if (
+            parts.length > 1 &&
+            firstPart &&
+            (firstPart.toLowerCase() === 'song' || firstPart.toLowerCase() === 'zene')
+          ) {
+            artistName = secondPart || '';
+          } else if (parts.length > 0 && firstPart) {
+            artistName = firstPart;
+          }
+        }
       }
 
       let thumbnail = '';
@@ -134,6 +152,32 @@ export default defineCachedEventHandler(
         duration = item.duration;
       }
 
+      let plays = '';
+      if (item.flex_columns) {
+        for (const col of item.flex_columns) {
+          const text =
+            col.title?.runs?.[0]?.text ||
+            (typeof col.title?.toString === 'function' ? col.title.toString() : '');
+          if (
+            text.toLowerCase().includes('play') ||
+            text.toLowerCase().includes('megtekintés') ||
+            text.match(/^\d+[KMB]\s/)
+          ) {
+            plays = text;
+          } else if (text.match(/^\d+:\d+/)) {
+            const parts = text.split(':');
+            if (parts.length === 2) {
+              duration = parseInt(parts[0] || '0') * 60 + parseInt(parts[1] || '0');
+            } else if (parts.length === 3) {
+              duration =
+                parseInt(parts[0] || '0') * 3600 +
+                parseInt(parts[1] || '0') * 60 +
+                parseInt(parts[2] || '0');
+            }
+          }
+        }
+      }
+
       return {
         id,
         type: 'song',
@@ -142,7 +186,8 @@ export default defineCachedEventHandler(
         artists: artists.length > 0 ? artists : undefined,
         artistId,
         thumbnailUrl: thumbnail,
-        durationSeconds: duration
+        durationSeconds: duration,
+        plays
       };
     };
 
@@ -182,8 +227,7 @@ export default defineCachedEventHandler(
 
         const results = await innertube.music.search(q.trim(), { type: 'song' });
         const shelf = results.contents?.find((c) => (c as ShelfItem).type === 'MusicShelf') as
-          | ShelfItem
-          | undefined;
+          ShelfItem | undefined;
 
         if (shelf?.contents) {
           for (const item of shelf.contents) {
@@ -204,13 +248,13 @@ export default defineCachedEventHandler(
       console.error('artist/songs.get.ts error:', error);
       throw createError({
         statusCode: 500,
-        statusMessage: 'Failed to fetch artist songs.'
+        message: 'Failed to fetch artist songs.'
       });
     }
   },
   {
     maxAge: 60 * 60 * 12, // Cache for 12 hours
-    name: 'artist-songs',
+    name: 'artist-songs-v2',
     getKey: (event) => {
       const query = getQuery(event);
       return `${query['q'] || 'none'}-${query['continuation'] || 'none'}`;

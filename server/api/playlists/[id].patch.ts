@@ -6,6 +6,7 @@ interface UpdatePlaylistBody {
   name?: string;
   description?: string;
   imageUrl?: string;
+  isPublic?: boolean;
 }
 
 export default defineEventHandler(async (event): Promise<PlaylistDetailResponse> => {
@@ -18,17 +19,18 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
   const { t } = useServerTranslation(event);
 
   if (!sessionData.accessToken || !sessionData.user) {
-    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
+    throw createError({ statusCode: 401, message: t('core.errors.unauthorized') });
   }
 
   const id = getRouterParam(event, 'id');
-  if (!id) throw createError({ statusCode: 400, statusMessage: t('playlists.errors.missingId') });
+  if (!id) throw createError({ statusCode: 400, message: t('playlists.errors.missingId') });
 
   const body = await readBody<UpdatePlaylistBody>(event);
-  const updates: Record<string, string> = {};
+  const updates: Record<string, string | boolean> = {};
   if (body?.name !== undefined) updates['name'] = body.name.trim();
   if (body?.description !== undefined) updates['description'] = body.description.trim();
   if (body?.imageUrl !== undefined) updates['imageUrl'] = body.imageUrl;
+  if (body?.isPublic !== undefined) updates['isPublic'] = body.isPublic;
 
   const playlist = await PlaylistModel.findOneAndUpdate(
     { _id: id, userId: sessionData.user.sub },
@@ -37,7 +39,7 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
   ).lean();
 
   if (!playlist) {
-    throw createError({ statusCode: 404, statusMessage: t('playlists.errors.notFound') });
+    throw createError({ statusCode: 404, message: t('playlists.errors.notFound') });
   }
 
   return {
@@ -56,6 +58,7 @@ export default defineEventHandler(async (event): Promise<PlaylistDetailResponse>
     trackCount: playlist.items.length,
     trackIds: playlist.items.map((i: { videoId: string }) => i.videoId),
     createdAt: playlist.createdAt.toISOString(),
-    updatedAt: playlist.updatedAt.toISOString()
+    updatedAt: playlist.updatedAt.toISOString(),
+    isPublic: playlist.isPublic !== false
   };
 });

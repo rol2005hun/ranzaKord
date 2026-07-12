@@ -83,7 +83,9 @@ const { toasts, remove } = useToast();
 <style scoped lang="scss">
 .toast-container {
   position: fixed;
-  top: calc(var(--titlebar-height, 0px) + var(--toast-offset, var(--space-4)));
+  top: calc(
+    var(--titlebar-height, 0px) + var(--safe-area-top, 0px) + var(--toast-offset, var(--space-4))
+  );
   right: var(--toast-offset, var(--space-4));
   display: flex;
   flex-direction: column;

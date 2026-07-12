@@ -6,7 +6,10 @@
     "notFound": "Page not found.",
     "fatalTitle": "FATAL ERROR (An error occurred!)",
     "fatalDescription": "Nuxt/Vue has crashed. Please copy this error message:",
-    "fatalHomeBtn": "Home"
+    "fatalHomeBtn": "Home",
+    "notFoundDesc": "Looks like this page migrated or never existed. Check the URL!",
+    "notFoundHeader": "404 - Not Found",
+    "systemErrorHeader": "{statusCode} - System Error"
   },
   "nav": {
     "signIn": "Sign in",
@@ -18,7 +21,8 @@
     "playlists": "Playlists",
     "language": "Language",
     "downloadApp": "Get Desktop App",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "new": "New"
   },
   "miniPlayer": "Mini Player",
   "exitMiniPlayer": "Exit Mini Player",
@@ -29,7 +33,8 @@
     "close": "Close",
     "back": "Back",
     "settings": "Settings",
-    "more": "More"
+    "more": "More",
+    "confirm": "Confirm"
   },
   "musicDetail": {
     "titleColumn": "Title",
@@ -61,6 +66,12 @@
     "audioReactiveLyrics": {
       "title": "Audio-Reactive Lyrics",
       "description": "Make the active lyric line bounce and glow to the beat of the music."
+    },
+    "globalShortcuts": {
+      "title": "Global Shortcuts",
+      "description": "Control playback (Ctrl+Alt+Space/Left/Right) even while gaming or using other apps."
     }
-  }
+  },
+  "demoModeToast": "Changes are not saved in Demo mode.",
+  "demoModeAudioToast": "For legal reasons, only royalty-free (NCS) music is playable in Demo mode."
 }

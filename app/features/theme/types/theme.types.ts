@@ -13,3 +13,8 @@ export interface CustomColor {
   s: number;
   l: number;
 }
+
+export interface CustomPalette {
+  primary: CustomColor;
+  secondary: CustomColor;
+}

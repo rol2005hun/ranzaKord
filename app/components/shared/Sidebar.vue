@@ -232,8 +232,8 @@ provide('sidebarExpanded', isExpanded);
   &__divider {
     height: 1px;
     background-color: var(--color-border);
-    margin: var(--space-2) 0.5rem var(--space-2) 0.5rem;
-    width: 14rem;
+    margin: var(--space-2) 0.75rem;
+    width: calc(100% - 1.5rem);
   }
 
   @media (max-width: 768px) {
@@ -290,7 +290,7 @@ provide('sidebarExpanded', isExpanded);
   font-size: var(--text-sm);
   font-weight: var(--font-weight-medium);
   white-space: nowrap;
-  overflow: hidden;
+  overflow: visible;
   transition:
     background-color var(--transition-fast),
     color var(--transition-fast);

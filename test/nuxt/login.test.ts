@@ -62,12 +62,16 @@ describe('login.vue', () => {
     expect(wrapper.find('#login-with-ranzakonnect').text()).toContain('auth.login.button');
   });
 
-  it('handles login button click', async () => {
+  it('handles login button click and accepts terms', async () => {
     const wrapper = mountLogin();
     await new Promise((r) => setTimeout(r, 0));
-    const btn = wrapper.find('#login-with-ranzakonnect');
+    // Accept terms checkbox on the main page
+    const checkbox = wrapper.find('.login-page__terms-checkbox');
+    await checkbox.setValue(true);
 
+    const btn = wrapper.find('#login-with-ranzakonnect');
     await btn.trigger('click');
+
     expect(mockLoginWithRanzaKonnect).toHaveBeenCalled();
 
     // Check loading state

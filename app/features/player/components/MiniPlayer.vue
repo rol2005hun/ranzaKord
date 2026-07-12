@@ -22,9 +22,9 @@ let primaryS = '0';
 
 function syncThemeColors() {
   if (!import.meta.client) return;
-  if (themeStore.currentCustomColor) {
-    primaryH = String(themeStore.currentCustomColor.h);
-    primaryS = String(themeStore.currentCustomColor.s) + '%';
+  if (themeStore.currentCustomPalette) {
+    primaryH = String(themeStore.currentCustomPalette.primary.h);
+    primaryS = String(themeStore.currentCustomPalette.primary.s) + '%';
   } else {
     const raw = themeStore.DEFAULT_THEME_COLORS[themeStore.themeId] || '158 85% 65%';
     const m = raw.match(/(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%/);
@@ -48,13 +48,18 @@ function handleResize() {
 }
 
 function drawFrame() {
-  animId = requestAnimationFrame(drawFrame);
   if (!layoutStore.isMiniPlayer) return;
 
   const canvas = canvasRef.value;
-  if (!canvas) return;
+  if (!canvas) {
+    animId = requestAnimationFrame(drawFrame);
+    return;
+  }
   const ctx = canvas.getContext('2d');
-  if (!ctx) return;
+  if (!ctx) {
+    animId = requestAnimationFrame(drawFrame);
+    return;
+  }
 
   const audio1 = player.audioElement1.value;
   const audio2 = player.audioElement2.value;
@@ -82,6 +87,8 @@ function drawFrame() {
     primaryS,
     time
   });
+
+  animId = requestAnimationFrame(drawFrame);
 }
 
 const displayTrack = computed(() => player.currentTrack.value);
@@ -200,7 +207,10 @@ onUnmounted(() => {
               min="0"
               :max="player.durationSeconds.value || 100"
               :value="player.currentTimeSeconds.value"
-              :style="{ '--pct': `${progress}%` }"
+              :style="{
+                '--pct': `${progress}%`,
+                '--progress-ratio': progress / 100
+              }"
               step="0.5"
               @input="(e) => player.seek(parseFloat((e.target as HTMLInputElement).value))"
               @click.stop />
@@ -435,8 +445,14 @@ onUnmounted(() => {
       background: linear-gradient(
         to right,
         rgba(255, 255, 255, 0.9) 0%,
-        rgba(255, 255, 255, 0.9) var(--pct, 0%),
-        rgba(255, 255, 255, 0.2) var(--pct, 0%),
+        rgba(255, 255, 255, 0.9)
+          calc(
+            var(--thumb-radius, 6px) + var(--progress-ratio, 0) * (100% - var(--thumb-width, 12px))
+          ),
+        rgba(255, 255, 255, 0.2)
+          calc(
+            var(--thumb-radius, 6px) + var(--progress-ratio, 0) * (100% - var(--thumb-width, 12px))
+          ),
         rgba(255, 255, 255, 0.2) 100%
       );
       border-radius: var(--radius-full);

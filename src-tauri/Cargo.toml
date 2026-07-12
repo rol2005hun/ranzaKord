@@ -30,3 +30,4 @@ tauri-plugin-process = "2"
 discord-rich-presence = "1.1.0"
 tauri-plugin-updater = "2.10.1"
 tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
+tauri-plugin-global-shortcut = "2"

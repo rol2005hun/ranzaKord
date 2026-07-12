@@ -1,0 +1,17 @@
+{
+  "title": "User Profile",
+  "private": "This profile is private.",
+  "followers": "Followers",
+  "following": "Following",
+  "follow": "Follow",
+  "unfollow": "Unfollow",
+  "playlists": "Public Playlists",
+  "noPlaylists": "This user hasn't created any public playlists yet.",
+  "connectionsModalTitle": {
+    "followers": "Followers",
+    "following": "Following"
+  },
+  "anonymousCount": "...and {count} private profile | ...and {count} private profiles",
+  "anonymousCountOnly": "{count} private profile | {count} private profiles",
+  "noConnections": "No users to display."
+}

@@ -12,6 +12,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.PowerManager
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
@@ -47,6 +48,8 @@ class MediaService : Service() {
 
     private val executorService = Executors.newSingleThreadExecutor()
     private val mainHandler = Handler(Looper.getMainLooper())
+    
+    private var wakeLock: PowerManager.WakeLock? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -72,6 +75,11 @@ class MediaService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (wakeLock == null) {
+            val powerManager = getSystemService(POWER_SERVICE) as PowerManager
+            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Kord:MediaPlaybackWakeLock")
+        }
+
         when (intent?.action) {
             ACTION_UPDATE_STATE -> {
                 val isPlaying = intent.getBooleanExtra("IS_PLAYING", false)
@@ -84,6 +92,12 @@ class MediaService : Service() {
                 currentTitle = title
                 currentArtist = artist
                 currentImageUrl = imageUrl
+
+                if (isPlaying) {
+                    if (wakeLock?.isHeld == false) wakeLock?.acquire()
+                } else {
+                    if (wakeLock?.isHeld == true) wakeLock?.release()
+                }
 
                 updatePlaybackState(isPlaying)
 
@@ -111,6 +125,7 @@ class MediaService : Service() {
                 }
             }
             ACTION_STOP -> {
+                if (wakeLock?.isHeld == true) wakeLock?.release()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                     stopForeground(STOP_FOREGROUND_REMOVE)
                 } else {
@@ -197,7 +212,15 @@ class MediaService : Service() {
             notificationBuilder.setLargeIcon(currentBitmap)
         }
 
-        startForeground(NOTIFICATION_ID, notificationBuilder.build())
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            startForeground(
+                NOTIFICATION_ID, 
+                notificationBuilder.build(), 
+                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+            )
+        } else {
+            startForeground(NOTIFICATION_ID, notificationBuilder.build())
+        }
     }
 
     private fun createNotificationChannel() {
@@ -218,6 +241,11 @@ class MediaService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        wakeLock?.let {
+            if (it.isHeld) {
+                it.release()
+            }
+        }
         mediaSession.release()
         executorService.shutdown()
     }

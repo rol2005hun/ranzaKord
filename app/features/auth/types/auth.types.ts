@@ -9,6 +9,7 @@ export interface UserSettings {
   crossfadeType?: string;
   isKaraoke?: boolean;
   isAudioReactiveLyrics?: boolean;
+  isAdaptiveThemeEnabled?: boolean;
   eqEnabled?: boolean;
   eqPreset?: string;
   eqBands?: number[];
@@ -21,6 +22,10 @@ export interface OAuthUser {
   email: string;
   picture?: string;
   hasAccess: boolean;
+  roles?: string[];
+  isDemo?: boolean;
+  isPublicProfile?: boolean;
+  showPlaylists?: boolean;
   settings?: UserSettings;
 }
 

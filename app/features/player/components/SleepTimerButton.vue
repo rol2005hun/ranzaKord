@@ -81,11 +81,6 @@ onClickOutside(containerRef, (event) => {
       <span v-if="isActive && sleepTimerMode === 'timer'" class="sleep-timer__badge">
         {{ formatRemaining(sleepTimerRemaining) }}
       </span>
-      <span
-        v-else-if="isActive && sleepTimerMode === 'end-of-track'"
-        class="sleep-timer__badge sleep-timer__badge--eot">
-        <AppIcon name="ph:music-note" />
-      </span>
     </button>
 
     <Teleport to="body">
@@ -166,6 +161,18 @@ onClickOutside(containerRef, (event) => {
 
       &:hover {
         color: var(--color-primary);
+      }
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 2px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background-color: var(--color-primary);
       }
     }
   }

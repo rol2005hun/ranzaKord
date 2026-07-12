@@ -27,6 +27,13 @@ const player = usePlayer();
       </AppSettingsItem>
 
       <AppSettingsItem
+        :title="$t('core.settings.globalShortcuts.title')"
+        :description="$t('core.settings.globalShortcuts.description')"
+        border>
+        <AppToggle v-model="playerStore.globalShortcutsEnabled" />
+      </AppSettingsItem>
+
+      <AppSettingsItem
         :title="$t('core.settings.crossfade.title')"
         :description="$t('core.settings.crossfade.description')"
         border>
@@ -57,6 +64,13 @@ const player = usePlayer();
             { label: $t('core.settings.crossfade.types.linear'), value: 'linear' },
             { label: $t('core.settings.crossfade.types.dj'), value: 'dj' }
           ]" />
+      </AppSettingsItem>
+
+      <AppSettingsItem
+        :title="$t('player.autoplay')"
+        :description="$t('player.autoplayDescription')"
+        border>
+        <AppToggle v-model="playerStore.autoplayEnabled" />
       </AppSettingsItem>
     </AppSettingsSection>
   </div>

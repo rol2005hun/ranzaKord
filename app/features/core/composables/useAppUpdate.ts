@@ -156,7 +156,8 @@ export function useAppUpdate() {
         assetCount: displayCount > 0 ? displayCount : null
       });
       showModal.value = true;
-    } catch {
+    } catch (e) {
+      console.error('checkViaGithub error:', e);
       // silently ignore — no network or no releases yet
     }
   }

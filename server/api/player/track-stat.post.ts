@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
   const { t } = useServerTranslation(event);
 
   if (!sessionData.user) {
-    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
+    throw createError({ statusCode: 401, message: t('core.errors.unauthorized') });
   }
 
   const body = await readBody<{
@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
   }>(event);
 
   if (!body || typeof body.trackId !== 'string' || typeof body.listeningSeconds !== 'number') {
-    throw createError({ statusCode: 400, statusMessage: t('player.errors.invalidPayload') });
+    throw createError({ statusCode: 400, message: t('player.errors.invalidPayload') });
   }
 
   const {

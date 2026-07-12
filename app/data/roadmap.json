@@ -1,0 +1,68 @@
+[
+  {
+    "status": "critical",
+    "title": {
+      "en": "Known Issue: Streaming Endpoint",
+      "hu": "Kritikus hiba: Streamelési végpont"
+    },
+    "description": {
+      "en": "The streaming endpoint may sometimes break due to YouTube changes. It will always be fixed as soon as possible.",
+      "hu": "Sajnos a YouTube változásai miatt a streamelési endpoint néha eltörhet. Erről tudunk, és minél hamarabb mindig fixelve lesz."
+    }
+  },
+  {
+    "status": "planned",
+    "title": {
+      "en": "Listen Together",
+      "hu": "Közös zenehallgatás"
+    },
+    "description": {
+      "en": "Listen to music synchronously with your friends in real-time.",
+      "hu": "Hallgassatok zenét a barátaiddal szinkronban, valós időben."
+    }
+  },
+  {
+    "status": "planned",
+    "title": {
+      "en": "Music News",
+      "hu": "Zenei hírek"
+    },
+    "description": {
+      "en": "Stay up to date with the latest news, releases, and updates in the music world.",
+      "hu": "Maradj naprakész a legújabb zenei hírekkel, cikkekkel és megjelenésekkel."
+    }
+  },
+  {
+    "status": "planned",
+    "title": {
+      "en": "Detailed Artist Info",
+      "hu": "Több infó az előadókról"
+    },
+    "description": {
+      "en": "Read biographies, explore discographies, and learn more about your favorite artists.",
+      "hu": "Olvass életrajzokat, böngéssz a diszkográfiákban és tudj meg többet a kedvenceidről."
+    }
+  },
+  {
+    "status": "planned",
+    "title": {
+      "en": "Music Videos",
+      "hu": "Videóklipek"
+    },
+    "description": {
+      "en": "Watch music videos playing in the background while listening to your favorite tracks.",
+      "hu": "Nézd a dalokhoz tartozó videóklipeket a háttérben zenehallgatás közben."
+    }
+  },
+  {
+    "status": "planned",
+    "title": {
+      "en": "AI Based Radio",
+      "hu": "AI alapú rádió"
+    },
+    "description": {
+      "en": "Personalized music recommendations and continuous playback powered by AI.",
+      "hu": "Személyre szabott zenei ajánlások és folyamatos lejátszás mesterséges intelligencia segítségével."
+    }
+  }
+]

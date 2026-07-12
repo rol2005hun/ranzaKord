@@ -1,7 +1,14 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 import { setActivePinia, createPinia } from 'pinia';
+
 import { useAuthStore } from '../../app/features/auth/stores/useAuthStore';
 import { useAuth } from '../../app/features/auth/composables/useAuth';
+
+const { mockNavigateTo } = vi.hoisted(() => ({
+  mockNavigateTo: vi.fn()
+}));
+mockNuxtImport('navigateTo', () => mockNavigateTo);
 
 describe('Auth Module', () => {
   let fetchMock: ReturnType<typeof vi.fn>;
@@ -62,6 +69,18 @@ describe('Auth Module', () => {
       // Cookie is cleared by setting expires in the past. Hard to test exact value of document.cookie
       // because JSDOM cookie handling is complex, but we can verify it ran without errors.
     });
+
+    it('logs in as demo user', () => {
+      const store = useAuthStore();
+      store.loginAsDemo();
+
+      expect(store.user).not.toBeNull();
+      expect(store.user?.isDemo).toBe(true);
+      expect(store.user?.sub).toBe('demo-user-id');
+      expect(store.isAuthenticated).toBe(true);
+      // It should also set localStorage
+      expect(localStorage.getItem('ranzakord_demo_session')).toBe('true');
+    });
   });
 
   describe('useAuth', () => {
@@ -82,11 +101,12 @@ describe('Auth Module', () => {
     it('logout fetches logout endpoint and hard reloads to login', async () => {
       fetchMock.mockResolvedValue(null);
       const { logout } = useAuth();
+      mockNavigateTo.mockClear();
 
       await logout();
 
       expect(globalThis.$fetch).toHaveBeenCalledWith('/auth/logout', { method: 'POST' });
-      expect(window.location.href).toBe('/login');
+      expect(mockNavigateTo).toHaveBeenCalledWith('/login');
     });
 
     it('fetchUser sets user on success', async () => {

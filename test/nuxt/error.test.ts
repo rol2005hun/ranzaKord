@@ -52,7 +52,7 @@ describe('error.vue', () => {
   it('renders 404 layout properly', () => {
     const wrapper = mountError(404);
 
-    expect(wrapper.find('.header-text').text()).toContain('404');
+    expect(wrapper.find('.header-text').text()).toContain('core.error.notFoundHeader');
     expect(wrapper.find('.error-title').text()).toBe('core.error.notFound');
     // 404 should not render stack trace
     expect(wrapper.find('.error-code-block').exists()).toBe(false);
@@ -61,7 +61,7 @@ describe('error.vue', () => {
   it('renders generic 500 error properly', () => {
     const wrapper = mountError(500, 'Custom error message');
 
-    expect(wrapper.find('.header-text').text()).toContain('500');
+    expect(wrapper.find('.header-text').text()).toContain('core.error.systemErrorHeader');
     expect(wrapper.find('.error-title').text()).toBe('core.error.fatalTitle');
     expect(wrapper.find('.error-desc').text()).toBe('core.error.fatalDescription');
 

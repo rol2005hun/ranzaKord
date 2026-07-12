@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue';
+import OfflineDownloadButton from '@/features/offline/components/DownloadButton.vue';
 
 const player = usePlayer();
 
@@ -17,10 +18,12 @@ export interface TrackListItem {
   thumbnailUrl?: string | null;
   durationSeconds: number;
   addedAt?: string;
+  addedBy?: { sub: string; name: string; picture: string } | string;
   isPlaying?: boolean;
+  plays?: string;
 }
 
-export type TrackListColumn = 'index' | 'title' | 'date' | 'time' | 'action';
+export type TrackListColumn = 'index' | 'title' | 'date' | 'time' | 'plays' | 'action' | 'download';
 
 export interface VirtualTrackItem {
   index: number;
@@ -75,6 +78,8 @@ function handleSort(column: string): void {
   }
 }
 
+const hoveredTrackId = ref<string | null>(null);
+
 const dragIndex = ref<number | null>(null);
 const dragOverIndex = ref<number | null>(null);
 
@@ -124,16 +129,21 @@ function handleDrop(event: DragEvent, toIndex: number) {
 
 const hasDateColumn = computed(() => props.columns.includes('date'));
 const hasActionColumn = computed(() => props.columns.includes('action'));
+const hasDownloadColumn = computed(() => props.columns.includes('download'));
+const hasTimeColumn = computed(() => props.columns.includes('time'));
+const hasPlaysColumn = computed(() => props.columns.includes('plays'));
 
 const gridColumns = computed(() => {
   const cols = ['var(--track-list-idx, 48px)', '1fr'];
   if (hasDateColumn.value) cols.push('var(--track-list-date, 160px)');
-  cols.push('var(--track-list-time, 60px)');
-  if (hasActionColumn.value) cols.push('var(--track-list-action, 48px)');
+  if (hasPlaysColumn.value) cols.push('var(--track-list-plays, 120px)');
+  if (hasTimeColumn.value) cols.push('var(--track-list-time, 60px)');
+  if (hasDownloadColumn.value || hasActionColumn.value) cols.push('auto');
   return cols.join(' ');
 });
 
 function formatDuration(seconds: number): string {
+  if (!seconds || seconds <= 0) return '-';
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60)
     .toString()
@@ -180,7 +190,11 @@ onMounted(() => {
           :name="sortOrder === 'asc' ? 'ph:arrow-up' : 'ph:arrow-down'"
           class="app-track-list__sort-icon" />
       </div>
+      <div v-if="hasPlaysColumn" class="app-track-list__col-plays">
+        <AppIcon name="ph:eye" />
+      </div>
       <div
+        v-if="hasTimeColumn"
         class="app-track-list__col-time app-track-list__col-sortable"
         @click="handleSort('duration')">
         <AppIcon name="ph:clock" />
@@ -189,6 +203,7 @@ onMounted(() => {
           :name="sortOrder === 'asc' ? 'ph:arrow-up' : 'ph:arrow-down'"
           class="app-track-list__sort-icon" />
       </div>
+      <div v-if="hasDownloadColumn" class="app-track-list__col-action"></div>
       <div v-if="hasActionColumn" class="app-track-list__col-action"></div>
     </div>
 
@@ -203,7 +218,8 @@ onMounted(() => {
             :key="index"
             class="app-track-list__track"
             :class="{
-              'app-track-list__track--playing': isHydrated && track?.isPlaying,
+              'app-track-list__track--playing':
+                isHydrated && track && player.currentTrack.value?.videoId === track.id,
               'app-track-list__track--skeleton': !track,
               'app-track-list__track--dragged': dragIndex === index,
               'app-track-list__track--drag-over': dragOverIndex === index
@@ -215,7 +231,9 @@ onMounted(() => {
             @dragover="track && handleDragOver($event, index)"
             @dragend="track && handleDragEnd()"
             @drop="track && handleDrop($event, index)"
-            @click="track && emit('play', track, index)">
+            @click="track && emit('play', track, index)"
+            @mouseenter="track && (hoveredTrackId = track.id)"
+            @mouseleave="hoveredTrackId = null">
             <template v-if="!track">
               <div class="app-track-list__track-num-wrapper">
                 <div class="skeleton-box" style="height: 14px; width: 16px"></div>
@@ -235,7 +253,15 @@ onMounted(() => {
                 v-if="hasDateColumn"
                 class="skeleton-box"
                 style="height: 14px; width: 80px"></div>
-              <div class="skeleton-box" style="height: 14px; width: 40px"></div>
+              <div
+                v-if="hasPlaysColumn"
+                class="skeleton-box"
+                style="height: 14px; width: 60px"></div>
+              <div
+                v-if="hasTimeColumn"
+                class="skeleton-box"
+                style="height: 14px; width: 40px"></div>
+              <div v-if="hasDownloadColumn"></div>
               <div v-if="hasActionColumn"></div>
             </template>
 
@@ -246,11 +272,11 @@ onMounted(() => {
                     <span
                       class="app-track-list__track-num"
                       :class="{
-                        'app-track-list__track-num--playing': isHydrated && track.isPlaying
+                        'app-track-list__track-num--playing':
+                          isHydrated && player.currentTrack.value?.videoId === track.id
                       }">
-                      <AppIcon
-                        v-if="isHydrated && track.isPlaying"
-                        name="ph:speaker-high-fill"
+                      <AppPlayingIndicator
+                        v-if="isHydrated && player.currentTrack.value?.videoId === track.id"
                         data-allow-mismatch
                         class="text-primary" />
                       <template v-else>{{ index + 1 }}</template>
@@ -266,7 +292,13 @@ onMounted(() => {
                       <AppIcon
                         v-else
                         data-allow-mismatch
-                        :name="isHydrated && track.isPlaying ? 'ph:pause-fill' : 'ph:play-fill'" />
+                        :name="
+                          isHydrated &&
+                          player.currentTrack.value?.videoId === track.id &&
+                          player.isPlaying.value
+                            ? 'ph:pause-fill'
+                            : 'ph:play-fill'
+                        " />
                     </div>
                   </div>
                   <template #fallback>
@@ -290,7 +322,9 @@ onMounted(() => {
                 <div class="app-track-list__track-text">
                   <span
                     class="app-track-list__track-title"
-                    :class="{ 'text-primary': isHydrated && track.isPlaying }">
+                    :class="{
+                      'text-primary': isHydrated && player.currentTrack.value?.videoId === track.id
+                    }">
                     {{ track.title }}
                   </span>
                   <div class="app-track-list__track-artist">
@@ -300,22 +334,69 @@ onMounted(() => {
               </div>
 
               <div v-if="hasDateColumn" class="app-track-list__track-date">
-                {{ formatDate(track.addedAt) }}
+                <span>{{ formatDate(track.addedAt) }}</span>
+                <NuxtLink
+                  v-if="track.addedBy && typeof track.addedBy === 'object'"
+                  :to="`/user/${track.addedBy.sub}`"
+                  class="app-track-list__track-added group relative cursor-pointer"
+                  @click.stop>
+                  <img
+                    v-if="track.addedBy.picture"
+                    :src="track.addedBy.picture"
+                    :alt="track.addedBy.name"
+                    class="w-5 h-5 rounded-full object-cover" />
+                  <AppIcon v-else name="ph:user-circle" class="text-xl" />
+                  <span
+                    class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 text-xs bg-[var(--color-bg-elevated)] text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 border border-[var(--color-border)] shadow-lg">
+                    Hozzáadta: {{ track.addedBy.name }}
+                  </span>
+                </NuxtLink>
+                <span v-else-if="track.addedBy" class="app-track-list__track-added">
+                  <AppIcon name="ph:user" />
+                  {{ track.addedBy }}
+                </span>
               </div>
 
-              <span class="app-track-list__track-duration">
+              <span v-if="hasPlaysColumn" class="app-track-list__track-plays">
+                {{ track.plays || '-' }}
+              </span>
+
+              <span v-if="hasTimeColumn" class="app-track-list__track-duration">
                 {{ formatDuration(track.durationSeconds) }}
               </span>
 
-              <div v-if="hasActionColumn" class="app-track-list__track-action">
-                <button
-                  v-if="track"
-                  class="app-track-list__action-btn"
-                  :aria-label="$t('playlists.delete')"
-                  @click.stop="emit('remove', track, index)">
-                  <AppIcon name="ph:trash" />
-                </button>
-              </div>
+              <Transition name="action-slide">
+                <div
+                  v-if="(hasDownloadColumn || hasActionColumn) && hoveredTrackId === track.id"
+                  class="app-track-list__actions-wrapper"
+                  @click.stop>
+                  <div class="app-track-list__actions-inner">
+                    <div v-if="hasDownloadColumn" class="app-track-list__track-action">
+                      <ClientOnly>
+                        <OfflineDownloadButton
+                          v-if="track"
+                          :track="{
+                            videoId: track.id,
+                            title: track.title,
+                            artist: track.artist,
+                            thumbnailUrl: track.thumbnailUrl || '',
+                            durationSeconds: track.durationSeconds
+                          }"
+                          size="sm" />
+                      </ClientOnly>
+                    </div>
+                    <div v-if="hasActionColumn" class="app-track-list__track-action">
+                      <button
+                        v-if="track"
+                        class="app-track-list__action-btn"
+                        :aria-label="$t('playlists.delete')"
+                        @click.stop="emit('remove', track, index)">
+                        <AppIcon name="ph:trash" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </Transition>
             </template>
           </div>
         </div>
@@ -329,7 +410,8 @@ onMounted(() => {
         :key="track.id"
         class="app-track-list__track"
         :class="{
-          'app-track-list__track--playing': isHydrated && track.isPlaying,
+          'app-track-list__track--playing':
+            isHydrated && player.currentTrack.value?.videoId === track.id,
           'app-track-list__track--dragged': dragIndex === index,
           'app-track-list__track--drag-over': dragOverIndex === index
         }"
@@ -340,16 +422,20 @@ onMounted(() => {
         @dragover="track && handleDragOver($event, index)"
         @dragend="track && handleDragEnd()"
         @drop="track && handleDrop($event, index)"
-        @click="emit('play', track, index)">
+        @click="emit('play', track, index)"
+        @mouseenter="track && (hoveredTrackId = track.id)"
+        @mouseleave="hoveredTrackId = null">
         <div class="app-track-list__track-num-wrapper">
           <ClientOnly>
             <div style="display: contents">
               <span
                 class="app-track-list__track-num"
-                :class="{ 'app-track-list__track-num--playing': isHydrated && track.isPlaying }">
-                <AppIcon
-                  v-if="isHydrated && track.isPlaying"
-                  name="ph:speaker-high-fill"
+                :class="{
+                  'app-track-list__track-num--playing':
+                    isHydrated && player.currentTrack.value?.videoId === track.id
+                }">
+                <AppPlayingIndicator
+                  v-if="isHydrated && player.currentTrack.value?.videoId === track.id"
                   data-allow-mismatch
                   class="text-primary" />
                 <template v-else>{{ index + 1 }}</template>
@@ -365,7 +451,13 @@ onMounted(() => {
                 <AppIcon
                   v-else
                   data-allow-mismatch
-                  :name="isHydrated && track.isPlaying ? 'ph:pause-fill' : 'ph:play-fill'" />
+                  :name="
+                    isHydrated &&
+                    player.currentTrack.value?.videoId === track.id &&
+                    player.isPlaying.value
+                      ? 'ph:pause-fill'
+                      : 'ph:play-fill'
+                  " />
               </div>
             </div>
             <template #fallback>
@@ -387,7 +479,9 @@ onMounted(() => {
           <div class="app-track-list__track-text">
             <span
               class="app-track-list__track-title"
-              :class="{ 'text-primary': isHydrated && track.isPlaying }">
+              :class="{
+                'text-primary': isHydrated && player.currentTrack.value?.videoId === track.id
+              }">
               {{ track.title }}
             </span>
             <div class="app-track-list__track-artist">
@@ -397,21 +491,67 @@ onMounted(() => {
         </div>
 
         <div v-if="hasDateColumn" class="app-track-list__track-date">
-          {{ formatDate(track.addedAt) }}
+          <span>{{ formatDate(track.addedAt) }}</span>
+          <NuxtLink
+            v-if="track.addedBy && typeof track.addedBy === 'object'"
+            :to="`/user/${track.addedBy.sub}`"
+            class="app-track-list__track-added group relative cursor-pointer"
+            @click.stop>
+            <img
+              v-if="track.addedBy.picture"
+              :src="track.addedBy.picture"
+              :alt="track.addedBy.name"
+              class="w-5 h-5 rounded-full object-cover" />
+            <AppIcon v-else name="ph:user-circle" class="text-xl" />
+            <span
+              class="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 text-xs bg-[var(--color-bg-elevated)] text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 border border-[var(--color-border)] shadow-lg">
+              Hozzáadta: {{ track.addedBy.name }}
+            </span>
+          </NuxtLink>
+          <span v-else-if="track.addedBy" class="app-track-list__track-added">
+            <AppIcon name="ph:user" />
+            {{ track.addedBy }}
+          </span>
         </div>
 
-        <span class="app-track-list__track-duration">
+        <span v-if="hasPlaysColumn" class="app-track-list__track-plays">
+          {{ track.plays || '-' }}
+        </span>
+
+        <span v-if="hasTimeColumn" class="app-track-list__track-duration">
           {{ formatDuration(track.durationSeconds) }}
         </span>
 
-        <div v-if="hasActionColumn" class="app-track-list__track-action">
-          <button
-            class="app-track-list__action-btn"
-            :aria-label="$t('playlists.delete')"
-            @click.stop="emit('remove', track, index)">
-            <AppIcon name="ph:trash" />
-          </button>
-        </div>
+        <Transition name="action-slide">
+          <div
+            v-if="(hasDownloadColumn || hasActionColumn) && hoveredTrackId === track.id"
+            class="app-track-list__actions-wrapper"
+            @click.stop>
+            <div class="app-track-list__actions-inner">
+              <div v-if="hasDownloadColumn" class="app-track-list__track-action">
+                <ClientOnly>
+                  <OfflineDownloadButton
+                    :track="{
+                      videoId: track.id,
+                      title: track.title,
+                      artist: track.artist,
+                      thumbnailUrl: track.thumbnailUrl || '',
+                      durationSeconds: track.durationSeconds
+                    }"
+                    size="sm" />
+                </ClientOnly>
+              </div>
+              <div v-if="hasActionColumn" class="app-track-list__track-action">
+                <button
+                  class="app-track-list__action-btn"
+                  :aria-label="$t('playlists.delete')"
+                  @click.stop="emit('remove', track, index)">
+                  <AppIcon name="ph:trash" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </Transition>
       </div>
       <template v-if="isLoading">
         <div
@@ -433,6 +573,7 @@ onMounted(() => {
           </div>
           <div v-if="hasDateColumn" class="skeleton-box" style="height: 14px; width: 80px"></div>
           <div class="skeleton-box" style="height: 14px; width: 40px"></div>
+          <div v-if="hasDownloadColumn"></div>
           <div v-if="hasActionColumn"></div>
         </div>
       </template>
@@ -492,6 +633,12 @@ onMounted(() => {
     display: flex;
     align-items: center;
     gap: var(--space-1);
+  }
+
+  &__col-plays {
+    display: flex;
+    align-items: center;
+    padding-top: 1px;
   }
 
   &__virtual-container {
@@ -652,10 +799,21 @@ onMounted(() => {
 
   &__track-date {
     color: var(--color-text-secondary);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     font-size: var(--text-sm);
+    gap: 4px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  &__track-plays {
+    color: var(--color-text-secondary);
+    display: flex;
+    align-items: center;
+    font-size: var(--text-sm);
   }
 
   &__track-duration {
@@ -664,6 +822,18 @@ onMounted(() => {
     align-items: center;
     font-size: var(--text-sm);
     font-variant-numeric: tabular-nums;
+  }
+
+  &__track-added {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--text-xs);
+    color: var(--color-text-tertiary);
+    background: var(--color-surface);
+    padding: 2px 6px;
+    border-radius: var(--radius-full);
+    width: fit-content;
   }
 
   &__track-action {
@@ -738,5 +908,39 @@ onMounted(() => {
       opacity: 1;
     }
   }
+}
+
+.app-track-list__actions-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  overflow: hidden;
+  height: 100%;
+}
+
+.app-track-list__actions-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.action-slide-enter-active,
+.action-slide-leave-active {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.action-slide-enter-from,
+.action-slide-leave-to {
+  opacity: 0;
+  max-width: 0;
+  transform: translateX(10px);
+}
+
+.action-slide-enter-to,
+.action-slide-leave-from {
+  opacity: 1;
+  max-width: 120px;
+  transform: translateX(0);
 }
 </style>

@@ -43,6 +43,8 @@ function onClick() {
     router.push(`/album/${props.track.id}`);
   } else if (props.track.type === 'playlist') {
     router.push(`/playlist/${props.track.id}`);
+  } else if (props.track.type === 'profile') {
+    router.push(`/user/${props.track.id}`);
   }
 }
 
@@ -61,13 +63,12 @@ function resolveArtists(track: SearchResult): { name: string; id?: string }[] {
           merged.push({ name: part });
         }
       }
-      return merged;
+      return merged.map((a) => ({ ...a, name: formatArtistName(a.name) }));
     }
-    return track.artists;
+    return track.artists.map((a) => ({ ...a, name: formatArtistName(a.name) }));
   }
 
-  if (parts.length <= 1) return [];
-  return parts.map((name) => ({ name }));
+  return parts.map((name) => ({ name: formatArtistName(name) }));
 }
 </script>
 
@@ -110,88 +111,97 @@ function resolveArtists(track: SearchResult): { name: string; id?: string }[] {
       </h3>
       <p class="search-list-item__subtitle">
         <span v-if="track.type === 'song'">
-          {{ $t('search.list.song') }} •
-          <template v-if="resolveArtists(track).length > 0">
-            <template v-for="(artist, index) in resolveArtists(track)" :key="index">
+          {{ $t('search.list.song') }}
+          <template v-if="resolveArtists(track).length > 0 || track.artist">
+            •
+            <template v-if="resolveArtists(track).length > 0">
+              <template v-for="(artist, index) in resolveArtists(track)" :key="index">
+                <NuxtLink
+                  :to="
+                    artist.id
+                      ? `/artist/${artist.id}`
+                      : `/search?q=${encodeURIComponent(artist.name)}&type=artist`
+                  "
+                  class="artist-link"
+                  @click.stop>
+                  {{ artist.name }}
+                </NuxtLink>
+                <span v-if="index < resolveArtists(track).length - 1">,&nbsp;</span>
+              </template>
+            </template>
+            <template v-else>
               <NuxtLink
-                :to="
-                  artist.id
-                    ? `/artist/${artist.id}`
-                    : `/search?q=${encodeURIComponent(artist.name)}&type=artist`
-                "
+                v-if="track.artistId"
+                :to="`/artist/${track.artistId}`"
                 class="artist-link"
                 @click.stop>
-                {{ artist.name }}
+                {{ formatArtistName(track.artist!) }}
               </NuxtLink>
-              <span v-if="index < resolveArtists(track).length - 1">,&nbsp;</span>
+              <NuxtLink
+                v-else-if="track.artist"
+                :to="`/search?q=${encodeURIComponent(track.artist)}&type=artist`"
+                class="artist-link"
+                @click.stop>
+                {{ formatArtistName(track.artist) }}
+              </NuxtLink>
             </template>
-          </template>
-          <template v-else>
-            <NuxtLink
-              v-if="track.artistId"
-              :to="`/artist/${track.artistId}`"
-              class="artist-link"
-              @click.stop>
-              {{ track.artist }}
-            </NuxtLink>
-            <NuxtLink
-              v-else-if="track.artist"
-              :to="`/search?q=${encodeURIComponent(track.artist)}&type=artist`"
-              class="artist-link"
-              @click.stop>
-              {{ track.artist }}
-            </NuxtLink>
           </template>
         </span>
         <span v-else-if="track.type === 'artist'">{{ $t('search.list.artist') }}</span>
         <span v-else-if="track.type === 'album'">
-          {{ $t('search.list.album') }} •
-          <template v-if="resolveArtists(track).length > 0">
-            <template v-for="(artist, index) in resolveArtists(track)" :key="index">
+          {{ $t('search.list.album') }}
+          <template v-if="resolveArtists(track).length > 0 || track.artist">
+            •
+            <template v-if="resolveArtists(track).length > 0">
+              <template v-for="(artist, index) in resolveArtists(track)" :key="index">
+                <NuxtLink
+                  :to="
+                    artist.id
+                      ? `/artist/${artist.id}`
+                      : `/search?q=${encodeURIComponent(artist.name)}&type=artist`
+                  "
+                  class="artist-link"
+                  @click.stop>
+                  {{ artist.name }}
+                </NuxtLink>
+                <span v-if="index < resolveArtists(track).length - 1">,&nbsp;</span>
+              </template>
+            </template>
+            <template v-else>
               <NuxtLink
-                :to="
-                  artist.id
-                    ? `/artist/${artist.id}`
-                    : `/search?q=${encodeURIComponent(artist.name)}&type=artist`
-                "
+                v-if="track.artistId"
+                :to="`/artist/${track.artistId}`"
                 class="artist-link"
                 @click.stop>
-                {{ artist.name }}
+                {{ formatArtistName(track.artist!) }}
               </NuxtLink>
-              <span v-if="index < resolveArtists(track).length - 1">,&nbsp;</span>
+              <NuxtLink
+                v-else-if="track.artist"
+                :to="`/search?q=${encodeURIComponent(track.artist)}&type=artist`"
+                class="artist-link"
+                @click.stop>
+                {{ formatArtistName(track.artist) }}
+              </NuxtLink>
             </template>
-          </template>
-          <template v-else>
-            <NuxtLink
-              v-if="track.artistId"
-              :to="`/artist/${track.artistId}`"
-              class="artist-link"
-              @click.stop>
-              {{ track.artist }}
-            </NuxtLink>
-            <NuxtLink
-              v-else-if="track.artist"
-              :to="`/search?q=${encodeURIComponent(track.artist)}&type=artist`"
-              class="artist-link"
-              @click.stop>
-              {{ track.artist }}
-            </NuxtLink>
           </template>
         </span>
         <span v-else-if="track.type === 'playlist'">
-          Playlist •
-          <template v-if="track.artistId">
-            <NuxtLink :to="`/artist/${track.artistId}`" class="artist-link" @click.stop>
-              {{ track.artist }}
-            </NuxtLink>
-          </template>
-          <template v-else-if="track.artist">
-            <NuxtLink
-              :to="`/search?q=${encodeURIComponent(track.artist)}&type=artist`"
-              class="artist-link"
-              @click.stop>
-              {{ track.artist }}
-            </NuxtLink>
+          Playlist
+          <template v-if="track.artistId || track.artist">
+            •
+            <template v-if="track.artistId">
+              <NuxtLink :to="`/artist/${track.artistId}`" class="artist-link" @click.stop>
+                {{ formatArtistName(track.artist!) }}
+              </NuxtLink>
+            </template>
+            <template v-else-if="track.artist">
+              <NuxtLink
+                :to="`/search?q=${encodeURIComponent(track.artist)}&type=artist`"
+                class="artist-link"
+                @click.stop>
+                {{ formatArtistName(track.artist) }}
+              </NuxtLink>
+            </template>
           </template>
         </span>
       </p>

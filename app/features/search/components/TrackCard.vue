@@ -51,7 +51,7 @@ const isInAnyPlaylist = computed(() => playlistsStore.isTrackInAnyPlaylist(props
           <button
             ref="addBtnRef"
             class="track-card__add-btn"
-            :aria-label="$t('playlists.addToPlaylist') || 'Add to playlist'"
+            :aria-label="$t('playlists.addToPlaylist')"
             @click.stop="showAddToPlaylist = !showAddToPlaylist">
             <AppIcon v-if="isInAnyPlaylist" name="ph:check-circle-fill" class="text-success" />
             <AppIcon v-else name="ph:plus-circle" />
@@ -64,11 +64,7 @@ const isInAnyPlaylist = computed(() => playlistsStore.isTrackInAnyPlaylist(props
         </div>
       </div>
 
-      <div v-if="isCurrentTrack" class="track-card__playing-indicator">
-        <span class="track-card__bar" />
-        <span class="track-card__bar" />
-        <span class="track-card__bar" />
-      </div>
+      <AppPlayingIndicator v-if="isCurrentTrack" class="track-card__playing-indicator" />
     </div>
 
     <div class="track-card__info">
@@ -230,30 +226,6 @@ const isInAnyPlaylist = computed(() => playlistsStore.isTrackInAnyPlaylist(props
     position: absolute;
     top: var(--space-2);
     left: var(--space-2);
-    display: flex;
-    align-items: flex-end;
-    gap: 2px;
-    height: 16px;
-  }
-
-  &__bar {
-    width: 3px;
-    background: var(--color-primary);
-    border-radius: 2px;
-    animation: equalizer 0.8s ease-in-out infinite alternate;
-
-    &:nth-child(1) {
-      height: 6px;
-      animation-delay: 0s;
-    }
-    &:nth-child(2) {
-      height: 14px;
-      animation-delay: 0.2s;
-    }
-    &:nth-child(3) {
-      height: 10px;
-      animation-delay: 0.4s;
-    }
   }
 
   &__info {

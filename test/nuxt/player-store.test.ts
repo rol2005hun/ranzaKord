@@ -143,10 +143,89 @@ describe('usePlayerStore', () => {
       expect(prev).toBeNull(); // because playbackOrder === 'random' and history is empty (since setTrack resets history? actually setTrack pushes to history if not fromHistory)
 
       // If only one item in queue, returns itself in shuffle? Wait, queue length is > 1.
+      // In the new logic, physical shuffling means nextTrack returns null if there are no more tracks, even in random mode.
       store.setQueue([mockTrack1]);
       store.setTrack(mockTrack1);
       expect(store.hasNext).toBe(false);
-      expect(store.nextTrack()?.videoId).toBe('v1');
+      expect(store.nextTrack()).toBeNull();
+    });
+  });
+
+  describe('visibleQueue', () => {
+    it('computes visibleQueue and startIndex correctly', () => {
+      const store = usePlayerStore();
+
+      const longQueue: {
+        videoId: string;
+        title: string;
+        artist: string;
+        durationSeconds: number;
+        thumbnailUrl: string;
+        queueId: string;
+      }[] = Array.from({ length: 30 }, (_, i) => ({
+        videoId: `v${i}`,
+        title: `T${i}`,
+        artist: 'A',
+        durationSeconds: 100,
+        thumbnailUrl: '',
+        queueId: `q${i}`
+      }));
+
+      store.setQueue(longQueue);
+
+      // When currentTrack is null
+      expect(store.visibleQueueStartIndex).toBe(0);
+      expect(store.visibleQueue.length).toBe(21);
+
+      // When currentTrack is at index 15
+      const trackAt15 = longQueue[15] as {
+        videoId: string;
+        title: string;
+        artist: string;
+        durationSeconds: number;
+        thumbnailUrl: string;
+        queueId: string;
+      };
+      store.setTrack(trackAt15);
+      expect(store.visibleQueueStartIndex).toBe(5); // 15 - 10 = 5
+      expect(store.visibleQueue.length).toBe(21); // From index 5 to 26
+
+      // When currentTrack is near the start
+      const trackAt5 = longQueue[5] as {
+        videoId: string;
+        title: string;
+        artist: string;
+        durationSeconds: number;
+        thumbnailUrl: string;
+        queueId: string;
+      };
+      store.setTrack(trackAt5);
+      expect(store.visibleQueueStartIndex).toBe(0);
+      expect(store.visibleQueue.length).toBe(16); // From index 0 to 16
+
+      // When currentTrack is near the end
+      const trackAt28 = longQueue[28] as {
+        videoId: string;
+        title: string;
+        artist: string;
+        durationSeconds: number;
+        thumbnailUrl: string;
+        queueId: string;
+      };
+      store.setTrack(trackAt28);
+      expect(store.visibleQueueStartIndex).toBe(18); // 28 - 10 = 18
+      expect(store.visibleQueue.length).toBe(12); // From index 18 to 30
+
+      // When track is not in queue
+      store.setTrack({
+        videoId: 'not-in-queue',
+        title: 'X',
+        artist: 'X',
+        durationSeconds: 100,
+        thumbnailUrl: ''
+      });
+      expect(store.visibleQueueStartIndex).toBe(0);
+      expect(store.visibleQueue.length).toBe(21);
     });
   });
 });

@@ -10,12 +10,8 @@
   flex-direction: column;
   height: calc(100dvh - var(--titlebar-height, 0px));
   margin-top: var(--titlebar-height, 0px);
+  box-sizing: border-box;
   background: var(--color-bg, #09090f);
   overflow: hidden;
-  box-sizing: border-box;
-
-  @media (max-width: 768px) {
-    padding-top: 0;
-  }
 }
 </style>

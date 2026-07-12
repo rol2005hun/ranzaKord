@@ -8,6 +8,7 @@
   "playlistName": "Playlist Name",
   "playlistDescription": "Description",
   "playlistImage": "Cover Image",
+  "isPublicLabel": "Public Playlist",
   "uploadImage": "Upload Image",
   "changeImage": "Change Image",
   "trackCount": "{count} songs",
@@ -54,6 +55,9 @@
     "delete": "Failed to delete playlist"
   },
   "myPlaylist": "My Playlist",
+  "collaboratorAdded": "Collaborator added",
+  "collaboratorRemoved": "Collaborator removed",
+  "confirmRemove": "Are you sure you want to remove this collaborator?",
   "sort": {
     "default": "Default Order",
     "titleAsc": "Title (A-Z)",

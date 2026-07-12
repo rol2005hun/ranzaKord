@@ -1,5 +1,6 @@
 {
-  "placeholder": "Search songs, artists…",
+  "placeholder": "Search songs, artists, profiles...",
+  "localPlaceholder": "Search...",
   "clear": "Clear search",
   "noResults": "No results found for \"{query}\"",
   "title": "Search",
@@ -14,7 +15,9 @@
     "artists": "Artists",
     "albums": "Albums",
     "noResultsQuery": "No results for: \"{query}\"",
-    "noResultsCategory": "No results for: \"{query}\" in this category."
+    "noResultsCategory": "No results for: \"{query}\" in this category.",
+    "all": "All",
+    "profiles": "Profiles"
   },
   "album": {
     "badge": "ALBUM",
@@ -26,7 +29,13 @@
     "badge": "ARTIST",
     "loadError": "Failed to load artist.",
     "topSongs": "Top Songs",
-    "albums": "Albums"
+    "albums": "Albums",
+    "allSongs": "All Songs",
+    "bio": "About",
+    "titleFallback": "Artist",
+    "singles": "Singles",
+    "discography": "Discography",
+    "plays": "plays"
   },
   "list": {
     "song": "Song",
@@ -34,5 +43,11 @@
     "album": "Album",
     "options": "Options",
     "addToPlaylist": "Add to playlist"
+  },
+  "badge": {
+    "song": "Song",
+    "artist": "Artist",
+    "album": "Album",
+    "profile": "Profile"
   }
 }

@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
   if (!url) {
     throw createError({
       statusCode: 400,
-      statusMessage: t('playlists.errors.missingUrl')
+      message: t('playlists.errors.missingUrl')
     });
   }
 
@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
     if (!playlistId) {
       throw createError({
         statusCode: 400,
-        statusMessage: t('playlists.errors.missingUrl')
+        message: t('playlists.errors.missingUrl')
       });
     }
 
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
     if (!playlist || !playlist.items) {
       throw createError({
         statusCode: 404,
-        statusMessage: t('playlists.errors.notFound')
+        message: t('playlists.errors.notFound')
       });
     }
 
@@ -43,8 +43,7 @@ export default defineEventHandler(async (event) => {
 
     let description = '';
     const rawDesc = header?.description as
-      | { description?: { text?: string }; toString?: () => string }
-      | undefined;
+      { description?: { text?: string }; toString?: () => string } | undefined;
     if (rawDesc) {
       if (rawDesc.description?.text) {
         description = rawDesc.description.text;
@@ -88,9 +87,7 @@ export default defineEventHandler(async (event) => {
       authors?: YtAuthor[];
       artists?: YtAuthor[];
       author?:
-        | YtAuthor
-        | YtAuthor[]
-        | { toString: () => string; name?: string; channel_id?: string };
+        YtAuthor | YtAuthor[] | { toString: () => string; name?: string; channel_id?: string };
     }
 
     for (const item of items) {
@@ -192,7 +189,7 @@ export default defineEventHandler(async (event) => {
     console.error('Failed to import YouTube playlist:', err);
     throw createError({
       statusCode: err.statusCode || 500,
-      statusMessage: err.statusMessage || err.message || t('playlists.errors.import')
+      message: err.statusMessage || err.message || t('playlists.errors.import')
     });
   }
 });

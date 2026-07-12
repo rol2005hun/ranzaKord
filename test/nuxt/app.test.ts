@@ -20,12 +20,12 @@ vi.mock('@tauri-apps/api/window', () => ({
 }));
 
 const mockThemeId = ref('dark');
-const mockCustomColor = ref<{ h: number; s: number; l: number } | null>(null);
+const mockCustomPalette = ref<{ primary: { h: number; s: number; l: number } } | null>(null);
 
 mockNuxtImport('useTheme', () => {
   return () => ({
     themeId: mockThemeId,
-    currentCustomColor: mockCustomColor
+    currentCustomPalette: mockCustomPalette
   });
 });
 
@@ -53,7 +53,7 @@ describe('app.vue', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockThemeId.value = 'dark';
-    mockCustomColor.value = null;
+    mockCustomPalette.value = null;
     vi.mocked(tauriCore.isTauri).mockReturnValue(false);
     if (typeof window !== 'undefined') {
       delete (window as unknown as Window & Record<string, unknown>).__TAURI_INTERNALS__;

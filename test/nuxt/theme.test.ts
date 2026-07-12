@@ -29,7 +29,7 @@ describe('Theme Module', () => {
     it('sets custom color', () => {
       const store = useThemeStore();
       store.setCustomColor('#ff0000');
-      expect(store.currentCustomColor?.hex).toBe('#ff0000');
+      expect(store.currentCustomPalette?.primary.hex).toBe('#ff0000');
     });
 
     it('clears custom color', () => {
@@ -43,12 +43,12 @@ describe('Theme Module', () => {
   describe('useTheme', () => {
     it('initializes theme from localStorage and handles body attributes', () => {
       const store = useThemeStore();
-      const { initialize, setTheme, setCustomColor, themeId, currentCustomColor, themes } =
+      const { initialize, setTheme, setCustomColor, themeId, currentCustomPalette, themes } =
         useTheme();
 
       expect(themes.length).toBeGreaterThan(0);
       expect(themeId.value).toBe('dark');
-      expect(currentCustomColor.value?.hex).toBe(store.DEFAULT_THEME_COLORS['dark']);
+      expect(currentCustomPalette.value?.primary.hex).toBe(store.DEFAULT_THEME_COLORS['dark']);
 
       // Reset state first to avoid cross-test pollution
       store.setTheme('dark');
@@ -64,7 +64,7 @@ describe('Theme Module', () => {
 
       // Test changing custom color
       setCustomColor('#123456');
-      expect(store.currentCustomColor?.hex).toBe('#123456');
+      expect(store.currentCustomPalette?.primary.hex).toBe('#123456');
     });
 
     it('applies custom color via css variables', () => {

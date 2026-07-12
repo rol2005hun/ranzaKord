@@ -37,6 +37,7 @@ const {
 watch(
   [isWalker, isWc2026],
   ([walker, wc]) => {
+    if (currentUser.value?.isDemo) return;
     if (walker) {
       executeTopTracks();
     } else if (wc) {
@@ -49,6 +50,26 @@ watch(
 );
 
 const featuredTracks: Ref<SearchResult[] | null> = computed(() => {
+  if (currentUser.value?.isDemo) {
+    return [
+      {
+        id: 'dQw4w9WgXcQ',
+        title: 'Demo Track 1 (NCS)',
+        artist: 'NCS Release',
+        thumbnailUrl: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+        durationSeconds: 212,
+        type: 'song'
+      },
+      {
+        id: '2Vv-BfVoq4g',
+        title: 'Demo Track 2 (Ed Sheeran Perfect Cover)',
+        artist: 'Cover',
+        thumbnailUrl: 'https://i.ytimg.com/vi/2Vv-BfVoq4g/hqdefault.jpg',
+        durationSeconds: 260,
+        type: 'song'
+      }
+    ];
+  }
   if (isWalker.value) return topTracks.value ?? null;
   if (isWc2026.value) return wcTracks.value ?? null;
   return featuredTracksData.value ?? null;
@@ -125,7 +146,7 @@ function onPlayFromList(track: SearchResult) {
 
       <ClientOnly>
         <div v-if="pending" class="home-dashboard__grid">
-          <div v-for="i in 8" :key="i" class="home-dashboard__skeleton">
+          <div v-for="i in 18" :key="i" class="home-dashboard__skeleton">
             <div class="skeleton skeleton--thumb" />
             <div class="home-dashboard__skeleton-info">
               <div class="skeleton skeleton--title" />
@@ -143,7 +164,7 @@ function onPlayFromList(track: SearchResult) {
 
         <template #fallback>
           <div class="home-dashboard__grid">
-            <div v-for="i in 8" :key="i" class="home-dashboard__skeleton">
+            <div v-for="i in 18" :key="i" class="home-dashboard__skeleton">
               <div class="skeleton skeleton--thumb" />
               <div class="home-dashboard__skeleton-info">
                 <div class="skeleton skeleton--title" />
@@ -261,7 +282,7 @@ function onPlayFromList(track: SearchResult) {
 
   &__skeleton-visual {
     width: 100%;
-    height: 120px;
+    height: 210px; /* matches TopResultCard approx height */
     border-radius: var(--radius-md);
     overflow: hidden;
   }
@@ -275,7 +296,7 @@ function onPlayFromList(track: SearchResult) {
 
   &__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: var(--space-4);
   }
 

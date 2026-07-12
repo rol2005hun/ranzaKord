@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import TermsModal from '@/features/auth/components/TermsModal.vue';
 
 definePageMeta({
   layout: 'auth'
@@ -12,14 +13,27 @@ const { loginWithRanzaKonnect, isAuthenticated, isTauri } = useAuth();
 const themeStore = useThemeStore();
 const isRedirecting = ref(false);
 const rememberMe = ref(false);
+const acceptedTerms = ref(false);
+const showTermsModal = ref(false);
 
 const redirectingText = computed(() =>
   isTauri.value ? t('auth.login.openingInBrowser') : t('auth.login.redirecting')
 );
 
 const handleLogin = () => {
+  if (!acceptedTerms.value) {
+    const toast = useToast();
+    toast.danger(t('auth.login.termsRequired'));
+    return;
+  }
   isRedirecting.value = true;
   loginWithRanzaKonnect(rememberMe.value);
+};
+
+const handleDemoLogin = async () => {
+  const authStore = useAuthStore();
+  authStore.loginAsDemo();
+  await navigateTo('/');
 };
 
 const handleWindowFocus = () => {
@@ -28,12 +42,14 @@ const handleWindowFocus = () => {
   }
 };
 
-onMounted(() => {
+let unlistenTauriFocus: (() => void) | null = null;
+
+onMounted(async () => {
   if (import.meta.client) {
     window.addEventListener('focus', handleWindowFocus);
 
     if (isTauri.value) {
-      getCurrentWindow().onFocusChanged(({ payload: focused }) => {
+      unlistenTauriFocus = await getCurrentWindow().onFocusChanged(({ payload: focused }) => {
         if (focused && isRedirecting.value) {
           isRedirecting.value = false;
         }
@@ -45,6 +61,9 @@ onMounted(() => {
 onUnmounted(() => {
   if (import.meta.client) {
     window.removeEventListener('focus', handleWindowFocus);
+    if (unlistenTauriFocus) {
+      unlistenTauriFocus();
+    }
   }
 });
 
@@ -68,15 +87,35 @@ if (isAuthenticated.value) {
         <span class="login-page__logo-text">{{ $t('core.appName') }}</span>
       </div>
 
-      <component :is="themeStore.themeId === 'wc2026' ? 'div' : 'h1'" class="login-page__title">
+      <h1 class="login-page__title">
         {{ $t('auth.login.title') }}
-      </component>
+      </h1>
       <p class="login-page__subtitle">{{ $t('auth.login.subtitle') }}</p>
 
       <div class="login-page__remember">
         <label class="login-page__remember-label">
           <input v-model="rememberMe" type="checkbox" class="login-page__remember-checkbox" />
           <span>{{ $t('auth.login.rememberMe') }}</span>
+        </label>
+      </div>
+
+      <div class="login-page__terms">
+        <label class="login-page__terms-label">
+          <input v-model="acceptedTerms" type="checkbox" class="login-page__terms-checkbox" />
+          <span class="login-page__terms-text">
+            <i18n-t keypath="auth.login.termsText" tag="span">
+              <template #terms>
+                <a href="#" class="login-page__terms-link" @click.prevent="showTermsModal = true">
+                  {{ $t('auth.login.termsLink') }}
+                </a>
+              </template>
+              <template #privacy>
+                <a href="#" class="login-page__terms-link" @click.prevent="showTermsModal = true">
+                  {{ $t('auth.login.privacyLink') }}
+                </a>
+              </template>
+            </i18n-t>
+          </span>
         </label>
       </div>
 
@@ -96,6 +135,16 @@ if (isAuthenticated.value) {
         </template>
       </AppButton>
 
+      <AppButton
+        id="login-demo"
+        class="login-page__btn login-page__btn--demo"
+        variant="secondary"
+        size="lg"
+        @click="handleDemoLogin">
+        <AppIcon name="ph:play-circle-duotone" />
+        {{ $t('auth.login.demoButton', 'Próbáld ki a Demo-t') }}
+      </AppButton>
+
       <p class="login-page__footer">{{ $t('auth.login.footer') }}</p>
     </div>
 
@@ -104,6 +153,26 @@ if (isAuthenticated.value) {
         <label class="login-page__remember-label">
           <input v-model="rememberMe" type="checkbox" class="login-page__remember-checkbox" />
           <span>{{ $t('auth.login.rememberMe') }}</span>
+        </label>
+      </div>
+
+      <div class="login-page__terms login-page__terms--wc">
+        <label class="login-page__terms-label">
+          <input v-model="acceptedTerms" type="checkbox" class="login-page__terms-checkbox" />
+          <span class="login-page__terms-text">
+            <i18n-t keypath="auth.login.termsText" tag="span">
+              <template #terms>
+                <a href="#" class="login-page__terms-link" @click.prevent="showTermsModal = true">
+                  {{ $t('auth.login.termsLink') }}
+                </a>
+              </template>
+              <template #privacy>
+                <a href="#" class="login-page__terms-link" @click.prevent="showTermsModal = true">
+                  {{ $t('auth.login.privacyLink') }}
+                </a>
+              </template>
+            </i18n-t>
+          </span>
         </label>
       </div>
       <AppButton
@@ -120,6 +189,16 @@ if (isAuthenticated.value) {
           <AppIcon name="ph:key-fill" />
           {{ $t('auth.login.button') }}
         </template>
+      </AppButton>
+
+      <AppButton
+        id="login-demo-wc"
+        class="wc-stadium__cta-btn login-page__btn--demo"
+        variant="secondary"
+        size="lg"
+        @click="handleDemoLogin">
+        <AppIcon name="ph:play-circle-duotone" />
+        {{ $t('auth.login.demoButton', 'Próbáld ki a Demo-t') }}
       </AppButton>
     </div>
 
@@ -204,6 +283,8 @@ if (isAuthenticated.value) {
         <div class="wc-stadium__spotlight wc-stadium__spotlight--4" />
       </div>
     </div>
+
+    <TermsModal v-if="showTermsModal" @close="showTermsModal = false" />
   </div>
 </template>
 
@@ -256,6 +337,60 @@ if (isAuthenticated.value) {
     height: 16px;
     cursor: pointer;
     accent-color: var(--color-primary);
+  }
+
+  &__terms {
+    width: 100%;
+    margin-bottom: var(--space-4);
+
+    &--wc {
+      margin-bottom: var(--space-4);
+      .login-page__terms-label {
+        color: rgba(255, 255, 255, 0.85);
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+      }
+      .login-page__terms-link {
+        color: rgba(255, 255, 255, 0.95);
+        &:hover {
+          color: white;
+        }
+      }
+    }
+  }
+
+  &__terms-label {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    user-select: none;
+    text-align: left;
+  }
+
+  &__terms-checkbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--color-primary);
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  &__terms-text {
+    line-height: 1.4;
+  }
+
+  &__terms-link {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: var(--font-weight-medium);
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
 
   &__card {
@@ -313,6 +448,10 @@ if (isAuthenticated.value) {
 
   &__btn {
     width: 100%;
+
+    &--demo {
+      margin-top: calc(var(--space-2) * -1);
+    }
   }
 
   &__spinner {
@@ -371,8 +510,8 @@ if (isAuthenticated.value) {
   }
   &__lang-toggle {
     position: absolute;
-    top: var(--space-6);
-    right: var(--space-6);
+    top: calc(var(--safe-area-top, 0px) + var(--space-4));
+    right: var(--space-4);
     display: flex;
     gap: var(--space-1);
     z-index: 10;

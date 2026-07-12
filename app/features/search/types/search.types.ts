@@ -1,4 +1,4 @@
-export type SearchResultType = 'song' | 'artist' | 'album' | 'video' | 'playlist';
+export type SearchResultType = 'song' | 'artist' | 'album' | 'video' | 'playlist' | 'profile';
 
 export interface SearchResultArtist {
   name: string;
@@ -15,6 +15,7 @@ export interface SearchResult {
   albumId?: string;
   thumbnailUrl: string;
   durationSeconds?: number;
+  plays?: string;
 }
 
 export interface CategorizedSearchResults {
@@ -22,12 +23,14 @@ export interface CategorizedSearchResults {
   songs: SearchResult[];
   artists: SearchResult[];
   albums: SearchResult[];
+  profiles: SearchResult[];
 }
 
 export interface ArtistDetail {
   id: string;
   name: string;
   thumbnailUrl: string;
+  bannerUrl?: string;
   description?: string;
   topSongs: SearchResult[];
   albums: SearchResult[];

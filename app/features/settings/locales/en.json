@@ -4,7 +4,8 @@
     "account": "Account",
     "appearance": "Appearance",
     "player": "Player",
-    "audio": "Audio (EQ)"
+    "audio": "Audio (EQ)",
+    "info": "Information"
   },
   "account": {
     "title": "Account Settings",
@@ -20,6 +21,10 @@
     "language": {
       "title": "Language",
       "description": "Choose the application's interface language."
+    },
+    "adaptiveTheme": {
+      "title": "Adaptive Theme Color",
+      "description": "Dynamically match the primary color to the current album art."
     },
     "customColor": {
       "title": "Custom Color",
@@ -37,6 +42,10 @@
   },
   "audio": {
     "title": "Audio Settings",
+    "spatialAudio": {
+      "title": "8D Spatial Audio",
+      "description": "Creates a 3D immersive experience by moving the sound around your head."
+    },
     "eq": {
       "title": "Equalizer",
       "description": "Adjust the 10-band audio equalizer to your liking.",
@@ -50,6 +59,20 @@
         "rock": "Rock",
         "custom": "Custom"
       }
+    }
+  },
+  "info": {
+    "title": "Information",
+    "description": "About the application and useful keyboard shortcuts.",
+    "shortcutsTitle": "Keyboard Shortcuts",
+    "shortcutsNote": "Global shortcuts work even when the app is in the background.",
+    "changelogTitle": "Changelog",
+    "roadmapTitle": "Roadmap",
+    "aboutTitle": "About",
+    "shortcuts": {
+      "playPause": "Play / Pause",
+      "next": "Next Track",
+      "prev": "Previous Track"
     }
   }
 }

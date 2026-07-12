@@ -6,8 +6,16 @@ const layoutStore = useLayoutStore();
 const { lyricsData, isLoading: lyricsLoading, fetchLyrics, getActiveLine } = useLyrics();
 
 const isHydrated = ref(false);
+
 const isTauri = computed(
   () => isHydrated.value && typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
+);
+
+const isDesktopTauri = computed(
+  () =>
+    isTauri.value &&
+    typeof navigator !== 'undefined' &&
+    !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
 );
 
 const displayTrack = computed(() => (isHydrated.value ? player.currentTrack.value : null));
@@ -183,38 +191,41 @@ onClickOutside(moreMenuBtnRef, (e) => {
     <audio ref="audioEl2" preload="metadata" playsinline crossorigin="anonymous" />
     <aside class="player-bar" :aria-label="$t('player.playerBar')">
       <div class="player-bar__left">
-        <ClientOnly>
-          <div class="player-bar__artwork">
-            <img
-              v-if="displayTrack?.thumbnailUrl"
-              :src="displayTrack.thumbnailUrl"
-              :alt="displayTrack?.title"
-              class="player-bar__img" />
-            <AppIcon v-else name="ph:music-notes-simple" class="player-bar__img-placeholder" />
-          </div>
-          <template #fallback>
+        <div class="player-bar__track-trigger" @click="toggleLyrics">
+          <ClientOnly>
             <div class="player-bar__artwork">
-              <AppSkeleton width="100%" height="100%" />
+              <img
+                v-if="displayTrack?.thumbnailUrl"
+                :src="displayTrack.thumbnailUrl"
+                :alt="displayTrack?.title"
+                class="player-bar__img" />
+              <AppIcon v-else name="ph:music-notes-simple" class="player-bar__img-placeholder" />
             </div>
-          </template>
-        </ClientOnly>
+            <template #fallback>
+              <div class="player-bar__artwork">
+                <AppSkeleton width="100%" height="100%" />
+              </div>
+            </template>
+          </ClientOnly>
 
-        <ClientOnly>
-          <div v-if="displayTrack" class="player-bar__info">
-            <span class="player-bar__title">{{ displayTrack.title }}</span>
-            <AppTrackArtists :track="displayTrack" class="player-bar__artist" />
-          </div>
-          <div v-else class="player-bar__info player-bar__info--empty">
-            <span class="player-bar__title">{{ $t('player.noTrack') }}</span>
-            <span class="player-bar__artist">{{ $t('player.startSomething') }}</span>
-          </div>
-          <template #fallback>
-            <div class="player-bar__info player-bar__info--skeleton">
-              <AppSkeleton height="12px" width="120px" border-radius="var(--radius-sm)" />
-              <AppSkeleton height="10px" width="80px" border-radius="var(--radius-sm)" />
+          <ClientOnly>
+            <div v-if="displayTrack" class="player-bar__info">
+              <span class="player-bar__title">{{ displayTrack.title }}</span>
+              <AppTrackArtists :track="displayTrack" class="player-bar__artist" />
             </div>
-          </template>
-        </ClientOnly>
+            <div v-else class="player-bar__info player-bar__info--empty">
+              <span class="player-bar__title">{{ $t('player.noTrack') }}</span>
+              <span class="player-bar__artist">{{ $t('player.startSomething') }}</span>
+            </div>
+            <template #fallback>
+              <div class="player-bar__info player-bar__info--skeleton">
+                <AppSkeleton height="12px" width="120px" border-radius="var(--radius-sm)" />
+                <AppSkeleton height="10px" width="80px" border-radius="var(--radius-sm)" />
+              </div>
+            </template>
+          </ClientOnly>
+        </div>
+
         <ClientOnly>
           <button
             ref="playlistBtnRef"
@@ -241,7 +252,7 @@ onClickOutside(moreMenuBtnRef, (e) => {
                 : false
             }"
             :disabled="!displayTrack"
-            :aria-label="$t('player.shuffle') || 'Shuffle'"
+            :aria-label="$t('player.shuffle')"
             @click="player.toggleShuffle()">
             <AppIcon name="ph:shuffle" />
           </button>
@@ -287,7 +298,7 @@ onClickOutside(moreMenuBtnRef, (e) => {
               'player-bar__btn--active': isHydrated ? player.repeatMode.value !== 'off' : false
             }"
             :disabled="!displayTrack"
-            :aria-label="$t('player.repeat') || 'Repeat'"
+            :aria-label="$t('player.repeat')"
             @click="player.toggleRepeat()">
             <AppIcon
               data-allow-mismatch
@@ -310,10 +321,11 @@ onClickOutside(moreMenuBtnRef, (e) => {
             :max="displayDuration || 1"
             :value="displayTime"
             :disabled="!displayTrack"
-            step="1"
+            step="any"
             :aria-label="$t('player.seek')"
             :style="{
-              '--progress': (displayTime / (displayDuration || 1)) * 100 + '%'
+              '--progress': (displayTime / (displayDuration || 1)) * 100 + '%',
+              '--progress-ratio': displayTime / (displayDuration || 1)
             }"
             data-allow-mismatch
             @input="onSeekInput"
@@ -340,7 +352,7 @@ onClickOutside(moreMenuBtnRef, (e) => {
           class="player-bar__extra-controls"
           :class="{ 'is-open': isMoreMenuOpen }">
           <button
-            v-if="isTauri"
+            v-if="isDesktopTauri"
             class="player-bar__btn"
             :aria-label="$t('core.miniPlayer')"
             @click="layoutStore.toggleMiniPlayer()">
@@ -391,7 +403,10 @@ onClickOutside(moreMenuBtnRef, (e) => {
             :value="displayVolume"
             step="0.01"
             :aria-label="$t('player.volume')"
-            :style="{ '--progress': displayVolume * 100 + '%' }"
+            :style="{
+              '--progress': displayVolume * 100 + '%',
+              '--progress-ratio': displayVolume
+            }"
             data-allow-mismatch
             @input="onVolumeInput" />
           <AppSkeleton v-else height="4px" width="100px" class="player-bar__slider--volume" />
@@ -504,6 +519,14 @@ onClickOutside(moreMenuBtnRef, (e) => {
     align-items: center;
     gap: var(--space-3);
     min-width: 0;
+  }
+
+  &__track-trigger {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-width: 0;
+    cursor: pointer;
   }
 
   &__center {
@@ -760,8 +783,14 @@ onClickOutside(moreMenuBtnRef, (e) => {
     &::-webkit-slider-runnable-track {
       background: linear-gradient(
         to right,
-        var(--color-primary) var(--progress, 0%),
-        #535353 var(--progress, 0%)
+        var(--color-primary)
+          calc(
+            var(--thumb-radius, 6px) + var(--progress-ratio, 0) * (100% - var(--thumb-width, 12px))
+          ),
+        #535353
+          calc(
+            var(--thumb-radius, 6px) + var(--progress-ratio, 0) * (100% - var(--thumb-width, 12px))
+          )
       );
       border-radius: var(--radius-full);
       height: 4px;
@@ -771,8 +800,16 @@ onClickOutside(moreMenuBtnRef, (e) => {
       &::-webkit-slider-runnable-track {
         background: linear-gradient(
           to right,
-          var(--color-primary-hover) var(--progress, 0%),
-          #666 var(--progress, 0%)
+          var(--color-primary-hover)
+            calc(
+              var(--thumb-radius, 6px) + var(--progress-ratio, 0) *
+                (100% - var(--thumb-width, 12px))
+            ),
+          #666
+            calc(
+              var(--thumb-radius, 6px) + var(--progress-ratio, 0) *
+                (100% - var(--thumb-width, 12px))
+            )
         );
       }
     }
@@ -986,7 +1023,8 @@ onClickOutside(moreMenuBtnRef, (e) => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: var(--space-4) var(--space-4) var(--space-3);
+    padding: calc(max(var(--safe-area-top, 0px), var(--space-2)) + var(--space-4)) var(--space-4)
+      var(--space-3);
     border-bottom: 1px solid var(--color-border);
     gap: var(--space-3);
     flex-shrink: 0;

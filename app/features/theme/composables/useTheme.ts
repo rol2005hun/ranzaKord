@@ -26,7 +26,7 @@ export function useTheme() {
 
   return {
     themeId: computed(() => store.themeId),
-    currentCustomColor: computed(() => store.currentCustomColor),
+    currentCustomPalette: computed(() => store.currentCustomPalette),
     themes: THEME_OPTIONS,
     setTheme: setThemeWithTransition,
     setCustomColor: (hex: string) => store.setCustomColor(hex),

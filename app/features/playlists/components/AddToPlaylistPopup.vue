@@ -16,6 +16,10 @@ const toast = useToast();
 
 const popupRef = ref<HTMLElement | null>(null);
 
+const allPlaylists = computed(() => {
+  return [...store.playlists, ...store.sharedPlaylists];
+});
+
 onClickOutside(
   popupRef,
   () => {
@@ -85,19 +89,19 @@ async function toggle(playlistId: string) {
     <div ref="popupRef" class="add-playlist-popup" :style="style" @click.stop>
       <div class="add-playlist-popup__header">
         <span class="add-playlist-popup__title">
-          {{ $t('playlists.addToPlaylist') || 'Add to playlist' }}
+          {{ $t('playlists.addToPlaylist') }}
         </span>
         <button class="add-playlist-popup__close" @click="emit('close')">
           <AppIcon name="ph:x" />
         </button>
       </div>
 
-      <div v-if="store.playlists.length === 0" class="add-playlist-popup__empty">
-        {{ $t('playlists.noPlaylists') || 'No playlists' }}
+      <div v-if="allPlaylists.length === 0" class="add-playlist-popup__empty">
+        {{ $t('playlists.noPlaylists') }}
       </div>
 
       <ul v-else class="add-playlist-popup__list">
-        <li v-for="p in store.playlists" :key="p.id" class="add-playlist-popup__item">
+        <li v-for="p in allPlaylists" :key="p.id" class="add-playlist-popup__item">
           <button class="add-playlist-popup__btn" @click="toggle(p.id)">
             <span class="add-playlist-popup__name">{{ p.name }}</span>
             <AppSpinner v-if="processing.includes(p.id)" size="sm" />

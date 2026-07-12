@@ -12,7 +12,25 @@ export const useAuthStore = defineStore('auth', () => {
 
   function clearSession() {
     user.value = null;
+    if (import.meta.client) {
+      localStorage.removeItem('ranzakord_demo_session');
+    }
   }
 
-  return { user, isAuthenticated, currentUser, setUser, clearSession };
+  function loginAsDemo() {
+    user.value = {
+      sub: 'demo-user-id',
+      name: 'Demo Felhasználó',
+      email: 'demo@ranzakord.app',
+      picture: '',
+      hasAccess: true,
+      roles: ['user'],
+      isDemo: true
+    };
+    if (import.meta.client) {
+      localStorage.setItem('ranzakord_demo_session', 'true');
+    }
+  }
+
+  return { user, isAuthenticated, currentUser, setUser, clearSession, loginAsDemo };
 });

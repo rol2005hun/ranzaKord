@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
   const { t } = useServerTranslation(event);
 
   if (!sessionData.user) {
-    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
+    throw createError({ statusCode: 401, message: t('core.errors.unauthorized') });
   }
 
   const userId = sessionData.user.sub;

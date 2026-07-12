@@ -1,17 +1,22 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
 
-const { themeId, currentCustomColor } = useTheme();
+const { themeId, currentCustomPalette } = useTheme();
 
 const customColorStyle = computed(() => {
-  if (!currentCustomColor.value) return '';
-  return `:root { --color-primary-h: ${currentCustomColor.value.h}; --color-primary-s: ${currentCustomColor.value.s}%; --color-primary-l: ${currentCustomColor.value.l}%; }`;
+  if (!currentCustomPalette.value) return '';
+  const cc = currentCustomPalette.value.primary;
+  return `:root { --color-primary-h: ${cc.h}; --color-primary-s: ${cc.s}%; --color-primary-l: ${cc.l}%; }`;
 });
 
 const { locale } = useI18n({ useScope: 'global' });
 const { showUpdateModal } = useAppUpdate();
 const layoutStore = useLayoutStore();
 const playerStore = usePlayerStore();
+
+// Initialize global features
+useGlobalShortcuts();
+useAdaptiveTheme();
 
 const isTauriDesktop =
   typeof window !== 'undefined' &&

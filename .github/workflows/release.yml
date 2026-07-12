@@ -99,7 +99,7 @@ jobs:
         run: npx tauri android init --ci
 
       - name: Generate Android Icons
-        run: npx tauri icon
+        run: npx tauri icon public/app-icon.png
 
       - name: Inject Deep Link Intent Filter
         run: |

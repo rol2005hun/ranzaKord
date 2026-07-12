@@ -6,6 +6,7 @@ interface CreatePlaylistBody {
   name: string;
   description?: string;
   imageUrl?: string;
+  isPublic?: boolean;
 }
 
 export default defineEventHandler(async (event): Promise<PlaylistResponse> => {
@@ -18,13 +19,13 @@ export default defineEventHandler(async (event): Promise<PlaylistResponse> => {
   const { t } = useServerTranslation(event);
 
   if (!sessionData.accessToken || !sessionData.user) {
-    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
+    throw createError({ statusCode: 401, message: t('core.errors.unauthorized') });
   }
 
   const body = await readBody<Partial<CreatePlaylistBody>>(event);
 
   if (!body?.name) {
-    throw createError({ statusCode: 400, statusMessage: t('playlists.errors.missingName') });
+    throw createError({ statusCode: 400, message: t('playlists.errors.missingName') });
   }
 
   const playlist = await PlaylistModel.create({
@@ -32,6 +33,7 @@ export default defineEventHandler(async (event): Promise<PlaylistResponse> => {
     name: body.name.trim(),
     description: body.description?.trim() || '',
     imageUrl: body.imageUrl || '',
+    isPublic: body.isPublic ?? false,
     items: []
   });
 
@@ -43,6 +45,7 @@ export default defineEventHandler(async (event): Promise<PlaylistResponse> => {
     trackCount: 0,
     trackIds: [],
     createdAt: playlist.createdAt.toISOString(),
-    updatedAt: playlist.updatedAt.toISOString()
+    updatedAt: playlist.updatedAt.toISOString(),
+    isPublic: playlist.isPublic !== false
   };
 });

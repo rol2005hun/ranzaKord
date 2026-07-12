@@ -12,6 +12,7 @@ export interface Track {
   artistId?: string;
   thumbnailUrl: string;
   durationSeconds: number;
+  isRadio?: boolean;
 }
 
 export interface PlayerState {

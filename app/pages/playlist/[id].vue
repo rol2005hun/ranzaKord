@@ -2,7 +2,8 @@
 import { computed, ref, watch } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
 import type { PlaylistDetail, PlaylistTrack } from '@/features/playlists/types/playlists.types';
-import type { TrackListItem } from '@/components/shared/AppTrackList.vue';
+import type { TrackListItem } from '@/components/shared/TrackList.vue';
+import type { Track } from '@/features/player/types/player.types';
 
 definePageMeta({
   layout: 'music'
@@ -16,11 +17,17 @@ const id = computed(() => route.params.id as string);
 
 const store = usePlaylistsStore();
 const player = usePlayer();
+const offlineStore = useOfflineStore();
+
+onMounted(async () => {
+  await offlineStore.init();
+});
 
 const playlist = ref<PlaylistDetail | null>(null);
 const isLoading = ref(true);
 const isDeleting = ref(false);
 const showEditModal = ref(false);
+const showCollaboratorModal = ref(false);
 const showDeleteConfirm = ref(false);
 
 const searchQuery = ref('');
@@ -151,6 +158,14 @@ useHead({
 const isReorderable = computed(() => !debouncedSearch.value && !sortBy.value);
 
 const isCurrentPlaylistPlaying = computed(() => {
+  const pStore = usePlayerStore();
+  if (
+    pStore.playbackContext?.type === 'playlist' &&
+    pStore.playbackContext?.sourceId === id.value
+  ) {
+    return player.isPlaying.value;
+  }
+
   if (!playlist.value || virtualTracks.value.length === 0) return false;
   if (!player.isPlaying.value) return false;
   return virtualTracks.value.some(
@@ -158,7 +173,20 @@ const isCurrentPlaylistPlaying = computed(() => {
   );
 });
 
+const auth = useAuthStore();
+const isOwner = computed(() => {
+  return auth.user?.sub && playlist.value?.ownerId === auth.user.sub;
+});
+
 const isCurrentPlaylistLoading = computed(() => {
+  const pStore = usePlayerStore();
+  if (
+    pStore.playbackContext?.type === 'playlist' &&
+    pStore.playbackContext?.sourceId === id.value
+  ) {
+    return player.isLoading.value;
+  }
+
   if (!playlist.value || virtualTracks.value.length === 0) return false;
   if (!player.isLoading.value) return false;
   return virtualTracks.value.some(
@@ -166,8 +194,22 @@ const isCurrentPlaylistLoading = computed(() => {
   );
 });
 
-function playAll(): void {
-  const loadedTracks = virtualTracks.value.filter((t): t is PlaylistTrack => t !== null);
+async function playAll(): Promise<void> {
+  let loadedTracks = virtualTracks.value.filter((t): t is PlaylistTrack => t !== null);
+
+  if (playlist.value && playlist.value.trackCount > loadedTracks.length) {
+    const fullDetail = await store.fetchDetail(id.value, {
+      limit: playlist.value.trackCount,
+      offset: 0,
+      sortBy: sortBy.value || undefined,
+      sortOrder: sortOrder.value,
+      search: debouncedSearch.value || undefined
+    });
+    if (fullDetail?.tracks) {
+      loadedTracks = fullDetail.tracks;
+    }
+  }
+
   if (loadedTracks.length === 0) return;
 
   if (isCurrentPlaylistPlaying.value) {
@@ -200,8 +242,22 @@ function playAll(): void {
   player.playQueue(tracksToPlay, 0);
 }
 
-function onPlaySong(track: TrackListItem, index: number): void {
-  const loadedTracks = virtualTracks.value.filter((t): t is PlaylistTrack => t !== null);
+async function onPlaySong(track: TrackListItem, index: number): Promise<void> {
+  let loadedTracks = virtualTracks.value.filter((t): t is PlaylistTrack => t !== null);
+
+  if (playlist.value && playlist.value.trackCount > loadedTracks.length) {
+    const fullDetail = await store.fetchDetail(id.value, {
+      limit: playlist.value.trackCount,
+      offset: 0,
+      sortBy: sortBy.value || undefined,
+      sortOrder: sortOrder.value,
+      search: debouncedSearch.value || undefined
+    });
+    if (fullDetail?.tracks) {
+      loadedTracks = fullDetail.tracks;
+    }
+  }
+
   const tracksToPlay = loadedTracks.map((t) => ({
     videoId: t.videoId,
     title: t.title,
@@ -285,6 +341,31 @@ async function onImageError(): Promise<void> {
   await store.update(id.value, { imageUrl: firstTrackThumb });
   await refresh();
 }
+
+const isDownloadingPlaylist = ref(false);
+
+async function downloadPlaylist(): Promise<void> {
+  if (isDownloadingPlaylist.value) return;
+  const loaded = virtualTracks.value.filter((t): t is PlaylistTrack => t !== null);
+  if (loaded.length === 0) return;
+  isDownloadingPlaylist.value = true;
+  for (const t of loaded) {
+    const track: Track = {
+      videoId: t.videoId,
+      title: t.title,
+      artist: t.artist,
+      thumbnailUrl: t.thumbnailUrl,
+      durationSeconds: Math.round(t.durationMs / 1000)
+    };
+    if (!offlineStore.isTrackDownloaded(track.videoId)) {
+      await offlineStore.downloadTrack(track);
+    }
+  }
+  isDownloadingPlaylist.value = false;
+}
+
+const showMobileMenu = ref(false);
+const showStickyMobileMenu = ref(false);
 </script>
 
 <template>
@@ -315,19 +396,20 @@ async function onImageError(): Promise<void> {
         <div
           v-if="(playlist?.trackCount ?? 0) > 0 || debouncedSearch"
           class="playlist-page__search-bar">
-          <AppIcon name="ph:magnifying-glass" class="playlist-page__search-icon" />
+          <AppIcon
+            v-if="status === 'pending' && playlist"
+            name="ph:spinner-gap"
+            class="playlist-page__search-icon spin" />
+          <AppIcon v-else name="ph:magnifying-glass" class="playlist-page__search-icon" />
           <input
             id="playlist-search-input"
             v-model="searchQuery"
             type="text"
-            :placeholder="$t('search.placeholder')"
-            :aria-label="$t('search.placeholder')"
+            :placeholder="$t('search.localPlaceholder')"
+            :aria-label="$t('search.localPlaceholder')"
             class="playlist-page__search-input" />
 
           <div class="playlist-page__search-actions">
-            <div v-if="status === 'pending' && playlist" class="playlist-page__inline-loader">
-              <AppIcon name="ph:spinner-gap" class="spin" />
-            </div>
             <button
               v-if="searchQuery"
               class="playlist-page__search-clear"
@@ -344,41 +426,176 @@ async function onImageError(): Promise<void> {
       </template>
 
       <template #sticky-actions>
-        <button
-          class="playlist-page__action-btn"
-          :title="$t('search.placeholder')"
-          @click="focusSearch">
-          <AppIcon name="ph:magnifying-glass" />
-        </button>
-        <button
-          class="playlist-page__action-btn"
-          :title="$t('playlists.editPlaylist')"
-          @click="showEditModal = true">
-          <AppIcon name="ph:pencil-simple" />
-        </button>
-        <button
-          class="playlist-page__action-btn playlist-page__action-btn--danger"
-          :title="$t('playlists.deletePlaylist')"
-          :disabled="isDeleting"
-          @click="showDeleteConfirm = true">
-          <AppIcon name="ph:trash" />
-        </button>
+        <div class="playlist-page__actions-desktop">
+          <button
+            class="playlist-page__action-btn"
+            :title="$t('search.placeholder')"
+            @click="focusSearch">
+            <AppIcon name="ph:magnifying-glass" />
+          </button>
+          <button
+            class="playlist-page__action-btn"
+            :title="$t('playlists.editPlaylist')"
+            @click="showEditModal = true">
+            <AppIcon name="ph:pencil-simple" />
+          </button>
+          <button
+            v-if="isOwner"
+            class="playlist-page__action-btn"
+            title="Kollaborátorok"
+            @click="showCollaboratorModal = true">
+            <AppIcon name="ph:users" />
+          </button>
+          <button
+            class="playlist-page__action-btn playlist-page__action-btn--danger"
+            :title="$t('playlists.deletePlaylist')"
+            :disabled="isDeleting"
+            @click="showDeleteConfirm = true">
+            <AppIcon name="ph:trash" />
+          </button>
+        </div>
+        <div class="playlist-page__actions-mobile">
+          <button
+            class="playlist-page__action-btn"
+            :title="$t('search.placeholder')"
+            @click="focusSearch">
+            <AppIcon name="ph:magnifying-glass" />
+          </button>
+          <div class="playlist-page__more-container">
+            <button
+              class="playlist-page__action-btn"
+              @click="showStickyMobileMenu = !showStickyMobileMenu">
+              <AppIcon name="ph:dots-three-vertical-bold" />
+            </button>
+            <div
+              v-if="showStickyMobileMenu"
+              class="playlist-page__dropdown-overlay"
+              @click="showStickyMobileMenu = false"></div>
+            <Transition name="dropdown">
+              <div v-if="showStickyMobileMenu" class="playlist-page__dropdown">
+                <button
+                  class="playlist-page__dropdown-item"
+                  @click="
+                    showStickyMobileMenu = false;
+                    showEditModal = true;
+                  ">
+                  <AppIcon name="ph:pencil-simple" />
+                  {{ $t('playlists.editPlaylist') }}
+                </button>
+                <button
+                  v-if="isOwner"
+                  class="playlist-page__dropdown-item"
+                  @click="
+                    showStickyMobileMenu = false;
+                    showCollaboratorModal = true;
+                  ">
+                  <AppIcon name="ph:users" />
+                  Kollaborátorok
+                </button>
+                <button
+                  class="playlist-page__dropdown-item playlist-page__dropdown-item--danger"
+                  :disabled="isDeleting"
+                  @click="
+                    showStickyMobileMenu = false;
+                    showDeleteConfirm = true;
+                  ">
+                  <AppIcon name="ph:trash" />
+                  {{ $t('playlists.deletePlaylist') }}
+                </button>
+              </div>
+            </Transition>
+          </div>
+        </div>
       </template>
 
       <template #actions>
-        <button
-          class="playlist-page__action-btn"
-          :title="$t('playlists.editPlaylist')"
-          @click="showEditModal = true">
-          <AppIcon name="ph:pencil-simple" />
-        </button>
-        <button
-          class="playlist-page__action-btn playlist-page__action-btn--danger"
-          :title="$t('playlists.deletePlaylist')"
-          :disabled="isDeleting"
-          @click="showDeleteConfirm = true">
-          <AppIcon name="ph:trash" />
-        </button>
+        <div class="playlist-page__actions-desktop">
+          <button
+            class="playlist-page__action-btn"
+            :title="$t('offline.downloadPlaylist')"
+            :disabled="isDownloadingPlaylist"
+            @click="downloadPlaylist">
+            <AppSpinner v-if="isDownloadingPlaylist" size="sm" />
+            <AppIcon v-else name="ph:arrow-circle-down-duotone" />
+          </button>
+          <button
+            class="playlist-page__action-btn"
+            :title="$t('playlists.editPlaylist')"
+            @click="showEditModal = true">
+            <AppIcon name="ph:pencil-simple" />
+          </button>
+          <button
+            v-if="isOwner"
+            class="playlist-page__action-btn"
+            title="Kollaborátorok"
+            @click="showCollaboratorModal = true">
+            <AppIcon name="ph:users" />
+          </button>
+          <button
+            class="playlist-page__action-btn playlist-page__action-btn--danger"
+            :title="$t('playlists.deletePlaylist')"
+            :disabled="isDeleting"
+            @click="showDeleteConfirm = true">
+            <AppIcon name="ph:trash" />
+          </button>
+        </div>
+        <div class="playlist-page__actions-mobile">
+          <div class="playlist-page__more-container">
+            <button
+              class="playlist-page__action-btn playlist-page__action-btn--more"
+              @click="showMobileMenu = !showMobileMenu">
+              <AppIcon name="ph:dots-three-vertical-bold" />
+            </button>
+            <div
+              v-if="showMobileMenu"
+              class="playlist-page__dropdown-overlay"
+              @click="showMobileMenu = false"></div>
+            <Transition name="dropdown">
+              <div v-if="showMobileMenu" class="playlist-page__dropdown">
+                <button
+                  class="playlist-page__dropdown-item"
+                  :disabled="isDownloadingPlaylist"
+                  @click="
+                    showMobileMenu = false;
+                    downloadPlaylist();
+                  ">
+                  <AppSpinner v-if="isDownloadingPlaylist" size="sm" />
+                  <AppIcon v-else name="ph:arrow-circle-down-duotone" />
+                  {{ $t('offline.downloadPlaylist') }}
+                </button>
+                <button
+                  class="playlist-page__dropdown-item"
+                  @click="
+                    showMobileMenu = false;
+                    showEditModal = true;
+                  ">
+                  <AppIcon name="ph:pencil-simple" />
+                  {{ $t('playlists.editPlaylist') }}
+                </button>
+                <button
+                  v-if="isOwner"
+                  class="playlist-page__dropdown-item"
+                  @click="
+                    showMobileMenu = false;
+                    showCollaboratorModal = true;
+                  ">
+                  <AppIcon name="ph:users" />
+                  Kollaborátorok
+                </button>
+                <button
+                  class="playlist-page__dropdown-item playlist-page__dropdown-item--danger"
+                  :disabled="isDeleting"
+                  @click="
+                    showMobileMenu = false;
+                    showDeleteConfirm = true;
+                  ">
+                  <AppIcon name="ph:trash" />
+                  {{ $t('playlists.deletePlaylist') }}
+                </button>
+              </div>
+            </Transition>
+          </div>
+        </div>
       </template>
 
       <template #skeleton-center-header>
@@ -390,7 +607,7 @@ async function onImageError(): Promise<void> {
       <template #skeleton-tracks>
         <AppTrackList
           :is-loading="true"
-          :columns="['index', 'title', 'date', 'time', 'action']"
+          :columns="['index', 'title', 'date', 'time', 'download', 'action']"
           :show-thumbnails="true" />
       </template>
 
@@ -419,7 +636,7 @@ async function onImageError(): Promise<void> {
               :visible-items="mappedVisibleItems"
               :offset-y="offsetY"
               :total-height="totalHeight"
-              :columns="['index', 'title', 'date', 'time', 'action']"
+              :columns="['index', 'title', 'date', 'time', 'download', 'action']"
               :show-thumbnails="true"
               :sort-by="sortBy"
               :sort-order="sortOrder"
@@ -440,9 +657,17 @@ async function onImageError(): Promise<void> {
       :initial-name="playlist.name"
       :initial-description="playlist.description"
       :initial-image-url="playlist.imageUrl"
+      :initial-is-public="playlist.isPublic"
       @saved="refresh()"
       @close="showEditModal = false"
       @created="showEditModal = false" />
+
+    <CollaboratorModal
+      v-if="playlist && isOwner"
+      v-model="showCollaboratorModal"
+      :playlist-id="id"
+      :collaborators="playlist.collaborators || []"
+      @saved="refresh()" />
 
     <ClientOnly>
       <Teleport to="body">
@@ -513,6 +738,94 @@ async function onImageError(): Promise<void> {
 
     &--danger:hover {
       color: hsl(0, 65%, 55%);
+    }
+  }
+
+  &__actions-desktop {
+    display: flex;
+    align-items: center;
+    gap: inherit;
+
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
+
+  &__actions-mobile {
+    display: none;
+    align-items: center;
+    gap: inherit;
+
+    @media (max-width: 768px) {
+      display: flex;
+    }
+  }
+
+  &__more-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  &__dropdown-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    background: transparent;
+  }
+
+  &__dropdown {
+    position: absolute;
+    top: calc(100% + var(--space-2));
+    right: 0;
+    z-index: 100;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-2);
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  }
+
+  &__dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+    padding: var(--space-3);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    color: var(--color-text-primary);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    text-align: left;
+    transition: background var(--transition-fast);
+
+    &:hover {
+      background: var(--color-surface-hover);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &--danger {
+      color: hsl(0, 65%, 65%);
+
+      &:hover {
+        background: color-mix(in srgb, hsl(0, 65%, 50%) 15%, transparent);
+        color: hsl(0, 65%, 65%);
+      }
+    }
+
+    svg {
+      font-size: 1.25rem;
     }
   }
 
@@ -611,8 +924,7 @@ async function onImageError(): Promise<void> {
 
   &__search-input {
     width: 100%;
-    padding: var(--space-3) calc(var(--space-4) * 2 + 3rem) var(--space-3)
-      calc(var(--space-4) + 1.5rem + var(--space-2));
+    padding: var(--space-3) 2.5rem var(--space-3) calc(var(--space-4) + 1.5rem + var(--space-2));
     background: color-mix(in srgb, var(--color-surface-raised) 80%, transparent);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-full);
@@ -712,5 +1024,18 @@ async function onImageError(): Promise<void> {
 .modal-enter-from,
 .modal-leave-to {
   opacity: 0;
+}
+
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-5px) scale(0.95);
 }
 </style>

@@ -6,7 +6,7 @@ import { useThemeStore } from '@/features/theme/stores/useThemeStore';
 import settingsSyncPlugin from '@/plugins/settings-sync.client';
 import { nextTick } from 'vue';
 
-describe.skip('settings-sync.client plugin', () => {
+describe('settings-sync.client plugin', () => {
   let mockNuxtApp: {
     hook: ReturnType<typeof vi.fn>;
     _mountedCallback: (() => void) | null;
@@ -88,7 +88,20 @@ describe.skip('settings-sync.client plugin', () => {
     settingsSyncPlugin(mockNuxtApp as unknown as ReturnType<typeof useNuxtApp>);
     if (mockNuxtApp._mountedCallback) mockNuxtApp._mountedCallback();
 
+    const authStore = useAuthStore();
     const themeStore = useThemeStore();
+
+    // Set authenticated user
+    authStore.setUser({
+      id: '1',
+      username: 'test',
+      sub: '1',
+      name: 'test',
+      email: 'test@example.com',
+      hasAccess: true,
+      settings: {}
+    } as unknown as NonNullable<ReturnType<typeof useAuthStore>['currentUser']>);
+    await nextTick();
 
     // Change a local setting
     themeStore.$patch({ themeId: 'ocean' });

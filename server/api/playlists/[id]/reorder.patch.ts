@@ -11,14 +11,14 @@ export default defineEventHandler(async (event) => {
   const { t } = useServerTranslation(event);
 
   if (!sessionData.accessToken || !sessionData.user) {
-    throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
+    throw createError({ statusCode: 401, message: t('core.errors.unauthorized') });
   }
 
   const id = getRouterParam(event, 'id');
   if (!id) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Playlist ID is required'
+      message: 'Playlist ID is required'
     });
   }
 
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
   if (typeof fromIndex !== 'number' || typeof toIndex !== 'number') {
     throw createError({
       statusCode: 400,
-      statusMessage: 'fromIndex and toIndex are required and must be numbers'
+      message: 'fromIndex and toIndex are required and must be numbers'
     });
   }
 
@@ -37,21 +37,21 @@ export default defineEventHandler(async (event) => {
   if (!playlist) {
     throw createError({
       statusCode: 404,
-      statusMessage: 'Playlist not found'
+      message: 'Playlist not found'
     });
   }
 
   if (fromIndex < 0 || fromIndex >= playlist.items.length) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'fromIndex out of bounds'
+      message: 'fromIndex out of bounds'
     });
   }
 
   if (toIndex < 0 || toIndex >= playlist.items.length) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'toIndex out of bounds'
+      message: 'toIndex out of bounds'
     });
   }
 

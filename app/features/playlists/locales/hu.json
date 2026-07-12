@@ -7,6 +7,7 @@
   "playlistName": "Lista neve",
   "playlistDescription": "Leírás",
   "playlistImage": "Borítókép",
+  "isPublicLabel": "Publikus lejátszási lista",
   "uploadImage": "Kép feltöltése",
   "changeImage": "Kép módosítása",
   "trackCount": "{count} dal",
@@ -52,5 +53,8 @@
     "update": "Failed to update playlist",
     "delete": "Failed to delete playlist"
   },
-  "myPlaylist": "Saját lejátszási lista"
+  "myPlaylist": "Saját lejátszási lista",
+  "collaboratorAdded": "Kollaborátor hozzáadva",
+  "collaboratorRemoved": "Kollaborátor eltávolítva",
+  "confirmRemove": "Biztosan eltávolítod ezt a kollaborátort?"
 }
