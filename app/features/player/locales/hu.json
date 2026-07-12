@@ -40,6 +40,12 @@
   "noRecommendations": "Nincsenek ajánlások",
   "fullscreenVisualizer": "Teljes képernyős vizualizáció",
   "closeVisualizer": "Vizualizáció bezárása",
+  "backgroundMode": "Háttér",
+  "backgroundModeVisualizer": "Vizualizáció",
+  "backgroundModeMusicVideo": "Videóklip",
+  "musicVideoSearching": "Videóklip keresése...",
+  "musicVideoNotFound": "Nem található videóklip",
+
   "karaokeMode": "Karaoke Mód (Ének némítása)",
   "visualizerStyle": "Vizualizáció Stílusa",
   "visualizerStyles": {

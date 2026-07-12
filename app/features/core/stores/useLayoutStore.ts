@@ -1,5 +1,5 @@
 import type { SidebarMode } from '@/features/player/types/sidebar.types';
-import type { VisualizerStyle } from '@/features/core/types/layout.types';
+import type { VisualizerStyle, FullscreenBackgroundMode } from '@/features/core/types/layout.types';
 
 const RIGHT_SIDEBAR_DEFAULT_WIDTH = 300;
 const RIGHT_SIDEBAR_MIN_WIDTH = 220;
@@ -28,6 +28,7 @@ export const useLayoutStore = defineStore(
 
     const visualizerStyle = ref<VisualizerStyle>('circle');
     const isFullscreenVisualizer = ref(false);
+    const fullscreenBackgroundMode = ref<FullscreenBackgroundMode>('visualizer');
 
     const isMobileLyricsOpen = ref(false);
     const isAddToPlaylistOpen = ref(false);
@@ -72,6 +73,10 @@ export const useLayoutStore = defineStore(
 
     function setVisualizerStyle(style: VisualizerStyle) {
       visualizerStyle.value = style;
+    }
+
+    function setFullscreenBackgroundMode(mode: FullscreenBackgroundMode) {
+      fullscreenBackgroundMode.value = mode;
     }
 
     function toggleFullscreenVisualizer() {
@@ -122,7 +127,9 @@ export const useLayoutStore = defineStore(
       isSettingsOpen,
       visualizerStyle,
       isFullscreenVisualizer,
+      fullscreenBackgroundMode,
       isMobileLyricsOpen,
+
       isAddToPlaylistOpen,
       toggleRightSidebar,
       openRightSidebar,
@@ -133,7 +140,9 @@ export const useLayoutStore = defineStore(
       openSettings,
       closeSettings,
       setVisualizerStyle,
+      setFullscreenBackgroundMode,
       toggleFullscreenVisualizer,
+
       toggleMobileLyrics,
       closeMobileLyrics,
       toggleAddToPlaylist,
@@ -145,7 +154,13 @@ export const useLayoutStore = defineStore(
   {
     persist: [
       {
-        pick: ['isRightSidebarOpen', 'rightSidebarMode', 'visualizerStyle'],
+        pick: [
+          'isRightSidebarOpen',
+          'rightSidebarMode',
+          'visualizerStyle',
+          'fullscreenBackgroundMode'
+        ],
+
         storage: {
           getItem: (key) => {
             const cookie = useCookie<string | null>(key);
