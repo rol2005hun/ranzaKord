@@ -20,7 +20,7 @@ export default defineCachedEventHandler(
       .limit(3)
       .lean();
 
-    const innertube = await createInnertube(false);
+    const innertube = await createInnertube(true);
 
     type YTItem = {
       id?: string;

@@ -11,7 +11,7 @@ export default defineCachedEventHandler(
       throw createError({ statusCode: 400, message: t('search.errors.missingArtistId') });
     }
 
-    const innertube = await createInnertube(false);
+    const innertube = await createInnertube(true);
 
     try {
       const artist = await innertube.music.getArtist(id);

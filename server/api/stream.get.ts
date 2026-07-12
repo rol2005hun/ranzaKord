@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: t('player.errors.missingVideoId') });
   }
 
-  const innertube = await createInnertube(false);
+  const innertube = await createInnertube(true);
   const debugInfo: Record<string, string> = {};
 
   let resolvedStreamUrl: string | undefined;
