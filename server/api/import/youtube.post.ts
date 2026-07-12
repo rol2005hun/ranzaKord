@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const innertube = await createInnertube(true);
+    const innertube = await createInnertube(false);
     const playlist = await innertube.music.getPlaylist(playlistId);
 
     if (!playlist || !playlist.items) {

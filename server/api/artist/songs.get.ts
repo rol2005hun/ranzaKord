@@ -13,7 +13,7 @@ export default defineCachedEventHandler(
       throw createError({ statusCode: 400, message: t('search.errors.missingQuery') });
     }
 
-    const innertube = await createInnertube(true);
+    const innertube = await createInnertube(false);
 
     type YTItem = {
       id?: string;

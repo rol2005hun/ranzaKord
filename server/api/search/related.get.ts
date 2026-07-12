@@ -11,7 +11,7 @@ export default defineCachedEventHandler(
       throw createError({ statusCode: 400, message: t('search.errors.missingQuery') });
     }
 
-    const innertube = await createInnertube(true);
+    const innertube = await createInnertube(false);
 
     try {
       const upNext = await innertube.music.getUpNext(videoId);
