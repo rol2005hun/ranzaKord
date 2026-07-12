@@ -52,7 +52,7 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
         authenticatedInstance = await Innertube.create({
           cookie: cookie ? cookie : undefined,
           cache: new UniversalCache(false),
-          generate_session_locally: !cookie
+          generate_session_locally: true
         });
       }
     } catch (e) {
