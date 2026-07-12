@@ -14,5 +14,6 @@ export default defineNitroPlugin(async () => {
     });
   } catch (err) {
     console.error('Failed to connect to MongoDB', err);
+    throw err;
   }
 });

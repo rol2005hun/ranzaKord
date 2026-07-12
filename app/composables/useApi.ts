@@ -29,7 +29,10 @@ export function useApi() {
         const { DEMO_PLAYLIST } = await import('@/features/core/utils/demoData');
 
         if (url === '/playlists') {
-          return { data: [DEMO_PLAYLIST] as unknown as T, status: 200 };
+          return {
+            data: { myPlaylists: [DEMO_PLAYLIST], sharedPlaylists: [] } as unknown as T,
+            status: 200
+          };
         }
         if (url.includes('/playlists/demo-playlist-1')) {
           return { data: DEMO_PLAYLIST as unknown as T, status: 200 };

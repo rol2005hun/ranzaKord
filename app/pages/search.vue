@@ -203,7 +203,6 @@ function onPlay(track: SearchResult) {
     </div>
 
     <div v-else-if="searchType === 'all' && categorizedResults" class="search-page__categorized">
-      <!-- Top Result & Songs -->
       <div class="search-page__top-section">
         <div v-if="categorizedResults.topResult" class="search-page__top-result-col">
           <h2 class="search-page__section-title">{{ $t('search.page.topResult') }}</h2>
@@ -222,7 +221,6 @@ function onPlay(track: SearchResult) {
         </div>
       </div>
 
-      <!-- Artists -->
       <div v-if="categorizedResults.artists.length > 0" class="search-page__section">
         <h2 class="search-page__section-title">{{ $t('search.page.artists') }}</h2>
         <div class="search-page__grid">
@@ -234,7 +232,6 @@ function onPlay(track: SearchResult) {
         </div>
       </div>
 
-      <!-- Albums -->
       <div v-if="categorizedResults.albums.length > 0" class="search-page__section">
         <h2 class="search-page__section-title">{{ $t('search.page.albums') }}</h2>
         <div class="search-page__grid">
@@ -246,7 +243,6 @@ function onPlay(track: SearchResult) {
         </div>
       </div>
 
-      <!-- Profiles -->
       <div
         v-if="categorizedResults.profiles && categorizedResults.profiles.length > 0"
         class="search-page__section">
@@ -273,7 +269,6 @@ function onPlay(track: SearchResult) {
       </div>
     </div>
 
-    <!-- Specific Category Results -->
     <div v-else-if="searchType !== 'all'" class="search-page__results">
       <div
         v-if="results.length > 0"

@@ -250,7 +250,7 @@ export default defineEventHandler(
         id: u.sub,
         type: 'profile',
         title: u.name,
-        artist: 'ranzaKord Profil',
+        artist: '',
         thumbnailUrl: u.picture || ''
       }));
     }

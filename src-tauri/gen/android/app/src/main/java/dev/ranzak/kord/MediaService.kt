@@ -241,6 +241,11 @@ class MediaService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        wakeLock?.let {
+            if (it.isHeld) {
+                it.release()
+            }
+        }
         mediaSession.release()
         executorService.shutdown()
     }

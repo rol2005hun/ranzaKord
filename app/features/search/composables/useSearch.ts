@@ -30,20 +30,31 @@ export function useSearch() {
 
       const authStore = useAuthStore();
       if (authStore.currentUser?.isDemo) {
+        const { DEMO_TRACKS } = await import('@/features/core/utils/demoData');
         const lowerQ = q.toLowerCase();
         const filtered = DEMO_TRACKS.filter(
           (t) => t.title.toLowerCase().includes(lowerQ) || t.artist.toLowerCase().includes(lowerQ)
         );
 
+        const searchResults: SearchResult[] = filtered.map((t) => ({
+          id: t.videoId,
+          type: 'song',
+          title: t.title,
+          artist: t.artist,
+          artists: t.artists,
+          thumbnailUrl: t.thumbnailUrl,
+          durationSeconds: t.durationSeconds
+        }));
+
         if (type === 'all') {
           store.setCategorizedResults({
-            songs: filtered,
+            songs: searchResults,
             albums: [],
             artists: [],
             profiles: []
           });
         } else {
-          store.setResults(filtered);
+          store.setResults(searchResults);
         }
         store.setLoading(false);
         return;

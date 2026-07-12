@@ -1,13 +1,34 @@
+const ALLOWED_HOSTS = [
+  'yt3.googleusercontent.com',
+  'i.ytimg.com',
+  'lh3.googleusercontent.com',
+  'image-cdn-ak.spotifycdn.com',
+  'i.scdn.co',
+  'i.imgur.com',
+  'mosaic.scdn.co'
+];
+
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const url = query.url as string;
 
   if (!url || (!url.startsWith('http://') && !url.startsWith('https://'))) {
-    throw createError({ statusCode: 400, message: 'Invalid URL' });
+    throw createError({ statusCode: 400, statusMessage: 'Invalid URL' });
+  }
+
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    throw createError({ statusCode: 400, statusMessage: 'Invalid URL' });
+  }
+
+  if (!ALLOWED_HOSTS.includes(parsedUrl.hostname)) {
+    throw createError({ statusCode: 403, statusMessage: 'Host not allowed' });
   }
 
   try {
-    const buffer = await $fetch<ArrayBuffer>(url, {
+    const response = await $fetch.raw<ArrayBuffer>(url, {
       responseType: 'arrayBuffer',
       headers: {
         'User-Agent':
@@ -16,14 +37,13 @@ export default defineEventHandler(async (event) => {
       }
     });
 
-    // Allow cross-origin access so the canvas can read it
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
     setResponseHeader(event, 'Access-Control-Allow-Origin', '*');
-    // Set long cache headers since album art is immutable, but ONLY if successful!
     setResponseHeader(event, 'Cache-Control', 'public, max-age=31536000, immutable');
-    setResponseHeader(event, 'Content-Type', 'image/jpeg');
-    return Buffer.from(buffer);
+    setResponseHeader(event, 'Content-Type', contentType);
+    return Buffer.from(response._data as ArrayBuffer);
   } catch (error) {
     console.error('Failed to proxy image:', error);
-    throw createError({ statusCode: 500, message: 'Failed to proxy image' });
+    throw createError({ statusCode: 500, statusMessage: 'Failed to proxy image' });
   }
 });
