@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { usePlayer } from '../../app/features/player/composables/usePlayer';
 import { usePlayerStore } from '../../app/features/player/stores/usePlayerStore';
+import { useOfflineStore } from '../../app/features/offline/stores/useOfflineStore';
 import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 import { nextTick } from 'vue';
 import type { Track } from '@/features/player/types/player.types';
@@ -12,10 +13,14 @@ mockNuxtImport('useI18n', () => {
   });
 });
 
+const fetchSpy = vi.hoisted(() => vi.fn().mockResolvedValue([]));
+mockNuxtImport('$fetch', () => fetchSpy);
+
 describe('usePlayer', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.resetAllMocks();
+    useOfflineStore().getObjectUrl = vi.fn().mockResolvedValue(null);
   });
 
   afterEach(() => {
@@ -244,18 +249,13 @@ describe('usePlayer', () => {
     usePlayer();
     const store = usePlayerStore();
     store.currentTrack = mockTrack;
-
-    // Mock the fetch
-    const fetchMock = vi.fn().mockResolvedValue([{ videoId: 'v10', title: 'Related' }]);
-    global.$fetch = fetchMock as unknown as typeof $fetch;
+    // Setup the specific mock resolution for this test
+    fetchSpy.mockResolvedValueOnce([{ videoId: 'v10', title: 'Related' }] as unknown as Track[]);
 
     store.autoplayEnabled = true;
     await nextTick();
     await new Promise((r) => setTimeout(r, 0)); // let promises resolve
 
-    // It should fetch if track is ending, or if autoplay is enabled.
-    // Testing the inner fetchRadioNext indirectly isn't easy without triggering the exact conditions,
-    // but toggling autoplayEnabled triggers it directly in the watcher!
-    expect(fetchMock).toHaveBeenCalled();
+    expect(fetchSpy).toHaveBeenCalled();
   });
 });

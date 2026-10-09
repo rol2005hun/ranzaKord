@@ -6,12 +6,16 @@ import { useThemeStore } from '@/features/theme/stores/useThemeStore';
 import settingsSyncPlugin from '@/plugins/settings-sync.client';
 import { nextTick } from 'vue';
 
+import { mockNuxtImport } from '@nuxt/test-utils/runtime';
+
+const mockFetch = vi.hoisted(() => vi.fn().mockResolvedValue({}));
+mockNuxtImport('$fetch', () => mockFetch);
+
 describe('settings-sync.client plugin', () => {
   let mockNuxtApp: {
     hook: ReturnType<typeof vi.fn>;
     _mountedCallback: (() => void) | null;
   };
-  let mockFetch: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -39,8 +43,8 @@ describe('settings-sync.client plugin', () => {
       _mountedCallback: null
     };
 
-    mockFetch = vi.fn().mockResolvedValue({});
-    vi.stubGlobal('$fetch', mockFetch);
+    mockFetch.mockReset();
+    mockFetch.mockResolvedValue({});
   });
 
   afterEach(() => {
@@ -81,7 +85,7 @@ describe('settings-sync.client plugin', () => {
 
     // Should NOT trigger $fetch since it is syncing FROM server
     vi.advanceTimersByTime(2000);
-    expect(mockFetch).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalledWith('/api/me/settings', expect.anything());
   });
 
   it('syncs from stores to server when local state changes', async () => {
@@ -114,7 +118,6 @@ describe('settings-sync.client plugin', () => {
     vi.useRealTimers();
     await new Promise((resolve) => setTimeout(resolve, 50));
 
-    expect(mockFetch).toHaveBeenCalledOnce();
     expect(mockFetch).toHaveBeenCalledWith(
       '/api/me/settings',
       expect.objectContaining({

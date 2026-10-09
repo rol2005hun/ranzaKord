@@ -23,13 +23,127 @@ export const usePlayerStore = defineStore(
     if (import.meta.client) {
       currentTimeSeconds.value = Number(localStorage.getItem('player_currentTimeSeconds')) || 0;
 
+      const savedTrack = localStorage.getItem('player_currentTrack');
+      if (savedTrack) {
+        try {
+          currentTrack.value = JSON.parse(savedTrack);
+        } catch (e) {
+          console.error('Failed to parse saved track', e);
+        }
+      }
+
+      const savedQueue = localStorage.getItem('player_queue');
+      if (savedQueue) {
+        try {
+          queue.value = JSON.parse(savedQueue);
+        } catch (e) {
+          console.error('Failed to parse saved queue', e);
+        }
+      }
+
+      const savedUnshuffled = localStorage.getItem('player_unshuffledQueue');
+      if (savedUnshuffled) {
+        try {
+          unshuffledQueue.value = JSON.parse(savedUnshuffled);
+        } catch (e) {
+          console.error('Failed to parse saved unshuffled queue', e);
+        }
+      }
+
+      watch(
+        currentTrack,
+        (val) => {
+          if (val) localStorage.setItem('player_currentTrack', JSON.stringify(val));
+          else localStorage.removeItem('player_currentTrack');
+        },
+        { deep: true }
+      );
+
+      watch(
+        queue,
+        (val) => {
+          if (val && val.length) localStorage.setItem('player_queue', JSON.stringify(val));
+          else localStorage.removeItem('player_queue');
+        },
+        { deep: true }
+      );
+
+      watch(
+        unshuffledQueue,
+        (val) => {
+          if (val && val.length)
+            localStorage.setItem('player_unshuffledQueue', JSON.stringify(val));
+          else localStorage.removeItem('player_unshuffledQueue');
+        },
+        { deep: true }
+      );
+
       watchThrottled(
         currentTimeSeconds,
         (val) => {
           localStorage.setItem('player_currentTimeSeconds', String(val));
+
+          if (currentTrack.value?.videoId) {
+            try {
+              const res = $fetch('/api/me/playback', {
+                method: 'PUT',
+                body: {
+                  videoId: currentTrack.value.videoId,
+                  currentTime: val
+                }
+              });
+              if (res && res.catch) {
+                res.catch(() => {
+                  void 0;
+                });
+              }
+            } catch {
+              void 0;
+            }
+          }
         },
         { throttle: 5000 }
       );
+
+      window.addEventListener('beforeunload', () => {
+        const val = currentTimeSeconds.value;
+        localStorage.setItem('player_currentTimeSeconds', String(val));
+        if (currentTrack.value?.videoId) {
+          try {
+            $fetch('/api/me/playback', {
+              method: 'PUT',
+              body: {
+                videoId: currentTrack.value.videoId,
+                currentTime: val
+              }
+            });
+          } catch {
+            void 0;
+          }
+        }
+      });
+
+      setTimeout(async () => {
+        try {
+          const res = await $fetch<{
+            lastPlayback: { videoId: string; currentTime: number } | null;
+          }>('/api/me/playback');
+          if (res?.lastPlayback) {
+            const { videoId, currentTime } = res.lastPlayback;
+            if (currentTrack.value?.videoId === videoId) {
+              const localTime = currentTimeSeconds.value;
+              if (Math.abs(currentTime - localTime) > 10) {
+                currentTimeSeconds.value = currentTime;
+                localStorage.setItem('player_currentTimeSeconds', String(currentTime));
+              }
+            } else if (!currentTrack.value) {
+              void 0;
+            }
+          }
+        } catch {
+          void 0;
+        }
+      }, 1000);
     }
     const durationSeconds = ref(0);
     const isLoading = ref(false);

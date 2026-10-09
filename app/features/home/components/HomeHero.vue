@@ -7,7 +7,7 @@ const { currentUser } = useAuth();
 const themeStore = useThemeStore();
 
 const isWalker = computed(() => themeStore.themeId === 'walker');
-const isWc2026 = computed(() => themeStore.themeId === 'wc2026');
+const isWc2026 = computed(() => false);
 
 const {
   data: featuredTracksData,
@@ -102,9 +102,7 @@ function onPlayFromList(track: SearchResult) {
 
 <template>
   <div class="home-dashboard">
-    <section
-      class="home-dashboard__hero"
-      :class="{ 'home-dashboard__hero--wc2026': themeStore.themeId === 'wc2026' }">
+    <section class="home-dashboard__hero">
       <div class="home-dashboard__hero-content">
         <i18n-t keypath="home.greeting" tag="p" class="home-dashboard__greeting" scope="global">
           <template #name>
@@ -113,11 +111,11 @@ function onPlayFromList(track: SearchResult) {
             </span>
           </template>
         </i18n-t>
-        <h1 v-if="themeStore.themeId === 'wc2026'" class="home-dashboard__title">
+        <h1 v-if="false" class="home-dashboard__title">
           {{ $t('home.wcTitle') }}
         </h1>
         <h1 v-else class="home-dashboard__title">{{ $t('home.title') }}</h1>
-        <p v-if="themeStore.themeId === 'wc2026'" class="home-dashboard__subtitle">
+        <p v-if="false" class="home-dashboard__subtitle">
           {{ $t('home.wcSubtitle') }}
         </p>
         <p v-else class="home-dashboard__subtitle">{{ $t('home.subtitle') }}</p>

@@ -10,7 +10,7 @@ const { t, locale, setLocale } = useI18n({ useScope: 'global' });
 useHead({ title: t('core.nav.signIn') });
 
 const { loginWithRanzaKonnect, isAuthenticated, isTauri } = useAuth();
-const themeStore = useThemeStore();
+
 const isRedirecting = ref(false);
 const rememberMe = ref(false);
 const acceptedTerms = ref(false);
@@ -79,9 +79,7 @@ if (isAuthenticated.value) {
       <button :class="{ active: locale === 'hu' }" @click="setLocale('hu')">HU</button>
     </div>
 
-    <div
-      class="login-page__card"
-      :class="{ 'login-page__card--hidden': themeStore.themeId === 'wc2026' }">
+    <div class="login-page__card">
       <div class="login-page__logo">
         <AppIcon name="ph:music-note-fill" class="login-page__logo-icon" />
         <span class="login-page__logo-text">{{ $t('core.appName') }}</span>
@@ -148,7 +146,7 @@ if (isAuthenticated.value) {
       <p class="login-page__footer">{{ $t('auth.login.footer') }}</p>
     </div>
 
-    <div v-if="themeStore.themeId === 'wc2026'" class="wc-stadium__cta">
+    <div v-if="false" class="wc-stadium__cta">
       <div class="login-page__remember login-page__remember--wc">
         <label class="login-page__remember-label">
           <input v-model="rememberMe" type="checkbox" class="login-page__remember-checkbox" />
@@ -208,7 +206,7 @@ if (isAuthenticated.value) {
       <div class="login-page__orb login-page__orb--3" />
     </div>
 
-    <div v-if="themeStore.themeId === 'wc2026'" class="wc-stadium" aria-hidden="true">
+    <div v-if="false" class="wc-stadium" aria-hidden="true">
       <!-- Stadium stands as CSS divs for proper visual appearance -->
       <div class="wc-stadium__stands" />
       <div class="wc-stadium__crowd" />

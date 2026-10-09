@@ -1,12 +1,15 @@
 import { defineComponent, h, nextTick } from 'vue';
 import { describe, expect, it, vi } from 'vitest';
-import { mountSuspended } from '@nuxt/test-utils/runtime';
+import { mountSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime';
 import { flushPromises } from '@vue/test-utils';
 
 import ImportPlaylistModal from '@/features/playlists/components/ImportPlaylistModal.vue';
 import { usePlaylistsStore } from '@/features/playlists/stores/usePlaylistsStore';
 
 import type { PlaylistSummary } from '@/features/playlists/types/playlists.types';
+
+const mockFetch = vi.hoisted(() => vi.fn().mockResolvedValue({}));
+mockNuxtImport('$fetch', () => mockFetch);
 
 function createPlaylistSummary(overrides: Partial<PlaylistSummary> = {}): PlaylistSummary {
   return {
@@ -161,8 +164,7 @@ describe('usePlaylistsStore', () => {
       })
     ];
 
-    const fetchMock = vi.fn().mockResolvedValue(undefined);
-    vi.stubGlobal('$fetch', fetchMock);
+    mockFetch.mockResolvedValue(undefined);
 
     expect(store.isTrackInPlaylist('playlist-1', 'video-1')).toBe(true);
     expect(store.isTrackInPlaylist('playlist-2', 'video-1')).toBe(false);
@@ -177,7 +179,7 @@ describe('usePlaylistsStore', () => {
       durationMs: 120000
     });
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/playlists/playlist-2/tracks', {
+    expect(mockFetch).toHaveBeenCalledWith('/api/playlists/playlist-2/tracks', {
       method: 'POST',
       body: {
         videoId: 'video-2',
@@ -192,7 +194,7 @@ describe('usePlaylistsStore', () => {
 
     await store.removeTrack('playlist-1', 'video-1');
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/playlists/playlist-1/tracks/video-1', {
+    expect(mockFetch).toHaveBeenCalledWith('/api/playlists/playlist-1/tracks/video-1', {
       method: 'DELETE'
     });
     expect(store.playlists[0]?.trackCount).toBe(0);

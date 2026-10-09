@@ -1,6 +1,4 @@
 <script setup lang="ts">
-const themeStore = useThemeStore();
-
 defineProps<{
   collapsed?: boolean;
 }>();
@@ -8,33 +6,25 @@ defineProps<{
 
 <template>
   <div class="app-brand" :class="{ 'app-brand--collapsed': collapsed }">
-    <div
-      v-if="themeStore.themeId === 'wc2026'"
-      v-show="!collapsed"
-      class="wc-decorations wc-decorations--left">
+    <div v-if="false" v-show="!collapsed" class="wc-decorations wc-decorations--left">
       <AppIcon name="ph:flag-pennant-fill" class="wc-flag" />
     </div>
 
     <div v-show="!collapsed" class="app-brand__logo-wrapper">
       <img src="/logo.webp" alt="ranzaKonnect" height="34" class="app-brand__logo" />
-      <div v-if="themeStore.themeId === 'wc2026'" class="wc-ball-wrapper">
+      <div v-if="false" class="wc-ball-wrapper">
         <AppIcon name="ph:soccer-ball-fill" class="wc-ball" />
       </div>
     </div>
 
     <div v-show="collapsed" class="app-brand__logo-collapsed">
       <img src="/logo.webp" alt="ranzaKonnect" height="34" class="app-brand__logo" />
-      <div
-        v-if="themeStore.themeId === 'wc2026'"
-        class="wc-ball-wrapper wc-ball-wrapper--collapsed">
+      <div v-if="false" class="wc-ball-wrapper wc-ball-wrapper--collapsed">
         <AppIcon name="ph:soccer-ball-fill" class="wc-ball" />
       </div>
     </div>
 
-    <div
-      v-if="themeStore.themeId === 'wc2026'"
-      v-show="!collapsed"
-      class="wc-decorations wc-decorations--right">
+    <div v-if="false" v-show="!collapsed" class="wc-decorations wc-decorations--right">
       <AppIcon name="ph:flag-pennant-fill" class="wc-flag wc-flag--right" />
     </div>
   </div>

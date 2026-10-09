@@ -9,13 +9,12 @@ const DEFAULT_THEME_COLORS: Record<ThemeId, string> = {
   light: '#4b1dd9',
   ocean: '#0982ae',
   rose: '#cd143d',
-  walker: '#ffcc00',
-  wc2026: '#12d58d'
+  walker: '#ffcc00'
 };
 
 export const useThemeStore = defineStore('theme', () => {
   const cookieThemeId = useCookie<ThemeId>('theme-id', {
-    default: () => 'wc2026',
+    default: () => 'dark',
     maxAge: 31536000
   });
   const cookieCustomColors = useCookie<Record<string, string>>('theme-custom-colors', {
@@ -28,10 +27,15 @@ export const useThemeStore = defineStore('theme', () => {
     maxAge: 31536000
   });
 
+  const cookieAdaptivePalette = useCookie<ColorPalette | null>('theme-adaptive-palette', {
+    default: () => null,
+    maxAge: 31536000
+  });
+
   const themeId = ref<ThemeId>(cookieThemeId.value);
   const customColors = ref<Record<string, string>>(cookieCustomColors.value || {});
   const isAdaptiveThemeEnabled = ref<boolean>(cookieIsAdaptive.value);
-  const adaptivePalette = ref<ColorPalette | null>(null);
+  const adaptivePalette = ref<ColorPalette | null>(cookieAdaptivePalette.value);
 
   const currentCustomPalette = computed<CustomPalette | null>(() => {
     if (isAdaptiveThemeEnabled.value && adaptivePalette.value) {
@@ -78,7 +82,8 @@ export const useThemeStore = defineStore('theme', () => {
     }
   });
 
-  watch(adaptivePalette, () => {
+  watch(adaptivePalette, (val) => {
+    cookieAdaptivePalette.value = val;
     if (isAdaptiveThemeEnabled.value && import.meta.client && currentCustomPalette.value) {
       applyPaletteToDom(currentCustomPalette.value);
     }

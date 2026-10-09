@@ -11,8 +11,9 @@ const route = useRoute();
 const userId = route.params.id as string;
 const authStore = useAuthStore();
 const toast = useToast();
+const { t } = useI18n();
 
-const { data, pending, error, refresh } = await useFetch<UserProfileResponse>(
+const { data, status, error, refresh } = await useLazyFetch<UserProfileResponse>(
   `/api/user/profile?id=${userId}`,
   {
     key: `user-profile-${userId}`,
@@ -25,7 +26,7 @@ const playlists = computed(() => data.value?.playlists || []);
 const isSelf = computed(() => authStore.currentUser?.sub === userId);
 
 useHead(() => ({
-  title: profile.value ? profile.value.name : 'Profil'
+  title: profile.value ? profile.value.name : t('profile.badge')
 }));
 
 const isFollowLoading = ref(false);
@@ -49,7 +50,7 @@ const toggleFollow = async () => {
     }
   } catch (err) {
     console.error('Follow error:', err);
-    toast.danger('Hiba történt a művelet során.');
+    toast.danger(t('profile.followError'));
   } finally {
     isFollowLoading.value = false;
   }
@@ -72,11 +73,11 @@ const openConnections = (type: 'followers' | 'following') => {
 <template>
   <div class="user-page">
     <AppMusicPage
-      :is-loading="pending"
-      :is-error="!!error || (!profile && !pending)"
-      error-text="Profil nem található. Lehet, hogy privát vagy nem létezik."
+      :is-loading="status === 'pending'"
+      :is-error="!!error || (status === 'success' && !profile)"
+      :error-text="$t('profile.errorNotFound')"
       :title="profile?.name"
-      badge="Profil"
+      :badge="$t('profile.badge')"
       :image-url="profile?.picture"
       :rounded-image="true"
       :show-play-button="false">
@@ -86,36 +87,18 @@ const openConnections = (type: 'followers' | 'following') => {
 
       <template #skeleton-tracks>
         <div class="user-page__content">
-          <h2 class="user-page__section-title">Publikus listák</h2>
+          <h2 class="user-page__section-title">{{ $t('profile.publicPlaylistsTitle') }}</h2>
           <div class="user-page__grid">
             <div
               v-for="i in 6"
               :key="`sk-pl-${i}`"
               class="user-page__playlist-card"
               style="pointer-events: none">
-              <div
-                class="user-page__playlist-cover"
-                style="
-                  background: var(--color-surface-raised);
-                  animation: pulse 1.5s infinite ease-in-out;
-                "></div>
-              <div
-                style="
-                  width: 80%;
-                  height: 16px;
-                  background: var(--color-surface-raised);
-                  margin-bottom: 8px;
-                  border-radius: var(--radius-sm);
-                  animation: pulse 1.5s infinite ease-in-out;
-                "></div>
-              <div
-                style="
-                  width: 40%;
-                  height: 12px;
-                  background: var(--color-surface-raised);
-                  border-radius: var(--radius-sm);
-                  animation: pulse 1.5s infinite ease-in-out;
-                "></div>
+              <div class="user-page__playlist-cover">
+                <AppSkeleton width="100%" height="100%" />
+              </div>
+              <AppSkeleton width="80%" height="16px" style="margin-bottom: 8px" />
+              <AppSkeleton width="40%" height="12px" />
             </div>
           </div>
         </div>
@@ -156,7 +139,9 @@ const openConnections = (type: 'followers' | 'following') => {
                 v-if="profile.isFollowing"
                 name="ph:check-bold"
                 class="user-page__follow-icon" />
-              <span>{{ profile.isFollowing ? 'Követve' : 'Követés' }}</span>
+              <span>
+                {{ profile.isFollowing ? $t('profile.following') : $t('profile.follow') }}
+              </span>
             </template>
           </div>
         </button>
@@ -164,7 +149,7 @@ const openConnections = (type: 'followers' | 'following') => {
           variant="ghost"
           size="sm"
           class="user-page__refresh-btn"
-          aria-label="Frissítés"
+          :aria-label="$t('profile.refresh')"
           @click="refresh">
           <AppIcon name="ph:arrows-clockwise" class="text-xl" />
         </AppButton>
@@ -172,11 +157,11 @@ const openConnections = (type: 'followers' | 'following') => {
 
       <template #tracks>
         <div class="user-page__content">
-          <h2 class="user-page__section-title">Publikus listák</h2>
+          <h2 class="user-page__section-title">{{ $t('profile.publicPlaylistsTitle') }}</h2>
 
-          <div v-if="playlists.length === 0 && !pending" class="user-page__empty">
+          <div v-if="playlists.length === 0 && status === 'success'" class="user-page__empty">
             <AppIcon name="ph:books" class="user-page__empty-icon" />
-            <p>Nincsenek publikus lejátszási listák.</p>
+            <p>{{ $t('profile.noPlaylists') }}</p>
           </div>
 
           <div v-else class="user-page__grid">
@@ -197,7 +182,9 @@ const openConnections = (type: 'followers' | 'following') => {
                 </div>
               </div>
               <h3 class="user-page__playlist-name">{{ playlist.name }}</h3>
-              <p class="user-page__playlist-count">{{ playlist.trackCount }} dal</p>
+              <p class="user-page__playlist-count">
+                {{ $t('profile.trackCount', { count: playlist.trackCount }) }}
+              </p>
             </NuxtLink>
           </div>
         </div>

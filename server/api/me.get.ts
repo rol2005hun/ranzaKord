@@ -11,6 +11,11 @@ export interface MeResponse {
   settings?: Record<string, unknown>;
   isPublicProfile?: boolean;
   showPlaylists?: boolean;
+  lastPlayback?: {
+    videoId: string;
+    currentTime: number;
+    updatedAt: string;
+  };
 }
 
 export default defineEventHandler(async (event): Promise<MeResponse> => {
@@ -43,6 +48,13 @@ export default defineEventHandler(async (event): Promise<MeResponse> => {
     roles: userDoc?.roles ?? [],
     settings: userDoc?.settings ?? {},
     isPublicProfile: userDoc?.isPublicProfile ?? true,
-    showPlaylists: userDoc?.showPlaylists ?? true
+    showPlaylists: userDoc?.showPlaylists ?? true,
+    lastPlayback: userDoc?.lastPlayback
+      ? {
+          videoId: userDoc.lastPlayback.videoId,
+          currentTime: userDoc.lastPlayback.currentTime,
+          updatedAt: userDoc.lastPlayback.updatedAt.toISOString()
+        }
+      : undefined
   };
 });

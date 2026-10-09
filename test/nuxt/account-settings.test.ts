@@ -24,12 +24,13 @@ mockNuxtImport('useToast', () => () => ({
   danger: mockToastDanger
 }));
 
-const mockFetch = vi.fn();
-global.$fetch = mockFetch as unknown as typeof $fetch;
+const mockFetch = vi.hoisted(() => vi.fn());
+mockNuxtImport('$fetch', () => mockFetch);
 
 describe('AccountSettings.vue', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFetch.mockReset();
     mockCurrentUser.value = null;
     mockIsAuthenticated.value = false;
   });

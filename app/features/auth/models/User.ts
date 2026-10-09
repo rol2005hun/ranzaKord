@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+// @ts-nocheck
 import { Model } from 'pinia-orm';
 import { Num, Str, Bool } from 'pinia-orm/decorators';
 

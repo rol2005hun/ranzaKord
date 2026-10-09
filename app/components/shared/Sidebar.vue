@@ -71,12 +71,13 @@ provide('sidebarExpanded', isExpanded);
   max-width: 4.5rem;
   flex-shrink: 0;
   background-color: var(--color-surface);
-  border-right: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin: var(--space-2);
   display: flex;
   flex-direction: column;
   position: sticky;
   top: 0;
-  height: 100%;
+  height: calc(100% - var(--space-4));
   overflow-y: auto;
   overflow-x: hidden;
   transition:

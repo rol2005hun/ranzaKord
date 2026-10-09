@@ -73,7 +73,12 @@ export function useLyrics() {
       }
 
       const response = await $fetch<LrclibResponse>(
-        `https://lrclib.net/api/get?${params.toString()}`
+        `https://lrclib.net/api/get?${params.toString()}`,
+        {
+          headers: {
+            'Lrclib-Client': 'ranzaKord v0.1.0 (https://github.com/rol2005hun/ranzaKord)'
+          }
+        }
       );
 
       const result: LyricsData = {

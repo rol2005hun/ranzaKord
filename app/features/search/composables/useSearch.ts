@@ -7,6 +7,10 @@ import type {
 const searchCache = new Map<string, CategorizedSearchResults | SearchResult[]>();
 const MAX_CACHE_SIZE = 20;
 
+export function clearSearchCache() {
+  searchCache.clear();
+}
+
 export function useSearch() {
   const store = useSearchStore();
 

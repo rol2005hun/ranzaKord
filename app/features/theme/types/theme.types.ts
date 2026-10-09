@@ -1,4 +1,4 @@
-export type ThemeId = 'dark' | 'light' | 'ocean' | 'rose' | 'walker' | 'wc2026';
+export type ThemeId = 'dark' | 'light' | 'ocean' | 'rose' | 'walker';
 
 export interface ThemeOption {
   id: ThemeId;

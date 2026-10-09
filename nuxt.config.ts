@@ -8,9 +8,7 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      htmlAttrs: { lang: 'en' },
       titleTemplate: '%s | ranzaKord',
-      charset: 'utf-8',
       viewport: 'width=device-width, initial-scale=1, viewport-fit=cover',
       link: [{ rel: 'icon', type: 'image/webp', href: '/logo.webp' }],
       script: [
@@ -48,7 +46,7 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
     '@nuxt/fonts',
-    '@nuxt/hints',
+
     '@nuxt/icon',
     '@nuxt/image',
     '@nuxt/scripts',
@@ -129,14 +127,8 @@ export default defineNuxtConfig({
     enabled: process.env.NUXT_SSR === 'true'
   },
 
-  hints: {
-    devtools: true,
-    features: {
-      lazyLoad: { logs: false, devtools: true }
-    }
-  },
-
   icon: {
+    serverBundle: 'remote',
     clientBundle: {
       scan: true,
       sizeLimitKb: 2048,

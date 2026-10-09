@@ -216,8 +216,8 @@ async function submit(): Promise<void> {
 
   &__image-label {
     display: block;
-    width: 200px;
-    height: 200px;
+    height: 100%;
+    width: auto;
     aspect-ratio: 1 / 1;
     flex-shrink: 0;
   }

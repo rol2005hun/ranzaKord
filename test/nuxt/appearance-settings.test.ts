@@ -54,8 +54,7 @@ describe('AppearanceSettings.vue', () => {
       light: '#1db954',
       ocean: '#1db954',
       rose: '#1db954',
-      walker: '#1db954',
-      wc2026: '#1db954'
+      walker: '#1db954'
     };
 
     await nextTick();

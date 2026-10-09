@@ -7,7 +7,7 @@ const themeStore = useThemeStore();
 const layoutStore = useLayoutStore();
 const { t, locale } = useI18n({ useScope: 'global' });
 
-const THEME_OPTIONS: ThemeId[] = ['dark', 'light', 'ocean', 'rose', 'walker', 'wc2026'];
+const THEME_OPTIONS: ThemeId[] = ['dark', 'light', 'ocean', 'rose', 'walker'];
 
 const getThemeIcon = (theme: ThemeId) => {
   switch (theme) {
@@ -21,8 +21,6 @@ const getThemeIcon = (theme: ThemeId) => {
       return 'ph:flower-lotus-bold';
     case 'walker':
       return 'ph:headphones-bold';
-    case 'wc2026':
-      return 'ph:soccer-ball-fill';
     default:
       return 'ph:palette-fill';
   }

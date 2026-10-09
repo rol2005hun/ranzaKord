@@ -64,7 +64,7 @@ const optimizedBgUrl = computed(() => {
         <div v-if="$slots['skeleton-center-header']" class="music-page__skeleton-center-header">
           <slot name="skeleton-center-header" />
         </div>
-        <div class="music-page__skeleton-actions">
+        <div v-if="showPlayButton" class="music-page__skeleton-actions">
           <div class="skeleton-btn skeleton-btn--play"></div>
           <div class="skeleton-btn" style="width: 48px; height: 48px; opacity: 0.5"></div>
           <div class="skeleton-btn" style="width: 48px; height: 48px; opacity: 0.5"></div>
