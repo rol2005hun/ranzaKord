@@ -91,6 +91,7 @@ onMounted(async () => {
     <ClientOnly>
       <AppUpdateModal v-model="showUpdateModal" />
       <SettingsModal />
+      <AppSnowEffect v-if="themeId === 'christmas'" />
     </ClientOnly>
 
     <Teleport to="body">

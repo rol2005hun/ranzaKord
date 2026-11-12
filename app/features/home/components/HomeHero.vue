@@ -8,6 +8,7 @@ const themeStore = useThemeStore();
 
 const isWalker = computed(() => themeStore.themeId === 'walker');
 const isWc2026 = computed(() => false);
+const isChristmas = computed(() => themeStore.themeId === 'christmas');
 
 const {
   data: featuredTracksData,
@@ -34,14 +35,25 @@ const {
   immediate: false
 });
 
+const {
+  data: christmasTracks,
+  pending: christmasPending,
+  execute: executeChristmas
+} = useLazyFetch<SearchResult[]>('/api/search', {
+  query: { q: 'christmas holiday songs hits', type: 'song' },
+  immediate: false
+});
+
 watch(
-  [isWalker, isWc2026],
-  ([walker, wc]) => {
+  [isWalker, isWc2026, isChristmas],
+  ([walker, wc, christmas]) => {
     if (currentUser.value?.isDemo) return;
     if (walker) {
       executeTopTracks();
     } else if (wc) {
       executeWc();
+    } else if (christmas) {
+      executeChristmas();
     } else {
       executeFeatured();
     }
@@ -51,6 +63,26 @@ watch(
 
 const featuredTracks: Ref<SearchResult[] | null> = computed(() => {
   if (currentUser.value?.isDemo) {
+    if (isChristmas.value) {
+      return [
+        {
+          id: 'yXQViqx6GMY',
+          title: 'All I Want for Christmas Is You',
+          artist: 'Mariah Carey',
+          thumbnailUrl: 'https://i.ytimg.com/vi/yXQViqx6GMY/hqdefault.jpg',
+          durationSeconds: 242,
+          type: 'song'
+        },
+        {
+          id: 'E8gmARGvPlI',
+          title: 'Last Christmas',
+          artist: 'Wham!',
+          thumbnailUrl: 'https://i.ytimg.com/vi/E8gmARGvPlI/hqdefault.jpg',
+          durationSeconds: 264,
+          type: 'song'
+        }
+      ];
+    }
     return [
       {
         id: 'dQw4w9WgXcQ',
@@ -72,12 +104,14 @@ const featuredTracks: Ref<SearchResult[] | null> = computed(() => {
   }
   if (isWalker.value) return topTracks.value ?? null;
   if (isWc2026.value) return wcTracks.value ?? null;
+  if (isChristmas.value) return christmasTracks.value ?? null;
   return featuredTracksData.value ?? null;
 });
 
 const pending = computed(() => {
   if (isWalker.value) return topTracksPending.value;
   if (isWc2026.value) return wcPending.value;
+  if (isChristmas.value) return christmasPending.value;
   return featuredPending.value;
 });
 
@@ -102,7 +136,11 @@ function onPlayFromList(track: SearchResult) {
 
 <template>
   <div class="home-dashboard">
-    <section class="home-dashboard__hero">
+    <section
+      class="home-dashboard__hero"
+      :class="{
+        'home-dashboard__hero--christmas': isChristmas
+      }">
       <div class="home-dashboard__hero-content">
         <i18n-t keypath="home.greeting" tag="p" class="home-dashboard__greeting" scope="global">
           <template #name>
@@ -111,11 +149,17 @@ function onPlayFromList(track: SearchResult) {
             </span>
           </template>
         </i18n-t>
-        <h1 v-if="false" class="home-dashboard__title">
+        <h1 v-if="isChristmas" class="home-dashboard__title">
+          {{ $t('home.christmasTitle') }}
+        </h1>
+        <h1 v-else-if="false" class="home-dashboard__title">
           {{ $t('home.wcTitle') }}
         </h1>
         <h1 v-else class="home-dashboard__title">{{ $t('home.title') }}</h1>
-        <p v-if="false" class="home-dashboard__subtitle">
+        <p v-if="isChristmas" class="home-dashboard__subtitle">
+          {{ $t('home.christmasSubtitle') }}
+        </p>
+        <p v-else-if="false" class="home-dashboard__subtitle">
           {{ $t('home.wcSubtitle') }}
         </p>
         <p v-else class="home-dashboard__subtitle">{{ $t('home.subtitle') }}</p>
@@ -140,7 +184,9 @@ function onPlayFromList(track: SearchResult) {
     </section>
 
     <section class="home-dashboard__section">
-      <h2 class="home-dashboard__section-title">{{ $t('home.featured') }}</h2>
+      <h2 class="home-dashboard__section-title">
+        {{ isChristmas ? $t('home.christmasFeatured') : $t('home.featured') }}
+      </h2>
 
       <ClientOnly>
         <div v-if="pending" class="home-dashboard__grid">
@@ -203,6 +249,15 @@ function onPlayFromList(track: SearchResult) {
           center/150px;
       border: 1px solid var(--color-primary);
       box-shadow: 0 0 20px rgba(74, 222, 128, 0.2);
+    }
+
+    &--christmas {
+      background:
+        radial-gradient(ellipse at 85% 20%, rgba(225, 29, 72, 0.28) 0%, transparent 65%),
+        radial-gradient(ellipse at 15% 80%, rgba(16, 185, 129, 0.2) 0%, transparent 65%),
+        linear-gradient(135deg, #12241e 0%, #1a0f16 100%);
+      border: 1px solid rgba(225, 29, 72, 0.35);
+      box-shadow: 0 0 25px rgba(225, 29, 72, 0.15);
     }
   }
 

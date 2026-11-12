@@ -9,7 +9,8 @@ const DEFAULT_THEME_COLORS: Record<ThemeId, string> = {
   light: '#4b1dd9',
   ocean: '#0982ae',
   rose: '#cd143d',
-  walker: '#ffcc00'
+  walker: '#ffcc00',
+  christmas: '#dc2626'
 };
 
 export const useThemeStore = defineStore('theme', () => {
