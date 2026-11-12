@@ -1,6 +1,9 @@
-type ClientType = 'TV' | 'WEB' | 'YTMUSIC' | 'ANDROID' | 'IOS' | 'TV_EMBEDDED' | 'WEB_CREATOR';
-const workingClients: ClientType[] = [
+type ClientType =
+  'ANDROID' | 'MWEB' | 'IOS' | 'YTMUSIC' | 'WEB' | 'TV' | 'TV_EMBEDDED' | 'WEB_CREATOR';
+
+const defaultWorkingClients: ClientType[] = [
   'ANDROID',
+  'MWEB',
   'IOS',
   'YTMUSIC',
   'WEB',
@@ -25,10 +28,18 @@ export default defineEventHandler(async (event) => {
   let resolvedStreamUrl: string | undefined;
   let resolvedUA: string | undefined;
 
+  const isTvOAuth = Boolean(innertube.session.logged_in && innertube.session.oauth?.oauth2_tokens);
+  const clientCandidates: ClientType[] = isTvOAuth
+    ? ['TV', 'MWEB', 'ANDROID', 'IOS', 'YTMUSIC', 'WEB', 'TV_EMBEDDED', 'WEB_CREATOR']
+    : [...defaultWorkingClients];
+
   for (let attempt = 1; attempt <= 2; attempt++) {
-    for (const client of workingClients) {
+    for (const client of clientCandidates) {
       try {
-        const info = await innertube.getBasicInfo(videoId.trim(), { client });
+        const info = await innertube.getBasicInfo(videoId.trim(), {
+          client,
+          po_token: innertube.session.po_token
+        });
         const formats = [
           ...(info.streaming_data?.formats || []),
           ...(info.streaming_data?.adaptive_formats || [])
@@ -84,7 +95,9 @@ export default defineEventHandler(async (event) => {
             ? 'com.google.ios.youtube/19.28.1 (iPhone14,5; U; CPU iOS 17_5_1 like Mac OS X)'
             : client === 'ANDROID'
               ? 'com.google.android.youtube/19.29.37 (Linux; U; Android 13)'
-              : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+              : client === 'MWEB'
+                ? 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36'
+                : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
         const testRes = await fetch(candidateUrl, {
           method: 'HEAD',
@@ -98,10 +111,10 @@ export default defineEventHandler(async (event) => {
           continue;
         }
 
-        if (workingClients[0] !== client) {
-          workingClients.unshift(
-            workingClients.splice(workingClients.indexOf(client), 1)[0] as ClientType
-          );
+        const primaryIndex = defaultWorkingClients.indexOf(client);
+        if (primaryIndex > 0) {
+          defaultWorkingClients.splice(primaryIndex, 1);
+          defaultWorkingClients.unshift(client);
         }
 
         resolvedStreamUrl = candidateUrl;
@@ -118,9 +131,16 @@ export default defineEventHandler(async (event) => {
   }
 
   if (!resolvedStreamUrl) {
+    const isBotChallenge = Object.values(debugInfo).some(
+      (m) => m.includes('Sign in to confirm you’re not a bot') || m.includes('Please sign in')
+    );
+    const failureReason = isBotChallenge
+      ? 'YouTube bot protection active (LOGIN_REQUIRED). Configure YouTube authentication via pnpm youtube:cookie or pnpm youtube:login.'
+      : 'All clients failed';
+
     throw createError({
       statusCode: 500,
-      message: t('player.errors.extractFailed', { msg: 'All clients failed' }),
+      message: t('player.errors.extractFailed', { msg: failureReason }),
       data: { debugInfo }
     });
   }
