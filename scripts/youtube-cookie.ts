@@ -76,6 +76,7 @@ async function run(): Promise<void> {
     { value: cookie },
     { upsert: true, returnDocument: 'after' }
   );
+  await SystemConfig.deleteOne({ key: 'youtube_oauth' });
   console.log('Saved YouTube cookies to MongoDB successfully.');
 
   console.log('Verifying cookies with YouTube Innertube...');

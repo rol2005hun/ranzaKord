@@ -15,6 +15,7 @@ Platform.shim.eval = (client: EvaluatorData) => {
 
 let anonymousInstance: Innertube | null = null;
 let authenticatedInstance: Innertube | null = null;
+let currentAuthKey = '';
 let isAuthenticating = false;
 
 function cleanConfigValue(value: unknown): string {
@@ -31,8 +32,6 @@ function cleanConfigValue(value: unknown): string {
 
 export async function createInnertube(withAuth = false): Promise<Innertube> {
   if (withAuth) {
-    if (authenticatedInstance) return authenticatedInstance;
-
     if (isAuthenticating) {
       while (isAuthenticating) {
         await new Promise((r) => setTimeout(r, 100));
@@ -44,15 +43,20 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
 
     try {
       const cookieRecord = await SystemConfig.findOne({ key: 'youtube_cookies' });
+      const cookieStr =
+        cookieRecord && cookieRecord.value ? cleanConfigValue(cookieRecord.value) : '';
+      const authKey = cookieStr ? `cookie:${cookieStr}` : '';
 
-      if (cookieRecord && cookieRecord.value) {
-        const cookieStr = cleanConfigValue(cookieRecord.value);
-        if (cookieStr.length > 0) {
-          authenticatedInstance = await Innertube.create({
-            cookie: cookieStr,
-            cache: new UniversalCache(false)
-          });
-        }
+      if (authenticatedInstance && currentAuthKey === authKey && authKey.length > 0) {
+        return authenticatedInstance;
+      }
+
+      if (cookieStr.length > 0) {
+        authenticatedInstance = await Innertube.create({
+          cookie: cookieStr,
+          cache: new UniversalCache(false)
+        });
+        currentAuthKey = authKey;
       }
 
       if (!authenticatedInstance) {

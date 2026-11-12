@@ -2,14 +2,14 @@ type ClientType =
   'ANDROID' | 'MWEB' | 'IOS' | 'YTMUSIC' | 'WEB' | 'TV' | 'TV_EMBEDDED' | 'WEB_CREATOR';
 
 const defaultWorkingClients: ClientType[] = [
-  'ANDROID',
-  'MWEB',
-  'IOS',
-  'YTMUSIC',
   'WEB',
-  'TV',
+  'YTMUSIC',
+  'MWEB',
+  'ANDROID',
+  'IOS',
   'TV_EMBEDDED',
-  'WEB_CREATOR'
+  'WEB_CREATOR',
+  'TV'
 ];
 
 export default defineEventHandler(async (event) => {
