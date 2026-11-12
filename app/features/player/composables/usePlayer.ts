@@ -115,8 +115,8 @@ export function usePlayer() {
                   playbackRate: el.playbackRate,
                   position: el.currentTime
                 });
-              } catch {
-                // ignore errors when mediaSession state cannot be updated
+              } catch (e) {
+                void e;
               }
             }
 
@@ -501,7 +501,6 @@ export function usePlayer() {
       el.src = await getStreamUrl(track.videoId);
       el.load();
 
-      // Ensure visualizer and audio-reactive loop are connected
       const { connect } = useAudioVisualizer();
       if (audio1Ref.value && audio2Ref.value) {
         connect(audio1Ref.value, audio2Ref.value, store.volume);
@@ -509,10 +508,21 @@ export function usePlayer() {
 
       await el.play();
       store.isPlaying = true;
+      prefetchNextTrack();
     } catch {
       store.error = t('player.errors.stream');
     } finally {
       store.isLoading = false;
+    }
+  }
+
+  function prefetchNextTrack() {
+    if (!import.meta.client) return;
+    const next = store.nextTrack();
+    if (next?.videoId) {
+      fetch(getApiUrl(`/api/stream?v=${next.videoId}`), {
+        headers: { Range: 'bytes=0-0' }
+      }).catch(() => {});
     }
   }
 

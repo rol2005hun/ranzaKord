@@ -1,6 +1,15 @@
 type ClientType =
   'ANDROID' | 'MWEB' | 'IOS' | 'YTMUSIC' | 'WEB' | 'TV' | 'TV_EMBEDDED' | 'WEB_CREATOR';
 
+interface CachedStream {
+  url: string;
+  ua: string;
+  expiresAt: number;
+}
+
+const streamCache = new Map<string, CachedStream>();
+const STREAM_CACHE_TTL = 2 * 60 * 60 * 1000;
+
 const defaultWorkingClients: ClientType[] = [
   'WEB',
   'YTMUSIC',
@@ -20,6 +29,16 @@ export default defineEventHandler(async (event) => {
 
   if (!videoId || videoId.trim().length === 0) {
     throw createError({ statusCode: 400, message: t('player.errors.missingVideoId') });
+  }
+
+  const cacheKey = `${videoId.trim()}_${streamType}`;
+  const cached = streamCache.get(cacheKey);
+  if (cached && Date.now() < cached.expiresAt) {
+    return proxyRequest(event, cached.url, {
+      headers: {
+        'User-Agent': cached.ua
+      }
+    });
   }
 
   const innertube = await createInnertube(true);
@@ -100,7 +119,8 @@ export default defineEventHandler(async (event) => {
           method: 'HEAD',
           headers: {
             'User-Agent': clientUA
-          }
+          },
+          signal: AbortSignal.timeout(1500)
         });
 
         if (testRes.status === 403) {
@@ -141,6 +161,27 @@ export default defineEventHandler(async (event) => {
       data: { debugInfo }
     });
   }
+
+  let expiresAt = Date.now() + STREAM_CACHE_TTL;
+  try {
+    const expireParam = new URL(resolvedStreamUrl).searchParams.get('expire');
+    if (expireParam) {
+      const expMs = Number(expireParam) * 1000;
+      if (!Number.isNaN(expMs) && expMs > Date.now()) {
+        expiresAt = Math.min(expiresAt, expMs - 60_000);
+      }
+    }
+  } catch {
+    expiresAt = Date.now() + STREAM_CACHE_TTL;
+  }
+
+  streamCache.set(cacheKey, {
+    url: resolvedStreamUrl,
+    ua:
+      resolvedUA ||
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    expiresAt
+  });
 
   return proxyRequest(event, resolvedStreamUrl, {
     headers: {
