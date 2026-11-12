@@ -1218,6 +1218,10 @@ function getStyleIcon(style: string) {
   }
 
   &__slider {
+    --thumb-offset-y: -5px;
+    --thumb-offset-x: 0px;
+    --thumb-width: 14px;
+    --thumb-radius: 7px;
     -webkit-appearance: none;
     appearance: none;
     width: 100px;
@@ -1253,11 +1257,33 @@ function getStyleIcon(style: string) {
       appearance: none;
       width: 14px;
       height: 14px;
-      margin-top: -5px; /* (4 - 14) / 2 */
+      margin-top: -5px !important;
       border-radius: 50%;
       background: white;
       cursor: pointer;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+    }
+
+    &::-moz-range-track {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-full);
+      height: 4px;
+    }
+
+    &::-moz-range-progress {
+      background: var(--color-primary);
+      border-radius: var(--radius-full);
+      height: 4px;
+    }
+
+    &::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border: none;
+      border-radius: 50%;
+      background: white;
+      cursor: pointer;
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
     }
   }
 
