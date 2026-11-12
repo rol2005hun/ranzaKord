@@ -933,8 +933,13 @@ onClickOutside(moreMenuBtnRef, (e) => {
 
     &__right {
       width: auto;
+      flex-shrink: 0;
       gap: var(--space-1);
       order: 2;
+    }
+
+    &__volume {
+      gap: var(--space-1);
     }
 
     &__progress {
@@ -1007,12 +1012,6 @@ onClickOutside(moreMenuBtnRef, (e) => {
 
     &__more-btn {
       display: flex !important;
-    }
-  }
-
-  @media (max-width: 420px) {
-    &__slider--volume {
-      display: none;
     }
   }
 }
