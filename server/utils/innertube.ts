@@ -17,6 +17,18 @@ let anonymousInstance: Innertube | null = null;
 let authenticatedInstance: Innertube | null = null;
 let isAuthenticating = false;
 
+function cleanConfigValue(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  const trimmed = value.trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1).trim();
+  }
+  return trimmed;
+}
+
 export async function createInnertube(withAuth = false): Promise<Innertube> {
   if (withAuth) {
     if (authenticatedInstance) return authenticatedInstance;
@@ -31,31 +43,45 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
     isAuthenticating = true;
 
     try {
-      const oauthRecord = await SystemConfig.findOne({ key: 'youtube_oauth' });
+      const cookieRecord = await SystemConfig.findOne({ key: 'youtube_cookies' });
 
-      if (oauthRecord && oauthRecord.value) {
-        try {
-          const oauthInstance = await Innertube.create({
+      if (cookieRecord && cookieRecord.value) {
+        const cookieStr = cleanConfigValue(cookieRecord.value);
+        if (cookieStr.length > 0) {
+          authenticatedInstance = await Innertube.create({
+            cookie: cookieStr,
             cache: new UniversalCache(false)
           });
+        }
+      }
 
-          oauthInstance.session.on('update-credentials', async ({ credentials }) => {
-            await SystemConfig.findOneAndUpdate(
-              { key: 'youtube_oauth' },
-              { value: credentials },
-              { upsert: true }
-            );
-          });
+      if (!authenticatedInstance) {
+        const oauthRecord = await SystemConfig.findOne({ key: 'youtube_oauth' });
 
-          oauthInstance.session.on('auth-error', () => {
+        if (oauthRecord && oauthRecord.value) {
+          try {
+            const oauthInstance = await Innertube.create({
+              cache: new UniversalCache(false)
+            });
+
+            oauthInstance.session.on('update-credentials', async ({ credentials }) => {
+              await SystemConfig.findOneAndUpdate(
+                { key: 'youtube_oauth' },
+                { value: credentials },
+                { upsert: true }
+              );
+            });
+
+            oauthInstance.session.on('auth-error', () => {
+              authenticatedInstance = null;
+            });
+
+            await oauthInstance.session.signIn(oauthRecord.value as OAuth2Tokens);
+            authenticatedInstance = oauthInstance;
+          } catch (oauthError) {
+            console.error('Failed to sign in with stored YouTube OAuth tokens:', oauthError);
             authenticatedInstance = null;
-          });
-
-          await oauthInstance.session.signIn(oauthRecord.value as OAuth2Tokens);
-          authenticatedInstance = oauthInstance;
-        } catch (oauthError) {
-          console.error('Failed to sign in with stored YouTube OAuth tokens:', oauthError);
-          authenticatedInstance = null;
+          }
         }
       }
 
@@ -65,7 +91,7 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
         });
 
         console.warn(
-          'YouTube OAuth is not configured in database. Run `pnpm youtube:login` to enable streaming on datacenter IPs.'
+          'YouTube authentication is not configured in database. Run `pnpm youtube:login` to enable streaming on datacenter IPs.'
         );
 
         authenticatedInstance = instance;

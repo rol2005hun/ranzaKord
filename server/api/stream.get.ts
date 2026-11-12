@@ -1,13 +1,13 @@
 type ClientType =
-  'TV' | 'MWEB' | 'ANDROID' | 'IOS' | 'YTMUSIC' | 'WEB' | 'TV_EMBEDDED' | 'WEB_CREATOR';
+  'ANDROID' | 'MWEB' | 'IOS' | 'YTMUSIC' | 'WEB' | 'TV' | 'TV_EMBEDDED' | 'WEB_CREATOR';
 
 const defaultWorkingClients: ClientType[] = [
-  'TV',
-  'MWEB',
   'ANDROID',
+  'MWEB',
   'IOS',
   'YTMUSIC',
   'WEB',
+  'TV',
   'TV_EMBEDDED',
   'WEB_CREATOR'
 ];
@@ -30,7 +30,7 @@ export default defineEventHandler(async (event) => {
 
   const isTvOAuth = Boolean(innertube.session.logged_in && innertube.session.oauth?.oauth2_tokens);
   const clientCandidates: ClientType[] = isTvOAuth
-    ? ['TV', 'MWEB', 'ANDROID', 'IOS', 'YTMUSIC', 'WEB', 'TV_EMBEDDED', 'WEB_CREATOR']
+    ? ['TV', 'TV_EMBEDDED', 'WEB_CREATOR']
     : [...defaultWorkingClients];
 
   for (let attempt = 1; attempt <= 2; attempt++) {

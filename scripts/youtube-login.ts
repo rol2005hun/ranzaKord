@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { chromium } from '@playwright/test';
 import { Innertube, UniversalCache } from 'youtubei.js';
 import mongoose from 'mongoose';
 
@@ -34,45 +35,91 @@ async function run(): Promise<void> {
   await mongoose.connect(uri);
   console.log('Connected to MongoDB.');
 
-  console.log('Initializing YouTube client for TV OAuth flow...');
-  const yt = await Innertube.create({ cache: new UniversalCache(false) });
-
-  yt.session.on('auth-pending', (data) => {
-    console.log(`\n======================================================`);
-    console.log(`ACTION REQUIRED:`);
-    console.log(`Open in browser: ${data.verification_url}`);
-    console.log(`Enter code: ${data.user_code}`);
-    console.log(`======================================================\n`);
-  });
-
-  yt.session.on('auth', async ({ credentials }) => {
-    console.log('Successfully signed in with YouTube OAuth!');
-    await SystemConfig.findOneAndUpdate(
-      { key: 'youtube_oauth' },
-      { value: credentials },
-      { upsert: true, returnDocument: 'after' }
-    );
-    console.log('Credentials and refresh token saved to MongoDB (youtube_oauth).');
-
-    await mongoose.disconnect();
-    process.exit(0);
-  });
-
-  yt.session.on('update-credentials', async ({ credentials }) => {
-    console.log('Credentials updated, syncing refresh token to MongoDB...');
-    await SystemConfig.findOneAndUpdate(
-      { key: 'youtube_oauth' },
-      { value: credentials },
-      { upsert: true, returnDocument: 'after' }
-    );
-  });
-
+  console.log('Opening browser for Google/YouTube login...');
+  let browser;
   try {
-    await yt.session.signIn();
-  } catch (err) {
-    console.error('Sign in failed:', err);
+    browser = await chromium.launch({
+      headless: false,
+      channel: 'chrome'
+    });
+  } catch {
+    browser = await chromium.launch({
+      headless: false,
+      channel: 'msedge'
+    });
+  }
+
+  const context = await browser.newContext();
+  const page = await context.newPage();
+
+  console.log('Please log into your Google account in the browser window...');
+  await page.goto(
+    'https://accounts.google.com/ServiceLogin?service=youtube&continue=https%3A%2F%2Fwww.youtube.com%2F'
+  );
+
+  let capturedCookieString = '';
+  const pollInterval = 1000;
+  const maxWaitMs = 300000;
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < maxWaitMs) {
+    const cookies = await context.cookies([
+      'https://www.youtube.com',
+      'https://youtube.com',
+      'https://accounts.google.com',
+      'https://google.com'
+    ]);
+
+    const hasAuthCookie = cookies.some(
+      (c) => c.name === 'SAPISID' || c.name === '__Secure-1PSID' || c.name === 'LOGIN_INFO'
+    );
+
+    if (hasAuthCookie) {
+      await page.waitForTimeout(2500);
+      const finalCookies = await context.cookies([
+        'https://www.youtube.com',
+        'https://youtube.com',
+        'https://accounts.google.com',
+        'https://google.com'
+      ]);
+      capturedCookieString = finalCookies.map((c) => `${c.name}=${c.value}`).join('; ');
+      break;
+    }
+
+    await new Promise((r) => setTimeout(r, pollInterval));
+  }
+
+  if (!capturedCookieString) {
+    console.error('Authentication timed out or closed before completion.');
+    await browser.close();
+    await mongoose.disconnect();
     process.exit(1);
   }
+
+  console.log('Authentication detected! Saving session to database (youtube_cookies)...');
+  await SystemConfig.findOneAndUpdate(
+    { key: 'youtube_cookies' },
+    { value: capturedCookieString },
+    { upsert: true, returnDocument: 'after' }
+  );
+  console.log('Saved YouTube authentication to MongoDB.');
+
+  await browser.close();
+
+  console.log('Verifying session with YouTube Innertube...');
+  try {
+    const yt = await Innertube.create({
+      cookie: capturedCookieString,
+      cache: new UniversalCache(false)
+    });
+    console.log(`Innertube verification finished. Logged in status: ${yt.session.logged_in}`);
+  } catch (err) {
+    console.warn('Innertube test check returned:', err);
+  }
+
+  await mongoose.disconnect();
+  console.log('Setup finished successfully!');
+  process.exit(0);
 }
 
 run();
