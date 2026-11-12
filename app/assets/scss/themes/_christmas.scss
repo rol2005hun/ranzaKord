@@ -57,22 +57,40 @@
   --glow-primary: 0 0 25px
     hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.45);
 
-  input[type='range']::-webkit-slider-thumb {
+  input[type='range']::-webkit-slider-thumb,
+  .fullscreen-visualizer__slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
     appearance: none;
-    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><text x="50%" y="54%" dominant-baseline="central" text-anchor="middle" font-size="24">❄️</text></svg>')
+    background: #dc2626
+      url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/><line x1="19.07" y1="4.93" x2="4.93" y2="19.07"/><path d="m10 4 2-2 2 2"/><path d="m10 20 2 2 2-2"/><path d="m4 10-2 2 2 2"/><path d="m20 10 2 2-2 2"/></svg>')
       center center no-repeat !important;
-    background-size: contain !important;
-    border: none !important;
-    box-shadow: 0 0 8px rgba(255, 255, 255, 0.7) !important;
-    border-radius: 50%;
-    width: 22px !important;
-    height: 22px !important;
+    background-size: 10px 10px !important;
+    border: 2px solid #ffffff !important;
+    box-shadow: 0 0 6px rgba(220, 38, 38, 0.7) !important;
+    border-radius: 50% !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin-top: -6px !important;
+  }
+
+  input[type='range']::-moz-range-thumb,
+  .fullscreen-visualizer__slider::-moz-range-thumb {
+    appearance: none;
+    background: #dc2626
+      url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/><line x1="19.07" y1="4.93" x2="4.93" y2="19.07"/><path d="m10 4 2-2 2 2"/><path d="m10 20 2 2 2-2"/><path d="m4 10-2 2 2 2"/><path d="m20 10 2 2-2 2"/></svg>')
+      center center no-repeat !important;
+    background-size: 10px 10px !important;
+    border: 2px solid #ffffff !important;
+    box-shadow: 0 0 6px rgba(220, 38, 38, 0.7) !important;
+    border-radius: 50% !important;
+    width: 16px !important;
+    height: 16px !important;
   }
 
   input[type='range'] {
-    --thumb-offset-y: -9px;
-    --thumb-width: 22px;
-    --thumb-radius: 11px;
+    --thumb-offset-y: -6px;
+    --thumb-width: 16px;
+    --thumb-radius: 8px;
   }
 
   .player-bar {
