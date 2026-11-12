@@ -68,6 +68,8 @@ export default defineNuxtConfig({
     ranzakonnectClientSecret: '',
     imgurClientId: '',
     youtubeCookies: '',
+    youtubePoToken: '',
+    youtubeVisitorData: '',
     public: {
       baseUrl: '',
       appVersion: pkg.version
