@@ -94,8 +94,6 @@
   }
 
   .player-bar {
-    position: relative;
-
     &::before {
       content: '';
       position: absolute;
@@ -113,8 +111,6 @@
   }
 
   .home-dashboard__hero {
-    position: relative;
-
     &::after {
       content: '';
       position: absolute;
@@ -133,8 +129,6 @@
   }
 
   .track-card {
-    position: relative;
-
     &::after {
       content: '';
       position: absolute;
@@ -151,8 +145,6 @@
   }
 
   .top-result-card {
-    position: relative;
-
     &::after {
       content: '';
       position: absolute;
