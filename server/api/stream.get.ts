@@ -1,13 +1,13 @@
 type ClientType =
-  'ANDROID' | 'MWEB' | 'IOS' | 'YTMUSIC' | 'WEB' | 'TV' | 'TV_EMBEDDED' | 'WEB_CREATOR';
+  'TV' | 'MWEB' | 'ANDROID' | 'IOS' | 'YTMUSIC' | 'WEB' | 'TV_EMBEDDED' | 'WEB_CREATOR';
 
 const defaultWorkingClients: ClientType[] = [
-  'ANDROID',
+  'TV',
   'MWEB',
+  'ANDROID',
   'IOS',
   'YTMUSIC',
   'WEB',
-  'TV',
   'TV_EMBEDDED',
   'WEB_CREATOR'
 ];
@@ -36,10 +36,7 @@ export default defineEventHandler(async (event) => {
   for (let attempt = 1; attempt <= 2; attempt++) {
     for (const client of clientCandidates) {
       try {
-        const info = await innertube.getBasicInfo(videoId.trim(), {
-          client,
-          po_token: innertube.session.po_token
-        });
+        const info = await innertube.getBasicInfo(videoId.trim(), { client });
         const formats = [
           ...(info.streaming_data?.formats || []),
           ...(info.streaming_data?.adaptive_formats || [])
@@ -135,7 +132,7 @@ export default defineEventHandler(async (event) => {
       (m) => m.includes('Sign in to confirm you’re not a bot') || m.includes('Please sign in')
     );
     const failureReason = isBotChallenge
-      ? 'YouTube bot protection active (LOGIN_REQUIRED). Configure YouTube authentication via pnpm youtube:cookie or pnpm youtube:login.'
+      ? 'YouTube bot protection active (LOGIN_REQUIRED). Please authorize via pnpm youtube:login.'
       : 'All clients failed';
 
     throw createError({
