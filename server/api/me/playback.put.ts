@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
         }
       }
     },
-    { new: true }
+    { returnDocument: 'after' }
   );
 
   if (!updatedUser) {
