@@ -1,5 +1,49 @@
 [
   {
+    "version": "v0.2.0-alpha.1",
+    "date": "2026-11-12",
+    "changes": {
+      "en": [
+        "New festive Christmas holiday theme with interactive snowfall effect, Santa hat branding, and holiday recommendations",
+        "Adaptive theme color improvements: contrast calibration and enhanced saturation for dark UI accessibility",
+        "Music video mode in fullscreen visualizer with YouTube sync",
+        "Redesigned playlist modal with full-height cover art and refined form layout",
+        "Slider thumb centering and minimum track alignment fixes across player and visualizer",
+        "Streaming reliability improvements with authenticated playback and bot-bypass enhancements",
+        "Complete Hungarian and English localization across privacy settings, toasts, and player actions",
+        "Updated dependencies and full Nuxt 4 & Tauri v2 optimizations"
+      ],
+      "hu": [
+        "Új karácsonyi ünnepi téma interaktív hóeséssel, Mikulás sapkával és ünnepi zeneajánlókkal",
+        "Dinamikus témaszínek fejlesztése: megnövelt kontraszt és telítettség a sötét hátterekhez és jobb láthatósághoz",
+        "Videóklip mód a teljes képernyős vizualizálóban YouTube szinkronizációval",
+        "Megújult lejátszási lista ablak megnövelt borítóképpel és igazított űrlap elrendezéssel",
+        "Csúszkák és gombok pontos középre igazítása a lejátszón és a vizualizálón",
+        "Megbízhatóbb zenelejátszás és streamelés bot-védelem javításokkal",
+        "Teljes magyar és angol fordítás az adatvédelmi beállításokhoz, értesítésekhez és vezérlőkhöz",
+        "Frissített csomagfüggőségek, Nuxt 4 és Tauri v2 optimalizációk"
+      ]
+    }
+  },
+  {
+    "version": "v0.1.0-alpha.2",
+    "date": "2026-07-12",
+    "changes": {
+      "en": [
+        "Private user profile visibility and security fixes",
+        "Tauri mobile and Android icon build enhancements",
+        "Sitemap generation fixes",
+        "Additional unit and integration tests"
+      ],
+      "hu": [
+        "Privát felhasználói profilok láthatósági és biztonsági javításai",
+        "Tauri mobil és Android ikon generálás javításai",
+        "Oldaltérkép (sitemap) generálási javítások",
+        "Bővített egység- és integrációs tesztek"
+      ]
+    }
+  },
+  {
     "version": "v0.1.0-alpha.1",
     "date": "2026-07-11",
     "changes": {
