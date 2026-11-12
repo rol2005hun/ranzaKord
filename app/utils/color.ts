@@ -28,6 +28,53 @@ export function hexToHsl(hex: string): { h: number; s: number; l: number } {
   };
 }
 
+export function hslToHex(h: number, s: number, l: number): string {
+  const normalizedH = ((h % 360) + 360) % 360;
+  const sat = Math.max(0, Math.min(100, s)) / 100;
+  const light = Math.max(0, Math.min(100, l)) / 100;
+
+  const c = (1 - Math.abs(2 * light - 1)) * sat;
+  const x = c * (1 - Math.abs(((normalizedH / 60) % 2) - 1));
+  const m = light - c / 2;
+
+  let r: number;
+  let g: number;
+  let b: number;
+
+  if (normalizedH >= 0 && normalizedH < 60) {
+    r = c;
+    g = x;
+    b = 0;
+  } else if (normalizedH >= 60 && normalizedH < 120) {
+    r = x;
+    g = c;
+    b = 0;
+  } else if (normalizedH >= 120 && normalizedH < 180) {
+    r = 0;
+    g = c;
+    b = x;
+  } else if (normalizedH >= 180 && normalizedH < 240) {
+    r = 0;
+    g = x;
+    b = c;
+  } else if (normalizedH >= 240 && normalizedH < 300) {
+    r = x;
+    g = 0;
+    b = c;
+  } else {
+    r = c;
+    g = 0;
+    b = x;
+  }
+
+  const toHex = (n: number) =>
+    Math.round((n + m) * 255)
+      .toString(16)
+      .padStart(2, '0');
+
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
 function getLuminance(r: number, g: number, b: number) {
   const toLinear = (c: number) => {
     c = c / 255;

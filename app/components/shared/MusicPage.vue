@@ -563,7 +563,7 @@ const optimizedBgUrl = computed(() => {
     height: 64px;
     border-radius: 50%;
     background-color: var(--color-primary);
-    color: #000;
+    color: var(--color-primary-foreground);
     border: none;
     display: flex;
     align-items: center;
@@ -584,6 +584,7 @@ const optimizedBgUrl = computed(() => {
     &:hover:not(:disabled) {
       transform: scale(1.05);
       background-color: var(--color-primary-hover);
+      color: var(--color-primary-foreground);
     }
 
     &:disabled {

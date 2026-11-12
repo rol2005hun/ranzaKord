@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia';
 import { ref, computed, watch } from 'vue';
-import { hexToHsl, getContrastColor } from '~/utils/color';
+
+import { hexToHsl, hslToHex, getContrastColor } from '@/utils/color';
+
 import type { ThemeId, CustomPalette } from '../types/theme.types';
-import type { ColorPalette } from '~/utils/colorExtraction';
+import type { ColorPalette } from '@/utils/colorExtraction';
 
 const DEFAULT_THEME_COLORS: Record<ThemeId, string> = {
   dark: '#7430e8',
@@ -40,11 +42,25 @@ export const useThemeStore = defineStore('theme', () => {
 
   const currentCustomPalette = computed<CustomPalette | null>(() => {
     if (isAdaptiveThemeEnabled.value && adaptivePalette.value) {
+      const rawPrimary = hexToHsl(adaptivePalette.value.primary);
+      const rawSecondary = hexToHsl(adaptivePalette.value.secondary);
+
+      const isGreyscale = rawPrimary.s < 10;
+      const tunedPrimaryHsl = {
+        h: rawPrimary.h,
+        s: isGreyscale ? 0 : Math.max(60, Math.min(rawPrimary.s, 95)),
+        l: isGreyscale ? 85 : Math.max(54, Math.min(rawPrimary.l, 68))
+      };
+      const tunedPrimaryHex = hslToHex(tunedPrimaryHsl.h, tunedPrimaryHsl.s, tunedPrimaryHsl.l);
+
       return {
-        primary: { hex: adaptivePalette.value.primary, ...hexToHsl(adaptivePalette.value.primary) },
+        primary: {
+          hex: tunedPrimaryHex,
+          ...tunedPrimaryHsl
+        },
         secondary: {
           hex: adaptivePalette.value.secondary,
-          ...hexToHsl(adaptivePalette.value.secondary)
+          ...rawSecondary
         }
       };
     }

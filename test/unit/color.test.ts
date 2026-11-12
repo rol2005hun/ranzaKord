@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { hexToHsl, getContrastColor } from '../../app/utils/color';
+import { hexToHsl, hslToHex, getContrastColor } from '../../app/utils/color';
 
 describe('color utils', () => {
   it('converts hex to hsl correctly', () => {
@@ -12,6 +12,14 @@ describe('color utils', () => {
     expect(hexToHsl('#ffcccc')).toEqual({ h: 0, s: 100, l: 90 });
     expect(hexToHsl('#ff00cc')).toEqual({ h: 312, s: 100, l: 50 });
     expect(hexToHsl('invalid')).toEqual({ h: 0, s: 0, l: 0 });
+  });
+
+  it('converts hsl to hex correctly', () => {
+    expect(hslToHex(0, 100, 50)).toBe('#ff0000');
+    expect(hslToHex(120, 100, 50)).toBe('#00ff00');
+    expect(hslToHex(240, 100, 50)).toBe('#0000ff');
+    expect(hslToHex(0, 0, 100)).toBe('#ffffff');
+    expect(hslToHex(0, 0, 0)).toBe('#000000');
   });
 
   it('calculates contrast color correctly', () => {

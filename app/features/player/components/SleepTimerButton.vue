@@ -243,8 +243,9 @@ onClickOutside(containerRef, (event) => {
   }
 
   &--active {
-    background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+    background: color-mix(in srgb, var(--color-primary) 18%, transparent);
     color: var(--color-primary);
+    font-weight: var(--font-weight-medium, 500);
   }
 }
 

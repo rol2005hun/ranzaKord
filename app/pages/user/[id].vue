@@ -230,7 +230,7 @@ const openConnections = (type: 'followers' | 'following') => {
     border-radius: var(--radius-full);
     border: 1px solid transparent;
     background: var(--color-primary);
-    color: #000;
+    color: var(--color-primary-foreground);
     transition: all 0.2s ease;
     overflow: hidden;
     cursor: pointer;
@@ -404,7 +404,7 @@ const openConnections = (type: 'followers' | 'following') => {
     height: 48px;
     border-radius: 50%;
     background: var(--color-primary);
-    color: #000;
+    color: var(--color-primary-foreground);
     display: flex;
     align-items: center;
     justify-content: center;

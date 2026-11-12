@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
 
+import { getContrastColor } from '@/utils/color';
+
 const { themeId, currentCustomPalette } = useTheme();
 const themeStore = useThemeStore();
 
@@ -14,6 +16,7 @@ const customColorStyle = computed(() => {
     --color-primary-h: ${cc.h}; 
     --color-primary-s: ${cc.s}%; 
     --color-primary-l: ${cc.l}%; 
+    --color-primary-foreground: ${getContrastColor(cc.hex)};
   }`;
 
   if (themeStore.isAdaptiveThemeEnabled) {
