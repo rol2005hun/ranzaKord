@@ -10,7 +10,20 @@
   "account": {
     "title": "Account Settings",
     "signedInAs": "Signed in as",
-    "noAccount": "You are not signed in"
+    "noAccount": "You are not signed in",
+    "privacy": {
+      "title": "Privacy",
+      "publicProfile": {
+        "title": "Public profile",
+        "description": "Others can view your profile and follow you"
+      },
+      "showPlaylists": {
+        "title": "Show playlists",
+        "description": "Others can see your public playlists on your profile"
+      },
+      "saveSuccess": "Privacy settings saved",
+      "saveError": "An error occurred while saving"
+    }
   },
   "appearance": {
     "title": "Appearance",

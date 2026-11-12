@@ -10,7 +10,20 @@
   "account": {
     "title": "Fiók beállítások",
     "signedInAs": "Bejelentkezve, mint",
-    "noAccount": "Nem vagy bejelentkezve"
+    "noAccount": "Nem vagy bejelentkezve",
+    "privacy": {
+      "title": "Adatvédelem",
+      "publicProfile": {
+        "title": "Publikus profil",
+        "description": "Mások megtekinthetik a profilodat és követhetnek téged"
+      },
+      "showPlaylists": {
+        "title": "Lejátszási listák mutatása",
+        "description": "Mások láthatják a publikus lejátszási listáidat a profilodon"
+      },
+      "saveSuccess": "Adatvédelmi beállítások elmentve",
+      "saveError": "Hiba történt a mentés során"
+    }
   },
   "appearance": {
     "title": "Megjelenés",

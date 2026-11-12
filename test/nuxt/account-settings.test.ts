@@ -12,6 +12,10 @@ const mockIsAuthenticated = ref(false);
 const mockToastSuccess = vi.fn();
 const mockToastDanger = vi.fn();
 
+mockNuxtImport('useI18n', () => () => ({
+  t: (key: string) => key
+}));
+
 mockNuxtImport('useAuth', () => () => ({
   currentUser: mockCurrentUser,
   isAuthenticated: mockIsAuthenticated,
@@ -84,7 +88,7 @@ describe('AccountSettings.vue', () => {
 
     expect(wrapper.text()).toContain('Test User');
     expect(wrapper.text()).toContain('test@example.com');
-    expect(wrapper.text()).toContain('Adatvédelem');
+    expect(wrapper.text()).toContain('settings.account.privacy.title');
   });
 
   it('calls API and shows success toast when saving privacy settings', async () => {
@@ -121,20 +125,19 @@ describe('AccountSettings.vue', () => {
       }
     });
 
-    // Manually trigger the updatePrivacySettings function by changing the toggle
     const toggle = wrapper.find('input[type="checkbox"]');
-    await toggle.setValue(true); // set isPublicProfile to true
+    await toggle.setValue(true);
 
     expect(mockFetch).toHaveBeenCalledWith('/api/me/settings', {
       method: 'PATCH',
       body: {
-        isPublicProfile: true, // we emitted true on the first toggle which is isPublicProfile
+        isPublicProfile: true,
         showPlaylists: true
       }
     });
 
     expect(mockFetchUser).toHaveBeenCalled();
-    expect(mockToastSuccess).toHaveBeenCalledWith('Adatvédelmi beállítások elmentve');
+    expect(mockToastSuccess).toHaveBeenCalledWith('settings.account.privacy.saveSuccess');
   });
 
   it('shows error toast on API failure', async () => {
@@ -175,6 +178,6 @@ describe('AccountSettings.vue', () => {
     await toggle.setValue(false);
 
     expect(mockFetch).toHaveBeenCalled();
-    expect(mockToastDanger).toHaveBeenCalledWith('Hiba történt a mentés során');
+    expect(mockToastDanger).toHaveBeenCalledWith('settings.account.privacy.saveError');
   });
 });
