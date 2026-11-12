@@ -1,6 +1,10 @@
 import type { Track, TrackStatPayload } from '../types/player.types';
 
-const { registerPauseCallback, onTrackEnded: sleepTimerOnTrackEnded } = useSleepTimer();
+const {
+  registerPauseCallback,
+  onTrackEnded: sleepTimerOnTrackEnded,
+  sleepTimerMode
+} = useSleepTimer();
 
 const audio1Ref = ref<HTMLAudioElement | null>(null);
 const audio2Ref = ref<HTMLAudioElement | null>(null);
@@ -118,6 +122,7 @@ export function usePlayer() {
 
             const actualDuration = store.currentTrack?.durationSeconds || 0;
             if (
+              sleepTimerMode.value !== 'end-of-track' &&
               store.crossfadeEnabled &&
               store.crossfadeDuration > 0 &&
               actualDuration > 0 &&
@@ -173,7 +178,11 @@ export function usePlayer() {
           if (store.currentTrack) {
             recordTrackStat(store.currentTrack, Math.floor(el.currentTime), false);
           }
-          sleepTimerOnTrackEnded();
+          const handledBySleepTimer = sleepTimerOnTrackEnded();
+          if (handledBySleepTimer) {
+            pause();
+            return;
+          }
           if (store.repeatMode === 'one') {
             seek(0);
             resume();

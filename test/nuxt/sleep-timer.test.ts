@@ -61,9 +61,9 @@ describe('useSleepTimer', () => {
     startEndOfTrack();
     expect(sleepTimerMode.value).toBe('end-of-track');
 
-    // Simulate track ending
-    onTrackEnded();
+    const handled = onTrackEnded();
 
+    expect(handled).toBe(true);
     expect(mockPause).toHaveBeenCalledOnce();
     expect(sleepTimerMode.value).toBe('off');
   });
@@ -72,8 +72,8 @@ describe('useSleepTimer', () => {
     const mockPause = vi.fn();
     registerPauseCallback(mockPause);
 
-    // Track ends, but mode is off
-    onTrackEnded();
+    const handled = onTrackEnded();
+    expect(handled).toBe(false);
     expect(mockPause).not.toHaveBeenCalled();
   });
 

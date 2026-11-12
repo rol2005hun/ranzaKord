@@ -48,11 +48,13 @@ function clearTimer() {
   endOfTrackEnabled = false;
 }
 
-function onTrackEnded() {
+function onTrackEnded(): boolean {
   if (endOfTrackEnabled) {
     clearTimer();
     pauseCallback?.();
+    return true;
   }
+  return false;
 }
 
 function formatRemaining(seconds: number): string {
