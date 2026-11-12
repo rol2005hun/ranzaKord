@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia';
 import { ref, computed, watch } from 'vue';
-import { hexToHsl, getContrastColor } from '~/utils/color';
+
+import { hexToHsl, hslToHex, getContrastColor } from '@/utils/color';
+
 import type { ThemeId, CustomPalette } from '../types/theme.types';
-import type { ColorPalette } from '~/utils/colorExtraction';
+import type { ColorPalette } from '@/utils/colorExtraction';
 
 const DEFAULT_THEME_COLORS: Record<ThemeId, string> = {
   dark: '#7430e8',
@@ -10,12 +12,12 @@ const DEFAULT_THEME_COLORS: Record<ThemeId, string> = {
   ocean: '#0982ae',
   rose: '#cd143d',
   walker: '#ffcc00',
-  wc2026: '#12d58d'
+  christmas: '#dc2626'
 };
 
 export const useThemeStore = defineStore('theme', () => {
   const cookieThemeId = useCookie<ThemeId>('theme-id', {
-    default: () => 'wc2026',
+    default: () => 'dark',
     maxAge: 31536000
   });
   const cookieCustomColors = useCookie<Record<string, string>>('theme-custom-colors', {
@@ -28,18 +30,37 @@ export const useThemeStore = defineStore('theme', () => {
     maxAge: 31536000
   });
 
+  const cookieAdaptivePalette = useCookie<ColorPalette | null>('theme-adaptive-palette', {
+    default: () => null,
+    maxAge: 31536000
+  });
+
   const themeId = ref<ThemeId>(cookieThemeId.value);
   const customColors = ref<Record<string, string>>(cookieCustomColors.value || {});
   const isAdaptiveThemeEnabled = ref<boolean>(cookieIsAdaptive.value);
-  const adaptivePalette = ref<ColorPalette | null>(null);
+  const adaptivePalette = ref<ColorPalette | null>(cookieAdaptivePalette.value);
 
   const currentCustomPalette = computed<CustomPalette | null>(() => {
     if (isAdaptiveThemeEnabled.value && adaptivePalette.value) {
+      const rawPrimary = hexToHsl(adaptivePalette.value.primary);
+      const rawSecondary = hexToHsl(adaptivePalette.value.secondary);
+
+      const isGreyscale = rawPrimary.s < 10;
+      const tunedPrimaryHsl = {
+        h: rawPrimary.h,
+        s: isGreyscale ? 0 : Math.max(60, Math.min(rawPrimary.s, 95)),
+        l: isGreyscale ? 85 : Math.max(54, Math.min(rawPrimary.l, 68))
+      };
+      const tunedPrimaryHex = hslToHex(tunedPrimaryHsl.h, tunedPrimaryHsl.s, tunedPrimaryHsl.l);
+
       return {
-        primary: { hex: adaptivePalette.value.primary, ...hexToHsl(adaptivePalette.value.primary) },
+        primary: {
+          hex: tunedPrimaryHex,
+          ...tunedPrimaryHsl
+        },
         secondary: {
           hex: adaptivePalette.value.secondary,
-          ...hexToHsl(adaptivePalette.value.secondary)
+          ...rawSecondary
         }
       };
     }
@@ -78,7 +99,8 @@ export const useThemeStore = defineStore('theme', () => {
     }
   });
 
-  watch(adaptivePalette, () => {
+  watch(adaptivePalette, (val) => {
+    cookieAdaptivePalette.value = val;
     if (isAdaptiveThemeEnabled.value && import.meta.client && currentCustomPalette.value) {
       applyPaletteToDom(currentCustomPalette.value);
     }

@@ -1,16 +1,19 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
-import { useSearch } from '../../app/features/search/composables/useSearch';
+import { useSearch, clearSearchCache } from '../../app/features/search/composables/useSearch';
 import { useSearchStore } from '../../app/features/search/stores/useSearchStore';
 
-describe('useSearch', () => {
-  let mockFetch: ReturnType<typeof vi.fn>;
+import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 
+const mockFetch = vi.hoisted(() => vi.fn());
+mockNuxtImport('$fetch', () => mockFetch);
+
+describe('useSearch', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
-    mockFetch = vi.fn();
-    globalThis.$fetch = mockFetch as unknown as typeof $fetch;
+    mockFetch.mockReset();
     vi.useFakeTimers();
+    clearSearchCache();
   });
 
   afterEach(() => {

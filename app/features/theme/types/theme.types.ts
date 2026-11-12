@@ -1,4 +1,4 @@
-export type ThemeId = 'dark' | 'light' | 'ocean' | 'rose' | 'walker' | 'wc2026';
+export type ThemeId = 'dark' | 'light' | 'ocean' | 'rose' | 'walker' | 'christmas';
 
 export interface ThemeOption {
   id: ThemeId;
@@ -17,4 +17,15 @@ export interface CustomColor {
 export interface CustomPalette {
   primary: CustomColor;
   secondary: CustomColor;
+}
+
+export interface Snowflake {
+  x: number;
+  y: number;
+  radius: number;
+  speedY: number;
+  speedX: number;
+  opacity: number;
+  phase: number;
+  phaseSpeed: number;
 }

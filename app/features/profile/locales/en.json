@@ -5,7 +5,7 @@
   "following": "Following",
   "follow": "Follow",
   "unfollow": "Unfollow",
-  "playlists": "Public Playlists",
+  "playlists": "public playlist",
   "noPlaylists": "This user hasn't created any public playlists yet.",
   "connectionsModalTitle": {
     "followers": "Followers",
@@ -13,5 +13,11 @@
   },
   "anonymousCount": "...and {count} private profile | ...and {count} private profiles",
   "anonymousCountOnly": "{count} private profile | {count} private profiles",
-  "noConnections": "No users to display."
+  "noConnections": "No users to display.",
+  "badge": "Profile",
+  "errorNotFound": "Profile not found. It might be private or doesn't exist.",
+  "publicPlaylistsTitle": "Public playlists",
+  "trackCount": "{count} track | {count} tracks",
+  "refresh": "Refresh",
+  "followError": "An error occurred during the operation."
 }

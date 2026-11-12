@@ -22,7 +22,7 @@
   "lyricsLoading": "Dalszöveg betöltése...",
   "lyricsNotSynced": "A dalszöveg nincs szinkronizálva",
   "translateToHu": "Fordítás magyarra",
-  "showOriginal": "Eredeti megjelenítése",
+  "showOriginal": "Eredeti nyelv",
   "translating": "Fordítás folyamatban...",
   "nowPlaying": "Most játszott",
   "queue": "Várólista",
@@ -40,6 +40,12 @@
   "noRecommendations": "Nincsenek ajánlások",
   "fullscreenVisualizer": "Teljes képernyős vizualizáció",
   "closeVisualizer": "Vizualizáció bezárása",
+  "backgroundMode": "Háttér",
+  "backgroundModeVisualizer": "Vizualizáció",
+  "backgroundModeMusicVideo": "Videóklip",
+  "musicVideoSearching": "Videóklip keresése...",
+  "musicVideoNotFound": "Nem található videóklip",
+
   "karaokeMode": "Karaoke Mód (Ének némítása)",
   "visualizerStyle": "Vizualizáció Stílusa",
   "visualizerStyles": {

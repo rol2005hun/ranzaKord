@@ -1,0 +1,175 @@
+[data-theme='christmas'] {
+  color-scheme: dark;
+
+  --color-primary-h: 350;
+  --color-primary-s: 84%;
+  --color-primary-l: 52%;
+
+  --color-primary: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l));
+  --color-primary-hover: hsl(
+    var(--color-primary-h) var(--color-primary-s) calc(var(--color-primary-l) + 8%)
+  );
+  --color-primary-foreground: #ffffff;
+  --color-primary-subtle: hsl(var(--color-primary-h) var(--color-primary-s) 14%);
+  --color-primary-glow: hsl(
+    var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.4
+  );
+
+  --color-bg: #091310;
+  --color-surface: #0f201a;
+  --color-surface-hover: #162d25;
+  --color-surface-raised: #1d3a30;
+  --color-surface-glass: rgba(15, 32, 26, 0.82);
+
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #94a3b8;
+  --color-text-tertiary: #64748b;
+  --color-text-disabled: #334155;
+
+  --color-border: #1a382e;
+  --color-border-hover: #274f41;
+  --color-border-focus: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l));
+
+  --color-danger: #ef4444;
+  --color-danger-hover: #dc2626;
+  --color-danger-foreground: #ffffff;
+  --color-danger-light: rgba(239, 68, 68, 0.12);
+
+  --color-success: #10b981;
+  --color-success-hover: #059669;
+  --color-success-foreground: #ffffff;
+  --color-success-light: rgba(16, 185, 129, 0.12);
+
+  --color-warning: #fbbf24;
+  --color-warning-hover: #f59e0b;
+  --color-warning-foreground: #000000;
+  --color-warning-light: rgba(245, 158, 11 / 0.12);
+
+  --color-neutral: #64748b;
+  --color-neutral-foreground: #ffffff;
+  --color-neutral-light: rgba(100, 116, 139, 0.15);
+
+  --color-ring: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.45);
+  --color-overlay: rgba(0, 0, 0, 0.82);
+
+  --gradient-hero: linear-gradient(135deg, #152b23 0%, #1e1017 100%);
+  --gradient-card: linear-gradient(transparent 40%, rgba(9, 19, 16, 0.88) 100%);
+  --glow-primary: 0 0 25px
+    hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.45);
+
+  input[type='range']::-webkit-slider-thumb,
+  .fullscreen-visualizer__slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    background: #dc2626
+      url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/><line x1="19.07" y1="4.93" x2="4.93" y2="19.07"/><path d="m10 4 2-2 2 2"/><path d="m10 20 2 2 2-2"/><path d="m4 10-2 2 2 2"/><path d="m20 10 2 2-2 2"/></svg>')
+      center center no-repeat !important;
+    background-size: 10px 10px !important;
+    border: 2px solid #ffffff !important;
+    box-shadow: 0 0 6px rgba(220, 38, 38, 0.7) !important;
+    border-radius: 50% !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin-top: -6px !important;
+  }
+
+  input[type='range']::-moz-range-thumb,
+  .fullscreen-visualizer__slider::-moz-range-thumb {
+    appearance: none;
+    background: #dc2626
+      url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/><line x1="19.07" y1="4.93" x2="4.93" y2="19.07"/><path d="m10 4 2-2 2 2"/><path d="m10 20 2 2 2-2"/><path d="m4 10-2 2 2 2"/><path d="m20 10 2 2-2 2"/></svg>')
+      center center no-repeat !important;
+    background-size: 10px 10px !important;
+    border: 2px solid #ffffff !important;
+    box-shadow: 0 0 6px rgba(220, 38, 38, 0.7) !important;
+    border-radius: 50% !important;
+    width: 16px !important;
+    height: 16px !important;
+  }
+
+  input[type='range'] {
+    --thumb-offset-y: -6px;
+    --thumb-width: 16px;
+    --thumb-radius: 8px;
+  }
+
+  .player-bar {
+    &::before {
+      content: '';
+      position: absolute;
+      top: -1px;
+      left: 0;
+      right: 0;
+      height: 8px;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 10" preserveAspectRatio="none"><path d="M0,0 C15,0 20,8 35,8 C50,8 55,2 70,3 C85,4 90,9 105,9 C115,9 118,3 120,0 L120,0 L0,0 Z" fill="%23ffffff"/></svg>');
+      background-size: 120px 8px;
+      background-repeat: repeat-x;
+      filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4));
+      pointer-events: none;
+      z-index: 10;
+    }
+  }
+
+  .home-dashboard__hero {
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 8px;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 12" preserveAspectRatio="none"><path d="M0,0 L160,0 L160,2 C150,8 140,11 125,11 C110,11 100,3 85,5 C70,7 65,12 50,12 C35,12 25,4 10,6 C5,7 2,3 0,2 Z" fill="%23ffffff" fill-opacity="0.95"/></svg>');
+      background-size: 160px 8px;
+      background-repeat: repeat-x;
+      border-top-left-radius: inherit;
+      border-top-right-radius: inherit;
+      pointer-events: none;
+      z-index: 2;
+    }
+  }
+
+  .track-card {
+    &::after {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: 8px;
+      right: 8px;
+      height: 6px;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 8" preserveAspectRatio="none"><path d="M0,0 L80,0 L80,1 C70,6 60,7 50,7 C40,7 35,2 25,3 C15,4 10,7 0,2 Z" fill="%23ffffff" fill-opacity="0.9"/></svg>');
+      background-size: 80px 6px;
+      background-repeat: repeat-x;
+      pointer-events: none;
+      z-index: 3;
+    }
+  }
+
+  .top-result-card {
+    &::after {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: 8px;
+      right: 8px;
+      height: 6px;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 8" preserveAspectRatio="none"><path d="M0,0 L80,0 L80,1 C70,6 60,7 50,7 C40,7 35,2 25,3 C15,4 10,7 0,2 Z" fill="%23ffffff" fill-opacity="0.9"/></svg>');
+      background-size: 80px 6px;
+      background-repeat: repeat-x;
+      pointer-events: none;
+      z-index: 3;
+    }
+  }
+
+  .app-brand__logo-wrapper::before,
+  .app-brand__logo-collapsed::before {
+    content: '🎅';
+    position: absolute;
+    top: -11px;
+    left: -7px;
+    font-size: 18px;
+    transform: rotate(-12deg);
+    z-index: 3;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    pointer-events: none;
+  }
+}

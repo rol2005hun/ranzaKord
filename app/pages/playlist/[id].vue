@@ -605,10 +605,12 @@ const showStickyMobileMenu = ref(false);
       </template>
 
       <template #skeleton-tracks>
-        <AppTrackList
-          :is-loading="true"
-          :columns="['index', 'title', 'date', 'time', 'download', 'action']"
-          :show-thumbnails="true" />
+        <div style="margin-top: var(--space-2)">
+          <AppTrackList
+            :is-loading="true"
+            :columns="['index', 'title', 'date', 'time', 'download', 'action']"
+            :show-thumbnails="true" />
+        </div>
       </template>
 
       <template #tracks>

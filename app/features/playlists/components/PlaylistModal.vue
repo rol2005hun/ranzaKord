@@ -101,6 +101,7 @@ async function submit(): Promise<void> {
   <AppModal
     :model-value="open"
     :title="editId ? $t('playlists.editPlaylist') : $t('playlists.createPlaylist')"
+    modal-class="playlist-modal-dialog"
     @update:model-value="
       (val) => {
         if (!val) emit('close');
@@ -148,7 +149,7 @@ async function submit(): Promise<void> {
             :placeholder="$t('playlists.namePlaceholder')"
             maxlength="100" />
         </div>
-        <div class="playlist-modal__field">
+        <div class="playlist-modal__field playlist-modal__field--textarea">
           <label class="playlist-modal__label" for="playlist-description">
             {{ $t('playlists.playlistDescription') }}
           </label>
@@ -193,6 +194,10 @@ async function submit(): Promise<void> {
 </template>
 
 <style scoped lang="scss">
+:deep(.playlist-modal-dialog) {
+  max-width: 580px;
+}
+
 .playlist-modal {
   &__image-section {
     display: flex;
@@ -210,16 +215,18 @@ async function submit(): Promise<void> {
 
       .playlist-modal__fields {
         width: 100%;
+        min-height: auto;
       }
     }
   }
 
   &__image-label {
     display: block;
-    width: 200px;
-    height: 200px;
+    width: 230px;
+    height: 230px;
     aspect-ratio: 1 / 1;
     flex-shrink: 0;
+    cursor: pointer;
   }
 
   &__file-input {
@@ -234,10 +241,6 @@ async function submit(): Promise<void> {
     overflow: hidden;
     background: var(--color-surface-hover);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-
-    @media (max-width: 480px) {
-      /* Handled by label sizing above */
-    }
 
     &:hover .playlist-modal__image-overlay {
       opacity: 1;
@@ -289,13 +292,27 @@ async function submit(): Promise<void> {
     flex: 1;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    min-height: 230px;
     gap: var(--space-4);
+    min-width: 0;
   }
 
   &__field {
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
+
+    &--textarea {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+
+      .playlist-modal__textarea {
+        flex: 1;
+        min-height: 80px;
+      }
+    }
 
     &--row {
       flex-direction: row;

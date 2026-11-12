@@ -45,7 +45,6 @@ describe('AppearanceSettings.vue', () => {
     });
     themeStore = useThemeStore();
 
-    // Mock initial store values
     themeStore.themeId = 'dark';
     themeStore.isAdaptiveThemeEnabled = false;
     themeStore.customColors = {};
@@ -55,7 +54,7 @@ describe('AppearanceSettings.vue', () => {
       ocean: '#1db954',
       rose: '#1db954',
       walker: '#1db954',
-      wc2026: '#1db954'
+      christmas: '#1db954'
     };
 
     await nextTick();

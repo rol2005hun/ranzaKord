@@ -41,7 +41,6 @@ export function getPalette(imageUrl: string): Promise<ColorPalette | null> {
         return;
       }
 
-      // Scale down significantly for performance and to act as a blur/average
       const size = 64;
       canvas.width = size;
       canvas.height = size;
@@ -53,7 +52,6 @@ export function getPalette(imageUrl: string): Promise<ColorPalette | null> {
         let totalCount = 0;
 
         for (let i = 0; i < data.length; i += 4) {
-          // Skip highly transparent pixels
           const alpha = data[i + 3] ?? 0;
           if (alpha < 128) continue;
 
@@ -61,16 +59,14 @@ export function getPalette(imageUrl: string): Promise<ColorPalette | null> {
           const green = data[i + 1] ?? 0;
           const blue = data[i + 2] ?? 0;
 
-          // Calculate luminance to filter out extremes (very dark or very light)
           const luma = 0.2126 * red + 0.7152 * green + 0.0722 * blue;
-          if (luma < 20 || luma > 230) continue;
+          if (luma < 30 || luma > 230) continue;
 
-          // Filter out greyish colors to prioritize vibrancy
           const max = Math.max(red, green, blue);
           const min = Math.min(red, green, blue);
           const saturation = max === 0 ? 0 : (max - min) / max;
 
-          if (saturation < 0.1) continue;
+          if (saturation < 0.15) continue;
 
           const hue = rgbToHue(red, green, blue);
           const bucketIndex = Math.floor(hue / 10) % 36;
@@ -86,11 +82,10 @@ export function getPalette(imageUrl: string): Promise<ColorPalette | null> {
         }
 
         if (totalCount === 0) {
-          // Fallback if image is entirely grayscale or doesn't meet filters
-          let r = 0,
-            g = 0,
-            b = 0,
-            count = 0;
+          let r = 0;
+          let g = 0;
+          let b = 0;
+          let count = 0;
           for (let i = 0; i < data.length; i += 4) {
             r += data[i] ?? 0;
             g += data[i + 1] ?? 0;
@@ -106,7 +101,18 @@ export function getPalette(imageUrl: string): Promise<ColorPalette | null> {
           return;
         }
 
-        buckets.sort((a, b) => b.count - a.count);
+        const scoreBucket = (b: { r: number; g: number; b: number; count: number }) => {
+          if (b.count === 0) return 0;
+          const avgR = b.r / b.count;
+          const avgG = b.g / b.count;
+          const avgB = b.b / b.count;
+          const max = Math.max(avgR, avgG, avgB);
+          const min = Math.min(avgR, avgG, avgB);
+          const sat = max === 0 ? 0 : (max - min) / max;
+          return b.count * (1 + sat * 1.5);
+        };
+
+        buckets.sort((a, b) => scoreBucket(b) - scoreBucket(a));
 
         const primaryBucket = buckets[0];
         if (!primaryBucket) {
@@ -121,7 +127,6 @@ export function getPalette(imageUrl: string): Promise<ColorPalette | null> {
 
         let secondaryHex = primaryHex;
 
-        // Find a distinct secondary bucket (at least 30 degrees hue diff)
         const primaryHue = rgbToHue(
           primaryBucket.r / primaryBucket.count,
           primaryBucket.g / primaryBucket.count,

@@ -3,6 +3,8 @@ import { mount, flushPromises } from '@vue/test-utils';
 import CollaboratorModal from '@/features/playlists/components/CollaboratorModal.vue';
 import { createTestingPinia } from '@pinia/testing';
 
+import { mockNuxtImport } from '@nuxt/test-utils/runtime';
+
 const mockToastSuccess = vi.fn();
 const mockToastDanger = vi.fn();
 
@@ -17,12 +19,13 @@ vi.mock('vue-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key })
 }));
 
-const mockFetch = vi.fn();
-global.$fetch = mockFetch as unknown as typeof $fetch;
+const mockFetch = vi.hoisted(() => vi.fn());
+mockNuxtImport('$fetch', () => mockFetch);
 
 describe('CollaboratorModal.vue', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFetch.mockReset();
     window.confirm = vi.fn().mockReturnValue(true);
   });
 

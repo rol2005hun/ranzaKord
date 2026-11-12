@@ -164,6 +164,72 @@ const containerRef = ref<HTMLElement | null>(null);
 const playlistBtnRef = ref<HTMLElement | null>(null);
 const mobilePlaylistBtnRef = ref<HTMLElement | null>(null);
 
+const musicVideoUrl = ref<string | null>(null);
+const isMusicVideoLoading = ref(false);
+const musicVideoNotFound = ref(false);
+
+async function fetchMusicVideo(track: { title: string; artists?: Array<{ name: string }> | null }) {
+  musicVideoUrl.value = null;
+  musicVideoNotFound.value = false;
+  isMusicVideoLoading.value = true;
+
+  try {
+    const artistName = track.artists?.[0]?.name ?? '';
+
+    const data = await $fetch<{ results: Array<{ videoId: string }> }>('/api/musicvideo', {
+      params: { artist: artistName, title: track.title }
+    });
+
+    if (data.results.length > 0) {
+      const first = data.results[0];
+      const vidId = first?.videoId;
+      if (!vidId) {
+        musicVideoNotFound.value = true;
+      } else {
+        const streamData = await $fetch<string>(`/api/stream?v=${vidId}&type=video`, {
+          responseType: 'text'
+        }).catch(() => null);
+        if (streamData) {
+          musicVideoUrl.value = `/api/stream?v=${vidId}&type=video`;
+        } else {
+          musicVideoNotFound.value = true;
+        }
+      }
+    } else {
+      musicVideoNotFound.value = true;
+    }
+  } catch {
+    musicVideoNotFound.value = true;
+  } finally {
+    isMusicVideoLoading.value = false;
+  }
+}
+
+watch(
+  () => player.currentTrack.value,
+  (track) => {
+    if (track && layoutStore.fullscreenBackgroundMode === 'musicvideo') {
+      fetchMusicVideo(track);
+    }
+  }
+);
+
+watch(
+  () => layoutStore.fullscreenBackgroundMode,
+  (mode) => {
+    if (
+      mode === 'musicvideo' &&
+      player.currentTrack.value &&
+      !musicVideoUrl.value &&
+      !isMusicVideoLoading.value
+    ) {
+      fetchMusicVideo(player.currentTrack.value);
+    }
+  }
+);
+
+const isMusicVideoMode = computed(() => layoutStore.fullscreenBackgroundMode === 'musicvideo');
+
 function getPlaylistBtnAnchor() {
   if (window.innerWidth <= 768 && mobilePlaylistBtnRef.value) {
     return mobilePlaylistBtnRef.value;
@@ -209,6 +275,10 @@ function handleResize() {
 
 function drawFrame() {
   if (!layoutStore.isFullscreenVisualizer) return;
+  if (isMusicVideoMode.value) {
+    animId = requestAnimationFrame(drawFrame);
+    return;
+  }
 
   const canvas = canvasRef.value;
   if (!canvas) {
@@ -318,23 +388,56 @@ function getStyleIcon(style: string) {
         width="1920"
         height="1080"
         fetchpriority="high" />
-      <canvas ref="canvasRef" class="fullscreen-visualizer__canvas"></canvas>
+      <video
+        v-if="isMusicVideoMode && musicVideoUrl"
+        ref="musicVideoRef"
+        :src="musicVideoUrl"
+        class="fullscreen-visualizer__music-video"
+        autoplay
+        loop
+        muted
+        playsinline
+        preload="auto" />
+      <canvas
+        v-show="!isMusicVideoMode"
+        ref="canvasRef"
+        class="fullscreen-visualizer__canvas"></canvas>
 
       <div class="fullscreen-visualizer__overlay">
         <!-- Controls (Top Right) -->
         <div class="fullscreen-visualizer__controls">
           <div class="fullscreen-visualizer__style-selector">
             <button
-              v-for="style in ['circle', 'bars', 'wave', 'particles'] as const"
-              :key="style"
-              class="fullscreen-visualizer__style-btn"
               :class="{
-                'fullscreen-visualizer__style-btn--active': layoutStore.visualizerStyle === style
+                'fullscreen-visualizer__style-btn': true,
+                'fullscreen-visualizer__style-btn--active': !isMusicVideoMode
               }"
-              :title="$t(`player.visualizerStyles.${style}`)"
-              @click="layoutStore.setVisualizerStyle(style)">
-              <AppIcon :name="getStyleIcon(style)" />
+              :title="$t('player.backgroundModeVisualizer')"
+              @click="layoutStore.setFullscreenBackgroundMode('visualizer')">
+              <AppIcon name="ph:waveform-bold" />
             </button>
+            <button
+              :class="{
+                'fullscreen-visualizer__style-btn': true,
+                'fullscreen-visualizer__style-btn--active': isMusicVideoMode
+              }"
+              :title="$t('player.backgroundModeMusicVideo')"
+              @click="layoutStore.setFullscreenBackgroundMode('musicvideo')">
+              <AppIcon name="ph:film-slate-bold" />
+            </button>
+            <template v-if="!isMusicVideoMode">
+              <button
+                v-for="style in ['circle', 'bars', 'wave', 'particles'] as const"
+                :key="style"
+                class="fullscreen-visualizer__style-btn"
+                :class="{
+                  'fullscreen-visualizer__style-btn--active': layoutStore.visualizerStyle === style
+                }"
+                :title="$t(`player.visualizerStyles.${style}`)"
+                @click="layoutStore.setVisualizerStyle(style)">
+                <AppIcon :name="getStyleIcon(style)" />
+              </button>
+            </template>
           </div>
 
           <!-- Close button -->
@@ -1115,6 +1218,10 @@ function getStyleIcon(style: string) {
   }
 
   &__slider {
+    --thumb-offset-y: -5px;
+    --thumb-offset-x: 0px;
+    --thumb-width: 14px;
+    --thumb-radius: 7px;
     -webkit-appearance: none;
     appearance: none;
     width: 100px;
@@ -1150,11 +1257,33 @@ function getStyleIcon(style: string) {
       appearance: none;
       width: 14px;
       height: 14px;
-      margin-top: -5px; /* (4 - 14) / 2 */
+      margin-top: -5px !important;
       border-radius: 50%;
       background: white;
       cursor: pointer;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+    }
+
+    &::-moz-range-track {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-full);
+      height: 4px;
+    }
+
+    &::-moz-range-progress {
+      background: var(--color-primary);
+      border-radius: var(--radius-full);
+      height: 4px;
+    }
+
+    &::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border: none;
+      border-radius: 50%;
+      background: white;
+      cursor: pointer;
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
     }
   }
 
@@ -1187,6 +1316,15 @@ function getStyleIcon(style: string) {
     @media (max-width: 768px) {
       font-size: 1.15rem;
     }
+  }
+
+  &__music-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
   }
 }
 

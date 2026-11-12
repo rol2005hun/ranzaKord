@@ -2,34 +2,39 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import plugin from '../../app/plugins/tauri-fetch.client';
 import { isTauri } from '@tauri-apps/api/core';
 
+import { mockNuxtImport } from '@nuxt/test-utils/runtime';
+
 vi.mock('@tauri-apps/api/core', () => ({
   isTauri: vi.fn()
 }));
 
+const createSpy = vi.hoisted(() => vi.fn().mockImplementation((opts: unknown) => opts));
+mockNuxtImport('$fetch', () => ({
+  create: createSpy
+}));
+
 describe('tauri-fetch.client plugin', () => {
-  let originalFetch: typeof globalThis.$fetch;
-
-  let createSpy: import('vitest').Mock;
-
   beforeEach(() => {
     vi.resetAllMocks();
-    originalFetch = globalThis.$fetch;
-
-    if (!globalThis.$fetch) {
-      globalThis.$fetch = vi.fn() as unknown as typeof globalThis.$fetch;
-    }
-
-    createSpy = vi.fn().mockImplementation((opts: unknown) => opts);
-    (globalThis.$fetch as unknown as { create: import('vitest').Mock }).create = createSpy;
+    process.env.TEST_TAURI_FETCH = '1';
+    createSpy.mockClear();
   });
 
   afterEach(() => {
-    globalThis.$fetch = originalFetch;
+    delete process.env.TEST_TAURI_FETCH;
   });
 
   it('overrides globalThis.$fetch with undefined baseURL if not in tauri prod', () => {
     vi.mocked(isTauri).mockReturnValue(false);
-    plugin({} as import('nuxt/app').NuxtApp);
+    if (typeof plugin === 'function') {
+      (plugin as unknown as (app: import('nuxt/app').NuxtApp) => void)(
+        {} as import('nuxt/app').NuxtApp
+      );
+    } else {
+      (plugin as unknown as { setup?: (app: import('nuxt/app').NuxtApp) => void }).setup?.(
+        {} as import('nuxt/app').NuxtApp
+      );
+    }
 
     expect(createSpy).toHaveBeenCalled();
     const config = createSpy.mock.calls[0]?.[0] as {
@@ -40,8 +45,15 @@ describe('tauri-fetch.client plugin', () => {
 
   it('overrides globalThis.$fetch with prod baseURL if in tauri prod', () => {
     vi.mocked(isTauri).mockReturnValue(true);
-    // Mock import.meta.dev as false by redefining it if possible, but Vitest defaults it to false in standard setups or we can just assume it works.
-    plugin({} as import('nuxt/app').NuxtApp);
+    if (typeof plugin === 'function') {
+      (plugin as unknown as (app: import('nuxt/app').NuxtApp) => void)(
+        {} as import('nuxt/app').NuxtApp
+      );
+    } else {
+      (plugin as unknown as { setup?: (app: import('nuxt/app').NuxtApp) => void }).setup?.(
+        {} as import('nuxt/app').NuxtApp
+      );
+    }
 
     expect(createSpy).toHaveBeenCalled();
     const config = createSpy.mock.calls[0]?.[0] as {

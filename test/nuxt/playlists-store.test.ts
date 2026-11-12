@@ -9,17 +9,19 @@ mockNuxtImport('useI18n', () => {
   });
 });
 
-describe('usePlaylistsStore', () => {
-  let fetchMock: ReturnType<typeof vi.fn>;
+const fetchMock = vi.hoisted(() => vi.fn());
+mockNuxtImport('$fetch', () => fetchMock);
 
+describe('usePlaylistsStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.resetAllMocks();
-    fetchMock = vi.fn();
-    globalThis.$fetch = fetchMock as unknown as typeof globalThis.$fetch;
+    fetchMock.mockReset();
+    vi.stubGlobal('$fetch', fetchMock);
   });
 
   afterEach(() => {
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
@@ -101,12 +103,12 @@ describe('usePlaylistsStore', () => {
       const store = usePlaylistsStore();
 
       await store.update('p1', { name: 'New Name' });
-      expect(globalThis.$fetch).toHaveBeenCalledWith('/api/playlists/p1', {
+      expect(fetchMock).toHaveBeenCalledWith('/api/playlists/p1', {
         method: 'PATCH',
         body: { name: 'New Name' }
       });
       // update calls fetchAll which calls /api/playlists
-      expect(globalThis.$fetch).toHaveBeenCalledWith('/api/playlists', expect.any(Object));
+      expect(fetchMock).toHaveBeenCalledWith('/api/playlists', expect.any(Object));
     });
 
     it('removes a playlist', async () => {
@@ -157,7 +159,7 @@ describe('usePlaylistsStore', () => {
 
       const res = await store.fetchDetail('p1', { limit: 10, offset: 0 });
       expect(res).toEqual(detail);
-      expect(globalThis.$fetch).toHaveBeenCalledWith(
+      expect(fetchMock).toHaveBeenCalledWith(
         '/api/playlists/p1?limit=10&offset=0',
         expect.anything()
       );
@@ -203,7 +205,7 @@ describe('usePlaylistsStore', () => {
       const res = await store.importPlaylist('http://yt', 'youtube');
 
       expect(res?.id).toBe('p3');
-      expect(globalThis.$fetch).toHaveBeenCalledWith(
+      expect(fetchMock).toHaveBeenCalledWith(
         '/api/playlists/p3/tracks',
         expect.objectContaining({ method: 'POST' })
       );
@@ -232,7 +234,7 @@ describe('usePlaylistsStore', () => {
       const res = await store.importPlaylist('http://sp', 'spotify');
 
       expect(res?.id).toBe('p4');
-      expect(globalThis.$fetch).toHaveBeenCalledWith(
+      expect(fetchMock).toHaveBeenCalledWith(
         '/api/playlists/p4/tracks',
         expect.objectContaining({ method: 'POST' })
       );
@@ -300,7 +302,7 @@ describe('usePlaylistsStore', () => {
       const store = usePlaylistsStore();
       const result = await store.reorderTrack('p1', 1, 1);
       expect(result).toBe(true);
-      expect(globalThis.$fetch).not.toHaveBeenCalled();
+      expect(fetchMock).not.toHaveBeenCalled();
     });
 
     it('calls API and returns success', async () => {
@@ -310,7 +312,7 @@ describe('usePlaylistsStore', () => {
       const result = await store.reorderTrack('p1', 0, 2);
 
       expect(result).toBe(true);
-      expect(globalThis.$fetch).toHaveBeenCalledWith('/api/playlists/p1/reorder', {
+      expect(fetchMock).toHaveBeenCalledWith('/api/playlists/p1/reorder', {
         method: 'PATCH',
         body: { fromIndex: 0, toIndex: 2 }
       });

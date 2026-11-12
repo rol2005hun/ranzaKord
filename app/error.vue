@@ -15,7 +15,7 @@ const handleError = () => {
 };
 
 // We apply the current theme manually here because error.vue is completely outside app.vue
-const themeDataAttr = computed(() => themeStore.themeId || 'wc2026');
+const themeDataAttr = computed(() => themeStore.themeId || 'dark');
 
 const customColorStyle = computed(() => {
   const palette = themeStore.currentCustomPalette;

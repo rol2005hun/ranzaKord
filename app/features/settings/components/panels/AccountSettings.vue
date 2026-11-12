@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
-import { useAuth } from '../../../auth/composables/useAuth';
-
 const { currentUser, isAuthenticated, logout, fetchUser } = useAuth();
+const { t } = useI18n();
 const toast = useToast();
 
 const isPublicProfile = ref(true);
@@ -19,7 +17,7 @@ watch(
   { immediate: true }
 );
 
-const updatePrivacySettings = async () => {
+const updatePrivacySettings = async (): Promise<void> => {
   try {
     await $fetch('/api/me/settings', {
       method: 'PATCH',
@@ -29,9 +27,9 @@ const updatePrivacySettings = async () => {
       }
     });
     await fetchUser();
-    toast.success('Adatvédelmi beállítások elmentve');
+    toast.success(t('settings.account.privacy.saveSuccess'));
   } catch {
-    toast.danger('Hiba történt a mentés során');
+    toast.danger(t('settings.account.privacy.saveError'));
   }
 };
 </script>
@@ -76,16 +74,18 @@ const updatePrivacySettings = async () => {
     </AppSettingsSection>
 
     <template v-if="isAuthenticated && currentUser">
-      <h2 class="settings-panel__title" style="margin-top: 2rem">Adatvédelem</h2>
+      <h2 class="settings-panel__title" style="margin-top: 2rem">
+        {{ $t('settings.account.privacy.title') }}
+      </h2>
       <AppSettingsSection>
         <AppSettingsItem
-          title="Publikus profil"
-          description="Mások megtekinthetik a profilodat és követhetnek téged">
+          :title="$t('settings.account.privacy.publicProfile.title')"
+          :description="$t('settings.account.privacy.publicProfile.description')">
           <AppToggle v-model="isPublicProfile" @update:model-value="updatePrivacySettings" />
         </AppSettingsItem>
         <AppSettingsItem
-          title="Lejátszási listák mutatása"
-          description="Mások láthatják a publikus lejátszási listáidat a profilodon">
+          :title="$t('settings.account.privacy.showPlaylists.title')"
+          :description="$t('settings.account.privacy.showPlaylists.description')">
           <AppToggle v-model="showPlaylists" @update:model-value="updatePrivacySettings" />
         </AppSettingsItem>
       </AppSettingsSection>

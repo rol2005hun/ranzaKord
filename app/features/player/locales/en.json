@@ -22,6 +22,7 @@
   "lyricsLoading": "Loading lyrics...",
   "lyricsNotSynced": "Lyrics not synced",
   "translateToHu": "Translate to Hungarian",
+  "showOriginal": "Show original",
   "translating": "Translating...",
   "nowPlaying": "Now Playing",
   "queue": "Queue",
@@ -39,6 +40,12 @@
   "noRecommendations": "No recommendations available",
   "fullscreenVisualizer": "Fullscreen visualizer",
   "closeVisualizer": "Close visualizer",
+  "backgroundMode": "Background",
+  "backgroundModeVisualizer": "Visualizer",
+  "backgroundModeMusicVideo": "Music Video",
+  "musicVideoSearching": "Looking for music video...",
+  "musicVideoNotFound": "No music video found",
+
   "karaokeMode": "Karaoke Mode (Vocal Remover)",
   "visualizerStyle": "Visualizer Style",
   "visualizerStyles": {

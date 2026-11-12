@@ -554,27 +554,29 @@ onMounted(() => {
         </Transition>
       </div>
       <template v-if="isLoading">
-        <div
-          v-for="i in 15"
-          :key="`normal-skel-${i}`"
-          class="app-track-list__track app-track-list__track--skeleton"
-          :style="{ height: `${itemHeight}px`, gridTemplateColumns: gridColumns }">
-          <div class="app-track-list__track-num-wrapper">
-            <div class="skeleton-box" style="height: 14px; width: 16px"></div>
-          </div>
-          <div class="app-track-list__track-info">
-            <div v-if="showThumbnails" class="app-track-list__track-thumb skeleton-box"></div>
-            <div class="app-track-list__track-text">
-              <div class="skeleton-box" style="height: 16px; width: 220px; max-width: 70%"></div>
-              <div
-                class="skeleton-box"
-                style="height: 12px; width: 140px; max-width: 50%; margin-top: 4px"></div>
+        <div class="app-track-list__skeletons" style="padding-top: var(--space-2)">
+          <div
+            v-for="i in 15"
+            :key="`normal-skel-${i}`"
+            class="app-track-list__track app-track-list__track--skeleton"
+            :style="{ height: `${itemHeight}px`, gridTemplateColumns: gridColumns }">
+            <div class="app-track-list__track-num-wrapper">
+              <div class="skeleton-box" style="height: 14px; width: 16px"></div>
             </div>
+            <div class="app-track-list__track-info">
+              <div v-if="showThumbnails" class="app-track-list__track-thumb skeleton-box"></div>
+              <div class="app-track-list__track-text">
+                <div class="skeleton-box" style="height: 16px; width: 220px; max-width: 70%"></div>
+                <div
+                  class="skeleton-box"
+                  style="height: 12px; width: 140px; max-width: 50%; margin-top: 4px"></div>
+              </div>
+            </div>
+            <div v-if="hasDateColumn" class="skeleton-box" style="height: 14px; width: 80px"></div>
+            <div class="skeleton-box" style="height: 14px; width: 40px"></div>
+            <div v-if="hasDownloadColumn"></div>
+            <div v-if="hasActionColumn"></div>
           </div>
-          <div v-if="hasDateColumn" class="skeleton-box" style="height: 14px; width: 80px"></div>
-          <div class="skeleton-box" style="height: 14px; width: 40px"></div>
-          <div v-if="hasDownloadColumn"></div>
-          <div v-if="hasActionColumn"></div>
         </div>
       </template>
     </div>
@@ -648,6 +650,7 @@ onMounted(() => {
     z-index: 1;
     overflow-y: auto;
     scrollbar-width: none;
+    padding-top: var(--space-2);
 
     &::-webkit-scrollbar {
       display: none;
@@ -672,12 +675,14 @@ onMounted(() => {
   &__container {
     display: flex;
     flex-direction: column;
+    padding-top: var(--space-2);
   }
 
   &__track {
     display: grid;
     align-items: center;
-    padding: 0 var(--space-6);
+    margin: 0 var(--space-2);
+    padding: 0 var(--space-4);
     border-radius: var(--radius-md);
     cursor: pointer;
     transition: background-color var(--transition-fast);
@@ -893,7 +898,8 @@ onMounted(() => {
     }
 
     &__track {
-      padding: 0 var(--space-2);
+      margin: 0 var(--space-1);
+      padding: 0 var(--space-1);
       gap: var(--space-2);
     }
 

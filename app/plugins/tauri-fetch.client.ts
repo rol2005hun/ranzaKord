@@ -7,6 +7,8 @@ export default defineNuxtPlugin({
     const config = useRuntimeConfig();
     const defaultBaseUrl = config.public.baseUrl;
 
+    if (import.meta.test && !process.env.TEST_TAURI_FETCH) return;
+
     globalThis.$fetch = $fetch.create({
       baseURL: isTauri() ? defaultBaseUrl : undefined,
       onRequest({ request, options }) {

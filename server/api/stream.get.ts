@@ -12,6 +12,7 @@ const workingClients: ClientType[] = [
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const videoId = query['v'] as string | undefined;
+  const streamType = (query['type'] as string | undefined) ?? 'audio';
   const { t } = useServerTranslation(event);
 
   if (!videoId || videoId.trim().length === 0) {
@@ -22,6 +23,7 @@ export default defineEventHandler(async (event) => {
   const debugInfo: Record<string, string> = {};
 
   let resolvedStreamUrl: string | undefined;
+  let resolvedUA: string | undefined;
 
   for (let attempt = 1; attempt <= 2; attempt++) {
     for (const client of workingClients) {
@@ -32,23 +34,43 @@ export default defineEventHandler(async (event) => {
           ...(info.streaming_data?.adaptive_formats || [])
         ];
 
-        let format = formats.find(
-          (f) => f.has_audio && !f.has_video && (f.url || f.signature_cipher)
-        );
-        if (!format) {
-          format = formats.find((f) => f.has_audio && (f.url || f.signature_cipher));
+        let format;
+        if (streamType === 'video') {
+          format =
+            formats.find(
+              (f) =>
+                f.has_video &&
+                f.has_audio &&
+                (f.url || f.signature_cipher) &&
+                (f as unknown as { height?: number }).height &&
+                ((f as unknown as { height?: number }).height as number) <= 720
+            ) ||
+            formats.find((f) => f.has_video && f.has_audio && (f.url || f.signature_cipher)) ||
+            formats.find((f) => f.has_video && (f.url || f.signature_cipher));
+        } else {
+          format = formats.find(
+            (f) => f.has_audio && !f.has_video && (f.url || f.signature_cipher)
+          );
+          if (!format) {
+            format = formats.find((f) => f.has_audio && (f.url || f.signature_cipher));
+          }
         }
 
         if (!format) {
           const status = info.playability_status?.status || 'UNKNOWN';
           const reason = info.playability_status?.reason || 'No reason provided';
           debugInfo[client] =
-            `No audio format found on attempt ${attempt}. Status: ${status}. Reason: ${reason}.`;
+            `No ${streamType} format found on attempt ${attempt}. Status: ${status}. Reason: ${reason}.`;
           continue;
         }
 
         let candidateUrl = format.url as string | undefined;
-        if (!candidateUrl) {
+        if (!candidateUrl && (format as unknown as Record<string, unknown>).signatureCipher) {
+          candidateUrl = await format.decipher(innertube.session.player);
+        } else if (
+          !candidateUrl &&
+          (format as unknown as Record<string, unknown>).signature_cipher
+        ) {
           candidateUrl = await format.decipher(innertube.session.player);
         }
 
@@ -57,7 +79,6 @@ export default defineEventHandler(async (event) => {
           continue;
         }
 
-        // Use a client-specific User-Agent or omit it to avoid 403 on iOS URLs
         const clientUA =
           client === 'IOS'
             ? 'com.google.ios.youtube/19.28.1 (iPhone14,5; U; CPU iOS 17_5_1 like Mac OS X)'
@@ -84,6 +105,7 @@ export default defineEventHandler(async (event) => {
         }
 
         resolvedStreamUrl = candidateUrl;
+        resolvedUA = clientUA;
         break;
       } catch (e) {
         debugInfo[client] = e instanceof Error ? e.message : String(e);
@@ -103,5 +125,11 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  return proxyRequest(event, resolvedStreamUrl);
+  return proxyRequest(event, resolvedStreamUrl, {
+    headers: {
+      'User-Agent':
+        resolvedUA ||
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
+  });
 });

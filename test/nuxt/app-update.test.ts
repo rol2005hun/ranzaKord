@@ -6,6 +6,8 @@ import { check } from '@tauri-apps/plugin-updater';
 
 import { useRuntimeConfig } from '#imports';
 
+import { mockNuxtImport } from '@nuxt/test-utils/runtime';
+
 vi.mock('@tauri-apps/plugin-updater', () => ({
   check: vi.fn()
 }));
@@ -14,18 +16,15 @@ vi.mock('@tauri-apps/plugin-process', () => ({
   relaunch: vi.fn()
 }));
 
-describe('useAppUpdate', () => {
-  let fetchMock: ReturnType<typeof vi.fn>;
-  let originalFetch: typeof globalThis.$fetch;
+const fetchMock = vi.hoisted(() => vi.fn());
+mockNuxtImport('$fetch', () => fetchMock);
 
+describe('useAppUpdate', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     useRuntimeConfig().public.appVersion = '0.1.0';
     vi.clearAllMocks();
-
-    originalFetch = globalThis.$fetch;
-    fetchMock = vi.fn();
-    globalThis.$fetch = fetchMock as unknown as typeof globalThis.$fetch;
+    fetchMock.mockReset();
 
     (window as unknown as Record<string, unknown>).__TAURI_INTERNALS__ = {};
     vi.mocked(check).mockRejectedValue(new Error('no native updater'));
@@ -37,7 +36,6 @@ describe('useAppUpdate', () => {
   });
 
   afterEach(() => {
-    globalThis.$fetch = originalFetch;
     vi.restoreAllMocks();
     delete (window as unknown as Record<string, unknown>).__TAURI_INTERNALS__;
   });

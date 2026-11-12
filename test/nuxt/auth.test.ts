@@ -10,9 +10,10 @@ const { mockNavigateTo } = vi.hoisted(() => ({
 }));
 mockNuxtImport('navigateTo', () => mockNavigateTo);
 
-describe('Auth Module', () => {
-  let fetchMock: ReturnType<typeof vi.fn>;
+const fetchMock = vi.hoisted(() => vi.fn());
+mockNuxtImport('$fetch', () => fetchMock);
 
+describe('Auth Module', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.resetAllMocks();
@@ -35,8 +36,7 @@ describe('Auth Module', () => {
     });
 
     // Mock globalThis.$fetch
-    fetchMock = vi.fn();
-    globalThis.$fetch = fetchMock as unknown as typeof globalThis.$fetch;
+    fetchMock.mockReset();
   });
 
   afterEach(() => {
@@ -105,7 +105,7 @@ describe('Auth Module', () => {
 
       await logout();
 
-      expect(globalThis.$fetch).toHaveBeenCalledWith('/auth/logout', { method: 'POST' });
+      expect(fetchMock).toHaveBeenCalledWith('/auth/logout', { method: 'POST' });
       expect(mockNavigateTo).toHaveBeenCalledWith('/login');
     });
 
@@ -116,7 +116,7 @@ describe('Auth Module', () => {
 
       await fetchUser();
 
-      expect(globalThis.$fetch).toHaveBeenCalledWith('/api/me');
+      expect(fetchMock).toHaveBeenCalledWith('/api/me');
       expect(store.user).toEqual({ sub: '2', name: 'Fetched User' });
     });
 

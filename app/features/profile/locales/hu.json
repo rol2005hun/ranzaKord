@@ -5,7 +5,7 @@
   "following": "Követve",
   "follow": "Követés",
   "unfollow": "Kikövetés",
-  "playlists": "Publikus Lejátszási Listák",
+  "playlists": "publikus lejátszási lista",
   "noPlaylists": "Ez a felhasználó még nem hozott létre publikus lejátszási listákat.",
   "connectionsModalTitle": {
     "followers": "Követők",
@@ -13,5 +13,11 @@
   },
   "anonymousCount": "...és további {count} privát profil",
   "anonymousCountOnly": "{count} privát profil",
-  "noConnections": "Nincsenek megjeleníthető felhasználók."
+  "noConnections": "Nincsenek megjeleníthető felhasználók.",
+  "badge": "Profil",
+  "errorNotFound": "Profil nem található. Lehet, hogy privát vagy nem létezik.",
+  "publicPlaylistsTitle": "Publikus listák",
+  "trackCount": "{count} dal",
+  "refresh": "Frissítés",
+  "followError": "Hiba történt a művelet során."
 }

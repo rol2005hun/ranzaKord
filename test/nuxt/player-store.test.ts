@@ -6,6 +6,7 @@ describe('usePlayerStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.resetAllMocks();
+    localStorage.clear();
   });
 
   afterEach(() => {

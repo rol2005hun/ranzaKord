@@ -1,12 +1,43 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
 
+import { getContrastColor } from '@/utils/color';
+
 const { themeId, currentCustomPalette } = useTheme();
+const themeStore = useThemeStore();
 
 const customColorStyle = computed(() => {
   if (!currentCustomPalette.value) return '';
   const cc = currentCustomPalette.value.primary;
-  return `:root { --color-primary-h: ${cc.h}; --color-primary-s: ${cc.s}%; --color-primary-l: ${cc.l}%; }`;
+  const sec = currentCustomPalette.value.secondary;
+  const h = cc.h;
+
+  let style = `:root { 
+    --color-primary-h: ${cc.h}; 
+    --color-primary-s: ${cc.s}%; 
+    --color-primary-l: ${cc.l}%; 
+    --color-primary-foreground: ${getContrastColor(cc.hex)};
+  }`;
+
+  if (themeStore.isAdaptiveThemeEnabled) {
+    style += `
+      :root {
+        --color-bg: hsl(${h} 20% 4%);
+        --color-surface: hsl(${h} 20% 8%);
+        --color-surface-hover: hsl(${h} 20% 12%);
+        --color-surface-raised: hsl(${h} 20% 16%);
+        --color-surface-glass: hsl(${h} 20% 8% / 0.78);
+        --color-border: hsl(${h} 20% 16%);
+        --color-border-hover: hsl(${h} 20% 24%);
+        --color-text-primary: hsl(${h} 10% 95%);
+        --color-text-secondary: hsl(${h} 15% 75%);
+        --color-text-tertiary: hsl(${h} 15% 55%);
+        --gradient-hero: linear-gradient(135deg, hsl(${sec.h} 30% 12%) 0%, hsl(${h} 20% 4%) 100%);
+      }
+    `;
+  }
+
+  return style;
 });
 
 const { locale } = useI18n({ useScope: 'global' });
@@ -63,6 +94,7 @@ onMounted(async () => {
     <ClientOnly>
       <AppUpdateModal v-model="showUpdateModal" />
       <SettingsModal />
+      <AppSnowEffect v-if="themeId === 'christmas'" />
     </ClientOnly>
 
     <Teleport to="body">
