@@ -30,68 +30,68 @@
     "youtube:login": "tsx scripts/youtube-login.ts"
   },
   "dependencies": {
-    "@pinia/colada": "1.4.8",
-    "@tauri-apps/api": "2.12.2",
-    "@tauri-apps/plugin-deep-link": "^2.6.1",
-    "@tauri-apps/plugin-global-shortcut": "^2.4.0",
-    "@tauri-apps/plugin-opener": "^2.7.0",
+    "@pinia/colada": "1.4.9",
+    "@tauri-apps/api": "2.12.4",
+    "@tauri-apps/plugin-deep-link": "^2.6.3",
+    "@tauri-apps/plugin-global-shortcut": "^2.4.1",
+    "@tauri-apps/plugin-opener": "^2.7.3",
     "@tauri-apps/plugin-process": "~2.4.0",
-    "@tauri-apps/plugin-updater": "^2.13.2",
-    "@unhead/vue": "^3.4.2",
+    "@tauri-apps/plugin-updater": "^2.14.1",
+    "@unhead/vue": "^3.4.3",
     "jintr": "^3.3.1",
-    "mongoose": "^9.11.1",
-    "nuxt": "4.5.2",
-    "pinia": "^4.0.3",
+    "mongoose": "^9.12.1",
+    "nuxt": "4.6.4",
+    "pinia": "^4.1.0",
     "pinia-orm": "^2.0.0",
     "pinia-plugin-persistedstate": "^4.7.1",
     "spotify-url-info": "^3.3.3",
-    "vue": "^3.5.43",
-    "vue-i18n": "^11.4.13",
-    "vue-router": "^5.4.0",
-    "youtubei.js": "^18.1.0"
+    "vue": "^3.5.45",
+    "vue-i18n": "^11.4.19",
+    "vue-router": "^5.5.0",
+    "youtubei.js": "^18.3.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "^21.2.3",
-    "@commitlint/config-conventional": "^21.2.3",
-    "@iconify-json/flag": "^1.2.12",
-    "@iconify-json/fluent": "^1.2.59",
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "@iconify-json/flag": "^1.2.15",
+    "@iconify-json/fluent": "^1.2.61",
     "@iconify-json/ph": "^1.2.2",
     "@iconify-json/twemoji": "^1.2.5",
     "@nuxt/a11y": "1.0.0-alpha.1",
     "@nuxt/eslint": "1.17.0",
-    "@nuxt/fonts": "0.14.0",
-    "@nuxt/hints": "1.1.4",
-    "@nuxt/icon": "2.5.1",
-    "@nuxt/image": "2.1.0",
+    "@nuxt/fonts": "1.2.0",
+    "@nuxt/hints": "1.1.5",
+    "@nuxt/icon": "2.6.2",
+    "@nuxt/image": "2.2.1",
     "@nuxt/scripts": "1.3.12",
-    "@nuxt/test-utils": "4.3.3",
+    "@nuxt/test-utils": "4.4.0",
     "@nuxtjs/i18n": "10.6.0",
-    "@nuxtjs/seo": "^5.3.16",
-    "@pinia/colada-nuxt": "1.2.0",
-    "@pinia/nuxt": "1.0.2",
-    "@pinia/testing": "^2.0.1",
-    "@playwright/test": "^1.64.0",
-    "@tauri-apps/cli": "^2.12.1",
-    "@types/node": "^26.6.4",
-    "@vitest/coverage-v8": "^5.0.3",
+    "@nuxtjs/seo": "^6.0.1",
+    "@pinia/colada-nuxt": "1.2.1",
+    "@pinia/nuxt": "1.0.3",
+    "@pinia/testing": "^2.0.2",
+    "@playwright/test": "^1.65.0",
+    "@tauri-apps/cli": "^2.12.4",
+    "@types/node": "^26.6.6",
+    "@vitest/coverage-v8": "^5.1.0",
     "@vue/test-utils": "^2.5.1",
     "@vueuse/nuxt": "^15.0.0",
     "bumpp": "^12.3.0",
-    "eslint": "^10.12.0",
-    "eslint-plugin-oxlint": "^1.87.0",
-    "happy-dom": "^20.14.6",
+    "eslint": "^10.14.0",
+    "eslint-plugin-oxlint": "^1.93.0",
+    "happy-dom": "^21.0.4",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
-    "oxlint": "^1.87.0",
-    "playwright-core": "^1.64.0",
-    "prettier": "^3.9.9",
+    "oxlint": "^1.93.0",
+    "playwright-core": "^1.65.0",
+    "prettier": "^3.10.1",
     "replace-in-file": "^9.0.0",
-    "sass": "^1.105.1",
+    "sass": "^1.108.2",
     "tsx": "^4.23.15",
-    "typescript": "^5.6.3",
-    "vitest": "^5.0.3",
-    "vue-tsc": "^3.3.12",
-    "zod": "^4.6.5"
+    "typescript": "~6.0.3",
+    "vitest": "^5.1.0",
+    "vue-tsc": "^3.3.14",
+    "zod": "^4.6.7"
   },
   "engines": {
     "node": ">=20.0.0"
@@ -103,31 +103,6 @@
     ],
     "*.{scss,css,json}": [
       "prettier --write"
-    ]
-  },
-  "pnpm": {
-    "overrides": {
-      "vite-plugin-checker": "0.14.5",
-      "h3": "1.15.11"
-    },
-    "peerDependencyRules": {
-      "ignoreMissing": [
-        "@unhead/vue",
-        "pinia",
-        "@pinia/nuxt"
-      ],
-      "allowedVersions": {
-        "@unhead/vue": "*",
-        "pinia": "*",
-        "@pinia/nuxt": "*"
-      }
-    },
-    "onlyBuiltDependencies": [
-      "@parcel/watcher",
-      "esbuild",
-      "sharp",
-      "unrs-resolver",
-      "vue-demi"
     ]
   }
 }
