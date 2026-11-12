@@ -18,13 +18,13 @@ const id = computed(() => route.params.id as string);
 const store = usePlaylistsStore();
 const player = usePlayer();
 const offlineStore = useOfflineStore();
+const isMounted = ref(false);
 
 onMounted(async () => {
+  isMounted.value = true;
   await offlineStore.init();
 });
 
-const playlist = ref<PlaylistDetail | null>(null);
-const isLoading = ref(true);
 const isDeleting = ref(false);
 const showEditModal = ref(false);
 const showCollaboratorModal = ref(false);
@@ -70,17 +70,12 @@ const { data, status, refresh } = useAsyncData<PlaylistDetail | null>(
     });
   },
   {
-    watch: [id, sortBy, sortOrder, debouncedSearch],
-    lazy: true
+    watch: [id, sortBy, sortOrder, debouncedSearch]
   }
 );
 
-watchEffect(() => {
-  if (data.value) {
-    playlist.value = data.value;
-  }
-  isLoading.value = status.value === 'pending' && !playlist.value;
-});
+const playlist = ref<PlaylistDetail | null>(data.value ?? null);
+const isLoading = computed(() => status.value === 'pending' && !playlist.value);
 
 const trackCount = computed(() => playlist.value?.trackCount ?? 0);
 
@@ -430,25 +425,29 @@ const showStickyMobileMenu = ref(false);
           <button
             class="playlist-page__action-btn"
             :title="$t('search.placeholder')"
+            :aria-label="$t('search.placeholder')"
             @click="focusSearch">
             <AppIcon name="ph:magnifying-glass" />
           </button>
           <button
             class="playlist-page__action-btn"
             :title="$t('playlists.editPlaylist')"
+            :aria-label="$t('playlists.editPlaylist')"
             @click="showEditModal = true">
             <AppIcon name="ph:pencil-simple" />
           </button>
           <button
             v-if="isOwner"
             class="playlist-page__action-btn"
-            title="Kollaborátorok"
+            :title="$t('playlists.collaborators')"
+            :aria-label="$t('playlists.collaborators')"
             @click="showCollaboratorModal = true">
             <AppIcon name="ph:users" />
           </button>
           <button
             class="playlist-page__action-btn playlist-page__action-btn--danger"
             :title="$t('playlists.deletePlaylist')"
+            :aria-label="$t('playlists.deletePlaylist')"
             :disabled="isDeleting"
             @click="showDeleteConfirm = true">
             <AppIcon name="ph:trash" />
@@ -458,12 +457,15 @@ const showStickyMobileMenu = ref(false);
           <button
             class="playlist-page__action-btn"
             :title="$t('search.placeholder')"
+            :aria-label="$t('search.placeholder')"
             @click="focusSearch">
             <AppIcon name="ph:magnifying-glass" />
           </button>
           <div class="playlist-page__more-container">
             <button
               class="playlist-page__action-btn"
+              :title="$t('core.actions.more')"
+              :aria-label="$t('core.actions.more')"
               @click="showStickyMobileMenu = !showStickyMobileMenu">
               <AppIcon name="ph:dots-three-vertical-bold" />
             </button>
@@ -490,7 +492,7 @@ const showStickyMobileMenu = ref(false);
                     showCollaboratorModal = true;
                   ">
                   <AppIcon name="ph:users" />
-                  Kollaborátorok
+                  {{ $t('playlists.collaborators') }}
                 </button>
                 <button
                   class="playlist-page__dropdown-item playlist-page__dropdown-item--danger"
@@ -513,6 +515,7 @@ const showStickyMobileMenu = ref(false);
           <button
             class="playlist-page__action-btn"
             :title="$t('offline.downloadPlaylist')"
+            :aria-label="$t('offline.downloadPlaylist')"
             :disabled="isDownloadingPlaylist"
             @click="downloadPlaylist">
             <AppSpinner v-if="isDownloadingPlaylist" size="sm" />
@@ -521,19 +524,22 @@ const showStickyMobileMenu = ref(false);
           <button
             class="playlist-page__action-btn"
             :title="$t('playlists.editPlaylist')"
+            :aria-label="$t('playlists.editPlaylist')"
             @click="showEditModal = true">
             <AppIcon name="ph:pencil-simple" />
           </button>
           <button
             v-if="isOwner"
             class="playlist-page__action-btn"
-            title="Kollaborátorok"
+            :title="$t('playlists.collaborators')"
+            :aria-label="$t('playlists.collaborators')"
             @click="showCollaboratorModal = true">
             <AppIcon name="ph:users" />
           </button>
           <button
             class="playlist-page__action-btn playlist-page__action-btn--danger"
             :title="$t('playlists.deletePlaylist')"
+            :aria-label="$t('playlists.deletePlaylist')"
             :disabled="isDeleting"
             @click="showDeleteConfirm = true">
             <AppIcon name="ph:trash" />
@@ -543,6 +549,8 @@ const showStickyMobileMenu = ref(false);
           <div class="playlist-page__more-container">
             <button
               class="playlist-page__action-btn playlist-page__action-btn--more"
+              :title="$t('core.actions.more')"
+              :aria-label="$t('core.actions.more')"
               @click="showMobileMenu = !showMobileMenu">
               <AppIcon name="ph:dots-three-vertical-bold" />
             </button>
@@ -580,7 +588,7 @@ const showStickyMobileMenu = ref(false);
                     showCollaboratorModal = true;
                   ">
                   <AppIcon name="ph:users" />
-                  Kollaborátorok
+                  {{ $t('playlists.collaborators') }}
                 </button>
                 <button
                   class="playlist-page__dropdown-item playlist-page__dropdown-item--danger"
@@ -671,36 +679,34 @@ const showStickyMobileMenu = ref(false);
       :collaborators="playlist.collaborators || []"
       @saved="refresh()" />
 
-    <ClientOnly>
-      <Teleport to="body">
-        <Transition name="modal">
-          <div
-            v-if="showDeleteConfirm"
-            class="playlist-page__confirm-overlay"
-            @click.self="!isDeleting && (showDeleteConfirm = false)">
-            <div class="playlist-page__confirm-dialog">
-              <h3>{{ $t('playlists.deletePlaylist') }}</h3>
-              <p>{{ $t('playlists.confirmDelete') }}</p>
-              <div class="playlist-page__confirm-actions">
-                <button
-                  class="playlist-page__confirm-btn playlist-page__confirm-btn--ghost"
-                  :disabled="isDeleting"
-                  @click="showDeleteConfirm = false">
-                  {{ $t('core.actions.cancel') }}
-                </button>
-                <button
-                  class="playlist-page__confirm-btn playlist-page__confirm-btn--danger"
-                  :disabled="isDeleting"
-                  @click="onDelete">
-                  <AppSpinner v-if="isDeleting" size="sm" />
-                  <span>{{ isDeleting ? $t('playlists.deleting') : $t('playlists.delete') }}</span>
-                </button>
-              </div>
+    <Teleport v-if="isMounted" to="body">
+      <Transition name="modal">
+        <div
+          v-if="showDeleteConfirm"
+          class="playlist-page__confirm-overlay"
+          @click.self="!isDeleting && (showDeleteConfirm = false)">
+          <div class="playlist-page__confirm-dialog">
+            <h3>{{ $t('playlists.deletePlaylist') }}</h3>
+            <p>{{ $t('playlists.confirmDelete') }}</p>
+            <div class="playlist-page__confirm-actions">
+              <button
+                class="playlist-page__confirm-btn playlist-page__confirm-btn--ghost"
+                :disabled="isDeleting"
+                @click="showDeleteConfirm = false">
+                {{ $t('core.actions.cancel') }}
+              </button>
+              <button
+                class="playlist-page__confirm-btn playlist-page__confirm-btn--danger"
+                :disabled="isDeleting"
+                @click="onDelete">
+                <AppSpinner v-if="isDeleting" size="sm" />
+                <span>{{ isDeleting ? $t('playlists.deleting') : $t('playlists.delete') }}</span>
+              </button>
             </div>
           </div>
-        </Transition>
-      </Teleport>
-    </ClientOnly>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 

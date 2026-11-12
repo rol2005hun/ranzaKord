@@ -27,9 +27,6 @@ export const usePlaylistsStore = defineStore('playlists', () => {
   const nuxtApp = useNuxtApp();
   const t = nuxtApp.$i18n.t;
 
-  // Capture request headers during setup for SSR
-  const reqHeaders = import.meta.server ? useRequestHeaders(['cookie']) : { cookie: '' };
-
   function isTrackInPlaylist(playlistId: string, videoId: string): boolean {
     const p = [...playlists.value, ...sharedPlaylists.value].find((x) => x.id === playlistId);
     return p ? p.trackIds.includes(videoId) : false;
@@ -64,8 +61,9 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     try {
       const fetchOptions: { headers?: Record<string, string> } = {};
       if (import.meta.server) {
-        if (reqHeaders.cookie) {
-          fetchOptions.headers = { cookie: reqHeaders.cookie };
+        const headers = useRequestHeaders(['cookie']);
+        if (headers.cookie) {
+          fetchOptions.headers = { cookie: headers.cookie };
         }
       }
       const response = await $fetch<{
@@ -269,8 +267,9 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     try {
       const fetchOptions: { headers?: Record<string, string> } = {};
       if (import.meta.server) {
-        if (reqHeaders.cookie) {
-          fetchOptions.headers = { cookie: reqHeaders.cookie };
+        const headers = useRequestHeaders(['cookie']);
+        if (headers.cookie) {
+          fetchOptions.headers = { cookie: headers.cookie };
         }
       }
 
