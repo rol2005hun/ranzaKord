@@ -312,5 +312,4 @@ function formatSize(bytes: number): string {
   justify-content: flex-end;
   gap: var(--space-3);
 }
-}
 </style>
