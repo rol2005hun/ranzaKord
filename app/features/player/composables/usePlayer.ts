@@ -19,6 +19,7 @@ let crossfadeGain2 = 0.0;
 let isCrossfading = false;
 let crossfadeTriggered = false;
 let crossfadeRafId: number | null = null;
+let crossfadeIntervalId: ReturnType<typeof setInterval> | null = null;
 let audioAbortController: AbortController | null = null;
 let currentPlayRequestId = 0;
 
@@ -26,6 +27,10 @@ function stopCrossfadeTimers() {
   if (crossfadeRafId !== null) {
     cancelAnimationFrame(crossfadeRafId);
     crossfadeRafId = null;
+  }
+  if (crossfadeIntervalId !== null) {
+    clearInterval(crossfadeIntervalId);
+    crossfadeIntervalId = null;
   }
 }
 
@@ -68,7 +73,7 @@ export function usePlayer() {
 
   let isRestoring = false;
 
-  const { setGains, setEqGains } = useAudioVisualizer();
+  const { setGains, setEqGains, resumeAudioContext } = useAudioVisualizer();
 
   watch(
     () => store.eqEnabled,
@@ -83,6 +88,47 @@ export function usePlayer() {
 
   function applyVolumes() {
     setGains(crossfadeGain1, crossfadeGain2, store.volume, audio1Ref.value, audio2Ref.value);
+  }
+
+  function updateMediaSession(track: Track) {
+    if (!import.meta.client || !('mediaSession' in navigator)) return;
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: track.title,
+        artist: track.artist,
+        artwork: track.thumbnailUrl
+          ? [{ src: track.thumbnailUrl, sizes: '512x512', type: 'image/jpeg' }]
+          : []
+      });
+      navigator.mediaSession.playbackState = store.isPlaying ? 'playing' : 'paused';
+      if (isFinite(track.durationSeconds) && track.durationSeconds > 0) {
+        navigator.mediaSession.setPositionState({
+          duration: track.durationSeconds,
+          playbackRate: 1,
+          position: Math.min(store.currentTimeSeconds, track.durationSeconds)
+        });
+      }
+      navigator.mediaSession.setActionHandler('play', resume);
+      navigator.mediaSession.setActionHandler('pause', pause);
+      navigator.mediaSession.setActionHandler('previoustrack', playPrev);
+      navigator.mediaSession.setActionHandler('nexttrack', playNext);
+      navigator.mediaSession.setActionHandler('seekto', (details) => {
+        if (typeof details.seekTime === 'number') {
+          seek(details.seekTime);
+        }
+      });
+      navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+        seek(Math.max(0, store.currentTimeSeconds - (details.seekOffset || 10)));
+      });
+      navigator.mediaSession.setActionHandler('seekforward', (details) => {
+        seek(
+          Math.min(store.durationSeconds, store.currentTimeSeconds + (details.seekOffset || 10))
+        );
+      });
+      navigator.mediaSession.setActionHandler('stop', pause);
+    } catch {
+      void 0;
+    }
   }
 
   function bindAudio(el1: HTMLAudioElement, el2: HTMLAudioElement) {
@@ -106,7 +152,7 @@ export function usePlayer() {
       el.addEventListener(
         'timeupdate',
         () => {
-          if (isRestoring) return;
+          if (isRestoring || store.isLoading) return;
           if (index === activeAudioIndex.value) {
             store.currentTimeSeconds = el.currentTime;
             if ('mediaSession' in navigator && isFinite(el.duration) && el.duration > 0) {
@@ -156,7 +202,23 @@ export function usePlayer() {
       el.addEventListener(
         'play',
         () => {
-          if (index === activeAudioIndex.value) store.isPlaying = true;
+          if (index === activeAudioIndex.value) {
+            store.isPlaying = true;
+            resumeAudioContext();
+            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+          }
+        },
+        { signal }
+      );
+
+      el.addEventListener(
+        'playing',
+        () => {
+          if (index === activeAudioIndex.value) {
+            store.isPlaying = true;
+            resumeAudioContext();
+            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+          }
         },
         { signal }
       );
@@ -166,6 +228,7 @@ export function usePlayer() {
         () => {
           if (index === activeAudioIndex.value && !isCrossfading) {
             store.isPlaying = false;
+            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
           }
         },
         { signal }
@@ -218,6 +281,10 @@ export function usePlayer() {
     });
 
     applyVolumes();
+
+    if (store.currentTrack) {
+      updateMediaSession(store.currentTrack);
+    }
 
     if (store.currentTrack) {
       const savedTime = store.currentTimeSeconds;
@@ -279,6 +346,7 @@ export function usePlayer() {
 
     store.setTrack(nextTrack);
     store.isPlaying = true;
+    updateMediaSession(nextTrack);
 
     const durationMs = store.crossfadeDuration * 1000;
     const startTime = performance.now();
@@ -328,6 +396,13 @@ export function usePlayer() {
 
     stopCrossfadeTimers();
     crossfadeRafId = requestAnimationFrame(loop);
+    crossfadeIntervalId = setInterval(() => {
+      if (isCrossfading) {
+        step(performance.now());
+      } else {
+        stopCrossfadeTimers();
+      }
+    }, 100);
   }
 
   function recordTrackStat(track: Track, listeningSeconds: number, skipped: boolean) {
@@ -460,8 +535,13 @@ export function usePlayer() {
 
     const requestId = ++currentPlayRequestId;
 
-    if (activeAudio.value) {
-      activeAudio.value.pause();
+    if (audio1Ref.value) {
+      audio1Ref.value.pause();
+      audio1Ref.value.currentTime = 0;
+    }
+    if (audio2Ref.value) {
+      audio2Ref.value.pause();
+      audio2Ref.value.currentTime = 0;
     }
 
     isCrossfading = false;
@@ -474,23 +554,13 @@ export function usePlayer() {
     }
 
     store.setTrack(track, fromHistory);
+    store.currentTimeSeconds = 0;
     store.isLoading = true;
     store.isPlaying = false;
     store.error = null;
 
     checkAndFetchMore(track);
-
-    if ('mediaSession' in navigator) {
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: track.title,
-        artist: track.artist,
-        artwork: track.thumbnailUrl ? [{ src: track.thumbnailUrl, sizes: '512x512' }] : []
-      });
-      navigator.mediaSession.setActionHandler('play', resume);
-      navigator.mediaSession.setActionHandler('pause', pause);
-      navigator.mediaSession.setActionHandler('previoustrack', playPrev);
-      navigator.mediaSession.setActionHandler('nexttrack', playNext);
-    }
+    updateMediaSession(track);
 
     try {
       await nextTick();
@@ -523,10 +593,14 @@ export function usePlayer() {
         connect(audio1Ref.value, audio2Ref.value, store.volume);
       }
 
+      resumeAudioContext();
       await el.play();
       if (requestId !== currentPlayRequestId) return;
 
       store.isPlaying = true;
+      if ('mediaSession' in navigator) {
+        navigator.mediaSession.playbackState = 'playing';
+      }
       prefetchNextTrack();
     } catch {
       if (requestId === currentPlayRequestId) {
@@ -560,6 +634,7 @@ export function usePlayer() {
   registerPauseCallback(pause);
 
   function resume() {
+    resumeAudioContext();
     if (activeAudio.value && store.currentTrack) {
       activeAudio.value
         .play()
@@ -590,6 +665,21 @@ export function usePlayer() {
       activeAudio.value.currentTime = seconds;
       store.currentTimeSeconds = seconds;
       store.syncDiscordPresence();
+      if (
+        'mediaSession' in navigator &&
+        isFinite(store.durationSeconds) &&
+        store.durationSeconds > 0
+      ) {
+        try {
+          navigator.mediaSession.setPositionState({
+            duration: store.durationSeconds,
+            playbackRate: 1,
+            position: Math.min(seconds, store.durationSeconds)
+          });
+        } catch {
+          void 0;
+        }
+      }
     }
   }
 

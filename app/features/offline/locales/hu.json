@@ -14,5 +14,6 @@
   "deleteAll": "Összes törlése",
   "deleteAllConfirm": "Biztosan törölni szeretnéd az összes letöltött zenét?",
   "navLabel": "Offline könyvtár",
-  "storageUsed": "{size} felhasználva"
+  "storageUsed": "{size} felhasználva",
+  "downloadProgress": "{current}/{total} dal"
 }

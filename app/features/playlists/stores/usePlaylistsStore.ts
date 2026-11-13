@@ -178,8 +178,6 @@ export const usePlaylistsStore = defineStore('playlists', () => {
           playlist.trackCount++;
           if (import.meta.client) {
             localStorage.setItem('ranzakord_demo_playlists', JSON.stringify(playlists.value));
-
-            // Save full track details so we can reconstruct the playlist details
             const storedTracks = localStorage.getItem('ranzakord_demo_tracks');
             const demoTracks: Record<string, Track> = storedTracks ? JSON.parse(storedTracks) : {};
             demoTracks[track.videoId] = {
@@ -197,13 +195,23 @@ export const usePlaylistsStore = defineStore('playlists', () => {
       return;
     }
 
-    await $fetch(`/api/playlists/${playlistId}/tracks`, { method: 'POST', body: track });
-    const playlist = playlists.value.find((p) => p.id === playlistId);
-    if (playlist) {
+    const playlist =
+      playlists.value.find((p) => p.id === playlistId) ??
+      sharedPlaylists.value.find((p) => p.id === playlistId);
+    const wasAlreadyIn = playlist?.trackIds.includes(track.videoId) ?? false;
+    if (playlist && !wasAlreadyIn) {
       playlist.trackCount++;
-      if (!playlist.trackIds.includes(track.videoId)) {
-        playlist.trackIds.push(track.videoId);
+      playlist.trackIds.push(track.videoId);
+    }
+
+    try {
+      await $fetch(`/api/playlists/${playlistId}/tracks`, { method: 'POST', body: track });
+    } catch (err) {
+      if (playlist && !wasAlreadyIn) {
+        playlist.trackCount = Math.max(0, playlist.trackCount - 1);
+        playlist.trackIds = playlist.trackIds.filter((id) => id !== track.videoId);
       }
+      throw err;
     }
   }
 
@@ -221,11 +229,23 @@ export const usePlaylistsStore = defineStore('playlists', () => {
       return;
     }
 
-    await $fetch(`/api/playlists/${playlistId}/tracks/${videoId}`, { method: 'DELETE' });
-    const playlist = playlists.value.find((p) => p.id === playlistId);
-    if (playlist) {
+    const playlist =
+      playlists.value.find((p) => p.id === playlistId) ??
+      sharedPlaylists.value.find((p) => p.id === playlistId);
+    const wasIn = playlist?.trackIds.includes(videoId) ?? false;
+    if (playlist && wasIn) {
       playlist.trackCount = Math.max(0, playlist.trackCount - 1);
       playlist.trackIds = playlist.trackIds.filter((id) => id !== videoId);
+    }
+
+    try {
+      await $fetch(`/api/playlists/${playlistId}/tracks/${videoId}`, { method: 'DELETE' });
+    } catch (err) {
+      if (playlist && wasIn) {
+        playlist.trackCount++;
+        playlist.trackIds.push(videoId);
+      }
+      throw err;
     }
   }
 

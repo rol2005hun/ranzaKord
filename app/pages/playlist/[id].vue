@@ -347,13 +347,25 @@ function onPlaySong(track: TrackListItem, index: number): void {
 }
 
 async function removeTrack(videoId: string): Promise<void> {
-  await store.removeTrack(id.value, videoId);
   const idx = virtualTracks.value.findIndex((t) => t?.videoId === videoId);
+  const removedTrack = idx >= 0 ? virtualTracks.value[idx] : null;
   if (idx >= 0) {
     virtualTracks.value.splice(idx, 1);
     if (data.value) {
       data.value.trackCount = Math.max(0, data.value.trackCount - 1);
     }
+  }
+
+  try {
+    await store.removeTrack(id.value, videoId);
+  } catch (err) {
+    if (idx >= 0 && removedTrack) {
+      virtualTracks.value.splice(idx, 0, removedTrack);
+      if (data.value) {
+        data.value.trackCount++;
+      }
+    }
+    throw err;
   }
 }
 
@@ -405,12 +417,22 @@ async function onImageError(): Promise<void> {
 }
 
 const isDownloadingPlaylist = ref(false);
+const downloadTotal = ref(0);
+const downloadCurrent = ref(0);
+
+const playlistDownloadPercent = computed(() => {
+  if (downloadTotal.value <= 0) return 0;
+  return Math.min(100, Math.round((downloadCurrent.value / downloadTotal.value) * 100));
+});
 
 async function downloadPlaylist(): Promise<void> {
   if (isDownloadingPlaylist.value) return;
   const loaded = virtualTracks.value.filter((t): t is PlaylistTrack => t !== null);
   if (loaded.length === 0) return;
   isDownloadingPlaylist.value = true;
+  const toDownload = loaded.filter((t) => !offlineStore.isTrackDownloaded(t.videoId));
+  downloadTotal.value = toDownload.length;
+  downloadCurrent.value = 0;
   for (const t of loaded) {
     const track: Track = {
       videoId: t.videoId,
@@ -421,9 +443,12 @@ async function downloadPlaylist(): Promise<void> {
     };
     if (!offlineStore.isTrackDownloaded(track.videoId)) {
       await offlineStore.downloadTrack(track);
+      downloadCurrent.value++;
     }
   }
   isDownloadingPlaylist.value = false;
+  downloadTotal.value = 0;
+  downloadCurrent.value = 0;
 }
 
 const showMobileMenu = ref(false);
@@ -577,15 +602,44 @@ const showStickyMobileMenu = ref(false);
 
       <template #actions>
         <div class="playlist-page__actions-desktop">
-          <button
-            class="playlist-page__action-btn"
-            :title="$t('offline.downloadPlaylist')"
-            :aria-label="$t('offline.downloadPlaylist')"
-            :disabled="isDownloadingPlaylist"
-            @click="downloadPlaylist">
-            <AppSpinner v-if="isDownloadingPlaylist" size="sm" />
-            <AppIcon v-else name="ph:arrow-circle-down-duotone" />
-          </button>
+          <div class="playlist-page__download-wrapper">
+            <button
+              class="playlist-page__action-btn"
+              :class="{ 'playlist-page__action-btn--downloading': isDownloadingPlaylist }"
+              :title="$t('offline.downloadPlaylist')"
+              :aria-label="$t('offline.downloadPlaylist')"
+              :disabled="isDownloadingPlaylist"
+              @click="downloadPlaylist">
+              <span v-if="isDownloadingPlaylist" class="playlist-page__progress-ring">
+                <svg viewBox="0 0 48 48" class="playlist-page__ring-svg">
+                  <circle
+                    class="playlist-page__ring-bg"
+                    cx="24"
+                    cy="24"
+                    r="20"
+                    fill="none"
+                    stroke-width="3" />
+                  <circle
+                    class="playlist-page__ring-fill"
+                    cx="24"
+                    cy="24"
+                    r="20"
+                    fill="none"
+                    stroke-width="3"
+                    :stroke-dasharray="`${(playlistDownloadPercent / 100) * 125.66} 125.66`"
+                    stroke-linecap="round"
+                    transform="rotate(-90 24 24)" />
+                </svg>
+                <AppIcon name="ph:arrow-down" class="playlist-page__download-icon" />
+              </span>
+              <AppIcon v-else name="ph:arrow-circle-down-duotone" />
+            </button>
+            <span v-if="isDownloadingPlaylist" class="playlist-page__download-count">
+              {{
+                $t('offline.downloadProgress', { current: downloadCurrent, total: downloadTotal })
+              }}
+            </span>
+          </div>
           <button
             class="playlist-page__action-btn"
             :title="$t('playlists.editPlaylist')"
@@ -634,7 +688,14 @@ const showStickyMobileMenu = ref(false);
                   ">
                   <AppSpinner v-if="isDownloadingPlaylist" size="sm" />
                   <AppIcon v-else name="ph:arrow-circle-down-duotone" />
-                  {{ $t('offline.downloadPlaylist') }}
+                  {{
+                    isDownloadingPlaylist
+                      ? $t('offline.downloadProgress', {
+                          current: downloadCurrent,
+                          total: downloadTotal
+                        })
+                      : $t('offline.downloadPlaylist')
+                  }}
                 </button>
                 <button
                   class="playlist-page__dropdown-item"
@@ -1070,6 +1131,53 @@ const showStickyMobileMenu = ref(false);
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  &__download-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  &__progress-ring {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__ring-svg {
+    width: 44px;
+    height: 44px;
+    position: absolute;
+    overflow: visible;
+  }
+
+  &__ring-bg {
+    stroke: color-mix(in srgb, var(--color-text-secondary) 30%, transparent);
+  }
+
+  &__ring-fill {
+    stroke: var(--color-primary);
+    transition: stroke-dasharray 0.3s ease;
+  }
+
+  &__download-icon {
+    font-size: 1.25rem;
+    color: var(--color-primary);
+    position: relative;
+    z-index: 1;
+  }
+
+  &__download-count {
+    font-size: 10px;
+    line-height: 1;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    pointer-events: none;
   }
 }
 

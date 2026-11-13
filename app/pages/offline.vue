@@ -7,9 +7,11 @@ const { t } = useI18n();
 const offlineStore = useOfflineStore();
 const player = usePlayer();
 const showDeleteConfirm = ref(false);
+const isMounted = ref(false);
 
 onMounted(async () => {
   await offlineStore.init();
+  isMounted.value = true;
 });
 
 useHead({
@@ -53,9 +55,17 @@ const mappedTracks = computed(() => {
   }));
 });
 
+const isDeleting = ref(false);
+
 async function confirmDeleteAll(): Promise<void> {
-  await offlineStore.removeAll();
-  showDeleteConfirm.value = false;
+  if (isDeleting.value) return;
+  isDeleting.value = true;
+  try {
+    await offlineStore.removeAll();
+    showDeleteConfirm.value = false;
+  } finally {
+    isDeleting.value = false;
+  }
 }
 
 function formatSize(bytes: number): string {
@@ -65,84 +75,96 @@ function formatSize(bytes: number): string {
 </script>
 
 <template>
-  <AppMusicPage :title="t('offline.title')" :show-play-button="false">
-    <template #fallback-icon>
-      <AppIcon name="ph:wifi-slash-duotone" />
-    </template>
+  <div class="offline-page">
+    <AppMusicPage :title="t('offline.title')" :show-play-button="false">
+      <template #fallback-icon>
+        <AppIcon name="ph:wifi-slash-duotone" />
+      </template>
 
-    <template #meta>
-      <span class="offline-header__size">
-        <AppIcon name="ph:database-duotone" />
-        {{ totalSizeMb }} MB
-      </span>
-    </template>
+      <template #meta>
+        <span class="offline-header__size">
+          <AppIcon name="ph:database-duotone" />
+          {{ totalSizeMb }} MB
+        </span>
+      </template>
 
-    <template #actions>
-      <button
-        v-if="offlineStore.downloadedTracks.length > 0"
-        class="offline-header__delete-btn"
-        @click="showDeleteConfirm = true">
-        <AppIcon name="ph:trash-duotone" />
-        {{ t('offline.deleteAll') }}
-      </button>
-    </template>
-
-    <template #tracks>
-      <div class="offline-content">
-        <div v-if="offlineStore.storageQuotaBytes > 0" class="offline-storage">
-          <div class="offline-storage__info">
-            <span class="offline-storage__used">
-              {{ t('offline.storageUsed', { size: formatSize(offlineStore.totalSizeBytes) }) }}
-            </span>
-            <span class="offline-storage__quota">
-              {{ formatSize(offlineStore.storageQuotaBytes) }} MAX
-            </span>
-          </div>
-          <div class="offline-storage__bar">
-            <div
-              class="offline-storage__fill"
-              :style="{
-                width: `${Math.min(100, (offlineStore.totalSizeBytes / offlineStore.storageQuotaBytes) * 100)}%`
-              }"></div>
-          </div>
-        </div>
-
-        <div v-if="offlineStore.downloadedTracks.length === 0" class="offline-empty">
-          <AppIcon name="ph:wifi-slash-duotone" class="offline-empty__icon" />
-          <p class="offline-empty__title">{{ t('offline.empty') }}</p>
-          <p class="offline-empty__hint">{{ t('offline.emptyHint') }}</p>
-        </div>
-
-        <AppTrackList
-          v-else
-          class="offline-track-list"
-          :tracks="mappedTracks"
-          :columns="['index', 'title', 'date', 'time', 'action']"
-          :show-thumbnails="true"
-          @play="playTrackFromList"
-          @remove="removeTrackFromList" />
-      </div>
-    </template>
-
-    <AppModal
-      v-if="showDeleteConfirm"
-      :model-value="showDeleteConfirm"
-      @update:model-value="showDeleteConfirm = $event">
-      <template #title>{{ t('offline.deleteAll') }}</template>
-      <p>{{ t('offline.deleteAllConfirm') }}</p>
       <template #actions>
-        <button class="app-btn app-btn--ghost" @click="showDeleteConfirm = false">
-          {{ t('core.cancel') }}
-        </button>
-        <button class="app-btn app-btn--danger" @click="confirmDeleteAll">
+        <button
+          v-if="offlineStore.downloadedTracks.length > 0"
+          class="offline-header__delete-btn"
+          @click="showDeleteConfirm = true">
+          <AppIcon name="ph:trash-duotone" />
           {{ t('offline.deleteAll') }}
         </button>
       </template>
-    </AppModal>
-  </AppMusicPage>
+
+      <template #tracks>
+        <div class="offline-content">
+          <div v-if="offlineStore.storageQuotaBytes > 0" class="offline-storage">
+            <div class="offline-storage__info">
+              <span class="offline-storage__used">
+                {{ t('offline.storageUsed', { size: formatSize(offlineStore.totalSizeBytes) }) }}
+              </span>
+              <span class="offline-storage__quota">
+                {{ formatSize(offlineStore.storageQuotaBytes) }} MAX
+              </span>
+            </div>
+            <div class="offline-storage__bar">
+              <div
+                class="offline-storage__fill"
+                :style="{
+                  width: `${Math.min(100, (offlineStore.totalSizeBytes / offlineStore.storageQuotaBytes) * 100)}%`
+                }"></div>
+            </div>
+          </div>
+
+          <div v-if="offlineStore.downloadedTracks.length === 0" class="offline-empty">
+            <AppIcon name="ph:wifi-slash-duotone" class="offline-empty__icon" />
+            <p class="offline-empty__title">{{ t('offline.empty') }}</p>
+            <p class="offline-empty__hint">{{ t('offline.emptyHint') }}</p>
+          </div>
+
+          <AppTrackList
+            v-else
+            class="offline-track-list"
+            :tracks="mappedTracks"
+            :columns="['index', 'title', 'date', 'time', 'action']"
+            :show-thumbnails="true"
+            @play="playTrackFromList"
+            @remove="removeTrackFromList" />
+        </div>
+      </template>
+    </AppMusicPage>
+
+    <Teleport v-if="isMounted" to="body">
+      <Transition name="modal">
+        <div
+          v-if="showDeleteConfirm"
+          class="offline-confirm-overlay"
+          @click.self="!isDeleting && (showDeleteConfirm = false)">
+          <div class="offline-confirm-dialog">
+            <h3 class="offline-confirm-title">{{ t('offline.deleteAll') }}</h3>
+            <p class="offline-delete-confirm-text">{{ t('offline.deleteAllConfirm') }}</p>
+            <div class="offline-confirm-actions">
+              <AppButton variant="ghost" :disabled="isDeleting" @click="showDeleteConfirm = false">
+                {{ t('core.actions.cancel') }}
+              </AppButton>
+              <AppButton variant="danger" :loading="isDeleting" @click="confirmDeleteAll">
+                {{ t('offline.deleteAll') }}
+              </AppButton>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+  </div>
 </template>
 
 <style scoped lang="scss">
+.offline-page {
+  height: 100%;
+}
+
 .offline-content {
   padding: 0 var(--space-6);
   padding-bottom: var(--space-8);
@@ -247,5 +269,47 @@ function formatSize(bytes: number): string {
 
 .offline-track-list {
   margin-top: var(--space-4);
+}
+
+.offline-delete-confirm-text {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  margin: 0;
+  margin-bottom: var(--space-6);
+}
+
+.offline-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background-color: var(--color-overlay);
+  z-index: var(--z-modal);
+}
+
+.offline-confirm-dialog {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.offline-confirm-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-3);
+}
+
+.offline-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
 }
 </style>

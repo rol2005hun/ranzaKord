@@ -14,5 +14,6 @@
   "deleteAll": "Delete all",
   "deleteAllConfirm": "Are you sure you want to delete all downloaded tracks?",
   "navLabel": "Offline Library",
-  "storageUsed": "{size} used"
+  "storageUsed": "{size} used",
+  "downloadProgress": "{current}/{total} tracks"
 }

@@ -11,13 +11,13 @@ const streamCache = new Map<string, CachedStream>();
 const STREAM_CACHE_TTL = 2 * 60 * 60 * 1000;
 
 const defaultWorkingClients: ClientType[] = [
-  'WEB',
   'YTMUSIC',
+  'WEB_CREATOR',
+  'WEB',
   'MWEB',
   'ANDROID',
   'IOS',
   'TV_EMBEDDED',
-  'WEB_CREATOR',
   'TV'
 ];
 
@@ -34,11 +34,26 @@ export default defineEventHandler(async (event) => {
   const cacheKey = `${videoId.trim()}_${streamType}`;
   const cached = streamCache.get(cacheKey);
   if (cached && Date.now() < cached.expiresAt) {
-    return proxyRequest(event, cached.url, {
-      headers: {
-        'User-Agent': cached.ua
+    try {
+      const testRes = await fetch(cached.url, {
+        method: 'GET',
+        headers: {
+          'User-Agent': cached.ua,
+          Range: 'bytes=0-'
+        },
+        signal: AbortSignal.timeout(1500)
+      });
+      if (testRes.status !== 403) {
+        return proxyRequest(event, cached.url, {
+          headers: {
+            'User-Agent': cached.ua
+          }
+        });
       }
-    });
+    } catch {
+      streamCache.delete(cacheKey);
+    }
+    streamCache.delete(cacheKey);
   }
 
   const innertube = await createInnertube(true);
@@ -75,12 +90,9 @@ export default defineEventHandler(async (event) => {
             formats.find((f) => f.has_video && f.has_audio && (f.url || f.signature_cipher)) ||
             formats.find((f) => f.has_video && (f.url || f.signature_cipher));
         } else {
-          format = formats.find(
-            (f) => f.has_audio && !f.has_video && (f.url || f.signature_cipher)
-          );
-          if (!format) {
-            format = formats.find((f) => f.has_audio && (f.url || f.signature_cipher));
-          }
+          format =
+            formats.find((f) => f.has_audio && f.has_video && (f.url || f.signature_cipher)) ||
+            formats.find((f) => f.has_audio && (f.url || f.signature_cipher));
         }
 
         if (!format) {
@@ -116,15 +128,16 @@ export default defineEventHandler(async (event) => {
                 : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
         const testRes = await fetch(candidateUrl, {
-          method: 'HEAD',
+          method: 'GET',
           headers: {
-            'User-Agent': clientUA
+            'User-Agent': clientUA,
+            Range: 'bytes=0-'
           },
-          signal: AbortSignal.timeout(1500)
+          signal: AbortSignal.timeout(2000)
         });
 
         if (testRes.status === 403) {
-          debugInfo[client] = `Stream URL HEAD returned 403 on attempt ${attempt}.`;
+          debugInfo[client] = `Stream URL test returned 403 on attempt ${attempt}.`;
           continue;
         }
 
