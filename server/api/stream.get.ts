@@ -39,14 +39,16 @@ export default defineEventHandler(async (event) => {
         method: 'GET',
         headers: {
           'User-Agent': cached.ua,
-          Range: 'bytes=0-'
+          Range: 'bytes=0-65535'
         },
         signal: AbortSignal.timeout(1500)
       });
       if (testRes.status !== 403) {
+        const clientRange = getRequestHeader(event, 'range');
         return proxyRequest(event, cached.url, {
           headers: {
-            'User-Agent': cached.ua
+            'User-Agent': cached.ua,
+            ...(clientRange ? { Range: clientRange } : {})
           }
         });
       }
@@ -131,7 +133,7 @@ export default defineEventHandler(async (event) => {
           method: 'GET',
           headers: {
             'User-Agent': clientUA,
-            Range: 'bytes=0-'
+            Range: 'bytes=0-65535'
           },
           signal: AbortSignal.timeout(2000)
         });
@@ -200,7 +202,10 @@ export default defineEventHandler(async (event) => {
     headers: {
       'User-Agent':
         resolvedUA ||
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      ...(getRequestHeader(event, 'range')
+        ? { Range: getRequestHeader(event, 'range') as string }
+        : {})
     }
   });
 });
