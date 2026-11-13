@@ -106,6 +106,16 @@ const { virtualTracks, visibleItems, totalHeight, offsetY, onScroll, containerRe
     debounceMs: 200
   });
 
+if (data.value) {
+  const count = data.value.trackCount;
+  const firstChunk = data.value.tracks;
+  playlist.value = data.value;
+  virtualTracks.value = new Array(count).fill(null);
+  for (let i = 0; i < firstChunk.length; i++) {
+    virtualTracks.value[i] = firstChunk[i] ?? null;
+  }
+}
+
 watch(
   () => data.value,
   (newData) => {
@@ -709,20 +719,28 @@ const showStickyMobileMenu = ref(false);
           </div>
 
           <div v-else :ref="setContainerRef">
-            <AppTrackList
-              :virtual="true"
-              :visible-items="mappedVisibleItems"
-              :offset-y="offsetY"
-              :total-height="totalHeight"
-              :columns="['index', 'title', 'date', 'time', 'download', 'action']"
-              :show-thumbnails="true"
-              :sort-by="sortBy"
-              :sort-order="sortOrder"
-              :reorderable="isReorderable"
-              @play="onPlaySong"
-              @remove="removeTrackWrapper"
-              @sort="onSort"
-              @reorder="(from, to) => store.reorderTrack(id, from, to)" />
+            <ClientOnly>
+              <AppTrackList
+                :virtual="true"
+                :visible-items="mappedVisibleItems"
+                :offset-y="offsetY"
+                :total-height="totalHeight"
+                :columns="['index', 'title', 'date', 'time', 'download', 'action']"
+                :show-thumbnails="true"
+                :sort-by="sortBy"
+                :sort-order="sortOrder"
+                :reorderable="isReorderable"
+                @play="onPlaySong"
+                @remove="removeTrackWrapper"
+                @sort="onSort"
+                @reorder="(from, to) => store.reorderTrack(id, from, to)" />
+              <template #fallback>
+                <AppTrackList
+                  :is-loading="true"
+                  :columns="['index', 'title', 'date', 'time', 'download', 'action']"
+                  :show-thumbnails="true" />
+              </template>
+            </ClientOnly>
           </div>
         </template>
       </template>
