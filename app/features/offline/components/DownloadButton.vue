@@ -1,4 +1,4 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import type { Track } from '@/features/player/types/player.types';
 
 interface Props {
@@ -45,18 +45,18 @@ async function handleClick(event: MouseEvent): Promise<void> {
           class="download-btn__ring-bg"
           cx="12"
           cy="12"
-          r="9.5"
+          r="10.2"
           fill="none"
-          stroke-width="2.5" />
+          stroke-width="2" />
         <circle
           class="download-btn__ring-fill"
           :class="{ 'download-btn__ring-fill--indeterminate': progress <= 0 }"
           cx="12"
           cy="12"
-          r="9.5"
+          r="10.2"
           fill="none"
-          stroke-width="2.5"
-          :stroke-dasharray="progress > 0 ? `${(progress / 100) * 59.7} 59.7` : '18 41.7'"
+          stroke-width="2"
+          :stroke-dasharray="progress > 0 ? `${(progress / 100) * 64.1} 64.1` : '18 46.1'"
           stroke-linecap="round"
           transform="rotate(-90 12 12)" />
       </svg>
@@ -96,19 +96,27 @@ async function handleClick(event: MouseEvent): Promise<void> {
     font-size: 1.2rem;
 
     .download-btn__ring-svg {
-      width: 28px;
-      height: 28px;
+      width: 30px;
+      height: 30px;
+    }
+
+    .download-btn__icon--small {
+      font-size: 0.8rem;
     }
   }
 
   &--sm {
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
     font-size: 1rem;
 
     .download-btn__ring-svg {
-      width: 22px;
-      height: 22px;
+      width: 24px;
+      height: 24px;
+    }
+
+    .download-btn__icon--small {
+      font-size: 0.65rem;
     }
   }
 
