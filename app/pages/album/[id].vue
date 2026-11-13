@@ -175,8 +175,8 @@ function onShuffleAlbum(): void {
 <template>
   <div class="album-page">
     <AppMusicPage
-      :is-loading="status === 'pending'"
-      :is-error="!!error || (!album && status !== 'pending')"
+      :is-loading="status === 'pending' || (status === 'idle' && !album)"
+      :is-error="!!error || (!album && status === 'success')"
       :error-text="$t('search.album.loadError')"
       :title="album?.title"
       :badge="$t('search.album.badge')"

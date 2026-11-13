@@ -338,15 +338,6 @@ onClickOutside(moreMenuBtnRef, (e) => {
       </div>
 
       <div class="player-bar__right">
-        <button
-          ref="moreMenuBtnRef"
-          class="player-bar__btn player-bar__more-btn"
-          :class="{ 'player-bar__btn--active': isMoreMenuOpen }"
-          :aria-label="$t('core.actions.more')"
-          @click="isMoreMenuOpen = !isMoreMenuOpen">
-          <AppIcon name="ph:dots-three-vertical-bold" />
-        </button>
-
         <div
           ref="extraControlsRef"
           class="player-bar__extra-controls"
@@ -381,6 +372,9 @@ onClickOutside(moreMenuBtnRef, (e) => {
             @click="toggleLyrics">
             <AppIcon name="ph:microphone-stage" />
           </button>
+        </div>
+
+        <div class="player-bar__volume">
           <button
             class="player-bar__btn player-bar__volume-btn"
             style="width: auto; height: auto"
@@ -411,6 +405,15 @@ onClickOutside(moreMenuBtnRef, (e) => {
             @input="onVolumeInput" />
           <AppSkeleton v-else height="4px" width="100px" class="player-bar__slider--volume" />
         </div>
+
+        <button
+          ref="moreMenuBtnRef"
+          class="player-bar__btn player-bar__more-btn"
+          :class="{ 'player-bar__btn--active': isMoreMenuOpen }"
+          :aria-label="$t('core.actions.more')"
+          @click="isMoreMenuOpen = !isMoreMenuOpen">
+          <AppIcon name="ph:dots-three-vertical-bold" />
+        </button>
       </div>
     </aside>
 
@@ -543,12 +546,19 @@ onClickOutside(moreMenuBtnRef, (e) => {
     align-items: center;
     justify-content: flex-end;
     min-width: 0;
+    gap: var(--space-3);
   }
 
   &__extra-controls {
     display: flex;
     align-items: center;
     gap: var(--space-3);
+  }
+
+  &__volume {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
   }
 
   &__artwork {
@@ -923,8 +933,13 @@ onClickOutside(moreMenuBtnRef, (e) => {
 
     &__right {
       width: auto;
+      flex-shrink: 0;
       gap: var(--space-1);
       order: 2;
+    }
+
+    &__volume {
+      gap: var(--space-1);
     }
 
     &__progress {
@@ -975,11 +990,6 @@ onClickOutside(moreMenuBtnRef, (e) => {
   }
 
   @media (max-width: 1000px) {
-    &__volume-btn,
-    &__slider--volume {
-      display: none !important;
-    }
-
     &__extra-controls {
       display: none;
 

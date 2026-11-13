@@ -1,6 +1,10 @@
 import type { Track, TrackStatPayload } from '../types/player.types';
 
-const { registerPauseCallback, onTrackEnded: sleepTimerOnTrackEnded } = useSleepTimer();
+const {
+  registerPauseCallback,
+  onTrackEnded: sleepTimerOnTrackEnded,
+  sleepTimerMode
+} = useSleepTimer();
 
 const audio1Ref = ref<HTMLAudioElement | null>(null);
 const audio2Ref = ref<HTMLAudioElement | null>(null);
@@ -16,6 +20,7 @@ let isCrossfading = false;
 let crossfadeTriggered = false;
 let crossfadeRafId: number | null = null;
 let audioAbortController: AbortController | null = null;
+let currentPlayRequestId = 0;
 
 function stopCrossfadeTimers() {
   if (crossfadeRafId !== null) {
@@ -111,13 +116,14 @@ export function usePlayer() {
                   playbackRate: el.playbackRate,
                   position: el.currentTime
                 });
-              } catch {
-                // ignore errors when mediaSession state cannot be updated
+              } catch (e) {
+                void e;
               }
             }
 
             const actualDuration = store.currentTrack?.durationSeconds || 0;
             if (
+              sleepTimerMode.value !== 'end-of-track' &&
               store.crossfadeEnabled &&
               store.crossfadeDuration > 0 &&
               actualDuration > 0 &&
@@ -173,7 +179,11 @@ export function usePlayer() {
           if (store.currentTrack) {
             recordTrackStat(store.currentTrack, Math.floor(el.currentTime), false);
           }
-          sleepTimerOnTrackEnded();
+          const handledBySleepTimer = sleepTimerOnTrackEnded();
+          if (handledBySleepTimer) {
+            pause();
+            return;
+          }
           if (store.repeatMode === 'one') {
             seek(0);
             resume();
@@ -437,10 +447,21 @@ export function usePlayer() {
     return null;
   }
 
-  async function playTrack(track: Track, fromHistory = false) {
-    if (store.currentTrack?.videoId === track.videoId && !store.error) {
+  async function playTrack(track: Track, fromHistory = false, force = false): Promise<void> {
+    if (
+      !force &&
+      store.currentTrack?.videoId === track.videoId &&
+      !store.error &&
+      !store.isLoading
+    ) {
       togglePlay();
       return;
+    }
+
+    const requestId = ++currentPlayRequestId;
+
+    if (activeAudio.value) {
+      activeAudio.value.pause();
     }
 
     isCrossfading = false;
@@ -473,6 +494,8 @@ export function usePlayer() {
 
     try {
       await nextTick();
+      if (requestId !== currentPlayRequestId) return;
+
       const el = activeAudio.value;
       if (!el) {
         store.isLoading = false;
@@ -489,21 +512,40 @@ export function usePlayer() {
         otherEl.currentTime = 0;
       }
 
-      el.src = await getStreamUrl(track.videoId);
+      const streamUrl = await getStreamUrl(track.videoId);
+      if (requestId !== currentPlayRequestId) return;
+
+      el.src = streamUrl;
       el.load();
 
-      // Ensure visualizer and audio-reactive loop are connected
       const { connect } = useAudioVisualizer();
       if (audio1Ref.value && audio2Ref.value) {
         connect(audio1Ref.value, audio2Ref.value, store.volume);
       }
 
       await el.play();
+      if (requestId !== currentPlayRequestId) return;
+
       store.isPlaying = true;
+      prefetchNextTrack();
     } catch {
-      store.error = t('player.errors.stream');
+      if (requestId === currentPlayRequestId) {
+        store.error = t('player.errors.stream');
+      }
     } finally {
-      store.isLoading = false;
+      if (requestId === currentPlayRequestId) {
+        store.isLoading = false;
+      }
+    }
+  }
+
+  function prefetchNextTrack() {
+    if (!import.meta.client) return;
+    const next = store.nextTrack();
+    if (next?.videoId) {
+      fetch(getApiUrl(`/api/stream?v=${next.videoId}`), {
+        headers: { Range: 'bytes=0-0' }
+      }).catch(() => {});
     }
   }
 
@@ -592,11 +634,11 @@ export function usePlayer() {
     store.setQueue(tracks);
   }
 
-  function playQueue(tracks: Track[], startIndex = 0) {
+  function playQueue(tracks: Track[], startIndex = 0, force = true) {
     store.setQueue(tracks);
     const track = tracks[startIndex];
     if (track) {
-      playTrack(track);
+      playTrack(track, false, force);
     }
   }
 

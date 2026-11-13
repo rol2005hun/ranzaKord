@@ -55,6 +55,7 @@
     "delete": "Failed to delete playlist"
   },
   "myPlaylist": "My Playlist",
+  "collaborators": "Collaborators",
   "collaboratorAdded": "Collaborator added",
   "collaboratorRemoved": "Collaborator removed",
   "confirmRemove": "Are you sure you want to remove this collaborator?",

@@ -9,14 +9,18 @@ interface EvaluatorData {
   output: string;
 }
 
+const evaluatorContext = vm.createContext({});
+
 Platform.shim.eval = (client: EvaluatorData) => {
-  return vm.runInNewContext(`(function() { ${client.output} })()`);
+  return vm.runInContext(`(function() { ${client.output} })()`, evaluatorContext);
 };
 
 let anonymousInstance: Innertube | null = null;
 let authenticatedInstance: Innertube | null = null;
 let currentAuthKey = '';
 let isAuthenticating = false;
+let lastAuthCheck = 0;
+const AUTH_CACHE_TTL = 60_000;
 
 function cleanConfigValue(value: unknown): string {
   if (typeof value !== 'string') return '';
@@ -32,6 +36,10 @@ function cleanConfigValue(value: unknown): string {
 
 export async function createInnertube(withAuth = false): Promise<Innertube> {
   if (withAuth) {
+    if (authenticatedInstance && Date.now() - lastAuthCheck < AUTH_CACHE_TTL) {
+      return authenticatedInstance;
+    }
+
     if (isAuthenticating) {
       while (isAuthenticating) {
         await new Promise((r) => setTimeout(r, 100));
@@ -46,6 +54,7 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
       const cookieStr =
         cookieRecord && cookieRecord.value ? cleanConfigValue(cookieRecord.value) : '';
       const authKey = cookieStr ? `cookie:${cookieStr}` : '';
+      lastAuthCheck = Date.now();
 
       if (authenticatedInstance && currentAuthKey === authKey && authKey.length > 0) {
         return authenticatedInstance;
