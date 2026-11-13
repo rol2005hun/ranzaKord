@@ -179,8 +179,7 @@ function onSliderChange() {
   height: 140px;
   cursor: pointer;
 
-  /* Vertical slider: swap the thumb offsets to center horizontally instead of vertically */
-  --thumb-offset-x: -4px;
+  --thumb-offset-x: -5px;
   --thumb-offset-y: 0px;
 
   &::-webkit-slider-runnable-track {
@@ -191,8 +190,8 @@ function onSliderChange() {
       var(--color-surface-hover) var(--val, 50%)
     );
     border-radius: var(--radius-full);
-    width: 4px; /* Thickness of the track */
-    height: 100%; /* Length of the track */
+    width: 4px;
+    height: 100%;
     border: 1px solid var(--color-border);
   }
 
@@ -205,15 +204,38 @@ function onSliderChange() {
     border-radius: 50%;
     background: #ffffff;
     border: 2px solid var(--color-primary);
-    margin: 0;
-    transform: translateX(
-      var(--thumb-offset-x, -4px)
-    ); /* Move left to center exactly on the 4px track */
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
   }
 
   &:hover::-webkit-slider-thumb {
-    transform: translateX(var(--thumb-offset-x, -4px)) scale(1.2);
+    transform: scale(1.2);
+  }
+
+  &::-moz-range-track {
+    box-sizing: border-box;
+    background: linear-gradient(
+      to top,
+      var(--color-primary) var(--val, 50%),
+      var(--color-surface-hover) var(--val, 50%)
+    );
+    border-radius: var(--radius-full);
+    width: 4px;
+    height: 100%;
+    border: 1px solid var(--color-border);
+  }
+
+  &::-moz-range-thumb {
+    box-sizing: border-box;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid var(--color-primary);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  &:hover::-moz-range-thumb {
+    transform: scale(1.2);
   }
 }
 
