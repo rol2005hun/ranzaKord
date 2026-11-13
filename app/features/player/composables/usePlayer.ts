@@ -20,6 +20,7 @@ let isCrossfading = false;
 let crossfadeTriggered = false;
 let crossfadeRafId: number | null = null;
 let audioAbortController: AbortController | null = null;
+let currentPlayRequestId = 0;
 
 function stopCrossfadeTimers() {
   if (crossfadeRafId !== null) {
@@ -446,10 +447,21 @@ export function usePlayer() {
     return null;
   }
 
-  async function playTrack(track: Track, fromHistory = false) {
-    if (store.currentTrack?.videoId === track.videoId && !store.error) {
+  async function playTrack(track: Track, fromHistory = false, force = false): Promise<void> {
+    if (
+      !force &&
+      store.currentTrack?.videoId === track.videoId &&
+      !store.error &&
+      !store.isLoading
+    ) {
       togglePlay();
       return;
+    }
+
+    const requestId = ++currentPlayRequestId;
+
+    if (activeAudio.value) {
+      activeAudio.value.pause();
     }
 
     isCrossfading = false;
@@ -482,6 +494,8 @@ export function usePlayer() {
 
     try {
       await nextTick();
+      if (requestId !== currentPlayRequestId) return;
+
       const el = activeAudio.value;
       if (!el) {
         store.isLoading = false;
@@ -498,7 +512,10 @@ export function usePlayer() {
         otherEl.currentTime = 0;
       }
 
-      el.src = await getStreamUrl(track.videoId);
+      const streamUrl = await getStreamUrl(track.videoId);
+      if (requestId !== currentPlayRequestId) return;
+
+      el.src = streamUrl;
       el.load();
 
       const { connect } = useAudioVisualizer();
@@ -507,12 +524,18 @@ export function usePlayer() {
       }
 
       await el.play();
+      if (requestId !== currentPlayRequestId) return;
+
       store.isPlaying = true;
       prefetchNextTrack();
     } catch {
-      store.error = t('player.errors.stream');
+      if (requestId === currentPlayRequestId) {
+        store.error = t('player.errors.stream');
+      }
     } finally {
-      store.isLoading = false;
+      if (requestId === currentPlayRequestId) {
+        store.isLoading = false;
+      }
     }
   }
 
@@ -611,11 +634,11 @@ export function usePlayer() {
     store.setQueue(tracks);
   }
 
-  function playQueue(tracks: Track[], startIndex = 0) {
+  function playQueue(tracks: Track[], startIndex = 0, force = true) {
     store.setQueue(tracks);
     const track = tracks[startIndex];
     if (track) {
-      playTrack(track);
+      playTrack(track, false, force);
     }
   }
 

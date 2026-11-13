@@ -189,13 +189,29 @@ const isCurrentPlaylistLoading = computed(() => {
   );
 });
 
-async function playAll(): Promise<void> {
+function playAll(): void {
   if (isCurrentPlaylistPlaying.value) {
     player.togglePlay();
     return;
   }
 
-  let loadedTracks = virtualTracks.value.filter((t): t is PlaylistTrack => t !== null);
+  const loadedTracks = virtualTracks.value.filter((t): t is PlaylistTrack => t !== null);
+  if (loadedTracks.length === 0) return;
+
+  const tracksToPlay = loadedTracks.map((t) => ({
+    videoId: t.videoId,
+    title: t.title,
+    artist: t.artist,
+    artistId: t.artistId,
+    artists: t.artists?.length
+      ? t.artists.map((a) => ({ name: a.name, id: a.channelId }))
+      : t.artist
+          .split(/,\s*|\s+feat\.\s+|\s+ft\.\s+|\s+&\s+/i)
+          .map((s) => ({ name: s.trim() }))
+          .filter((a) => a.name),
+    thumbnailUrl: t.thumbnailUrl ?? '',
+    durationSeconds: Math.round(t.durationMs / 1000)
+  }));
 
   const pStore = usePlayerStore();
   pStore.playbackContext = {
@@ -204,80 +220,66 @@ async function playAll(): Promise<void> {
     currentOffset: loadedTracks.length,
     totalItems: playlist.value?.trackCount || loadedTracks.length
   };
-  pStore.isLoading = true;
+  player.playQueue(tracksToPlay, 0, true);
 
   if (playlist.value && playlist.value.trackCount > loadedTracks.length) {
-    const fullDetail = await store.fetchDetail(id.value, {
-      limit: playlist.value.trackCount,
-      offset: 0,
-      sortBy: sortBy.value || undefined,
-      sortOrder: sortOrder.value,
-      search: debouncedSearch.value || undefined
-    });
-    if (fullDetail?.tracks) {
-      loadedTracks = fullDetail.tracks;
-    }
+    store
+      .fetchDetail(id.value, {
+        limit: playlist.value.trackCount,
+        offset: 0,
+        sortBy: sortBy.value || undefined,
+        sortOrder: sortOrder.value,
+        search: debouncedSearch.value || undefined
+      })
+      .then((fullDetail) => {
+        if (fullDetail?.tracks && pStore.playbackContext?.sourceId === id.value) {
+          const fullQueue = fullDetail.tracks.map((t) => ({
+            videoId: t.videoId,
+            title: t.title,
+            artist: t.artist,
+            artistId: t.artistId,
+            artists: t.artists?.length
+              ? t.artists.map((a) => ({ name: a.name, id: a.channelId }))
+              : t.artist
+                  .split(/,\s*|\s+feat\.\s+|\s+ft\.\s+|\s+&\s+/i)
+                  .map((s) => ({ name: s.trim() }))
+                  .filter((a) => a.name),
+            thumbnailUrl: t.thumbnailUrl ?? '',
+            durationSeconds: Math.round(t.durationMs / 1000)
+          }));
+          pStore.setQueue(fullQueue);
+          if (pStore.playbackContext) {
+            pStore.playbackContext.currentOffset = fullQueue.length;
+          }
+        }
+      })
+      .catch(() => {});
   }
+}
 
-  if (loadedTracks.length === 0) {
-    pStore.isLoading = false;
+function onPlaySong(track: TrackListItem, index: number): void {
+  const pStore = usePlayerStore();
+
+  if (player.currentTrack.value?.videoId === track.id && !player.isLoading.value && !pStore.error) {
+    player.togglePlay();
     return;
   }
 
-  const tracksToPlay = loadedTracks.map((t) => ({
-    videoId: t.videoId,
-    title: t.title,
-    artist: t.artist,
-    artistId: t.artistId,
-    artists: t.artists?.length
-      ? t.artists.map((a) => ({ name: a.name, id: a.channelId }))
-      : t.artist
-          .split(/,\s*|\s+feat\.\s+|\s+ft\.\s+|\s+&\s+/i)
-          .map((s) => ({ name: s.trim() }))
-          .filter((a) => a.name),
-    thumbnailUrl: t.thumbnailUrl,
-    durationSeconds: Math.round(t.durationMs / 1000)
-  }));
-
-  player.playQueue(tracksToPlay, 0);
-}
-
-async function onPlaySong(track: TrackListItem, index: number): Promise<void> {
-  const pStore = usePlayerStore();
-
-  const immediateTrack: Track = {
-    videoId: track.id,
-    title: track.title,
-    artist: track.artist ?? '',
-    artistId: track.artistId,
-    artists: track.artists?.map((a) => ({ name: a.name, id: a.channelId })) ?? [],
-    thumbnailUrl: track.thumbnailUrl ?? '',
-    durationSeconds: track.durationSeconds ?? 0
-  };
-
-  pStore.currentTrack = immediateTrack;
-  pStore.isLoading = true;
-  pStore.isPlaying = false;
-  pStore.playbackContext = {
-    type: 'playlist',
-    sourceId: id.value,
-    currentOffset: 0,
-    totalItems: playlist.value?.trackCount ?? 0
-  };
-
   let loadedTracks = virtualTracks.value.filter((t): t is PlaylistTrack => t !== null);
-
-  if (playlist.value && playlist.value.trackCount > loadedTracks.length) {
-    const fullDetail = await store.fetchDetail(id.value, {
-      limit: playlist.value.trackCount,
-      offset: 0,
-      sortBy: sortBy.value || undefined,
-      sortOrder: sortOrder.value,
-      search: debouncedSearch.value || undefined
-    });
-    if (fullDetail?.tracks) {
-      loadedTracks = fullDetail.tracks;
-    }
+  if (!loadedTracks.some((t) => t.videoId === track.id)) {
+    loadedTracks = [
+      ...loadedTracks,
+      {
+        videoId: track.id,
+        title: track.title,
+        artist: track.artist,
+        artistId: track.artistId,
+        artists: track.artists?.map((a) => ({ name: a.name, channelId: a.channelId })),
+        thumbnailUrl: track.thumbnailUrl ?? '',
+        durationMs: track.durationSeconds * 1000,
+        addedAt: track.addedAt ?? new Date().toISOString()
+      }
+    ];
   }
 
   const tracksToPlay = loadedTracks.map((t) => ({
@@ -291,7 +293,7 @@ async function onPlaySong(track: TrackListItem, index: number): Promise<void> {
           .split(/,\s*|\s+feat\.\s+|\s+ft\.\s+|\s+&\s+/i)
           .map((s) => ({ name: s.trim() }))
           .filter((a) => a.name),
-    thumbnailUrl: t.thumbnailUrl,
+    thumbnailUrl: t.thumbnailUrl ?? '',
     durationSeconds: Math.round(t.durationMs / 1000)
   }));
 
@@ -301,8 +303,42 @@ async function onPlaySong(track: TrackListItem, index: number): Promise<void> {
     currentOffset: loadedTracks.length,
     totalItems: playlist.value?.trackCount || loadedTracks.length
   };
-  const resolvedIndex = loadedTracks.findIndex((t) => t.videoId === track.id);
-  player.playQueue(tracksToPlay, resolvedIndex >= 0 ? resolvedIndex : index);
+  const resolvedIndex = tracksToPlay.findIndex((t) => t.videoId === track.id);
+  player.playQueue(tracksToPlay, resolvedIndex >= 0 ? resolvedIndex : index, true);
+
+  if (playlist.value && playlist.value.trackCount > loadedTracks.length) {
+    store
+      .fetchDetail(id.value, {
+        limit: playlist.value.trackCount,
+        offset: 0,
+        sortBy: sortBy.value || undefined,
+        sortOrder: sortOrder.value,
+        search: debouncedSearch.value || undefined
+      })
+      .then((fullDetail) => {
+        if (fullDetail?.tracks && pStore.playbackContext?.sourceId === id.value) {
+          const fullQueue = fullDetail.tracks.map((t) => ({
+            videoId: t.videoId,
+            title: t.title,
+            artist: t.artist,
+            artistId: t.artistId,
+            artists: t.artists?.length
+              ? t.artists.map((a) => ({ name: a.name, id: a.channelId }))
+              : t.artist
+                  .split(/,\s*|\s+feat\.\s+|\s+ft\.\s+|\s+&\s+/i)
+                  .map((s) => ({ name: s.trim() }))
+                  .filter((a) => a.name),
+            thumbnailUrl: t.thumbnailUrl ?? '',
+            durationSeconds: Math.round(t.durationMs / 1000)
+          }));
+          pStore.setQueue(fullQueue);
+          if (pStore.playbackContext) {
+            pStore.playbackContext.currentOffset = fullQueue.length;
+          }
+        }
+      })
+      .catch(() => {});
+  }
 }
 
 async function removeTrack(videoId: string): Promise<void> {
