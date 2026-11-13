@@ -193,18 +193,11 @@ export default defineNuxtConfig({
         ...(process.env.NUXT_SSR === 'true' ? ['@unhead/schema-org/vue'] : [])
       ]
     },
-    esbuild: {
-      tsconfigRaw: {
-        compilerOptions: {
-          experimentalDecorators: true
-        }
-      }
-    },
     clearScreen: false,
     envPrefix: ['VITE_', 'TAURI_'],
     server: {
       strictPort: true,
-      hmr: {
+      ws: {
         protocol: 'ws',
         host:
           process.env.TAURI_DEV_HOST ||
