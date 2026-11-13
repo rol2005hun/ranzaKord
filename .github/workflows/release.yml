@@ -142,9 +142,28 @@ jobs:
 
       - name: Patch Tauri Android buildSrc for Gradle compatibility
         run: |
-          sed -i 's/rootDirRel = config.rootDirRel/rootDirRel = config.rootDirRel\n                        projectDir = project.projectDir.absolutePath/g' src-tauri/gen/android/buildSrc/src/main/java/dev/ranzak/kord/kotlin/RustPlugin.kt || true
-          sed -i 's/var projectDir: String? = null/@org.gradle.api.tasks.Optional\n    @org.gradle.api.tasks.Internal\n    var projectDir: String? = null/g' src-tauri/gen/android/buildSrc/src/main/java/dev/ranzak/kord/kotlin/BuildTask.kt || true
-          sed -i 's/workingDir(File(projectDir, rootDirRel))/workingDir(File(projectDir ?: project.projectDir.absolutePath, rootDirRel))/g' src-tauri/gen/android/buildSrc/src/main/java/dev/ranzak/kord/kotlin/BuildTask.kt || true
+          node -e "
+          const fs = require('fs');
+          const btPath = 'src-tauri/gen/android/buildSrc/src/main/java/dev/ranzak/kord/kotlin/BuildTask.kt';
+          if (fs.existsSync(btPath)) {
+            let bt = fs.readFileSync(btPath, 'utf8');
+            bt = bt.replace(/import org\.gradle\.api\.tasks\.Optional/g, 'import org.gradle.api.tasks.Internal');
+            if (!bt.includes('import org.gradle.api.tasks.Internal')) {
+              bt = bt.replace('import org.gradle.api.tasks.Input', 'import org.gradle.api.tasks.Input\nimport org.gradle.api.tasks.Internal');
+            }
+            bt = bt.replace(/(@Input\s+)?(@Optional\s+)?(@Internal\s+)?var projectDir/g, '@Internal\n    var projectDir');
+            bt = bt.replace(/workingDir\(File\(projectDir, rootDirRel\)\)/g, 'workingDir(File(projectDir ?: project.projectDir.absolutePath, rootDirRel))');
+            fs.writeFileSync(btPath, bt);
+          }
+          const rpPath = 'src-tauri/gen/android/buildSrc/src/main/java/dev/ranzak/kord/kotlin/RustPlugin.kt';
+          if (fs.existsSync(rpPath)) {
+            let rp = fs.readFileSync(rpPath, 'utf8');
+            if (!rp.includes('projectDir = project.projectDir.absolutePath')) {
+              rp = rp.replace('rootDirRel = config.rootDirRel', 'rootDirRel = config.rootDirRel\n                        projectDir = project.projectDir.absolutePath');
+              fs.writeFileSync(rpPath, rp);
+            }
+          }
+          "
 
       - name: Patch Gradle wrapper to compatible version
         run: |
