@@ -139,6 +139,11 @@ jobs:
       - name: Initialize Tauri Android
         run: npx tauri android init --ci
 
+      - name: Patch Gradle wrapper to compatible version
+        run: |
+          sed -i 's|distributions/gradle-.*-bin.zip|distributions/gradle-8.10.2-bin.zip|g' \
+            src-tauri/gen/android/gradle/wrapper/gradle-wrapper.properties
+
       - name: Generate Android Icons
         run: npx tauri icon public/logo.webp
 
