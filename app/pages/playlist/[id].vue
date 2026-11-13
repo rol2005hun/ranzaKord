@@ -57,7 +57,7 @@ function onSort(by: string, order: 'asc' | 'desc'): void {
   sortOrder.value = order;
 }
 
-const { data, status, refresh } = useAsyncData<PlaylistDetail | null>(
+const { data, status, error, refresh } = useAsyncData<PlaylistDetail | null>(
   `playlist-${id.value}`,
   async () => {
     if (!id.value) return null;
@@ -75,7 +75,15 @@ const { data, status, refresh } = useAsyncData<PlaylistDetail | null>(
 );
 
 const playlist = ref<PlaylistDetail | null>(data.value ?? null);
-const isLoading = computed(() => status.value === 'pending' && !playlist.value);
+const isLoading = computed(
+  () => !playlist.value && (status.value === 'pending' || status.value === 'idle')
+);
+const isError = computed(
+  () =>
+    Boolean(error?.value) ||
+    status.value === 'error' ||
+    (status.value === 'success' && !playlist.value)
+);
 
 const trackCount = computed(() => playlist.value?.trackCount ?? 0);
 
@@ -429,7 +437,7 @@ const showStickyMobileMenu = ref(false);
   <div class="playlist-page">
     <AppMusicPage
       :is-loading="isLoading"
-      :is-error="!playlist && !isLoading"
+      :is-error="isError"
       :title="playlist?.name"
       :badge="$t('playlists.myPlaylist')"
       :image-url="playlist?.imageUrl"
