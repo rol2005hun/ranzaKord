@@ -74,7 +74,10 @@ export const useOfflineStore = defineStore('offline', () => {
       if (!response.ok) throw new Error('Stream fetch failed');
 
       const contentLength = response.headers.get('content-length');
-      const total = contentLength ? parseInt(contentLength, 10) : 0;
+      let total = contentLength ? parseInt(contentLength, 10) : 0;
+      if (total <= 0 && track.durationSeconds > 0) {
+        total = Math.round(track.durationSeconds * 16_000);
+      }
 
       const reader = response.body?.getReader();
       if (!reader) throw new Error('No readable stream');
@@ -89,7 +92,10 @@ export const useOfflineStore = defineStore('offline', () => {
           chunks.push(value);
           received += value.length;
           if (total > 0) {
-            downloadProgress.value[track.videoId] = Math.round((received / total) * 100);
+            downloadProgress.value[track.videoId] = Math.min(
+              95,
+              Math.round((received / total) * 100)
+            );
           }
         }
       }

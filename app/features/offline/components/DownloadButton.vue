@@ -41,15 +41,22 @@ async function handleClick(event: MouseEvent): Promise<void> {
     @click="handleClick">
     <span v-if="status === 'downloading'" class="download-btn__progress-ring">
       <svg viewBox="0 0 24 24" class="download-btn__ring-svg">
-        <circle class="download-btn__ring-bg" cx="12" cy="12" r="9" fill="none" stroke-width="2" />
         <circle
-          class="download-btn__ring-fill"
+          class="download-btn__ring-bg"
           cx="12"
           cy="12"
-          r="9"
+          r="9.5"
           fill="none"
-          stroke-width="2"
-          :stroke-dasharray="`${(progress / 100) * 56.5} 56.5`"
+          stroke-width="2.5" />
+        <circle
+          class="download-btn__ring-fill"
+          :class="{ 'download-btn__ring-fill--indeterminate': progress <= 0 }"
+          cx="12"
+          cy="12"
+          r="9.5"
+          fill="none"
+          stroke-width="2.5"
+          :stroke-dasharray="progress > 0 ? `${(progress / 100) * 59.7} 59.7` : '18 41.7'"
           stroke-linecap="round"
           transform="rotate(-90 12 12)" />
       </svg>
@@ -87,12 +94,22 @@ async function handleClick(event: MouseEvent): Promise<void> {
     width: 32px;
     height: 32px;
     font-size: 1.2rem;
+
+    .download-btn__ring-svg {
+      width: 28px;
+      height: 28px;
+    }
   }
 
   &--sm {
     width: 24px;
     height: 24px;
     font-size: 1rem;
+
+    .download-btn__ring-svg {
+      width: 22px;
+      height: 22px;
+    }
   }
 
   &:hover {
@@ -124,25 +141,29 @@ async function handleClick(event: MouseEvent): Promise<void> {
   }
 
   &__ring-svg {
-    width: 20px;
-    height: 20px;
     position: absolute;
+    overflow: visible;
   }
 
   &__ring-bg {
-    stroke: var(--color-border);
+    stroke: color-mix(in srgb, var(--color-text-secondary) 30%, transparent);
   }
 
   &__ring-fill {
     stroke: var(--color-primary);
-    transition: stroke-dasharray 0.2s ease;
+    transition: stroke-dasharray 0.25s ease;
+
+    &--indeterminate {
+      animation: spin-ring 1.2s linear infinite;
+      transform-origin: 12px 12px;
+    }
   }
 
   &__icon {
     font-size: inherit;
 
     &--small {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       position: relative;
       z-index: 1;
     }
@@ -154,6 +175,15 @@ async function handleClick(event: MouseEvent): Promise<void> {
     &--error {
       color: hsl(var(--color-error-h, 0), 70%, 55%);
     }
+  }
+}
+
+@keyframes spin-ring {
+  from {
+    transform: rotate(-90deg);
+  }
+  to {
+    transform: rotate(270deg);
   }
 }
 </style>
