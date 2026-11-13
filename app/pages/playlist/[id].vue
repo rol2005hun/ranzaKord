@@ -75,15 +75,15 @@ const { data, status, error, refresh } = useAsyncData<PlaylistDetail | null>(
 );
 
 const playlist = ref<PlaylistDetail | null>(data.value ?? null);
-const isLoading = computed(
-  () => !playlist.value && (status.value === 'pending' || status.value === 'idle')
-);
-const isError = computed(
-  () =>
+const isError = computed(() => {
+  if (import.meta.server) return false;
+  return (
     Boolean(error?.value) ||
     status.value === 'error' ||
     (status.value === 'success' && !playlist.value)
-);
+  );
+});
+const isLoading = computed(() => !playlist.value && !isError.value);
 
 const trackCount = computed(() => playlist.value?.trackCount ?? 0);
 
