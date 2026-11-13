@@ -186,7 +186,7 @@ const isCurrentPlaylistPlaying = computed(() => {
 
 const auth = useAuthStore();
 const isOwner = computed(() => {
-  return auth.user?.sub && playlist.value?.ownerId === auth.user.sub;
+  return isMounted.value && Boolean(auth.user?.sub && playlist.value?.ownerId === auth.user.sub);
 });
 
 const isCurrentPlaylistLoading = computed(() => {
@@ -466,9 +466,7 @@ const showStickyMobileMenu = ref(false);
       </template>
 
       <template #center-header>
-        <div
-          v-if="(playlist?.trackCount ?? 0) > 0 || debouncedSearch"
-          class="playlist-page__search-bar">
+        <div class="playlist-page__search-bar">
           <AppIcon
             v-if="status === 'pending' && playlist"
             name="ph:spinner-gap"
