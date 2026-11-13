@@ -68,7 +68,7 @@ export function usePlayer() {
 
   let isRestoring = false;
 
-  const { setGains, setEqGains } = useAudioVisualizer();
+  const { setGains, setEqGains, resumeAudioContext } = useAudioVisualizer();
 
   watch(
     () => store.eqEnabled,
@@ -523,6 +523,7 @@ export function usePlayer() {
         connect(audio1Ref.value, audio2Ref.value, store.volume);
       }
 
+      resumeAudioContext();
       await el.play();
       if (requestId !== currentPlayRequestId) return;
 
@@ -560,6 +561,7 @@ export function usePlayer() {
   registerPauseCallback(pause);
 
   function resume() {
+    resumeAudioContext();
     if (activeAudio.value && store.currentTrack) {
       activeAudio.value
         .play()

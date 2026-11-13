@@ -115,7 +115,9 @@ const optimizedBgUrl = computed(() => {
               <AppIcon v-else name="ph:play-fill" />
             </button>
             <div class="music-page__sticky-bar-text">
-              <span class="music-page__sticky-bar-title">{{ props.title }}</span>
+              <span class="music-page__sticky-bar-title" data-allow-mismatch>
+                {{ props.title }}
+              </span>
               <span class="music-page__sticky-bar-subtitle">
                 <slot name="sticky-subtitle"></slot>
               </span>
@@ -154,7 +156,7 @@ const optimizedBgUrl = computed(() => {
             </div>
             <div class="music-page__info">
               <div v-if="badge" class="music-page__badge">{{ badge }}</div>
-              <h1 class="music-page__title">{{ props.title }}</h1>
+              <h1 class="music-page__title" data-allow-mismatch>{{ props.title }}</h1>
               <div v-if="$slots.meta" class="music-page__meta">
                 <slot name="meta" />
               </div>
