@@ -7,9 +7,11 @@ const { t } = useI18n();
 const offlineStore = useOfflineStore();
 const player = usePlayer();
 const showDeleteConfirm = ref(false);
+const isMounted = ref(false);
 
 onMounted(async () => {
   await offlineStore.init();
+  isMounted.value = true;
 });
 
 useHead({
@@ -134,22 +136,27 @@ function formatSize(bytes: number): string {
       </template>
     </AppMusicPage>
 
-    <AppModal
-      v-if="showDeleteConfirm"
-      :model-value="showDeleteConfirm"
-      :title="t('offline.deleteAll')"
-      size="sm"
-      @update:model-value="showDeleteConfirm = $event">
-      <p class="offline-delete-confirm-text">{{ t('offline.deleteAllConfirm') }}</p>
-      <template #footer>
-        <AppButton variant="ghost" :disabled="isDeleting" @click="showDeleteConfirm = false">
-          {{ t('core.actions.cancel') }}
-        </AppButton>
-        <AppButton variant="danger" :loading="isDeleting" @click="confirmDeleteAll">
-          {{ t('offline.deleteAll') }}
-        </AppButton>
-      </template>
-    </AppModal>
+    <Teleport v-if="isMounted" to="body">
+      <Transition name="modal">
+        <div
+          v-if="showDeleteConfirm"
+          class="offline-confirm-overlay"
+          @click.self="!isDeleting && (showDeleteConfirm = false)">
+          <div class="offline-confirm-dialog">
+            <h3 class="offline-confirm-title">{{ t('offline.deleteAll') }}</h3>
+            <p class="offline-delete-confirm-text">{{ t('offline.deleteAllConfirm') }}</p>
+            <div class="offline-confirm-actions">
+              <AppButton variant="ghost" :disabled="isDeleting" @click="showDeleteConfirm = false">
+                {{ t('core.actions.cancel') }}
+              </AppButton>
+              <AppButton variant="danger" :loading="isDeleting" @click="confirmDeleteAll">
+                {{ t('offline.deleteAll') }}
+              </AppButton>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -269,5 +276,41 @@ function formatSize(bytes: number): string {
   font-size: var(--text-sm);
   line-height: var(--leading-normal);
   margin: 0;
+  margin-bottom: var(--space-6);
+}
+
+.offline-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background-color: var(--color-overlay);
+  z-index: var(--z-modal);
+}
+
+.offline-confirm-dialog {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.offline-confirm-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-3);
+}
+
+.offline-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
 }
 </style>

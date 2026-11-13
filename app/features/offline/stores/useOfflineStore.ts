@@ -1,4 +1,10 @@
-import { saveTrack, getTrackBlob, getAllMetas, deleteTrack } from '../composables/useOfflineDb';
+import {
+  saveTrack,
+  getTrackBlob,
+  getAllMetas,
+  deleteTrack,
+  clearAllTracks
+} from '../composables/useOfflineDb';
 import type { OfflineTrack, DownloadStatus } from '../types/offline.types';
 import type { Track } from '@/features/player/types/player.types';
 
@@ -157,13 +163,10 @@ export const useOfflineStore = defineStore('offline', () => {
   }
 
   async function removeAll(): Promise<void> {
-    const ids = Array.from(downloadedIds.value);
-    for (const id of ids) {
-      try {
-        await deleteTrack(id);
-      } catch (e) {
-        console.warn('Failed to delete track during clearAll:', e);
-      }
+    try {
+      await clearAllTracks();
+    } catch (e) {
+      console.warn('Failed to clear all tracks from DB:', e);
     }
     for (const url of objectUrlCache.values()) {
       URL.revokeObjectURL(url);

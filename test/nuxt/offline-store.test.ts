@@ -9,6 +9,7 @@ describe('useOfflineStore', () => {
   let mockGetTrackBlob: ReturnType<typeof vi.spyOn>;
   let mockSaveTrack: ReturnType<typeof vi.spyOn>;
   let mockDeleteTrack: ReturnType<typeof vi.spyOn>;
+  let mockClearAllTracks: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     setActivePinia(createPinia());
@@ -21,12 +22,11 @@ describe('useOfflineStore', () => {
       .mockResolvedValue(new Blob(['test'], { type: 'audio/webm' }));
     mockSaveTrack = vi.spyOn(offlineDb, 'saveTrack').mockResolvedValue(undefined);
     mockDeleteTrack = vi.spyOn(offlineDb, 'deleteTrack').mockResolvedValue(undefined);
+    mockClearAllTracks = vi.spyOn(offlineDb, 'clearAllTracks').mockResolvedValue(undefined);
 
-    // Mock URL object
     global.URL.createObjectURL = vi.fn(() => 'blob:http://localhost/test');
     global.URL.revokeObjectURL = vi.fn();
 
-    // Mock navigator.storage
     Object.defineProperty(navigator, 'storage', {
       value: {
         estimate: vi.fn().mockResolvedValue({ quota: 1000000 })
@@ -61,13 +61,12 @@ describe('useOfflineStore', () => {
 
     const url2 = await store.getObjectUrl('1');
     expect(url2).toBe('blob:http://localhost/test');
-    expect(mockGetTrackBlob).not.toHaveBeenCalled(); // Should hit cache
+    expect(mockGetTrackBlob).not.toHaveBeenCalled();
   });
 
   it('downloads track and updates progress', async () => {
     const store = useOfflineStore();
 
-    // Mock fetch
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       headers: new Headers({ 'content-length': '10' }),
@@ -129,7 +128,7 @@ describe('useOfflineStore', () => {
 
     await store.removeAll();
 
-    expect(mockDeleteTrack).toHaveBeenCalledTimes(2);
+    expect(mockClearAllTracks).toHaveBeenCalledTimes(1);
     expect(store.downloadedTracks).toHaveLength(0);
     expect(store.totalSizeBytes).toBe(0);
   });
