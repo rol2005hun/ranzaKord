@@ -215,7 +215,7 @@ onMounted(() => {
           :style="{ transform: `translateY(${offsetY}px)` }">
           <div
             v-for="{ index, data: track } in visibleItems"
-            :key="index"
+            :key="track ? `track-${track.id}` : `skeleton-${index}`"
             class="app-track-list__track"
             :class="{
               'app-track-list__track--playing':

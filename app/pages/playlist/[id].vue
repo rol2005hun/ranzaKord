@@ -75,7 +75,7 @@ const { data, status, error, refresh } = useAsyncData<PlaylistDetail | null>(
   }
 );
 
-const playlist = ref<PlaylistDetail | null>(data.value ?? null);
+const playlist = computed(() => data.value);
 const isError = computed(() => {
   return (
     Boolean(error?.value) || status.value === 'error' || (status.value === 'success' && !data.value)
@@ -83,7 +83,7 @@ const isError = computed(() => {
 });
 const isLoading = computed(() => status.value === 'pending' || status.value === 'idle');
 
-const trackCount = computed(() => data.value?.trackCount ?? playlist.value?.trackCount ?? 0);
+const trackCount = computed(() => playlist.value?.trackCount ?? 0);
 
 async function fetchChunk(offset: number, limit: number): Promise<PlaylistTrack[]> {
   if (!id.value) return [];
@@ -112,7 +112,6 @@ watch(
     if (!newData) return;
     const count = newData.trackCount;
     const firstChunk = newData.tracks;
-    playlist.value = newData;
 
     virtualTracks.value = new Array(count).fill(null);
     for (let i = 0; i < firstChunk.length; i++) {
@@ -176,7 +175,7 @@ const isCurrentPlaylistPlaying = computed(() => {
 
 const auth = useAuthStore();
 const isOwner = computed(() => {
-  return auth.user?.sub && playlist.value?.ownerId === auth.user.sub;
+  return isMounted.value && Boolean(auth.user?.sub && playlist.value?.ownerId === auth.user.sub);
 });
 
 const isCurrentPlaylistLoading = computed(() => {
@@ -352,8 +351,8 @@ async function removeTrack(videoId: string): Promise<void> {
   const idx = virtualTracks.value.findIndex((t) => t?.videoId === videoId);
   if (idx >= 0) {
     virtualTracks.value.splice(idx, 1);
-    if (playlist.value) {
-      playlist.value.trackCount = Math.max(0, playlist.value.trackCount - 1);
+    if (data.value) {
+      data.value.trackCount = Math.max(0, data.value.trackCount - 1);
     }
   }
 }
@@ -456,9 +455,7 @@ const showStickyMobileMenu = ref(false);
       </template>
 
       <template #center-header>
-        <div
-          v-if="(playlist?.trackCount ?? 0) > 0 || debouncedSearch"
-          class="playlist-page__search-bar">
+        <div class="playlist-page__search-bar">
           <AppIcon
             v-if="status === 'pending' && playlist"
             name="ph:spinner-gap"
@@ -709,20 +706,28 @@ const showStickyMobileMenu = ref(false);
           </div>
 
           <div v-else :ref="setContainerRef">
-            <AppTrackList
-              :virtual="true"
-              :visible-items="mappedVisibleItems"
-              :offset-y="offsetY"
-              :total-height="totalHeight"
-              :columns="['index', 'title', 'date', 'time', 'download', 'action']"
-              :show-thumbnails="true"
-              :sort-by="sortBy"
-              :sort-order="sortOrder"
-              :reorderable="isReorderable"
-              @play="onPlaySong"
-              @remove="removeTrackWrapper"
-              @sort="onSort"
-              @reorder="(from, to) => store.reorderTrack(id, from, to)" />
+            <ClientOnly>
+              <AppTrackList
+                :virtual="true"
+                :visible-items="mappedVisibleItems"
+                :offset-y="offsetY"
+                :total-height="totalHeight"
+                :columns="['index', 'title', 'date', 'time', 'download', 'action']"
+                :show-thumbnails="true"
+                :sort-by="sortBy"
+                :sort-order="sortOrder"
+                :reorderable="isReorderable"
+                @play="onPlaySong"
+                @remove="removeTrackWrapper"
+                @sort="onSort"
+                @reorder="(from, to) => store.reorderTrack(id, from, to)" />
+              <template #fallback>
+                <AppTrackList
+                  :is-loading="true"
+                  :columns="['index', 'title', 'date', 'time', 'download', 'action']"
+                  :show-thumbnails="true" />
+              </template>
+            </ClientOnly>
           </div>
         </template>
       </template>
