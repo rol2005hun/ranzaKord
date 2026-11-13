@@ -74,11 +74,16 @@ onMounted(() => {
   }
 });
 
-const { playQueue } = usePlayer();
+const { playQueue, togglePlay, currentTrack } = usePlayer();
 
 function onPlay(track: SearchResult) {
   if (track.type === 'profile') {
     router.push(`/user/${track.id}`);
+    return;
+  }
+
+  if (currentTrack.value?.videoId === track.id) {
+    togglePlay();
     return;
   }
 
