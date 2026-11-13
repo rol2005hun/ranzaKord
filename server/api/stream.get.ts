@@ -11,13 +11,13 @@ const streamCache = new Map<string, CachedStream>();
 const STREAM_CACHE_TTL = 2 * 60 * 60 * 1000;
 
 const defaultWorkingClients: ClientType[] = [
-  'WEB',
   'YTMUSIC',
+  'WEB_CREATOR',
+  'WEB',
   'MWEB',
   'ANDROID',
   'IOS',
   'TV_EMBEDDED',
-  'WEB_CREATOR',
   'TV'
 ];
 
@@ -116,15 +116,16 @@ export default defineEventHandler(async (event) => {
                 : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
         const testRes = await fetch(candidateUrl, {
-          method: 'HEAD',
+          method: 'GET',
           headers: {
-            'User-Agent': clientUA
+            'User-Agent': clientUA,
+            Range: 'bytes=0-1'
           },
-          signal: AbortSignal.timeout(1500)
+          signal: AbortSignal.timeout(2000)
         });
 
         if (testRes.status === 403) {
-          debugInfo[client] = `Stream URL HEAD returned 403 on attempt ${attempt}.`;
+          debugInfo[client] = `Stream URL test returned 403 on attempt ${attempt}.`;
           continue;
         }
 
