@@ -34,11 +34,26 @@ export default defineEventHandler(async (event) => {
   const cacheKey = `${videoId.trim()}_${streamType}`;
   const cached = streamCache.get(cacheKey);
   if (cached && Date.now() < cached.expiresAt) {
-    return proxyRequest(event, cached.url, {
-      headers: {
-        'User-Agent': cached.ua
+    try {
+      const testRes = await fetch(cached.url, {
+        method: 'GET',
+        headers: {
+          'User-Agent': cached.ua,
+          Range: 'bytes=0-'
+        },
+        signal: AbortSignal.timeout(1500)
+      });
+      if (testRes.status !== 403) {
+        return proxyRequest(event, cached.url, {
+          headers: {
+            'User-Agent': cached.ua
+          }
+        });
       }
-    });
+    } catch {
+      streamCache.delete(cacheKey);
+    }
+    streamCache.delete(cacheKey);
   }
 
   const innertube = await createInnertube(true);
@@ -75,12 +90,9 @@ export default defineEventHandler(async (event) => {
             formats.find((f) => f.has_video && f.has_audio && (f.url || f.signature_cipher)) ||
             formats.find((f) => f.has_video && (f.url || f.signature_cipher));
         } else {
-          format = formats.find(
-            (f) => f.has_audio && !f.has_video && (f.url || f.signature_cipher)
-          );
-          if (!format) {
-            format = formats.find((f) => f.has_audio && (f.url || f.signature_cipher));
-          }
+          format =
+            formats.find((f) => f.has_audio && f.has_video && (f.url || f.signature_cipher)) ||
+            formats.find((f) => f.has_audio && (f.url || f.signature_cipher));
         }
 
         if (!format) {
@@ -119,7 +131,7 @@ export default defineEventHandler(async (event) => {
           method: 'GET',
           headers: {
             'User-Agent': clientUA,
-            Range: 'bytes=0-1'
+            Range: 'bytes=0-'
           },
           signal: AbortSignal.timeout(2000)
         });
