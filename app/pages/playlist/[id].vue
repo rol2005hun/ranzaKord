@@ -57,7 +57,7 @@ function onSort(by: string, order: 'asc' | 'desc'): void {
   sortOrder.value = order;
 }
 
-const { data, status, error, refresh } = await useAsyncData<PlaylistDetail | null>(
+const { data, status, error, refresh } = useAsyncData<PlaylistDetail | null>(
   `playlist-${id.value}`,
   async () => {
     if (!id.value) return null;
@@ -70,6 +70,7 @@ const { data, status, error, refresh } = await useAsyncData<PlaylistDetail | nul
     });
   },
   {
+    lazy: true,
     watch: [id, sortBy, sortOrder, debouncedSearch]
   }
 );
