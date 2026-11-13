@@ -188,6 +188,7 @@ const optimizedBgUrl = computed(() => {
         <slot name="tracks" />
       </div>
     </template>
+    <slot />
   </div>
 </template>
 

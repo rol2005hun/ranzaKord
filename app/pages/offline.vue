@@ -73,64 +73,66 @@ function formatSize(bytes: number): string {
 </script>
 
 <template>
-  <AppMusicPage :title="t('offline.title')" :show-play-button="false">
-    <template #fallback-icon>
-      <AppIcon name="ph:wifi-slash-duotone" />
-    </template>
+  <div class="offline-page">
+    <AppMusicPage :title="t('offline.title')" :show-play-button="false">
+      <template #fallback-icon>
+        <AppIcon name="ph:wifi-slash-duotone" />
+      </template>
 
-    <template #meta>
-      <span class="offline-header__size">
-        <AppIcon name="ph:database-duotone" />
-        {{ totalSizeMb }} MB
-      </span>
-    </template>
+      <template #meta>
+        <span class="offline-header__size">
+          <AppIcon name="ph:database-duotone" />
+          {{ totalSizeMb }} MB
+        </span>
+      </template>
 
-    <template #actions>
-      <button
-        v-if="offlineStore.downloadedTracks.length > 0"
-        class="offline-header__delete-btn"
-        @click="showDeleteConfirm = true">
-        <AppIcon name="ph:trash-duotone" />
-        {{ t('offline.deleteAll') }}
-      </button>
-    </template>
+      <template #actions>
+        <button
+          v-if="offlineStore.downloadedTracks.length > 0"
+          class="offline-header__delete-btn"
+          @click="showDeleteConfirm = true">
+          <AppIcon name="ph:trash-duotone" />
+          {{ t('offline.deleteAll') }}
+        </button>
+      </template>
 
-    <template #tracks>
-      <div class="offline-content">
-        <div v-if="offlineStore.storageQuotaBytes > 0" class="offline-storage">
-          <div class="offline-storage__info">
-            <span class="offline-storage__used">
-              {{ t('offline.storageUsed', { size: formatSize(offlineStore.totalSizeBytes) }) }}
-            </span>
-            <span class="offline-storage__quota">
-              {{ formatSize(offlineStore.storageQuotaBytes) }} MAX
-            </span>
+      <template #tracks>
+        <div class="offline-content">
+          <div v-if="offlineStore.storageQuotaBytes > 0" class="offline-storage">
+            <div class="offline-storage__info">
+              <span class="offline-storage__used">
+                {{ t('offline.storageUsed', { size: formatSize(offlineStore.totalSizeBytes) }) }}
+              </span>
+              <span class="offline-storage__quota">
+                {{ formatSize(offlineStore.storageQuotaBytes) }} MAX
+              </span>
+            </div>
+            <div class="offline-storage__bar">
+              <div
+                class="offline-storage__fill"
+                :style="{
+                  width: `${Math.min(100, (offlineStore.totalSizeBytes / offlineStore.storageQuotaBytes) * 100)}%`
+                }"></div>
+            </div>
           </div>
-          <div class="offline-storage__bar">
-            <div
-              class="offline-storage__fill"
-              :style="{
-                width: `${Math.min(100, (offlineStore.totalSizeBytes / offlineStore.storageQuotaBytes) * 100)}%`
-              }"></div>
+
+          <div v-if="offlineStore.downloadedTracks.length === 0" class="offline-empty">
+            <AppIcon name="ph:wifi-slash-duotone" class="offline-empty__icon" />
+            <p class="offline-empty__title">{{ t('offline.empty') }}</p>
+            <p class="offline-empty__hint">{{ t('offline.emptyHint') }}</p>
           </div>
-        </div>
 
-        <div v-if="offlineStore.downloadedTracks.length === 0" class="offline-empty">
-          <AppIcon name="ph:wifi-slash-duotone" class="offline-empty__icon" />
-          <p class="offline-empty__title">{{ t('offline.empty') }}</p>
-          <p class="offline-empty__hint">{{ t('offline.emptyHint') }}</p>
+          <AppTrackList
+            v-else
+            class="offline-track-list"
+            :tracks="mappedTracks"
+            :columns="['index', 'title', 'date', 'time', 'action']"
+            :show-thumbnails="true"
+            @play="playTrackFromList"
+            @remove="removeTrackFromList" />
         </div>
-
-        <AppTrackList
-          v-else
-          class="offline-track-list"
-          :tracks="mappedTracks"
-          :columns="['index', 'title', 'date', 'time', 'action']"
-          :show-thumbnails="true"
-          @play="playTrackFromList"
-          @remove="removeTrackFromList" />
-      </div>
-    </template>
+      </template>
+    </AppMusicPage>
 
     <AppModal
       v-if="showDeleteConfirm"
@@ -148,10 +150,14 @@ function formatSize(bytes: number): string {
         </AppButton>
       </template>
     </AppModal>
-  </AppMusicPage>
+  </div>
 </template>
 
 <style scoped lang="scss">
+.offline-page {
+  height: 100%;
+}
+
 .offline-content {
   padding: 0 var(--space-6);
   padding-bottom: var(--space-8);

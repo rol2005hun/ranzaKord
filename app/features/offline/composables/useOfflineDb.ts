@@ -79,15 +79,6 @@ export async function deleteTrack(videoId: string): Promise<void> {
   ]);
 }
 
-export async function clearAllTracks(): Promise<void> {
-  const db = await getDb();
-  const tx = db.transaction([META_STORE, BLOB_STORE], 'readwrite');
-  await Promise.all([
-    promisify(tx.objectStore(META_STORE).clear()),
-    promisify(tx.objectStore(BLOB_STORE).clear())
-  ]);
-}
-
 export async function isDownloaded(videoId: string): Promise<boolean> {
   const meta = await getTrackMeta(videoId);
   return meta !== undefined;
@@ -100,7 +91,6 @@ export function useOfflineDb() {
     getTrackMeta,
     getAllMetas,
     deleteTrack,
-    clearAllTracks,
     isDownloaded
   };
 }
