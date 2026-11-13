@@ -57,7 +57,7 @@ function onSort(by: string, order: 'asc' | 'desc'): void {
   sortOrder.value = order;
 }
 
-const { data, status, error, refresh } = await useAsyncData<PlaylistDetail | null>(
+const { data, status, error, refresh } = useAsyncData<PlaylistDetail | null>(
   `playlist-${id.value}`,
   async () => {
     if (!id.value) return null;
@@ -70,6 +70,7 @@ const { data, status, error, refresh } = await useAsyncData<PlaylistDetail | nul
     });
   },
   {
+    lazy: true,
     watch: [id, sortBy, sortOrder, debouncedSearch]
   }
 );
@@ -82,7 +83,7 @@ const isError = computed(() => {
 });
 const isLoading = computed(() => status.value === 'pending' || status.value === 'idle');
 
-const trackCount = computed(() => playlist.value?.trackCount ?? 0);
+const trackCount = computed(() => data.value?.trackCount ?? playlist.value?.trackCount ?? 0);
 
 async function fetchChunk(offset: number, limit: number): Promise<PlaylistTrack[]> {
   if (!id.value) return [];
@@ -689,7 +690,7 @@ const showStickyMobileMenu = ref(false);
       </template>
 
       <template #tracks>
-        <template v-if="trackCount === 0 && !isLoading && !debouncedSearch">
+        <template v-if="trackCount === 0 && status === 'success' && !debouncedSearch">
           <div class="music-page__empty">
             <AppIcon
               name="ph:music-notes-simple-duotone"

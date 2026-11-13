@@ -118,10 +118,14 @@ const pending = computed(() => {
 const recommendedTrack = computed(() => featuredTracks.value?.[0]);
 const otherFeaturedTracks = computed(() => featuredTracks.value?.slice(1));
 
-const { playQueue } = usePlayer();
+const { playQueue, togglePlay, currentTrack } = usePlayer();
 
 function onPlayFromList(track: SearchResult) {
   if (!featuredTracks.value) return;
+  if (currentTrack.value?.videoId === track.id) {
+    togglePlay();
+    return;
+  }
   const tracksToPlay = featuredTracks.value.map((t: SearchResult) => ({
     videoId: t.id,
     title: t.title,

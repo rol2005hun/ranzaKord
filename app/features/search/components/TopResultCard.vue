@@ -123,7 +123,11 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
       </div>
     </NuxtLink>
 
-    <div v-else class="top-result-card__inner">
+    <div
+      v-else
+      class="top-result-card__inner"
+      :class="{ 'top-result-card__inner--clickable': props.result.type === 'song' }"
+      @click="props.result.type === 'song' && emit('play', props.result)">
       <div
         class="top-result-card__image-container"
         :class="{
@@ -201,10 +205,11 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
       <button
         v-if="props.result.type === 'song'"
         class="top-result-card__play-btn"
-        :aria-label="$t('player.play')"
-        @click.prevent="emit('play', props.result)">
+        :aria-label="isPlaying ? $t('player.pause') : $t('player.play')"
+        @click.stop="emit('play', props.result)">
         <ClientOnly>
-          <AppIcon v-if="isPlaying" name="ph:pause-fill" data-allow-mismatch />
+          <AppSpinner v-if="isCurrentlyPlaying && playerStore.isLoading" size="sm" />
+          <AppIcon v-else-if="isPlaying" name="ph:pause-fill" data-allow-mismatch />
           <AppIcon v-else name="ph:play-fill" data-allow-mismatch />
         </ClientOnly>
       </button>
@@ -237,6 +242,10 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
     text-decoration: none;
     color: inherit;
     height: 100%;
+
+    &--clickable {
+      cursor: pointer;
+    }
   }
 
   &__image-container {
