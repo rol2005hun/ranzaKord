@@ -219,6 +219,20 @@ export function usePlayer() {
 
     applyVolumes();
 
+    if (store.currentTrack && 'mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: store.currentTrack.title,
+        artist: store.currentTrack.artist,
+        artwork: store.currentTrack.thumbnailUrl
+          ? [{ src: store.currentTrack.thumbnailUrl, sizes: '512x512', type: 'image/jpeg' }]
+          : []
+      });
+      navigator.mediaSession.setActionHandler('play', resume);
+      navigator.mediaSession.setActionHandler('pause', pause);
+      navigator.mediaSession.setActionHandler('previoustrack', playPrev);
+      navigator.mediaSession.setActionHandler('nexttrack', playNext);
+    }
+
     if (store.currentTrack) {
       const savedTime = store.currentTimeSeconds;
       const wasPlaying = store.isPlaying;
