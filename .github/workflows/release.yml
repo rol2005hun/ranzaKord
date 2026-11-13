@@ -141,16 +141,13 @@ jobs:
 
       - name: Patch Tauri Android buildSrc for Gradle 8+ compatibility
         run: |
-          python3 -c "
-import glob, re
-for f in glob.glob('src-tauri/gen/android/buildSrc/**/*.kt', recursive=True):
-    content = open(f).read()
-    if 'projectDir' in content:
-        patched = re.sub(r'@get:Input(\s+)(abstract val projectDir)', r'@get:Internal\1\2', content)
-        if patched != content:
-            open(f, 'w').write(patched)
-            print('Patched:', f)
-"
+          find src-tauri/gen/android/buildSrc -name "*.kt" | while read f; do
+            if grep -q "projectDir" "$f"; then
+              sed -i 's/@get:Input\(\s*\)\(abstract val projectDir\)/@get:Internal\n    \2/g' "$f" || true
+              perl -i -0pe 's/\@get:Input(\s+)(abstract val projectDir)/\@get:Internal$1$2/g' "$f"
+              echo "Patched: $f"
+            fi
+          done
 
       - name: Patch Gradle wrapper to compatible version
         run: |
