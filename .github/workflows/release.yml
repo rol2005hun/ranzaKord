@@ -92,6 +92,7 @@ jobs:
           prerelease: true
 
   android:
+    name: 'release (android)'
     needs: [init]
     permissions:
       contents: write
@@ -139,15 +140,11 @@ jobs:
       - name: Initialize Tauri Android
         run: npx tauri android init --ci
 
-      - name: Patch Tauri Android buildSrc for Gradle 8+ compatibility
+      - name: Patch Tauri Android buildSrc for Gradle compatibility
         run: |
-          find src-tauri/gen/android/buildSrc -name "*.kt" | while read f; do
-            if grep -q "projectDir" "$f"; then
-              sed -i 's/@get:Input\(\s*\)\(abstract val projectDir\)/@get:Internal\n    \2/g' "$f" || true
-              perl -i -0pe 's/\@get:Input(\s+)(abstract val projectDir)/\@get:Internal$1$2/g' "$f"
-              echo "Patched: $f"
-            fi
-          done
+          sed -i 's/rootDirRel = config.rootDirRel/rootDirRel = config.rootDirRel\n                        projectDir = project.projectDir.absolutePath/g' src-tauri/gen/android/buildSrc/src/main/java/dev/ranzak/kord/kotlin/RustPlugin.kt || true
+          sed -i 's/var projectDir: String? = null/@org.gradle.api.tasks.Optional\n    @org.gradle.api.tasks.Internal\n    var projectDir: String? = null/g' src-tauri/gen/android/buildSrc/src/main/java/dev/ranzak/kord/kotlin/BuildTask.kt || true
+          sed -i 's/workingDir(File(projectDir, rootDirRel))/workingDir(File(projectDir ?: project.projectDir.absolutePath, rootDirRel))/g' src-tauri/gen/android/buildSrc/src/main/java/dev/ranzak/kord/kotlin/BuildTask.kt || true
 
       - name: Patch Gradle wrapper to compatible version
         run: |
