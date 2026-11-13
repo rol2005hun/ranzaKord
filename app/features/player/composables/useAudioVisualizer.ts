@@ -10,27 +10,26 @@ let wetGainNode: GainNode | null = null;
 let spatialPannerNode: PannerNode | null = null;
 let eqFilters: BiquadFilterNode[] = [];
 let isConnected = false;
-let hasUserGesture = false;
 
 if (typeof window !== 'undefined') {
-  const onGesture = () => {
-    hasUserGesture = true;
+  const resume = () => {
     if (audioCtx && audioCtx.state === 'suspended') {
       void audioCtx.resume();
     }
   };
-  window.addEventListener('pointerdown', onGesture, { capture: true, passive: true });
-  window.addEventListener('keydown', onGesture, { capture: true, passive: true });
+  window.addEventListener('pointerdown', resume, { capture: true, passive: true });
+  window.addEventListener('keydown', resume, { capture: true, passive: true });
+  window.addEventListener('focus', resume, { passive: true });
+  document.addEventListener('visibilitychange', () => {
+    if (audioCtx && audioCtx.state === 'suspended') {
+      void audioCtx.resume();
+    }
+  });
 }
 
 function tryResumeAudioContext(): void {
   if (audioCtx && audioCtx.state === 'suspended') {
-    if (
-      hasUserGesture ||
-      (typeof navigator !== 'undefined' && navigator.userActivation?.hasBeenActive)
-    ) {
-      void audioCtx.resume();
-    }
+    void audioCtx.resume();
   }
 }
 
@@ -38,7 +37,6 @@ const EQ_FREQUENCIES = [32, 64, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
 
 export function useAudioVisualizer() {
   function resumeAudioContext(): void {
-    hasUserGesture = true;
     if (audioCtx && audioCtx.state === 'suspended') {
       void audioCtx.resume();
     }
@@ -58,7 +56,12 @@ export function useAudioVisualizer() {
 
     try {
       if (!audioCtx) {
-        audioCtx = new AudioContext();
+        audioCtx = new AudioContext({ latencyHint: 'playback' });
+        audioCtx.onstatechange = () => {
+          if (audioCtx && audioCtx.state === 'suspended') {
+            void audioCtx.resume();
+          }
+        };
       }
 
       tryResumeAudioContext();
