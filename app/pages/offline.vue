@@ -53,9 +53,17 @@ const mappedTracks = computed(() => {
   }));
 });
 
+const isDeleting = ref(false);
+
 async function confirmDeleteAll(): Promise<void> {
-  await offlineStore.removeAll();
-  showDeleteConfirm.value = false;
+  if (isDeleting.value) return;
+  isDeleting.value = true;
+  try {
+    await offlineStore.removeAll();
+    showDeleteConfirm.value = false;
+  } finally {
+    isDeleting.value = false;
+  }
 }
 
 function formatSize(bytes: number): string {
@@ -127,16 +135,17 @@ function formatSize(bytes: number): string {
     <AppModal
       v-if="showDeleteConfirm"
       :model-value="showDeleteConfirm"
+      :title="t('offline.deleteAll')"
+      size="sm"
       @update:model-value="showDeleteConfirm = $event">
-      <template #title>{{ t('offline.deleteAll') }}</template>
-      <p>{{ t('offline.deleteAllConfirm') }}</p>
-      <template #actions>
-        <button class="app-btn app-btn--ghost" @click="showDeleteConfirm = false">
-          {{ t('core.cancel') }}
-        </button>
-        <button class="app-btn app-btn--danger" @click="confirmDeleteAll">
+      <p class="offline-delete-confirm-text">{{ t('offline.deleteAllConfirm') }}</p>
+      <template #footer>
+        <AppButton variant="ghost" :disabled="isDeleting" @click="showDeleteConfirm = false">
+          {{ t('core.actions.cancel') }}
+        </AppButton>
+        <AppButton variant="danger" :loading="isDeleting" @click="confirmDeleteAll">
           {{ t('offline.deleteAll') }}
-        </button>
+        </AppButton>
       </template>
     </AppModal>
   </AppMusicPage>
@@ -247,5 +256,12 @@ function formatSize(bytes: number): string {
 
 .offline-track-list {
   margin-top: var(--space-4);
+}
+
+.offline-delete-confirm-text {
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  margin: 0;
 }
 </style>

@@ -165,11 +165,14 @@ export const useOfflineStore = defineStore('offline', () => {
         console.warn('Failed to delete track during clearAll:', e);
       }
     }
+    for (const url of objectUrlCache.values()) {
+      URL.revokeObjectURL(url);
+    }
+    objectUrlCache.clear();
     downloadedTracks.value = [];
     downloadedIds.value.clear();
     downloadStatuses.value = {};
     downloadProgress.value = {};
-    objectUrlCache.clear();
   }
 
   return {
