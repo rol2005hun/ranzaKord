@@ -197,9 +197,7 @@ const optimizedBgUrl = computed(() => {
   container-name: music-page;
   position: absolute;
   inset: 0;
-  max-width: 1600px;
   width: 100%;
-  margin: 0 auto;
   display: flex;
   flex-direction: column;
   overflow: hidden;
