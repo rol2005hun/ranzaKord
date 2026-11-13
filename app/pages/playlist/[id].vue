@@ -347,13 +347,25 @@ function onPlaySong(track: TrackListItem, index: number): void {
 }
 
 async function removeTrack(videoId: string): Promise<void> {
-  await store.removeTrack(id.value, videoId);
   const idx = virtualTracks.value.findIndex((t) => t?.videoId === videoId);
+  const removedTrack = idx >= 0 ? virtualTracks.value[idx] : null;
   if (idx >= 0) {
     virtualTracks.value.splice(idx, 1);
     if (data.value) {
       data.value.trackCount = Math.max(0, data.value.trackCount - 1);
     }
+  }
+
+  try {
+    await store.removeTrack(id.value, videoId);
+  } catch (err) {
+    if (idx >= 0 && removedTrack) {
+      virtualTracks.value.splice(idx, 0, removedTrack);
+      if (data.value) {
+        data.value.trackCount++;
+      }
+    }
+    throw err;
   }
 }
 

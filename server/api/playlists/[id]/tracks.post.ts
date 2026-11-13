@@ -1,5 +1,6 @@
-import type { ServerSession } from '../../../types/auth.server.types';
 import { PlaylistModel } from '../../../models/Playlist';
+
+import type { ServerSession } from '../../../types/auth.server.types';
 
 interface AddTrackArtist {
   name: string;
@@ -37,7 +38,7 @@ export default defineEventHandler(async (event): Promise<{ success: boolean }> =
     throw createError({ statusCode: 400, message: t('playlists.errors.missingTrackInfo') });
   }
 
-  const playlist = await PlaylistModel.findOne({ _id: id });
+  const playlist = await PlaylistModel.findOne({ _id: id }, { userId: 1, collaborators: 1 }).lean();
   if (!playlist) throw createError({ statusCode: 404, message: t('playlists.errors.notFound') });
 
   const isOwner = playlist.userId === sessionData.user.sub;
@@ -47,21 +48,27 @@ export default defineEventHandler(async (event): Promise<{ success: boolean }> =
     throw createError({ statusCode: 403, message: t('core.errors.unauthorized') });
   }
 
-  const alreadyExists = playlist.items.some((item) => item.videoId === body.videoId);
-  if (!alreadyExists) {
-    playlist.items.push({
-      videoId: body.videoId,
-      title: body.title,
-      artist: body.artist || '',
-      artistId: body.artistId,
-      artists: body.artists ?? [],
-      thumbnailUrl: body.thumbnailUrl || '',
-      durationMs: body.durationMs || 0,
-      addedAt: new Date(),
-      addedBy: sessionData.user.sub
-    });
-    await playlist.save();
-  }
+  await PlaylistModel.updateOne(
+    {
+      _id: id,
+      'items.videoId': { $ne: body.videoId }
+    },
+    {
+      $push: {
+        items: {
+          videoId: body.videoId,
+          title: body.title,
+          artist: body.artist || '',
+          artistId: body.artistId,
+          artists: body.artists ?? [],
+          thumbnailUrl: body.thumbnailUrl || '',
+          durationMs: body.durationMs || 0,
+          addedAt: new Date(),
+          addedBy: sessionData.user.sub
+        }
+      }
+    }
+  );
 
   return { success: true };
 });

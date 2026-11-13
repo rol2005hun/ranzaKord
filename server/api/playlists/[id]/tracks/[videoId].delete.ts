@@ -1,6 +1,8 @@
 import type { H3Event } from 'h3';
+
+import { PlaylistModel } from '../../../../models/Playlist';
+
 import type { ServerSession } from '../../../../types/auth.server.types';
-import { PlaylistModel, type IPlaylistItem } from '../../../../models/Playlist';
 
 function resolveParam(event: H3Event, key: string): string | undefined {
   const routeParam = getRouterParam(event, key) ?? event.context.params?.[key];
@@ -37,7 +39,10 @@ export default defineEventHandler(async (event): Promise<{ success: boolean }> =
     throw createError({ statusCode: 400, message: t('playlists.errors.missingParams') });
   }
 
-  const playlist = await PlaylistModel.findOne({ _id: id });
+  const playlist = await PlaylistModel.findOne(
+    { _id: id },
+    { userId: 1, collaborators: 1, items: { $elemMatch: { videoId } } }
+  ).lean();
   if (!playlist) throw createError({ statusCode: 404, message: t('playlists.errors.notFound') });
 
   const isOwner = playlist.userId === sessionData.user.sub;
@@ -47,24 +52,23 @@ export default defineEventHandler(async (event): Promise<{ success: boolean }> =
     throw createError({ statusCode: 403, message: t('core.errors.unauthorized') });
   }
 
-  // Find the track
-  const trackIndex = playlist.items.findIndex((item: IPlaylistItem) => item.videoId === videoId);
-  if (trackIndex === -1) {
-    return { success: true };
-  }
-
-  const track = playlist.items[trackIndex];
+  const track = playlist.items?.[0];
   if (!track) {
     return { success: true };
   }
 
-  // Collaborators can only delete their own tracks
   if (!isOwner && track.addedBy !== sessionData.user.sub) {
     throw createError({ statusCode: 403, message: t('core.errors.unauthorized') });
   }
 
-  playlist.items.splice(trackIndex, 1);
-  await playlist.save();
+  await PlaylistModel.updateOne(
+    { _id: id },
+    {
+      $pull: {
+        items: { videoId }
+      }
+    }
+  );
 
   return { success: true };
 });

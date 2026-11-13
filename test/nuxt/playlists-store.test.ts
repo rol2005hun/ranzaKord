@@ -143,11 +143,39 @@ describe('usePlaylistsStore', () => {
     it('removes a track', async () => {
       fetchMock.mockResolvedValue({});
       const store = usePlaylistsStore();
-      store.playlists = [mockPlaylist]; // Has t1 and t2
+      store.playlists = [mockPlaylist];
 
       await store.removeTrack('p1', 't1');
       expect(store.playlists[0]?.trackCount).toBe(1);
       expect(store.playlists[0]?.trackIds).not.toContain('t1');
+    });
+
+    it('rolls back optimistic addTrack on error', async () => {
+      fetchMock.mockRejectedValue(new Error('Network error'));
+      const store = usePlaylistsStore();
+      store.playlists = [{ ...mockPlaylist, trackIds: [], trackCount: 0 }];
+
+      await expect(
+        store.addTrack('p1', {
+          videoId: 't1',
+          title: 'T',
+          artist: 'A',
+          thumbnailUrl: '',
+          durationMs: 100
+        })
+      ).rejects.toThrow('Network error');
+      expect(store.playlists[0]?.trackCount).toBe(0);
+      expect(store.playlists[0]?.trackIds).not.toContain('t1');
+    });
+
+    it('rolls back optimistic removeTrack on error', async () => {
+      fetchMock.mockRejectedValue(new Error('Network error'));
+      const store = usePlaylistsStore();
+      store.playlists = [{ ...mockPlaylist, trackIds: ['t1'], trackCount: 1 }];
+
+      await expect(store.removeTrack('p1', 't1')).rejects.toThrow('Network error');
+      expect(store.playlists[0]?.trackCount).toBe(1);
+      expect(store.playlists[0]?.trackIds).toContain('t1');
     });
   });
 
