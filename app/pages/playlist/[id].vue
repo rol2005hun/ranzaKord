@@ -405,12 +405,17 @@ async function onImageError(): Promise<void> {
 }
 
 const isDownloadingPlaylist = ref(false);
+const downloadTotal = ref(0);
+const downloadCurrent = ref(0);
 
 async function downloadPlaylist(): Promise<void> {
   if (isDownloadingPlaylist.value) return;
   const loaded = virtualTracks.value.filter((t): t is PlaylistTrack => t !== null);
   if (loaded.length === 0) return;
   isDownloadingPlaylist.value = true;
+  const toDownload = loaded.filter((t) => !offlineStore.isTrackDownloaded(t.videoId));
+  downloadTotal.value = toDownload.length;
+  downloadCurrent.value = 0;
   for (const t of loaded) {
     const track: Track = {
       videoId: t.videoId,
@@ -421,9 +426,12 @@ async function downloadPlaylist(): Promise<void> {
     };
     if (!offlineStore.isTrackDownloaded(track.videoId)) {
       await offlineStore.downloadTrack(track);
+      downloadCurrent.value++;
     }
   }
   isDownloadingPlaylist.value = false;
+  downloadTotal.value = 0;
+  downloadCurrent.value = 0;
 }
 
 const showMobileMenu = ref(false);
@@ -577,15 +585,22 @@ const showStickyMobileMenu = ref(false);
 
       <template #actions>
         <div class="playlist-page__actions-desktop">
-          <button
-            class="playlist-page__action-btn"
-            :title="$t('offline.downloadPlaylist')"
-            :aria-label="$t('offline.downloadPlaylist')"
-            :disabled="isDownloadingPlaylist"
-            @click="downloadPlaylist">
-            <AppSpinner v-if="isDownloadingPlaylist" size="sm" />
-            <AppIcon v-else name="ph:arrow-circle-down-duotone" />
-          </button>
+          <div class="playlist-page__download-wrapper">
+            <button
+              class="playlist-page__action-btn"
+              :title="$t('offline.downloadPlaylist')"
+              :aria-label="$t('offline.downloadPlaylist')"
+              :disabled="isDownloadingPlaylist"
+              @click="downloadPlaylist">
+              <AppSpinner v-if="isDownloadingPlaylist" size="sm" />
+              <AppIcon v-else name="ph:arrow-circle-down-duotone" />
+            </button>
+            <span v-if="isDownloadingPlaylist" class="playlist-page__download-count">
+              {{
+                $t('offline.downloadProgress', { current: downloadCurrent, total: downloadTotal })
+              }}
+            </span>
+          </div>
           <button
             class="playlist-page__action-btn"
             :title="$t('playlists.editPlaylist')"
@@ -634,7 +649,14 @@ const showStickyMobileMenu = ref(false);
                   ">
                   <AppSpinner v-if="isDownloadingPlaylist" size="sm" />
                   <AppIcon v-else name="ph:arrow-circle-down-duotone" />
-                  {{ $t('offline.downloadPlaylist') }}
+                  {{
+                    isDownloadingPlaylist
+                      ? $t('offline.downloadProgress', {
+                          current: downloadCurrent,
+                          total: downloadTotal
+                        })
+                      : $t('offline.downloadPlaylist')
+                  }}
                 </button>
                 <button
                   class="playlist-page__dropdown-item"
@@ -1070,6 +1092,21 @@ const showStickyMobileMenu = ref(false);
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  &__download-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  &__download-count {
+    font-size: 10px;
+    line-height: 1;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    pointer-events: none;
   }
 }
 
