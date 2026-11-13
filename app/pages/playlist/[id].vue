@@ -190,7 +190,21 @@ const isCurrentPlaylistLoading = computed(() => {
 });
 
 async function playAll(): Promise<void> {
+  if (isCurrentPlaylistPlaying.value) {
+    player.togglePlay();
+    return;
+  }
+
   let loadedTracks = virtualTracks.value.filter((t): t is PlaylistTrack => t !== null);
+
+  const pStore = usePlayerStore();
+  pStore.playbackContext = {
+    type: 'playlist',
+    sourceId: id.value,
+    currentOffset: loadedTracks.length,
+    totalItems: playlist.value?.trackCount || loadedTracks.length
+  };
+  pStore.isLoading = true;
 
   if (playlist.value && playlist.value.trackCount > loadedTracks.length) {
     const fullDetail = await store.fetchDetail(id.value, {
@@ -205,10 +219,8 @@ async function playAll(): Promise<void> {
     }
   }
 
-  if (loadedTracks.length === 0) return;
-
-  if (isCurrentPlaylistPlaying.value) {
-    player.togglePlay();
+  if (loadedTracks.length === 0) {
+    pStore.isLoading = false;
     return;
   }
 
@@ -227,17 +239,32 @@ async function playAll(): Promise<void> {
     durationSeconds: Math.round(t.durationMs / 1000)
   }));
 
-  const pStore = usePlayerStore();
-  pStore.playbackContext = {
-    type: 'playlist',
-    sourceId: id.value,
-    currentOffset: loadedTracks.length,
-    totalItems: playlist.value?.trackCount || loadedTracks.length
-  };
   player.playQueue(tracksToPlay, 0);
 }
 
 async function onPlaySong(track: TrackListItem, index: number): Promise<void> {
+  const pStore = usePlayerStore();
+
+  const immediateTrack: Track = {
+    videoId: track.id,
+    title: track.title,
+    artist: track.artist ?? '',
+    artistId: track.artistId,
+    artists: track.artists?.map((a) => ({ name: a.name, id: a.channelId })) ?? [],
+    thumbnailUrl: track.thumbnailUrl ?? '',
+    durationSeconds: track.durationSeconds ?? 0
+  };
+
+  pStore.currentTrack = immediateTrack;
+  pStore.isLoading = true;
+  pStore.isPlaying = false;
+  pStore.playbackContext = {
+    type: 'playlist',
+    sourceId: id.value,
+    currentOffset: 0,
+    totalItems: playlist.value?.trackCount ?? 0
+  };
+
   let loadedTracks = virtualTracks.value.filter((t): t is PlaylistTrack => t !== null);
 
   if (playlist.value && playlist.value.trackCount > loadedTracks.length) {
@@ -268,7 +295,6 @@ async function onPlaySong(track: TrackListItem, index: number): Promise<void> {
     durationSeconds: Math.round(t.durationMs / 1000)
   }));
 
-  const pStore = usePlayerStore();
   pStore.playbackContext = {
     type: 'playlist',
     sourceId: id.value,
