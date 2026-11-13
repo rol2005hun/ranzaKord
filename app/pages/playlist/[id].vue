@@ -57,7 +57,7 @@ function onSort(by: string, order: 'asc' | 'desc'): void {
   sortOrder.value = order;
 }
 
-const { data, status, error, refresh } = useAsyncData<PlaylistDetail | null>(
+const { data, status, error, refresh } = await useAsyncData<PlaylistDetail | null>(
   `playlist-${id.value}`,
   async () => {
     if (!id.value) return null;
@@ -76,7 +76,6 @@ const { data, status, error, refresh } = useAsyncData<PlaylistDetail | null>(
 
 const playlist = ref<PlaylistDetail | null>(data.value ?? null);
 const isError = computed(() => {
-  if (import.meta.server) return false;
   return (
     Boolean(error?.value) ||
     status.value === 'error' ||
