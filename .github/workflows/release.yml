@@ -139,6 +139,19 @@ jobs:
       - name: Initialize Tauri Android
         run: npx tauri android init --ci
 
+      - name: Patch Tauri Android buildSrc for Gradle 8+ compatibility
+        run: |
+          python3 -c "
+import glob, re
+for f in glob.glob('src-tauri/gen/android/buildSrc/**/*.kt', recursive=True):
+    content = open(f).read()
+    if 'projectDir' in content:
+        patched = re.sub(r'@get:Input(\s+)(abstract val projectDir)', r'@get:Internal\1\2', content)
+        if patched != content:
+            open(f, 'w').write(patched)
+            print('Patched:', f)
+"
+
       - name: Patch Gradle wrapper to compatible version
         run: |
           sed -i 's|distributions/gradle-.*-bin.zip|distributions/gradle-8.13-bin.zip|g' \
