@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import OfflineDownloadButton from '@/features/offline/components/DownloadButton.vue';
+
 const player = usePlayer();
 const audioEl1 = ref<HTMLAudioElement | null>(null);
 const audioEl2 = ref<HTMLAudioElement | null>(null);
@@ -227,17 +229,24 @@ onClickOutside(moreMenuBtnRef, (e) => {
         </div>
 
         <ClientOnly>
-          <button
-            ref="playlistBtnRef"
-            class="player-bar__add-btn"
-            :disabled="!displayTrack"
-            :aria-label="$t('playlists.addToPlaylist')"
-            @click="layoutStore.toggleAddToPlaylist()">
-            <AppIcon v-if="isInAnyPlaylist" name="ph:check-circle-fill" class="text-success" />
-            <AppIcon v-else name="ph:plus-circle" />
-          </button>
+          <div class="player-bar__actions">
+            <button
+              ref="playlistBtnRef"
+              class="player-bar__add-btn"
+              :disabled="!displayTrack"
+              :aria-label="$t('playlists.addToPlaylist')"
+              @click="layoutStore.toggleAddToPlaylist()">
+              <AppIcon v-if="isInAnyPlaylist" name="ph:check-circle-fill" class="text-success" />
+              <AppIcon v-else name="ph:plus-circle" />
+            </button>
+            <OfflineDownloadButton
+              v-if="displayTrack"
+              :track="displayTrack"
+              size="sm"
+              class="player-bar__download-btn" />
+          </div>
           <template #fallback>
-            <AppSkeleton width="20px" height="20px" border-radius="var(--radius-full)" />
+            <AppSkeleton width="48px" height="24px" border-radius="var(--radius-full)" />
           </template>
         </ClientOnly>
       </div>
@@ -668,6 +677,13 @@ onClickOutside(moreMenuBtnRef, (e) => {
     align-items: center;
     justify-content: center;
     gap: var(--space-4);
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-shrink: 0;
   }
 
   &__add-btn {
