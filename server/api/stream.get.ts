@@ -4,7 +4,15 @@ import type { H3Event } from 'h3';
 import type { Innertube } from 'youtubei.js';
 
 type ClientType =
-  'ANDROID' | 'MWEB' | 'IOS' | 'YTMUSIC' | 'WEB' | 'TV' | 'TV_EMBEDDED' | 'WEB_CREATOR';
+  | 'ANDROID'
+  | 'MWEB'
+  | 'IOS'
+  | 'YTMUSIC'
+  | 'WEB'
+  | 'TV'
+  | 'TV_SIMPLY'
+  | 'TV_EMBEDDED'
+  | 'WEB_CREATOR';
 
 interface CachedStream {
   url: string;
@@ -280,6 +288,7 @@ async function discoverStream(
   const isTvOAuth = Boolean(innertube.session.logged_in && innertube.session.oauth?.oauth2_tokens);
   const candidateSpecs: CandidateSpec[] = isTvOAuth
     ? [
+        { client: 'TV_SIMPLY', useAuth: true },
         { client: 'TV', useAuth: true },
         { client: 'TV_EMBEDDED', useAuth: true },
         { client: 'ANDROID', useAuth: false },
@@ -289,6 +298,7 @@ async function discoverStream(
         { client: 'WEB', useAuth: false }
       ]
     : [
+        { client: 'TV_SIMPLY', useAuth: false },
         { client: 'ANDROID', useAuth: false },
         { client: 'YTMUSIC', useAuth: false },
         { client: 'IOS', useAuth: false },
