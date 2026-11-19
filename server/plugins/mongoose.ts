@@ -5,7 +5,9 @@ export default defineNitroPlugin(async () => {
 
   const config = useRuntimeConfig();
 
-  if (!config.mongodbUri) throw new Error('MONGODB_URI is not set');
+  if (!config.mongodbUri || config.mongodbUri === 'your_mongo_uri') {
+    throw new Error('[ranzaKord] MONGODB_URI is not configured in .env');
+  }
 
   try {
     await mongoose.connect(config.mongodbUri, {
@@ -13,7 +15,7 @@ export default defineNitroPlugin(async () => {
       socketTimeoutMS: 45000
     });
   } catch (err) {
-    console.error('Failed to connect to MongoDB', err);
+    console.error('[ranzaKord] Failed to connect to MongoDB. Is MongoDB running?', err);
     throw err;
   }
 });

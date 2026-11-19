@@ -407,7 +407,7 @@ export function usePlayer() {
 
   function recordTrackStat(track: Track, listeningSeconds: number, skipped: boolean) {
     const authStore = useAuthStore();
-    if (authStore.currentUser?.isDemo) return;
+    if (!authStore.isAuthenticated || authStore.currentUser?.isDemo) return;
 
     const payload: TrackStatPayload = {
       trackId: track.videoId,

@@ -51,14 +51,14 @@ const optimizedBgUrl = computed(() => {
 
 <template>
   <div class="music-page">
-    <div v-if="isLoading" class="music-page__skeleton">
+    <div v-if="isLoading" class="music-page__skeleton" aria-hidden="true">
       <div class="music-page__skeleton-header">
         <div
           class="music-page__skeleton-cover skeleton-box"
           :class="{ 'music-page__skeleton-cover--rounded': roundedImage }"></div>
         <div class="music-page__skeleton-info">
           <div class="skeleton-line skeleton-line--badge"></div>
-          <h1 class="skeleton-line skeleton-line--title"></h1>
+          <div class="skeleton-line skeleton-line--title"></div>
           <div class="skeleton-line skeleton-line--meta"></div>
         </div>
         <div v-if="$slots['skeleton-center-header']" class="music-page__skeleton-center-header">

@@ -14,9 +14,15 @@ export default defineEventHandler(async (event) => {
     !path.startsWith('/api/stream') &&
     !path.startsWith('/api/updater')
   ) {
-    const session = await useAppSession(event);
-    const sessionData = session.data as Partial<ServerSession>;
     const { t } = useServerTranslation(event);
+    let sessionData: Partial<ServerSession>;
+
+    try {
+      const session = await useAppSession(event);
+      sessionData = session.data as Partial<ServerSession>;
+    } catch {
+      throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });
+    }
 
     if (!sessionData.accessToken || !sessionData.user) {
       throw createError({ statusCode: 401, statusMessage: t('core.errors.unauthorized') });

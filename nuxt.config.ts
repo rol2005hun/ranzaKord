@@ -62,7 +62,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     mongodbUri: '',
-    sessionSecret: '',
+    sessionSecret: process.env.NUXT_SESSION_SECRET || 'dev-secret-min-32-characters-long',
     ranzakonnectDomain: '',
     ranzakonnectClientId: '',
     ranzakonnectClientSecret: '',
@@ -111,6 +111,10 @@ export default defineNuxtConfig({
     url: process.env.NUXT_PUBLIC_BASE_URL,
     name: 'ranzaKord',
     description: 'Premium music streaming.'
+  },
+
+  seo: {
+    automaticTwitterTags: false
   },
 
   sitemap: {

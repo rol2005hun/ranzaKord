@@ -12,8 +12,8 @@ export async function useAppSession(event: H3Event) {
       (event.headers && event.headers.get ? event.headers.get('cookie') : undefined) ||
       (event.node?.req?.headers?.cookie as string) ||
       '';
-    if (!cookieHeader.includes('session=')) {
-      const newCookie = cookieHeader ? `${cookieHeader}; session=${token}` : `session=${token}`;
+    if (!cookieHeader.includes('session=') && !cookieHeader.includes('h3=')) {
+      const newCookie = cookieHeader ? `${cookieHeader}; h3=${token}` : `h3=${token}`;
       if (event.node?.req?.headers) {
         event.node.req.headers.cookie = newCookie;
       }
@@ -25,10 +25,12 @@ export async function useAppSession(event: H3Event) {
 
   const host = getRequestHeader(event, 'host') || '';
   const isSecure = !host.includes('localhost') && !host.match(/^\d{1,3}\./);
+  const rawSecret = (config.sessionSecret as string) || process.env.NUXT_SESSION_SECRET || '';
+  const sessionSecret = rawSecret.length >= 32 ? rawSecret : 'dev-secret-min-32-characters-long';
 
   return useSession(event, {
-    password: config.sessionSecret as string,
-    maxAge: 60 * 60 * 24 * 365, // 365 days
+    password: sessionSecret,
+    maxAge: 60 * 60 * 24 * 365,
     cookie: {
       sameSite: isSecure ? 'none' : 'lax',
       secure: isSecure,

@@ -317,7 +317,8 @@ onMounted(() => {
                     width="40"
                     height="40"
                     format="webp"
-                    loading="lazy" />
+                    :loading="index < 10 ? 'eager' : 'lazy'"
+                    decoding="async" />
                 </div>
                 <div class="app-track-list__track-text">
                   <span
@@ -474,7 +475,8 @@ onMounted(() => {
               width="40"
               height="40"
               format="webp"
-              loading="lazy" />
+              loading="eager"
+              decoding="async" />
           </div>
           <div class="app-track-list__track-text">
             <span

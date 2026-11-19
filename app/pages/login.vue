@@ -101,7 +101,7 @@ if (isAuthenticated.value) {
         <label class="login-page__terms-label">
           <input v-model="acceptedTerms" type="checkbox" class="login-page__terms-checkbox" />
           <span class="login-page__terms-text">
-            <i18n-t keypath="auth.login.termsText" tag="span">
+            <i18n-t keypath="auth.login.termsText" tag="span" scope="global">
               <template #terms>
                 <a href="#" class="login-page__terms-link" @click.prevent="showTermsModal = true">
                   {{ $t('auth.login.termsLink') }}
@@ -158,7 +158,7 @@ if (isAuthenticated.value) {
         <label class="login-page__terms-label">
           <input v-model="acceptedTerms" type="checkbox" class="login-page__terms-checkbox" />
           <span class="login-page__terms-text">
-            <i18n-t keypath="auth.login.termsText" tag="span">
+            <i18n-t keypath="auth.login.termsText" tag="span" scope="global">
               <template #terms>
                 <a href="#" class="login-page__terms-link" @click.prevent="showTermsModal = true">
                   {{ $t('auth.login.termsLink') }}
@@ -382,12 +382,20 @@ if (isAuthenticated.value) {
   }
 
   &__terms-link {
-    color: var(--color-primary);
-    text-decoration: none;
+    color: var(--color-text-primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
     font-weight: var(--font-weight-medium);
+    transition: color var(--transition-fast);
 
     &:hover {
-      text-decoration: underline;
+      color: var(--color-primary-hover, var(--color-primary));
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+      border-radius: var(--radius-xs);
     }
   }
 
