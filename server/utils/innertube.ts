@@ -101,10 +101,6 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
           retrieve_player: true
         });
 
-        console.warn(
-          'YouTube OAuth is not configured in database. Run `pnpm youtube:login` to enable authenticated streaming on datacenter IPs.'
-        );
-
         authenticatedInstance = instance;
       }
     } catch (e) {

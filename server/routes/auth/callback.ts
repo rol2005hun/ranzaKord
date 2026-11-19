@@ -98,34 +98,17 @@ export default defineEventHandler(async (event) => {
   });
 
   const setCookieHeaders = getResponseHeader(event, 'set-cookie');
-  let sessionToken = '';
-  if (setCookieHeaders) {
+  if (setCookieHeaders && !rememberMe) {
     const cookies = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
-    const newHeaders = [...cookies];
-
-    for (let i = 0; i < cookies.length; i++) {
-      let cookie = cookies[i];
-      if (typeof cookie === 'string') {
-        const match = cookie.match(/^(?:h3|session)=([^;]+)/);
-        if (match && match[1]) {
-          sessionToken = match[1];
-
-          if (!rememberMe) {
-            cookie = cookie.replace(/Max-Age=\d+;?\s*/i, '').replace(/Expires=[^;]+;?\s*/i, '');
-            newHeaders[i] = cookie;
-          }
-        }
-      }
-    }
-
-    if (!rememberMe) {
-      setResponseHeader(event, 'set-cookie', newHeaders);
-    }
+    const newHeaders = cookies.map((c) =>
+      typeof c === 'string'
+        ? c.replace(/Max-Age=\d+;?\s*/i, '').replace(/Expires=[^;]+;?\s*/i, '')
+        : c
+    );
+    setResponseHeader(event, 'set-cookie', newHeaders);
   }
 
-  if (!sessionToken) {
-    sessionToken = await sealSession(event, getSessionConfig(event));
-  }
+  const sessionToken = await sealSession(event, getSessionConfig(event));
 
   const isTauriApp = desktopAuth || (authSource && authSource.includes('tauri.localhost'));
 

@@ -57,8 +57,19 @@ export function useAuth(): UseAuthReturn {
     }
     if (store.currentUser?.isDemo) return;
     try {
-      const fetcher = import.meta.server && requestFetch ? requestFetch : globalFetch;
-      const user = (await fetcher(useApiUrl('/api/me'))) as unknown;
+      const fetcher =
+        import.meta.server && requestFetch
+          ? requestFetch
+          : (nuxtApp.$fetch as unknown as (req: string, opts?: unknown) => Promise<unknown>) ||
+            globalFetch;
+      const token = import.meta.client
+        ? localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
+        : null;
+      const user = token
+        ? ((await fetcher(useApiUrl('/api/me'), {
+            headers: { Authorization: `Bearer ${token}`, 'x-h3-session': token }
+          })) as unknown)
+        : ((await fetcher(useApiUrl('/api/me'))) as unknown);
       if (user && typeof user === 'object' && 'sub' in user) {
         store.setUser(
           user as { sub: string; name: string; email: string; picture?: string; hasAccess: boolean }
