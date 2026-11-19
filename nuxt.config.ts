@@ -68,7 +68,7 @@ export default defineNuxtConfig({
     ranzakonnectClientSecret: '',
     imgurClientId: '',
     public: {
-      baseUrl: '',
+      baseUrl: process.env.NUXT_PUBLIC_BASE_URL || '',
       appVersion: pkg.version
     }
   },
