@@ -26,6 +26,7 @@ export default defineNuxtPlugin({
           if (token) {
             const headers = new Headers(options.headers || {});
             headers.set('Authorization', `Bearer ${token}`);
+            headers.set('x-h3-session', token);
             options.headers = headers;
           }
         }

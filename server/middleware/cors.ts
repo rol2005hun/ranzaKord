@@ -20,7 +20,7 @@ export default defineEventHandler((event) => {
   setResponseHeader(
     event,
     'Access-Control-Allow-Headers',
-    'Origin, Content-Type, Accept, Authorization, Cookie'
+    'Origin, Content-Type, Accept, Authorization, Cookie, x-h3-session'
   );
 
   if (event.method === 'OPTIONS') {
