@@ -14,22 +14,16 @@ let isConnected = false;
 if (typeof window !== 'undefined') {
   const resume = () => {
     if (audioCtx && audioCtx.state === 'suspended') {
-      void audioCtx.resume();
+      audioCtx.resume().catch(() => void 0);
     }
   };
   window.addEventListener('pointerdown', resume, { capture: true, passive: true });
   window.addEventListener('keydown', resume, { capture: true, passive: true });
-  window.addEventListener('focus', resume, { passive: true });
-  document.addEventListener('visibilitychange', () => {
-    if (audioCtx && audioCtx.state === 'suspended') {
-      void audioCtx.resume();
-    }
-  });
 }
 
 function tryResumeAudioContext(): void {
   if (audioCtx && audioCtx.state === 'suspended') {
-    void audioCtx.resume();
+    audioCtx.resume().catch(() => void 0);
   }
 }
 
@@ -38,7 +32,7 @@ const EQ_FREQUENCIES = [32, 64, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
 export function useAudioVisualizer() {
   function resumeAudioContext(): void {
     if (audioCtx && audioCtx.state === 'suspended') {
-      void audioCtx.resume();
+      audioCtx.resume().catch(() => void 0);
     }
   }
 
@@ -57,11 +51,6 @@ export function useAudioVisualizer() {
     try {
       if (!audioCtx) {
         audioCtx = new AudioContext({ latencyHint: 'playback' });
-        audioCtx.onstatechange = () => {
-          if (audioCtx && audioCtx.state === 'suspended') {
-            void audioCtx.resume();
-          }
-        };
       }
 
       tryResumeAudioContext();

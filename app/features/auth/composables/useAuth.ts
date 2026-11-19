@@ -19,7 +19,9 @@ export function useAuth(): UseAuthReturn {
     const lang = nuxtApp.$i18n?.locale?.value || 'en';
     const desktopAuth = isTauri.value ? '&desktop=1' : '';
     const rememberAuth = rememberMe ? '&remember=1' : '';
-    const baseUrl = isTauri.value ? config.public.baseUrl : window.location.origin;
+    const baseUrl = isTauri.value
+      ? config.public.baseUrl.replace(/\/+$/, '')
+      : window.location.origin;
     const loginUrl = isTauri.value
       ? `${baseUrl}/auth/login?source=${origin}&lang=${lang}${desktopAuth}${rememberAuth}`
       : `/auth/login?source=${origin}&lang=${lang}${desktopAuth}${rememberAuth}`;
@@ -45,7 +47,7 @@ export function useAuth(): UseAuthReturn {
       });
     }
 
-    $fetch('/auth/logout', { method: 'POST' }).catch(() => null);
+    $fetch(useApiUrl('/auth/logout'), { method: 'POST' }).catch(() => null);
   }
 
   async function fetchUser() {
@@ -56,7 +58,7 @@ export function useAuth(): UseAuthReturn {
     if (store.currentUser?.isDemo) return;
     try {
       const fetcher = import.meta.server && requestFetch ? requestFetch : globalFetch;
-      const user = (await fetcher('/api/me')) as unknown;
+      const user = (await fetcher(useApiUrl('/api/me'))) as unknown;
       if (user && typeof user === 'object' && 'sub' in user) {
         store.setUser(
           user as { sub: string; name: string; email: string; picture?: string; hasAccess: boolean }

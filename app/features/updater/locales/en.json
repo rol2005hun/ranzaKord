@@ -4,9 +4,16 @@
   "mandatory": "Mandatory Update",
   "newVersion": "New Version",
   "releaseNotes": "Release Notes",
+  "noReleaseNotes": "No release notes provided.",
   "downloading": "Downloading",
+  "downloadSize": "Download size",
+  "fileCount": "File count",
+  "releasedOn": "Released on",
+  "readyToInstall": "Download complete! Restart to update.",
   "skip": "Skip for Now",
   "installing": "Installing...",
   "installAndRestart": "Install & Restart",
-  "downloadApk": "Download Update"
+  "downloadApk": "Download Update",
+  "openInBrowser": "Download from browser",
+  "restartNow": "Restart now"
 }

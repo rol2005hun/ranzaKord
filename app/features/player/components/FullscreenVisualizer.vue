@@ -466,6 +466,9 @@ function getStyleIcon(style: string) {
             v-else-if="hasSyncedLyrics"
             ref="lyricsListRef"
             class="fullscreen-visualizer__lyrics-list"
+            tabindex="0"
+            role="region"
+            :aria-label="$t('player.lyrics')"
             @scroll.passive="onLyricsScroll">
             <p
               v-for="(line, idx) in syncedLines"
@@ -783,7 +786,7 @@ function getStyleIcon(style: string) {
   &__lyric-line {
     font-size: 3rem;
     font-weight: 800;
-    color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.65);
     text-align: center;
     margin: 0;
     cursor: pointer;

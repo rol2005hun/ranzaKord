@@ -3,19 +3,20 @@ import { isTauri } from '@tauri-apps/api/core';
 export default defineNuxtPlugin({
   name: 'tauri-fetch',
   enforce: 'pre',
-  setup() {
+  setup(nuxtApp) {
     const config = useRuntimeConfig();
-    const defaultBaseUrl = config.public.baseUrl;
+    const defaultBaseUrl = config.public.baseUrl ? config.public.baseUrl.replace(/\/+$/, '') : '';
 
     if (import.meta.test && !process.env.TEST_TAURI_FETCH) return;
 
-    globalThis.$fetch = $fetch.create({
+    const customFetch = $fetch.create({
       baseURL: isTauri() ? defaultBaseUrl : undefined,
       onRequest({ request, options }) {
         const requestUrl = request.toString();
         const isInternalApi =
           requestUrl.startsWith('/api') ||
-          requestUrl.startsWith(defaultBaseUrl) ||
+          requestUrl.startsWith('/auth') ||
+          Boolean(defaultBaseUrl && requestUrl.startsWith(defaultBaseUrl)) ||
           requestUrl.startsWith('http://localhost') ||
           requestUrl.startsWith('http://127.0.0.1');
 
@@ -30,5 +31,14 @@ export default defineNuxtPlugin({
         }
       }
     });
+
+    globalThis.$fetch = customFetch;
+    nuxtApp.$fetch = customFetch;
+
+    return {
+      provide: {
+        fetch: customFetch
+      }
+    };
   }
 });

@@ -172,7 +172,8 @@ onMounted(() => {
                 v-if="track.thumbnailUrl"
                 :src="track.thumbnailUrl"
                 :alt="track.title"
-                loading="lazy" />
+                :loading="index < 6 ? 'eager' : 'lazy'"
+                decoding="async" />
               <div v-else class="player-queue__track-thumb-placeholder">
                 <AppIcon name="ph:music-notes" />
               </div>

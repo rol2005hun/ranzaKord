@@ -11,8 +11,9 @@ export const useApiUrl = (path: string) => {
 
   const isTauriProd = import.meta.client && isTauri() && !import.meta.dev;
 
-  if (isTauriProd) {
-    return `${config.public.baseUrl}${normalizedPath}`;
+  if (isTauriProd && config.public.baseUrl) {
+    const base = config.public.baseUrl.replace(/\/+$/, '');
+    return `${base}${normalizedPath}`;
   }
 
   return normalizedPath;

@@ -15,6 +15,9 @@ function getDb(): Promise<IDBDatabase> {
       return reject(new Error('indexedDB is not defined in this environment'));
     }
     const request = indexedDB.open(DB_NAME, DB_VERSION);
+    if (!request) {
+      return reject(new Error('indexedDB.open returned undefined'));
+    }
 
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;

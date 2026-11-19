@@ -4,9 +4,16 @@
   "mandatory": "Kötelező Frissítés",
   "newVersion": "Új verzió",
   "releaseNotes": "Újdonságok",
+  "noReleaseNotes": "Nincsenek kiadási megjegyzések.",
   "downloading": "Letöltés folyamatban",
+  "downloadSize": "Letöltési méret",
+  "fileCount": "Fájlok száma",
+  "releasedOn": "Megjelent",
+  "readyToInstall": "Letöltés kész! Újraindítással frissül.",
   "skip": "Kihagyás most",
   "installing": "Telepítés...",
   "installAndRestart": "Telepítés és Újraindítás",
-  "downloadApk": "Frissítés letöltése"
+  "downloadApk": "Frissítés letöltése",
+  "openInBrowser": "Letöltés böngészőből",
+  "restartNow": "Újraindítás most"
 }

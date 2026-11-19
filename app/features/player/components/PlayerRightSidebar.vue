@@ -450,6 +450,9 @@ const sidebarStyle = computed(() => ({
           <div
             ref="lyricsListRef"
             class="right-sidebar__lyrics-list"
+            tabindex="0"
+            role="region"
+            :aria-label="$t('player.lyrics')"
             @scroll.passive="onLyricsScroll">
             <div
               v-for="(line, idx) in syncedLines"
@@ -467,7 +470,11 @@ const sidebarStyle = computed(() => ({
         </template>
 
         <template v-else>
-          <div class="right-sidebar__plain-lyrics-wrap">
+          <div
+            class="right-sidebar__plain-lyrics-wrap"
+            tabindex="0"
+            role="region"
+            :aria-label="$t('player.lyrics')">
             <p class="right-sidebar__unsync-badge">
               <AppIcon name="ph:warning" />
               {{ $t('player.lyricsNotSynced') }}
@@ -869,95 +876,17 @@ const sidebarStyle = computed(() => ({
   &__lyrics-list {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: var(--space-8) var(--space-4) 50vh;
     scroll-behavior: smooth;
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
 
-    &::-webkit-scrollbar {
-      display: none;
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -2px;
     }
-    scrollbar-width: none;
-  }
-
-  &__lyric-line {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--color-text-primary);
-    opacity: 0.5;
-    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-    transform-origin: left center;
-    cursor: pointer;
-    line-height: 1.4;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-
-    &:hover {
-      opacity: 0.8;
-    }
-
-    &--active {
-      color: var(--color-text-primary);
-      opacity: 1;
-      transform: scale(1.05);
-      text-shadow: 0 0 20px color-mix(in srgb, var(--color-primary) 30%, transparent);
-    }
-  }
-
-  &__lyric-text {
-    display: block;
-  }
-
-  &__lyric-translated {
-    display: block;
-    font-size: 1.1rem;
-    font-weight: 500;
-    color: var(--color-primary);
-    opacity: 0.9;
-  }
-
-  &__plain-lyrics-wrap {
-    flex: 1;
-    overflow-y: auto;
-    padding: var(--space-4);
-  }
-
-  &__plain-lyrics {
-    font-size: 1.1rem;
-    line-height: 1.8;
-    color: var(--color-text-primary);
-    white-space: pre-wrap;
-    opacity: 0.9;
-  }
-
-  &__plain-translated {
-    font-size: 1.1rem;
-    line-height: 1.8;
-    color: var(--color-primary);
-    white-space: pre-wrap;
-    opacity: 0.9;
-    margin-top: var(--space-6);
-    padding-top: var(--space-6);
-    border-top: 1px dashed var(--color-border);
-  }
-  &__lyrics-loading-skeleton {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    padding: var(--space-6) var(--space-4);
-    gap: var(--space-4);
-  }
-
-  &__lyrics-list {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: var(--space-6) 15% var(--space-6) var(--space-4);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
 
     &::-webkit-scrollbar {
       width: 4px;
@@ -970,27 +899,25 @@ const sidebarStyle = computed(() => ({
   }
 
   &__lyric-line {
-    font-size: var(--text-lg);
-    font-weight: var(--font-weight-bold);
+    font-size: 1.5rem;
+    font-weight: 700;
     color: var(--color-text-secondary);
-    line-height: var(--leading-relaxed);
-    margin: 0;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-origin: left center;
     cursor: pointer;
-    transition:
-      color var(--transition-base),
-      transform var(--transition-base),
-      opacity var(--transition-base);
-    opacity: 0.45;
-    transform-origin: left;
+    line-height: 1.4;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 
     &:hover {
-      opacity: 0.7;
       color: var(--color-text-primary);
     }
 
     &--active {
       color: var(--color-text-primary);
-      opacity: 1;
+      transform: scale(1.05);
+      text-shadow: 0 0 20px color-mix(in srgb, var(--color-primary) 30%, transparent);
     }
 
     body.audio-reactive-lyrics &--active {
@@ -1008,6 +935,17 @@ const sidebarStyle = computed(() => ({
     }
   }
 
+  &__lyric-text {
+    display: block;
+  }
+
+  &__lyric-translated {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--color-primary);
+  }
+
   &__plain-lyrics-wrap {
     flex: 1;
     overflow-y: auto;
@@ -1015,6 +953,11 @@ const sidebarStyle = computed(() => ({
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
+
+    &:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -2px;
+    }
 
     &::-webkit-scrollbar {
       width: 4px;
@@ -1040,11 +983,28 @@ const sidebarStyle = computed(() => ({
   }
 
   &__plain-lyrics {
-    font-size: var(--text-sm);
-    color: var(--color-text-secondary);
-    line-height: var(--leading-relaxed);
-    white-space: pre-line;
-    margin: 0;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--color-text-primary);
+    white-space: pre-wrap;
+  }
+
+  &__plain-translated {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--color-primary);
+    white-space: pre-wrap;
+    margin-top: var(--space-6);
+    padding-top: var(--space-6);
+    border-top: 1px dashed var(--color-border);
+  }
+
+  &__lyrics-loading-skeleton {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-6) var(--space-4);
+    gap: var(--space-4);
   }
 
   @media (max-width: 768px) {

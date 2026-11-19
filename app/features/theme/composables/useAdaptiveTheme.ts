@@ -5,7 +5,6 @@ import { getPalette, type ColorPalette } from '@/utils/colorExtraction';
 
 const paletteCache = new Map<string, ColorPalette>();
 
-// Hydrate from localStorage
 if (import.meta.client) {
   try {
     const saved = localStorage.getItem('theme_paletteCache');
@@ -42,8 +41,6 @@ export function useAdaptiveTheme() {
 
     const currentTrack = playerStore.currentTrack;
     if (!currentTrack || !currentTrack.thumbnailUrl) {
-      // Don't set to null immediately if we are just pausing/loading?
-      // Wait, if no track, then no theme.
       themeStore.adaptivePalette = null;
       return;
     }

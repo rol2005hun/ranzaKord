@@ -10,6 +10,7 @@ export const usePlayerStore = defineStore(
     const isPlaying = ref(false);
     const volume = ref(0.8);
     const currentTimeSeconds = ref(0);
+    const authStore = useAuthStore();
 
     function shuffleArray<T>(array: T[]): T[] {
       const result = [...array];
@@ -83,7 +84,7 @@ export const usePlayerStore = defineStore(
         (val) => {
           localStorage.setItem('player_currentTimeSeconds', String(val));
 
-          if (currentTrack.value?.videoId) {
+          if (authStore.isAuthenticated && currentTrack.value?.videoId) {
             try {
               const res = $fetch('/api/me/playback', {
                 method: 'PUT',
@@ -108,7 +109,7 @@ export const usePlayerStore = defineStore(
       window.addEventListener('beforeunload', () => {
         const val = currentTimeSeconds.value;
         localStorage.setItem('player_currentTimeSeconds', String(val));
-        if (currentTrack.value?.videoId) {
+        if (authStore.isAuthenticated && currentTrack.value?.videoId) {
           try {
             $fetch('/api/me/playback', {
               method: 'PUT',
@@ -123,7 +124,10 @@ export const usePlayerStore = defineStore(
         }
       });
 
-      setTimeout(async () => {
+      const syncPlaybackFromServer = async () => {
+        if (!authStore.isAuthenticated) {
+          return;
+        }
         try {
           const res = await $fetch<{
             lastPlayback: { videoId: string; currentTime: number } | null;
@@ -143,7 +147,20 @@ export const usePlayerStore = defineStore(
         } catch {
           void 0;
         }
+      };
+
+      setTimeout(() => {
+        void syncPlaybackFromServer();
       }, 1000);
+
+      watch(
+        () => authStore.isAuthenticated,
+        (isAuth) => {
+          if (isAuth) {
+            void syncPlaybackFromServer();
+          }
+        }
+      );
     }
     const durationSeconds = ref(0);
     const isLoading = ref(false);

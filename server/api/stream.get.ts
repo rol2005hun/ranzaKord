@@ -1,211 +1,528 @@
+import { resetAnonymousInnertube } from '../utils/innertube';
+
+import type { H3Event } from 'h3';
+import type { Innertube } from 'youtubei.js';
+
 type ClientType =
   'ANDROID' | 'MWEB' | 'IOS' | 'YTMUSIC' | 'WEB' | 'TV' | 'TV_EMBEDDED' | 'WEB_CREATOR';
 
 interface CachedStream {
   url: string;
-  ua: string;
+  client: ClientType;
+  contentLength?: number;
+  mimeType?: string;
   expiresAt: number;
 }
 
-const streamCache = new Map<string, CachedStream>();
-const STREAM_CACHE_TTL = 2 * 60 * 60 * 1000;
+interface CandidateSpec {
+  client: ClientType;
+  useAuth: boolean;
+}
 
-const defaultWorkingClients: ClientType[] = [
-  'YTMUSIC',
-  'WEB_CREATOR',
-  'WEB',
-  'MWEB',
-  'ANDROID',
-  'IOS',
-  'TV_EMBEDDED',
-  'TV'
-];
+interface DecipherResult {
+  url?: string;
+  error?: string;
+}
+
+interface StreamFetchResult {
+  res: Response | null;
+  statusText?: string;
+  isFatalError?: boolean;
+  isRangeNotSatisfiable?: boolean;
+}
+
+interface ByteRange {
+  start: number;
+  end: number;
+}
+
+interface CandidateFormat {
+  url?: string;
+  mime_type?: string;
+  content_length?: number;
+  has_video?: boolean;
+  has_audio?: boolean;
+  decipher?: (player: unknown) => Promise<string>;
+}
+
+const streamCache = new Map<string, CachedStream>();
+const inFlightDiscovery = new Map<string, Promise<CachedStream | null>>();
+const STREAM_CACHE_TTL = 2 * 60 * 60 * 1000;
+const CHUNK_SIZE = 512 * 1024;
+const MAX_DISCOVERY_TIME_MS = 25000;
+const CLIENT_TIMEOUT_MS = 5000;
+const STREAM_CONNECT_TIMEOUT_MS = 6000;
+
+function isPlayableFormat(format: CandidateFormat): boolean {
+  const raw = format as unknown as { signature_cipher?: string; cipher?: string };
+  return Boolean(format.url || raw.signature_cipher || raw.cipher);
+}
+
+function parseByteRange(clientRange: string | undefined): ByteRange {
+  if (!clientRange) {
+    return { start: 0, end: CHUNK_SIZE - 1 };
+  }
+  const match = /^bytes=(\d+)-(\d+)?$/i.exec(clientRange.trim());
+  if (!match || !match[1]) {
+    return { start: 0, end: CHUNK_SIZE - 1 };
+  }
+  const start = Number.parseInt(match[1], 10);
+  if (Number.isNaN(start)) {
+    return { start: 0, end: CHUNK_SIZE - 1 };
+  }
+  if (match[2]) {
+    const end = Number.parseInt(match[2], 10);
+    if (!Number.isNaN(end) && end >= start) {
+      if (end - start + 1 > CHUNK_SIZE) {
+        return { start, end: start + CHUNK_SIZE - 1 };
+      }
+      return { start, end };
+    }
+  }
+  return { start, end: start + CHUNK_SIZE - 1 };
+}
+
+function getValidRange(range: ByteRange, contentLength?: number): ByteRange | null {
+  if (contentLength && contentLength > 0) {
+    if (range.start >= contentLength) {
+      return null;
+    }
+    const end = Math.min(range.end, contentLength - 1);
+    const start = Math.min(range.start, end);
+    return { start, end };
+  }
+  return range;
+}
+
+const DEFAULT_USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+async function fetchYouTubeStream(
+  url: string,
+  client: ClientType,
+  range: ByteRange
+): Promise<StreamFetchResult> {
+  const rangeHeader = `bytes=${range.start}-${range.end}`;
+
+  const headers: Record<string, string> = {
+    'User-Agent': DEFAULT_USER_AGENT,
+    Accept: '*/*',
+    'Accept-Encoding': 'identity',
+    Range: rangeHeader
+  };
+
+  if (client === 'YTMUSIC') {
+    headers['Origin'] = 'https://music.youtube.com';
+    headers['Referer'] = 'https://music.youtube.com/';
+  } else if (client === 'MWEB' || client === 'WEB') {
+    headers['Origin'] = 'https://www.youtube.com';
+    headers['Referer'] = 'https://www.youtube.com/';
+  }
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(url, {
+        method: 'GET',
+        headers,
+        signal: AbortSignal.timeout(STREAM_CONNECT_TIMEOUT_MS)
+      });
+      if (res.status === 200 || res.status === 206) {
+        return { res };
+      }
+      if (res.status === 416) {
+        res.body?.cancel();
+        return { res: null, statusText: 'Range Not Satisfiable', isRangeNotSatisfiable: true };
+      }
+      if (res.status === 403 || res.status === 410) {
+        const statusText = `HTTP ${res.status} ${res.statusText}`;
+        res.body?.cancel();
+        return { res: null, statusText, isFatalError: true };
+      }
+      res.body?.cancel();
+    } catch (err) {
+      if (attempt === 1) {
+        return { res: null, statusText: err instanceof Error ? err.message : String(err) };
+      }
+    }
+  }
+
+  return { res: null, statusText: 'Upstream fetch failed after retries' };
+}
+
+async function pipeUpstreamResponse(
+  event: H3Event,
+  upstreamRes: Response,
+  range?: ByteRange,
+  contentLength?: number,
+  cachedEntry?: CachedStream
+): Promise<unknown> {
+  const isRangedRequest = Boolean(range);
+  const responseStatus = isRangedRequest ? 206 : upstreamRes.status;
+  setResponseStatus(event, responseStatus);
+
+  setResponseHeaders(event, {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+    'Access-Control-Allow-Headers': 'Range, Accept, Origin, Content-Type',
+    'Access-Control-Expose-Headers': 'Content-Range, Content-Length, Accept-Ranges',
+    'Cross-Origin-Resource-Policy': 'cross-origin',
+    'Accept-Ranges': 'bytes'
+  });
+
+  const contentType = upstreamRes.headers.get('content-type') || 'audio/mp4';
+  setResponseHeader(event, 'content-type', contentType);
+
+  let finalContentLength = contentLength;
+  const upstreamRange = upstreamRes.headers.get('content-range');
+  if (upstreamRange) {
+    const match = /\/(\d+)$/.exec(upstreamRange);
+    if (match?.[1]) {
+      const parsedTotal = Number.parseInt(match[1], 10);
+      if (!Number.isNaN(parsedTotal) && parsedTotal > 0) {
+        finalContentLength = parsedTotal;
+        if (cachedEntry) {
+          cachedEntry.contentLength = parsedTotal;
+        }
+      }
+    }
+  }
+
+  if (isRangedRequest && range) {
+    const rawLen = upstreamRes.headers.get('content-length');
+    const actualLength = rawLen ? Number.parseInt(rawLen, 10) : range.end - range.start + 1;
+    const totalStr = finalContentLength ? String(finalContentLength) : '*';
+    const contentRange = upstreamRange || `bytes ${range.start}-${range.end}/${totalStr}`;
+    setResponseHeader(event, 'content-range', contentRange);
+    setResponseHeader(event, 'content-length', actualLength);
+  } else {
+    const upstreamLength = upstreamRes.headers.get('content-length');
+    if (upstreamLength) {
+      setResponseHeader(event, 'content-length', Number.parseInt(upstreamLength, 10));
+    }
+  }
+
+  if (!upstreamRes.body) {
+    return send(event, '');
+  }
+  return sendStream(event, upstreamRes.body);
+}
+
+async function fetchBasicInfoWithTimeout(
+  innertube: Innertube,
+  videoId: string,
+  client: ClientType,
+  timeoutMs: number
+) {
+  let timer: NodeJS.Timeout | undefined;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new Error(`Timeout fetching stream info for client ${client}`));
+    }, timeoutMs);
+  });
+
+  try {
+    return await Promise.race([innertube.getBasicInfo(videoId, { client }), timeoutPromise]);
+  } finally {
+    if (timer) {
+      clearTimeout(timer);
+    }
+  }
+}
+
+async function extractCandidateUrl(
+  format: CandidateFormat,
+  primaryPlayer: unknown,
+  fallbackPlayer?: unknown
+): Promise<DecipherResult> {
+  const raw = format as unknown as { signature_cipher?: string; cipher?: string };
+  if (typeof format.decipher === 'function' && (raw.signature_cipher || raw.cipher)) {
+    let decipherErr: string | undefined;
+    try {
+      const result = await format.decipher(primaryPlayer);
+      if (result && result.length > 0) return { url: result };
+    } catch (err) {
+      decipherErr = err instanceof Error ? err.message : String(err);
+    }
+    if (fallbackPlayer && fallbackPlayer !== primaryPlayer) {
+      try {
+        const result = await format.decipher(fallbackPlayer);
+        if (result && result.length > 0) return { url: result };
+      } catch (err) {
+        decipherErr = err instanceof Error ? err.message : String(err);
+      }
+    }
+    return { error: decipherErr || 'Deciphering produced empty URL' };
+  }
+  return { url: format.url };
+}
+
+function parseCacheExpiry(streamUrl: string): number {
+  try {
+    const expireParam = new URL(streamUrl).searchParams.get('expire');
+    if (expireParam) {
+      const expMs = Number(expireParam) * 1000;
+      if (!Number.isNaN(expMs) && expMs > Date.now()) {
+        return Math.min(Date.now() + STREAM_CACHE_TTL, expMs - 60_000);
+      }
+    }
+  } catch {
+    void 0;
+  }
+  return Date.now() + STREAM_CACHE_TTL;
+}
+
+async function discoverStream(
+  vid: string,
+  streamType: string,
+  debugInfo: Record<string, string>
+): Promise<CachedStream | null> {
+  const innertube = await createInnertube(true);
+  const isTvOAuth = Boolean(innertube.session.logged_in && innertube.session.oauth?.oauth2_tokens);
+  const candidateSpecs: CandidateSpec[] = isTvOAuth
+    ? [
+        { client: 'TV', useAuth: true },
+        { client: 'TV_EMBEDDED', useAuth: true },
+        { client: 'ANDROID', useAuth: false },
+        { client: 'YTMUSIC', useAuth: false },
+        { client: 'IOS', useAuth: false },
+        { client: 'MWEB', useAuth: false },
+        { client: 'WEB', useAuth: false }
+      ]
+    : [
+        { client: 'ANDROID', useAuth: false },
+        { client: 'YTMUSIC', useAuth: false },
+        { client: 'IOS', useAuth: false },
+        { client: 'MWEB', useAuth: false },
+        { client: 'WEB', useAuth: false }
+      ];
+
+  const startTime = Date.now();
+  let anonInnertube: Innertube | null = null;
+
+  for (const candidate of candidateSpecs) {
+    if (Date.now() - startTime > MAX_DISCOVERY_TIME_MS) {
+      debugInfo['timeout'] = 'Max discovery time exceeded, aborting candidate loop';
+      break;
+    }
+
+    try {
+      const targetInnertube = candidate.useAuth
+        ? innertube
+        : (anonInnertube ??= await createInnertube(false));
+
+      const info = await fetchBasicInfoWithTimeout(
+        targetInnertube,
+        vid,
+        candidate.client,
+        CLIENT_TIMEOUT_MS
+      );
+
+      const formats = [
+        ...(info.streaming_data?.formats || []),
+        ...(info.streaming_data?.adaptive_formats || [])
+      ] as CandidateFormat[];
+
+      const candidateFormats: CandidateFormat[] = [];
+      if (streamType === 'video') {
+        const v720 = formats.filter(
+          (f) =>
+            f.has_video &&
+            f.has_audio &&
+            isPlayableFormat(f) &&
+            (f as unknown as { height?: number }).height &&
+            ((f as unknown as { height?: number }).height as number) <= 720
+        );
+        const vAny = formats.filter((f) => f.has_video && f.has_audio && isPlayableFormat(f));
+        candidateFormats.push(...v720, ...vAny);
+      } else {
+        const audioOnly = formats.filter((f) => f.has_audio && !f.has_video && isPlayableFormat(f));
+        const audioCombined = formats.filter((f) => f.has_audio && isPlayableFormat(f));
+        candidateFormats.push(...audioOnly, ...audioCombined);
+      }
+
+      if (candidateFormats.length === 0) {
+        const status = info.playability_status?.status || 'UNKNOWN';
+        const reason = info.playability_status?.reason || 'No reason provided';
+        debugInfo[candidate.client] =
+          `No ${streamType} format found. Status: ${status}. Reason: ${reason}.`;
+        continue;
+      }
+
+      for (const format of candidateFormats) {
+        const decipherResult = await extractCandidateUrl(
+          format,
+          targetInnertube.session.player,
+          innertube.session.player
+        );
+
+        const candidateUrl = decipherResult.url;
+        if (!candidateUrl) {
+          debugInfo[candidate.client] = decipherResult.error
+            ? `Failed to decipher stream URL: ${decipherResult.error}`
+            : 'Failed to extract stream URL.';
+          continue;
+        }
+
+        const testRange: ByteRange = { start: 0, end: 1024 };
+        const { res: streamRes, statusText } = await fetchYouTubeStream(
+          candidateUrl,
+          candidate.client,
+          testRange
+        );
+
+        if (!streamRes) {
+          debugInfo[candidate.client] = `Stream fetch failed: ${statusText || 'unknown error'}`;
+          continue;
+        }
+        streamRes.body?.cancel();
+
+        if (format.content_length && format.content_length > 1048576) {
+          const testRange2: ByteRange = { start: 1048576, end: 1049600 };
+          const { res: streamRes2 } = await fetchYouTubeStream(
+            candidateUrl,
+            candidate.client,
+            testRange2
+          );
+          if (!streamRes2) {
+            debugInfo[candidate.client] =
+              'Stream capped at 1MB by YouTube anti-bot restriction, trying fallback format';
+            continue;
+          }
+          streamRes2.body?.cancel();
+        }
+
+        return {
+          url: candidateUrl,
+          client: candidate.client,
+          contentLength: format.content_length,
+          mimeType: format.mime_type,
+          expiresAt: parseCacheExpiry(candidateUrl)
+        };
+      }
+    } catch (e) {
+      debugInfo[candidate.client] = e instanceof Error ? e.message : String(e);
+    }
+  }
+
+  resetAnonymousInnertube();
+  return null;
+}
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
   const videoId = query['v'] as string | undefined;
   const streamType = (query['type'] as string | undefined) ?? 'audio';
+  const shouldRedirect = query['redirect'] === '1' || query['redirect'] === 'true';
   const { t } = useServerTranslation(event);
+  const clientRange = getRequestHeader(event, 'range');
+  const parsedRange = parseByteRange(clientRange);
 
   if (!videoId || videoId.trim().length === 0) {
     throw createError({ statusCode: 400, message: t('player.errors.missingVideoId') });
   }
 
-  const cacheKey = `${videoId.trim()}_${streamType}`;
+  const vid = videoId.trim();
+  const cacheKey = `${vid}_${streamType}`;
   const cached = streamCache.get(cacheKey);
+
   if (cached && Date.now() < cached.expiresAt) {
-    try {
-      const testRes = await fetch(cached.url, {
-        method: 'GET',
-        headers: {
-          'User-Agent': cached.ua,
-          Range: 'bytes=0-65535'
-        },
-        signal: AbortSignal.timeout(1500)
-      });
-      if (testRes.status !== 403) {
-        const clientRange = getRequestHeader(event, 'range');
-        return proxyRequest(event, cached.url, {
-          headers: {
-            'User-Agent': cached.ua,
-            ...(clientRange ? { Range: clientRange } : {})
-          }
-        });
-      }
-    } catch {
+    const validRange = getValidRange(parsedRange, cached.contentLength);
+    if (!validRange) {
+      setResponseStatus(event, 416);
+      setResponseHeader(event, 'content-range', `bytes */${cached.contentLength || '*'}`);
+      setResponseHeader(event, 'content-length', 0);
+      return '';
+    }
+
+    if (shouldRedirect) {
+      return sendRedirect(event, cached.url, 302);
+    }
+
+    const {
+      res: cachedRes,
+      isFatalError,
+      isRangeNotSatisfiable
+    } = await fetchYouTubeStream(cached.url, cached.client, validRange);
+
+    if (cachedRes) {
+      return pipeUpstreamResponse(event, cachedRes, validRange, cached.contentLength, cached);
+    }
+
+    if (isRangeNotSatisfiable) {
+      setResponseStatus(event, 416);
+      setResponseHeader(event, 'content-range', `bytes */${cached.contentLength || '*'}`);
+      setResponseHeader(event, 'content-length', 0);
+      return '';
+    }
+
+    if (isFatalError) {
       streamCache.delete(cacheKey);
     }
-    streamCache.delete(cacheKey);
   }
 
-  const innertube = await createInnertube(true);
   const debugInfo: Record<string, string> = {};
 
-  let resolvedStreamUrl: string | undefined;
-  let resolvedUA: string | undefined;
-
-  const isTvOAuth = Boolean(innertube.session.logged_in && innertube.session.oauth?.oauth2_tokens);
-  const clientCandidates: ClientType[] = isTvOAuth
-    ? ['TV', 'TV_EMBEDDED', 'WEB_CREATOR']
-    : [...defaultWorkingClients];
-
-  for (let attempt = 1; attempt <= 2; attempt++) {
-    for (const client of clientCandidates) {
-      try {
-        const info = await innertube.getBasicInfo(videoId.trim(), { client });
-        const formats = [
-          ...(info.streaming_data?.formats || []),
-          ...(info.streaming_data?.adaptive_formats || [])
-        ];
-
-        let format;
-        if (streamType === 'video') {
-          format =
-            formats.find(
-              (f) =>
-                f.has_video &&
-                f.has_audio &&
-                (f.url || f.signature_cipher) &&
-                (f as unknown as { height?: number }).height &&
-                ((f as unknown as { height?: number }).height as number) <= 720
-            ) ||
-            formats.find((f) => f.has_video && f.has_audio && (f.url || f.signature_cipher)) ||
-            formats.find((f) => f.has_video && (f.url || f.signature_cipher));
-        } else {
-          format =
-            formats.find((f) => f.has_audio && f.has_video && (f.url || f.signature_cipher)) ||
-            formats.find((f) => f.has_audio && (f.url || f.signature_cipher));
-        }
-
-        if (!format) {
-          const status = info.playability_status?.status || 'UNKNOWN';
-          const reason = info.playability_status?.reason || 'No reason provided';
-          debugInfo[client] =
-            `No ${streamType} format found on attempt ${attempt}. Status: ${status}. Reason: ${reason}.`;
-          continue;
-        }
-
-        let candidateUrl = format.url as string | undefined;
-        if (!candidateUrl && (format as unknown as Record<string, unknown>).signatureCipher) {
-          candidateUrl = await format.decipher(innertube.session.player);
-        } else if (
-          !candidateUrl &&
-          (format as unknown as Record<string, unknown>).signature_cipher
-        ) {
-          candidateUrl = await format.decipher(innertube.session.player);
-        }
-
-        if (!candidateUrl) {
-          debugInfo[client] = `Failed to extract stream URL on attempt ${attempt}.`;
-          continue;
-        }
-
-        const clientUA =
-          client === 'IOS'
-            ? 'com.google.ios.youtube/19.28.1 (iPhone14,5; U; CPU iOS 17_5_1 like Mac OS X)'
-            : client === 'ANDROID'
-              ? 'com.google.android.youtube/19.29.37 (Linux; U; Android 13)'
-              : client === 'MWEB'
-                ? 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36'
-                : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-
-        const testRes = await fetch(candidateUrl, {
-          method: 'GET',
-          headers: {
-            'User-Agent': clientUA,
-            Range: 'bytes=0-65535'
-          },
-          signal: AbortSignal.timeout(2000)
-        });
-
-        if (testRes.status === 403) {
-          debugInfo[client] = `Stream URL test returned 403 on attempt ${attempt}.`;
-          continue;
-        }
-
-        const primaryIndex = defaultWorkingClients.indexOf(client);
-        if (primaryIndex > 0) {
-          defaultWorkingClients.splice(primaryIndex, 1);
-          defaultWorkingClients.unshift(client);
-        }
-
-        resolvedStreamUrl = candidateUrl;
-        resolvedUA = clientUA;
-        break;
-      } catch (e) {
-        debugInfo[client] = e instanceof Error ? e.message : String(e);
-      }
-    }
-
-    if (resolvedStreamUrl) {
-      break;
-    }
+  let discoveryPromise = inFlightDiscovery.get(cacheKey);
+  if (!discoveryPromise) {
+    discoveryPromise = discoverStream(vid, streamType, debugInfo);
+    inFlightDiscovery.set(cacheKey, discoveryPromise);
   }
 
-  if (!resolvedStreamUrl) {
-    const isBotChallenge = Object.values(debugInfo).some(
-      (m) => m.includes('Sign in to confirm you’re not a bot') || m.includes('Please sign in')
-    );
-    const failureReason = isBotChallenge
-      ? 'YouTube bot protection active (LOGIN_REQUIRED). Please authorize via pnpm youtube:login.'
-      : 'All clients failed';
-
-    throw createError({
-      statusCode: 500,
-      message: t('player.errors.extractFailed', { msg: failureReason }),
-      data: { debugInfo }
-    });
-  }
-
-  let expiresAt = Date.now() + STREAM_CACHE_TTL;
-  try {
-    const expireParam = new URL(resolvedStreamUrl).searchParams.get('expire');
-    if (expireParam) {
-      const expMs = Number(expireParam) * 1000;
-      if (!Number.isNaN(expMs) && expMs > Date.now()) {
-        expiresAt = Math.min(expiresAt, expMs - 60_000);
-      }
-    }
-  } catch {
-    expiresAt = Date.now() + STREAM_CACHE_TTL;
-  }
-
-  streamCache.set(cacheKey, {
-    url: resolvedStreamUrl,
-    ua:
-      resolvedUA ||
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    expiresAt
+  const discovered = await discoveryPromise.finally(() => {
+    inFlightDiscovery.delete(cacheKey);
   });
 
-  return proxyRequest(event, resolvedStreamUrl, {
-    headers: {
-      'User-Agent':
-        resolvedUA ||
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      ...(getRequestHeader(event, 'range')
-        ? { Range: getRequestHeader(event, 'range') as string }
-        : {})
+  if (discovered) {
+    streamCache.set(cacheKey, discovered);
+
+    const validRange = getValidRange(parsedRange, discovered.contentLength);
+    if (!validRange) {
+      setResponseStatus(event, 416);
+      setResponseHeader(event, 'content-range', `bytes */${discovered.contentLength || '*'}`);
+      setResponseHeader(event, 'content-length', 0);
+      return '';
     }
+
+    if (shouldRedirect) {
+      return sendRedirect(event, discovered.url, 302);
+    }
+
+    const {
+      res: streamRes,
+      statusText,
+      isRangeNotSatisfiable
+    } = await fetchYouTubeStream(discovered.url, discovered.client, validRange);
+
+    if (streamRes) {
+      return pipeUpstreamResponse(
+        event,
+        streamRes,
+        validRange,
+        discovered.contentLength,
+        discovered
+      );
+    }
+
+    if (isRangeNotSatisfiable) {
+      setResponseStatus(event, 416);
+      setResponseHeader(event, 'content-range', `bytes */${discovered.contentLength || '*'}`);
+      setResponseHeader(event, 'content-length', 0);
+      return '';
+    }
+
+    debugInfo[discovered.client] = `Stream fetch failed: ${statusText || 'unknown error'}`;
+  }
+
+  const isBotChallenge = Object.values(debugInfo).some(
+    (m) => m.includes('Sign in to confirm you') || m.includes('Please sign in')
+  );
+  const failureReason = isBotChallenge
+    ? 'YouTube bot protection active (LOGIN_REQUIRED). Please authorize via pnpm youtube:login.'
+    : 'All clients failed';
+
+  throw createError({
+    statusCode: 500,
+    message: t('player.errors.extractFailed', { msg: failureReason }),
+    data: { debugInfo }
   });
 });
