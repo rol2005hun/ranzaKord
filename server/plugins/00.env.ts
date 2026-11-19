@@ -6,6 +6,7 @@ export default defineNitroPlugin(() => {
     return;
   }
 
+  const isDev = process.env.NODE_ENV !== 'production';
   const envPath = path.resolve(process.cwd(), '.env');
   const envExists = fs.existsSync(envPath);
   const config = useRuntimeConfig();
@@ -13,8 +14,8 @@ export default defineNitroPlugin(() => {
   const missing: string[] = [];
   const warnings: string[] = [];
 
-  if (!envExists) {
-    missing.push('.env file is missing in the project root');
+  if (isDev && !envExists) {
+    warnings.push('.env file is missing in the project root');
   }
 
   if (!config.mongodbUri || config.mongodbUri === 'your_mongo_uri') {
@@ -22,15 +23,23 @@ export default defineNitroPlugin(() => {
   }
 
   const sessionSecret = (config.sessionSecret as string) || process.env.NUXT_SESSION_SECRET || '';
-  if (!sessionSecret || sessionSecret.length < 32) {
-    missing.push('NUXT_SESSION_SECRET is missing or shorter than 32 characters');
+  if (!sessionSecret) {
+    if (isDev) {
+      warnings.push('NUXT_SESSION_SECRET is missing');
+    } else {
+      missing.push('NUXT_SESSION_SECRET is missing');
+    }
+  } else if (sessionSecret.length < 32) {
+    if (isDev) {
+      warnings.push('NUXT_SESSION_SECRET is shorter than 32 characters');
+    } else {
+      missing.push('NUXT_SESSION_SECRET is shorter than 32 characters');
+    }
   }
 
   if (!config.ranzakonnectDomain) {
     missing.push('NUXT_RANZAKONNECT_DOMAIN is missing');
   }
-
-  const isDev = process.env.NODE_ENV !== 'production';
 
   if (!config.ranzakonnectClientId) {
     missing.push('NUXT_RANZAKONNECT_CLIENT_ID is missing');
