@@ -30,7 +30,13 @@ const playerStore = usePlayerStore();
 const player = usePlayer();
 const { playTrack, togglePlay, isPlaying, currentTrack } = player;
 
+const isMounted = ref(false);
+onMounted(() => {
+  isMounted.value = true;
+});
+
 const isAlbumPlaying = computed(() => {
+  if (!isMounted.value) return false;
   if (
     playerStore.playbackContext?.type === 'album' &&
     playerStore.playbackContext?.sourceId === id

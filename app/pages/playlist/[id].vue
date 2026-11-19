@@ -158,6 +158,7 @@ useHead({
 const isReorderable = computed(() => !debouncedSearch.value && !sortBy.value);
 
 const isCurrentPlaylistPlaying = computed(() => {
+  if (!isMounted.value) return false;
   const pStore = usePlayerStore();
   if (
     pStore.playbackContext?.type === 'playlist' &&

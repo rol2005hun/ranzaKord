@@ -70,7 +70,7 @@ export default defineNuxtPlugin((nuxtApp) => {
       };
 
       try {
-        await $fetch('/api/me/settings', {
+        await $fetch(useApiUrl('/api/me/settings'), {
           method: 'PATCH',
           body: settings
         });

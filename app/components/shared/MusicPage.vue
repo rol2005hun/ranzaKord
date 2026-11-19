@@ -47,6 +47,11 @@ const optimizedBgUrl = computed(() => {
   if (!props.imageUrl) return '';
   return img(props.imageUrl, { format: 'webp', width: 800, quality: 50 });
 });
+
+const isMounted = ref(false);
+onMounted(() => {
+  isMounted.value = true;
+});
 </script>
 
 <template>
@@ -111,7 +116,7 @@ const optimizedBgUrl = computed(() => {
               :aria-label="$t('player.play')"
               @click="emit('play-all')">
               <AppSpinner v-if="isListLoading" size="sm" />
-              <AppIcon v-else-if="isListPlaying" name="ph:pause-fill" />
+              <AppIcon v-else-if="isMounted && isListPlaying" name="ph:pause-fill" />
               <AppIcon v-else name="ph:play-fill" />
             </button>
             <div class="music-page__sticky-bar-text">
@@ -177,7 +182,7 @@ const optimizedBgUrl = computed(() => {
                 :aria-label="$t('player.play')"
                 @click="emit('play-all')">
                 <AppSpinner v-if="isListLoading" size="md" />
-                <AppIcon v-else-if="isListPlaying" name="ph:pause-fill" />
+                <AppIcon v-else-if="isMounted && isListPlaying" name="ph:pause-fill" />
                 <AppIcon v-else name="ph:play-fill" />
               </button>
               <slot name="actions" />
