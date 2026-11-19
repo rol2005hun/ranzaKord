@@ -1,7 +1,11 @@
-import type { OAuthTokenResponse, OAuthUser } from '../../types/auth.server.types';
+import { sealSession } from 'h3';
+
 import { UserModel } from '../../models/User';
+import { getSessionConfig } from '../../utils/session';
 import enLocale from '../../../app/features/auth/locales/en.json';
 import huLocale from '../../../app/features/auth/locales/hu.json';
+
+import type { OAuthTokenResponse, OAuthUser } from '../../types/auth.server.types';
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig();
@@ -117,6 +121,10 @@ export default defineEventHandler(async (event) => {
     if (!rememberMe) {
       setResponseHeader(event, 'set-cookie', newHeaders);
     }
+  }
+
+  if (!sessionToken) {
+    sessionToken = await sealSession(event, getSessionConfig(event));
   }
 
   const isTauriApp = desktopAuth || (authSource && authSource.includes('tauri.localhost'));

@@ -3,7 +3,7 @@ use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
 #[cfg(desktop)]
 use std::sync::Mutex;
 #[cfg(desktop)]
-use tauri::State;
+use tauri::{Manager, State};
 
 #[cfg(desktop)]
 struct DiscordState(Mutex<Option<DiscordIpcClient>>);
@@ -94,9 +94,11 @@ pub fn run() {
         let _ = client.connect();
         
         builder = builder
-            .plugin(tauri_plugin_single_instance::init(|_app, _args, _cwd| {
-                // The deep link plugin automatically integrates with single instance
-                // to trigger the onOpenUrl callback in JavaScript on Windows/Linux.
+            .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
             }))
             .plugin(tauri_plugin_updater::Builder::new().build())
             .plugin(tauri_plugin_global_shortcut::Builder::new().build())

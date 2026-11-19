@@ -62,7 +62,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     mongodbUri: '',
-    sessionSecret: process.env.NUXT_SESSION_SECRET || 'dev-secret-min-32-characters-long',
+    sessionSecret: process.env.NUXT_SESSION_SECRET,
     ranzakonnectDomain: '',
     ranzakonnectClientId: '',
     ranzakonnectClientSecret: '',
