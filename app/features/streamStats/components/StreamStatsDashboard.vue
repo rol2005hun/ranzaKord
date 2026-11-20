@@ -82,8 +82,56 @@ function maxAvgDuration(averages: { avgDurationMs: number }[]): number {
       </div>
     </div>
 
-    <div v-if="store.isLoading && !store.data" class="stream-stats__loader">
-      <AppSpinner size="lg" />
+    <div v-if="store.isLoading && !store.data" class="stream-stats__content">
+      <div class="stream-stats__kpis">
+        <AppCard v-for="i in 4" :key="i" class="stream-stats__kpi-card">
+          <div class="stream-stats__kpi-inner">
+            <AppSkeleton width="48px" height="48px" border-radius="var(--radius-lg)" />
+            <div class="stream-stats__skeleton-kpi-text">
+              <AppSkeleton width="110px" height="14px" border-radius="var(--radius-sm)" />
+              <AppSkeleton width="60px" height="28px" border-radius="var(--radius-sm)" />
+            </div>
+          </div>
+        </AppCard>
+      </div>
+
+      <div class="stream-stats__section">
+        <AppSkeleton
+          width="260px"
+          height="24px"
+          border-radius="var(--radius-sm)"
+          class="stream-stats__skeleton-title" />
+        <AppCard>
+          <div class="stream-stats__skeleton-table">
+            <AppSkeleton width="100%" height="24px" border-radius="var(--radius-sm)" />
+            <AppSkeleton
+              v-for="i in 3"
+              :key="i"
+              width="100%"
+              height="36px"
+              border-radius="var(--radius-sm)" />
+          </div>
+        </AppCard>
+      </div>
+
+      <div class="stream-stats__section">
+        <AppSkeleton
+          width="220px"
+          height="24px"
+          border-radius="var(--radius-sm)"
+          class="stream-stats__skeleton-title" />
+        <AppCard>
+          <div class="stream-stats__skeleton-table">
+            <AppSkeleton width="100%" height="24px" border-radius="var(--radius-sm)" />
+            <AppSkeleton
+              v-for="i in 8"
+              :key="i"
+              width="100%"
+              height="36px"
+              border-radius="var(--radius-sm)" />
+          </div>
+        </AppCard>
+      </div>
     </div>
 
     <div v-else class="stream-stats__content">
@@ -391,11 +439,21 @@ function maxAvgDuration(averages: { avgDurationMs: number }[]): number {
     gap: var(--space-3);
   }
 
-  &__loader {
+  &__skeleton-kpi-text {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 300px;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  &__skeleton-title {
+    margin-bottom: var(--space-3);
+  }
+
+  &__skeleton-table {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
   }
 
   &__content {
