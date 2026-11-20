@@ -151,6 +151,14 @@ async function fetchYouTubeStream(
     Range: rangeHeader
   };
 
+  if (client === 'YTMUSIC') {
+    headers['Origin'] = 'https://music.youtube.com';
+    headers['Referer'] = 'https://music.youtube.com/';
+  } else if (client === 'MWEB' || client === 'WEB') {
+    headers['Origin'] = 'https://www.youtube.com';
+    headers['Referer'] = 'https://www.youtube.com/';
+  }
+
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const res = await fetch(url, {

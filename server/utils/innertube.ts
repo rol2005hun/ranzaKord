@@ -36,6 +36,23 @@ interface StoredPoData {
   visitorData?: string;
 }
 
+function isValidPoToken(token?: string): boolean {
+  if (!token || typeof token !== 'string') return false;
+  const trimmed = token.trim();
+  if (trimmed.length < 20) return false;
+  if (trimmed.startsWith('{') || trimmed.endsWith('}')) return false;
+  if (trimmed.length % 4 === 1) return false;
+  return /^[A-Za-z0-9+/=_-]+$/.test(trimmed);
+}
+
+function isValidVisitorData(data?: string): boolean {
+  if (!data || typeof data !== 'string') return false;
+  const trimmed = data.trim();
+  if (trimmed.length < 10) return false;
+  if (trimmed.includes('"') || trimmed.includes('{') || trimmed.includes('}')) return false;
+  return /^[A-Za-z0-9+/=%_-]+$/.test(trimmed);
+}
+
 async function getStoredPoData(): Promise<StoredPoData> {
   let poToken: string | undefined;
   let visitorData: string | undefined;
@@ -56,6 +73,13 @@ async function getStoredPoData(): Promise<StoredPoData> {
   poToken = poToken || process.env.NUXT_YOUTUBE_PO_TOKEN || process.env.YOUTUBE_PO_TOKEN;
   visitorData =
     visitorData || process.env.NUXT_YOUTUBE_VISITOR_DATA || process.env.YOUTUBE_VISITOR_DATA;
+
+  if (!isValidPoToken(poToken)) {
+    poToken = undefined;
+  }
+  if (!isValidVisitorData(visitorData)) {
+    visitorData = undefined;
+  }
 
   return { poToken, visitorData };
 }
@@ -171,10 +195,18 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
 
   if (anonymousInstance) return anonymousInstance;
 
+  const cookies = await getStoredCookies();
+  const { poToken, visitorData } = await getStoredPoData();
+  const hasPo = Boolean(poToken && visitorData);
+
   anonymousInstance = await Innertube.create({
     cache: new UniversalCache(false),
     retrieve_player: true,
-    lang: 'en'
+    lang: 'en',
+    cookie: cookies,
+    po_token: poToken,
+    visitor_data: visitorData,
+    generate_session_locally: hasPo
   });
 
   return anonymousInstance;

@@ -96,11 +96,17 @@ async function run(): Promise<void> {
         '\x1b[32mSuccessfully extracted poToken and visitorData from JSON payload!\x1b[0m'
       );
     } else {
-      poToken = payloadOrPo.trim() || undefined;
+      const candidatePo = payloadOrPo.trim();
+      if (candidatePo && !candidatePo.startsWith('{') && candidatePo.length >= 20) {
+        poToken = candidatePo;
+      }
       const visitorInput = await rl.question(
         '3. Optional: Paste Visitor Data (press Enter to skip): '
       );
-      visitorData = visitorInput.trim() || undefined;
+      const candidateVisitor = visitorInput.trim();
+      if (candidateVisitor && !candidateVisitor.includes('{') && !candidateVisitor.includes('"')) {
+        visitorData = candidateVisitor;
+      }
     }
 
     console.log('\nValidating credentials with YouTube...');
