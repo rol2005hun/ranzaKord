@@ -5,6 +5,8 @@ import type { Innertube } from 'youtubei.js';
 
 type ClientType =
   | 'ANDROID'
+  | 'ANDROID_VR'
+  | 'VISIONOS'
   | 'MWEB'
   | 'IOS'
   | 'YTMUSIC'
@@ -105,6 +107,10 @@ function getValidRange(range: ByteRange, contentLength?: number): ByteRange | nu
 const DEFAULT_USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
+const ANDROID_USER_AGENT = 'com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip';
+
+const IOS_USER_AGENT = 'com.google.ios.youtube/19.09.3 (iPhone16,2; U; CPU iOS 17_4 like Mac OS X)';
+
 async function fetchYouTubeStream(
   url: string,
   client: ClientType,
@@ -112,8 +118,15 @@ async function fetchYouTubeStream(
 ): Promise<StreamFetchResult> {
   const rangeHeader = `bytes=${range.start}-${range.end}`;
 
+  let userAgent = DEFAULT_USER_AGENT;
+  if (client === 'ANDROID' || client === 'ANDROID_VR') {
+    userAgent = ANDROID_USER_AGENT;
+  } else if (client === 'IOS' || client === 'VISIONOS') {
+    userAgent = IOS_USER_AGENT;
+  }
+
   const headers: Record<string, string> = {
-    'User-Agent': DEFAULT_USER_AGENT,
+    'User-Agent': userAgent,
     Accept: '*/*',
     'Accept-Encoding': 'identity',
     Range: rangeHeader
@@ -286,25 +299,22 @@ async function discoverStream(
 ): Promise<CachedStream | null> {
   const innertube = await createInnertube(true);
   const isTvOAuth = Boolean(innertube.session.logged_in && innertube.session.oauth?.oauth2_tokens);
-  const candidateSpecs: CandidateSpec[] = isTvOAuth
-    ? [
-        { client: 'TV_SIMPLY', useAuth: true },
-        { client: 'TV', useAuth: true },
-        { client: 'TV_EMBEDDED', useAuth: true },
-        { client: 'ANDROID', useAuth: false },
-        { client: 'YTMUSIC', useAuth: false },
-        { client: 'IOS', useAuth: false },
-        { client: 'MWEB', useAuth: false },
-        { client: 'WEB', useAuth: false }
-      ]
-    : [
-        { client: 'TV_SIMPLY', useAuth: false },
-        { client: 'ANDROID', useAuth: false },
-        { client: 'YTMUSIC', useAuth: false },
-        { client: 'IOS', useAuth: false },
-        { client: 'MWEB', useAuth: false },
-        { client: 'WEB', useAuth: false }
-      ];
+  const candidateSpecs: CandidateSpec[] = [
+    { client: 'ANDROID_VR', useAuth: false },
+    { client: 'VISIONOS', useAuth: false },
+    ...(isTvOAuth
+      ? [
+          { client: 'TV_SIMPLY' as ClientType, useAuth: true },
+          { client: 'TV' as ClientType, useAuth: true },
+          { client: 'TV_EMBEDDED' as ClientType, useAuth: true }
+        ]
+      : [{ client: 'TV_SIMPLY' as ClientType, useAuth: false }]),
+    { client: 'ANDROID', useAuth: false },
+    { client: 'YTMUSIC', useAuth: false },
+    { client: 'IOS', useAuth: false },
+    { client: 'MWEB', useAuth: false },
+    { client: 'WEB', useAuth: false }
+  ];
 
   const startTime = Date.now();
   let anonInnertube: Innertube | null = null;
@@ -526,9 +536,19 @@ export default defineEventHandler(async (event) => {
   const isBotChallenge = Object.values(debugInfo).some(
     (m) => m.includes('Sign in to confirm you') || m.includes('Please sign in')
   );
-  const failureReason = isBotChallenge
-    ? 'YouTube bot protection active (LOGIN_REQUIRED). Please authorize via pnpm youtube:login.'
-    : 'All clients failed';
+  const isIpBlocked = Object.values(debugInfo).every(
+    (m) =>
+      m.includes('LOGIN_REQUIRED') ||
+      m.includes('Sign in to confirm you') ||
+      m.includes('This video is unavailable') ||
+      m.includes('UNPLAYABLE')
+  );
+  const failureReason =
+    isBotChallenge && isIpBlocked
+      ? 'YouTube IP block on server (datacenter IP). This video cannot be streamed from this server.'
+      : isBotChallenge
+        ? 'YouTube bot protection active (LOGIN_REQUIRED). Please authorize via pnpm youtube:login.'
+        : 'All clients failed';
 
   throw createError({
     statusCode: 500,
