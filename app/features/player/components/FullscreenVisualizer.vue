@@ -168,17 +168,29 @@ const musicVideoUrl = ref<string | null>(null);
 const isMusicVideoLoading = ref(false);
 const musicVideoNotFound = ref(false);
 
-async function fetchMusicVideo(track: { title: string; artists?: Array<{ name: string }> | null }) {
+async function fetchMusicVideo(track: {
+  title: string;
+  artist?: string;
+  artists?: Array<{ name: string }> | null;
+}) {
   musicVideoUrl.value = null;
   musicVideoNotFound.value = false;
   isMusicVideoLoading.value = true;
 
   try {
-    const artistName = track.artists?.[0]?.name ?? '';
+    const artistName = track.artist || track.artists?.[0]?.name || '';
 
-    const data = await $fetch<{ results: Array<{ videoId: string }> }>('/api/musicvideo', {
-      params: { artist: artistName, title: track.title }
-    });
+    if (!track.title && !artistName) {
+      musicVideoNotFound.value = true;
+      return;
+    }
+
+    const data = await $fetch<{ results: Array<{ videoId: string }> }>(
+      useApiUrl('/api/musicvideo'),
+      {
+        params: { artist: artistName, title: track.title }
+      }
+    );
 
     if (data.results.length > 0) {
       const first = data.results[0];
@@ -186,11 +198,11 @@ async function fetchMusicVideo(track: { title: string; artists?: Array<{ name: s
       if (!vidId) {
         musicVideoNotFound.value = true;
       } else {
-        const streamData = await $fetch<string>(`/api/stream?v=${vidId}&type=video`, {
+        const streamData = await $fetch<string>(useApiUrl(`/api/stream?v=${vidId}&type=video`), {
           responseType: 'text'
         }).catch(() => null);
         if (streamData) {
-          musicVideoUrl.value = `/api/stream?v=${vidId}&type=video`;
+          musicVideoUrl.value = useApiUrl(`/api/stream?v=${vidId}&type=video`);
         } else {
           musicVideoNotFound.value = true;
         }
