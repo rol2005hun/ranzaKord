@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Stream Speed Analytics**: Added developer dashboard (`/stream-stats`) tracking YouTube client resolution latency, cache hit performance, and server-side paginated logs.
 - **Playback Persistence**: Automatically save and restore the last played track and timestamp across restarts via cookie, localStorage, and database.
 - **Search Fallback for Lyrics**: Added LRCLIB search fallback and metadata title cleaning to retrieve synced lyrics even when YouTube titles duplicate artist names.
+- **SponsorBlock Integration**: Automatically skip non-music segments (intros, dialogues, and outros) in YouTube tracks using the SponsorBlock crowdsourced API, with visual markers on the progress seekbar.
 
 ### Fixed
 

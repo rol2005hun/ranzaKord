@@ -23,6 +23,7 @@ interface CachedStream {
   client: ClientType;
   contentLength?: number;
   mimeType?: string;
+  height?: number;
   expiresAt: number;
 }
 
@@ -54,6 +55,7 @@ interface CandidateFormat {
   content_length?: number;
   has_video?: boolean;
   has_audio?: boolean;
+  height?: number;
   decipher?: (player: unknown) => Promise<string>;
 }
 
@@ -374,16 +376,32 @@ async function resolveCandidate(
 
   const candidateFormats: CandidateFormat[] = [];
   if (streamType === 'video') {
-    const v720 = formats.filter(
-      (f) =>
-        f.has_video &&
-        f.has_audio &&
-        isPlayableFormat(f) &&
-        (f as unknown as { height?: number }).height &&
-        ((f as unknown as { height?: number }).height as number) <= 720
-    );
-    const vAny = formats.filter((f) => f.has_video && f.has_audio && isPlayableFormat(f));
-    candidateFormats.push(...v720, ...vAny);
+    const videoFormats = formats.filter((f) => f.has_video && isPlayableFormat(f));
+    videoFormats.sort((a, b) => {
+      const hA = a.height || 0;
+      const hB = b.height || 0;
+      const isMp4A = (a.mime_type || '').includes('mp4') ? 1 : 0;
+      const isMp4B = (b.mime_type || '').includes('mp4') ? 1 : 0;
+      const isAvc1A = (a.mime_type || '').includes('avc1') ? 1 : 0;
+      const isAvc1B = (b.mime_type || '').includes('avc1') ? 1 : 0;
+
+      const getScore = (h: number, isMp4: number, isAvc1: number): number => {
+        let base = h;
+        if (h === 1080) {
+          base = 3000;
+        } else if (h === 1440) {
+          base = 2500;
+        } else if (h === 720) {
+          base = 2000;
+        } else if (h > 1440) {
+          base = 1500;
+        }
+        return base + isMp4 * 50 + isAvc1 * 100;
+      };
+
+      return getScore(hB, isMp4B, isAvc1B) - getScore(hA, isMp4A, isAvc1A);
+    });
+    candidateFormats.push(...videoFormats);
   } else {
     const audioOnly = formats.filter((f) => f.has_audio && !f.has_video && isPlayableFormat(f));
     const audioCombined = formats.filter((f) => f.has_audio && isPlayableFormat(f));
@@ -444,12 +462,31 @@ async function resolveCandidate(
       streamRes2.body?.cancel();
     }
 
+    if (streamType === 'video' && format.content_length && format.content_length > 25000000) {
+      const testRangeVideo: ByteRange = {
+        start: format.content_length - 1000,
+        end: format.content_length - 1
+      };
+      const { res: streamResVideo } = await fetchYouTubeStream(
+        candidateUrl,
+        candidate.client,
+        testRangeVideo
+      );
+      if (!streamResVideo) {
+        lastCandidateError =
+          'Video stream capped at high byte offset by YouTube anti-bot restriction';
+        continue;
+      }
+      streamResVideo.body?.cancel();
+    }
+
     return {
       cached: {
         url: candidateUrl,
         client: candidate.client,
         contentLength: format.content_length,
         mimeType: format.mime_type,
+        height: format.height,
         expiresAt: parseCacheExpiry(candidateUrl)
       },
       client: candidate.client,
@@ -473,7 +510,16 @@ async function discoverStream(
   const anonInnertube = await createInnertube(false);
   const poData = await mintPoTokenForVideo(vid);
 
-  const tier1Specs: CandidateSpec[] = [
+  const videoTier1Specs: CandidateSpec[] = [
+    { client: 'VISIONOS', useAuth: false },
+    ...(isTvOAuth
+      ? [{ client: 'TV_SIMPLY' as ClientType, useAuth: true }]
+      : [{ client: 'TV_SIMPLY' as ClientType, useAuth: false }]),
+    { client: 'ANDROID_VR', useAuth: false },
+    { client: 'IOS', useAuth: false }
+  ];
+
+  const audioTier1Specs: CandidateSpec[] = [
     { client: 'ANDROID_VR', useAuth: false },
     { client: 'VISIONOS', useAuth: false },
     { client: 'WEB', useAuth: false },
@@ -482,6 +528,8 @@ async function discoverStream(
       : [{ client: 'TV_SIMPLY' as ClientType, useAuth: false }]),
     { client: 'ANDROID', useAuth: false }
   ];
+
+  const tier1Specs = streamType === 'video' ? videoTier1Specs : audioTier1Specs;
 
   const tier2Specs: CandidateSpec[] = [
     ...(isTvOAuth
@@ -573,7 +621,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const vid = videoId.trim();
-  const cacheKey = `${vid}_${streamType}`;
+  const cacheKey = streamType === 'video' ? `${vid}_video_v4` : `${vid}_${streamType}`;
   const cached = streamCache.get(cacheKey);
 
   if (cached && Date.now() < cached.expiresAt) {

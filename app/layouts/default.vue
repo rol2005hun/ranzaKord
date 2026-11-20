@@ -36,9 +36,9 @@ const { isAuthenticated, currentUser, logout } = useAuth();
       </nav>
     </header>
 
-    <main class="layout__main">
+    <div class="layout__main">
       <slot />
-    </main>
+    </div>
 
     <footer class="layout__footer">
       <p>{{ $t('core.appName') }} © {{ new Date().getFullYear() }}</p>

@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import type { LyricLine } from '../types/sidebar.types';
+import { useMusicVideo } from '@/features/player/composables/useMusicVideo';
+
+import type { LyricLine } from '@/features/player/types/sidebar.types';
 
 const player = usePlayer();
 const layoutStore = useLayoutStore();
@@ -15,6 +17,19 @@ const {
 } = useLyrics();
 const { connect: connectVisualizer } = useAudioVisualizer();
 const { drawVisualizer } = useCanvasVisualizer();
+const {
+  musicVideoUrl,
+  isLoading: isMusicVideoLoading,
+  fetchMusicVideo,
+  resetMusicVideo
+} = useMusicVideo();
+
+function onVideoError() {
+  resetMusicVideo();
+}
+
+const isMusicVideoMode = computed(() => layoutStore.sidebarBackgroundMode === 'musicvideo');
+const musicVideoRef = ref<HTMLVideoElement | null>(null);
 
 const lyricsListRef = ref<HTMLElement | null>(null);
 const isResizing = ref(false);
@@ -42,7 +57,12 @@ const themeStore = useThemeStore();
 
 function drawFrame() {
   animId = requestAnimationFrame(drawFrame);
-  if (layoutStore.rightSidebarMode !== 'info' || !layoutStore.isRightSidebarOpen) return;
+  if (
+    layoutStore.rightSidebarMode !== 'info' ||
+    !layoutStore.isRightSidebarOpen ||
+    isMusicVideoMode.value
+  )
+    return;
 
   const canvas = canvasRef.value;
   if (!canvas) return;
@@ -122,10 +142,43 @@ watch(
   (track) => {
     if (track) {
       fetchLyrics(track);
+      if (layoutStore.sidebarBackgroundMode === 'musicvideo') {
+        fetchMusicVideo(track);
+      }
     }
   },
   { immediate: true }
 );
+
+watch(
+  () => layoutStore.sidebarBackgroundMode,
+  (mode) => {
+    if (
+      mode === 'musicvideo' &&
+      currentTrack.value &&
+      !musicVideoUrl.value &&
+      !isMusicVideoLoading.value
+    ) {
+      fetchMusicVideo(currentTrack.value);
+    }
+  }
+);
+
+watch(isPlaying, (playing) => {
+  if (!musicVideoRef.value) return;
+  if (playing) {
+    musicVideoRef.value.play().catch(() => {});
+  } else {
+    musicVideoRef.value.pause();
+  }
+});
+
+watch(currentTime, (time) => {
+  if (!musicVideoRef.value || !isPlaying.value) return;
+  if (Math.abs(musicVideoRef.value.currentTime - time) > 2) {
+    musicVideoRef.value.currentTime = time;
+  }
+});
 
 const activeLineIndex = computed(() => getActiveLine(currentTime.value));
 
@@ -202,9 +255,14 @@ function onLyricsScroll() {
 }
 
 function onResizeStart(event: MouseEvent | TouchEvent) {
+  if ('button' in event && event.button !== 0) return;
+  if (event.cancelable) {
+    event.preventDefault();
+  }
   isResizing.value = true;
   document.body.style.userSelect = 'none';
   document.body.style.cursor = 'ew-resize';
+  document.body.classList.add('is-resizing-sidebar');
 
   const startX = 'touches' in event ? (event.touches[0]?.clientX ?? 0) : event.clientX;
   const startWidth = layoutStore.rightSidebarWidth;
@@ -219,6 +277,7 @@ function onResizeStart(event: MouseEvent | TouchEvent) {
     isResizing.value = false;
     document.body.style.userSelect = '';
     document.body.style.cursor = '';
+    document.body.classList.remove('is-resizing-sidebar');
     document.removeEventListener('mousemove', onMove);
     document.removeEventListener('mouseup', onEnd);
     document.removeEventListener('touchmove', onMove);
@@ -247,6 +306,7 @@ const sidebarStyle = computed(() => ({
     :aria-label="$t('player.openInfoPanel')">
     <div
       class="right-sidebar__resize-handle"
+      :class="{ 'right-sidebar__resize-handle--active': isResizing }"
       role="separator"
       :aria-label="'Resize sidebar'"
       @mousedown="onResizeStart"
@@ -308,40 +368,79 @@ const sidebarStyle = computed(() => ({
 
         <template v-else-if="currentTrack">
           <div ref="vizWrapRef" class="right-sidebar__artwork-wrap">
+            <video
+              v-if="isMusicVideoMode && musicVideoUrl"
+              ref="musicVideoRef"
+              :src="musicVideoUrl"
+              class="right-sidebar__music-video"
+              autoplay
+              loop
+              muted
+              playsinline
+              preload="auto"
+              @error="onVideoError" />
             <img
-              v-if="currentTrack.thumbnailUrl"
+              v-else-if="currentTrack.thumbnailUrl"
               :src="currentTrack.thumbnailUrl"
               :alt="currentTrack.title"
               class="right-sidebar__artwork-bg" />
             <div v-else class="right-sidebar__artwork-placeholder">
               <AppIcon name="ph:music-notes-simple" />
             </div>
-            <canvas ref="canvasRef" class="right-sidebar__canvas" />
+
+            <div
+              v-if="isMusicVideoMode && isMusicVideoLoading"
+              class="right-sidebar__music-video-loading">
+              <AppSpinner size="md" />
+            </div>
+
+            <canvas v-show="!isMusicVideoMode" ref="canvasRef" class="right-sidebar__canvas" />
 
             <div class="right-sidebar__visualizer-selector">
               <button
-                v-for="style in ['circle', 'bars', 'wave', 'particles']"
-                :key="style"
                 class="right-sidebar__style-btn"
                 :class="{
-                  'right-sidebar__style-btn--active': layoutStore.visualizerStyle === style
+                  'right-sidebar__style-btn--active': !isMusicVideoMode
                 }"
-                :title="$t(`player.visualizerStyles.${style}`)"
-                @click="layoutStore.setVisualizerStyle(style as any)">
-                <AppIcon
-                  :name="
-                    style === 'circle'
-                      ? 'ph:circle-bold'
-                      : style === 'bars'
-                        ? 'ph:chart-bar-bold'
-                        : style === 'wave'
-                          ? 'ph:wave-sine-bold'
-                          : 'ph:sparkle-bold'
-                  " />
+                :title="$t('player.backgroundModeVisualizer')"
+                @click="layoutStore.setSidebarBackgroundMode('visualizer')">
+                <AppIcon name="ph:waveform-bold" />
               </button>
+              <button
+                class="right-sidebar__style-btn"
+                :class="{
+                  'right-sidebar__style-btn--active': isMusicVideoMode
+                }"
+                :title="$t('player.backgroundModeMusicVideo')"
+                @click="layoutStore.setSidebarBackgroundMode('musicvideo')">
+                <AppIcon name="ph:film-slate-bold" />
+              </button>
+              <template v-if="!isMusicVideoMode">
+                <button
+                  v-for="style in ['circle', 'bars', 'wave', 'particles'] as const"
+                  :key="style"
+                  class="right-sidebar__style-btn"
+                  :class="{
+                    'right-sidebar__style-btn--active': layoutStore.visualizerStyle === style
+                  }"
+                  :title="$t(`player.visualizerStyles.${style}`)"
+                  @click="layoutStore.setVisualizerStyle(style)">
+                  <AppIcon
+                    :name="
+                      style === 'circle'
+                        ? 'ph:circle-bold'
+                        : style === 'bars'
+                          ? 'ph:chart-bar-bold'
+                          : style === 'wave'
+                            ? 'ph:wave-sine-bold'
+                            : 'ph:sparkle-bold'
+                    " />
+                </button>
+              </template>
             </div>
 
             <div
+              v-if="!isMusicVideoMode || !musicVideoUrl"
               class="right-sidebar__artwork-center"
               :class="{ 'right-sidebar__artwork-center--spinning': isPlaying }">
               <img
@@ -512,20 +611,29 @@ const sidebarStyle = computed(() => ({
 
   &--resizing {
     transition: none;
+    user-select: none;
+
+    iframe,
+    video,
+    canvas {
+      pointer-events: none !important;
+    }
   }
 
   &__resize-handle {
     position: absolute;
     top: 0;
     left: 0;
-    width: 4px;
-    height: 100%;
+    bottom: 0;
+    width: 8px;
     cursor: ew-resize;
-    z-index: 1;
+    z-index: 50;
+    touch-action: none;
     transition: background var(--transition-fast);
 
-    &:hover {
-      background: color-mix(in srgb, var(--color-primary) 40%, transparent);
+    &:hover,
+    &--active {
+      background: color-mix(in srgb, var(--color-primary) 50%, transparent);
     }
   }
 
@@ -614,17 +722,39 @@ const sidebarStyle = computed(() => ({
     align-items: center;
     gap: var(--space-3);
     overflow-y: auto;
-    flex: 1; /* Make it fill the body */
+    flex: 1;
   }
 
   &__artwork-wrap {
     position: relative;
     width: 100%;
-    flex: 1; /* Expand to fill the entire info area */
+    flex: 1;
     overflow: hidden;
     background: var(--color-surface-hover);
     box-shadow: var(--shadow-xl);
     flex-shrink: 0;
+  }
+
+  &__music-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  &__music-video-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 2;
+    backdrop-filter: blur(4px);
+    pointer-events: none;
   }
 
   &__artwork-bg {
@@ -1018,6 +1148,17 @@ const sidebarStyle = computed(() => ({
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+:global(body.is-resizing-sidebar) {
+  user-select: none !important;
+  cursor: ew-resize !important;
+
+  iframe,
+  video,
+  canvas {
+    pointer-events: none !important;
   }
 }
 </style>

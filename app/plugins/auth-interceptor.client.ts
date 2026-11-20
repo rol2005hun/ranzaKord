@@ -53,11 +53,5 @@ export default defineNuxtPlugin({
         configurable: true
       });
     }
-
-    return {
-      provide: {
-        fetch: wrappedFetch
-      }
-    };
   }
 });

@@ -65,5 +65,10 @@
   "sleepTimerMinutes": "{n} min",
   "sleepTimerActive": "Stops in {time}",
   "sleepTimerSet": "Sleep timer set",
-  "sleepTimerCleared": "Sleep timer cleared"
+  "sleepTimerCleared": "Sleep timer cleared",
+  "sponsorBlock": {
+    "title": "Skip Non-Music Sections",
+    "description": "Automatically skip music video intros, mid-song dialogues, and credits using SponsorBlock",
+    "skippedToast": "Skipped non-music section"
+  }
 }

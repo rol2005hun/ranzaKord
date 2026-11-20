@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useMusicVideo } from '@/features/player/composables/useMusicVideo';
+
 import type { LyricLine } from '../types/sidebar.types';
 const player = usePlayer();
 const layoutStore = useLayoutStore();
@@ -164,46 +166,17 @@ const containerRef = ref<HTMLElement | null>(null);
 const playlistBtnRef = ref<HTMLElement | null>(null);
 const mobilePlaylistBtnRef = ref<HTMLElement | null>(null);
 
-const musicVideoUrl = ref<string | null>(null);
-const isMusicVideoLoading = ref(false);
-const musicVideoNotFound = ref(false);
+const {
+  musicVideoUrl,
+  isLoading: isMusicVideoLoading,
+  fetchMusicVideo,
+  resetMusicVideo
+} = useMusicVideo();
 
-async function fetchMusicVideo(track: { title: string; artists?: Array<{ name: string }> | null }) {
-  musicVideoUrl.value = null;
-  musicVideoNotFound.value = false;
-  isMusicVideoLoading.value = true;
-
-  try {
-    const artistName = track.artists?.[0]?.name ?? '';
-
-    const data = await $fetch<{ results: Array<{ videoId: string }> }>('/api/musicvideo', {
-      params: { artist: artistName, title: track.title }
-    });
-
-    if (data.results.length > 0) {
-      const first = data.results[0];
-      const vidId = first?.videoId;
-      if (!vidId) {
-        musicVideoNotFound.value = true;
-      } else {
-        const streamData = await $fetch<string>(`/api/stream?v=${vidId}&type=video`, {
-          responseType: 'text'
-        }).catch(() => null);
-        if (streamData) {
-          musicVideoUrl.value = `/api/stream?v=${vidId}&type=video`;
-        } else {
-          musicVideoNotFound.value = true;
-        }
-      }
-    } else {
-      musicVideoNotFound.value = true;
-    }
-  } catch {
-    musicVideoNotFound.value = true;
-  } finally {
-    isMusicVideoLoading.value = false;
-  }
+function onVideoError() {
+  resetMusicVideo();
 }
+const musicVideoRef = ref<HTMLVideoElement | null>(null);
 
 watch(
   () => player.currentTrack.value,
@@ -227,6 +200,25 @@ watch(
     }
   }
 );
+
+watch(
+  () => player.isPlaying.value,
+  (playing) => {
+    if (!musicVideoRef.value) return;
+    if (playing) {
+      musicVideoRef.value.play().catch(() => {});
+    } else {
+      musicVideoRef.value.pause();
+    }
+  }
+);
+
+watch(currentTime, (time) => {
+  if (!musicVideoRef.value || !player.isPlaying.value) return;
+  if (Math.abs(musicVideoRef.value.currentTime - time) > 2) {
+    musicVideoRef.value.currentTime = time;
+  }
+});
 
 const isMusicVideoMode = computed(() => layoutStore.fullscreenBackgroundMode === 'musicvideo');
 
@@ -397,7 +389,8 @@ function getStyleIcon(style: string) {
         loop
         muted
         playsinline
-        preload="auto" />
+        preload="auto"
+        @error="onVideoError" />
       <canvas
         v-show="!isMusicVideoMode"
         ref="canvasRef"
@@ -477,7 +470,10 @@ function getStyleIcon(style: string) {
               class="fullscreen-visualizer__lyric-line"
               :class="{ 'fullscreen-visualizer__lyric-line--active': idx === activeLineIndex }"
               @click.stop="player.seek(line.time)">
-              {{ line.text }}
+              <span class="fullscreen-visualizer__lyric-text">{{ line.text }}</span>
+              <span v-if="line.translatedText" class="fullscreen-visualizer__lyric-translated">
+                {{ line.translatedText }}
+              </span>
             </p>
           </div>
           <div v-else-if="plainLyrics" class="fullscreen-visualizer__lyrics-plain">
@@ -485,7 +481,10 @@ function getStyleIcon(style: string) {
               <AppIcon name="ph:warning" />
               {{ $t('player.lyricsNotSynced') }}
             </p>
-            <p>{{ plainLyrics }}</p>
+            <p class="fullscreen-visualizer__plain-text">{{ plainLyrics }}</p>
+            <p v-if="lyricsData?.translatedPlain" class="fullscreen-visualizer__plain-translated">
+              {{ lyricsData.translatedPlain }}
+            </p>
           </div>
           <div v-else class="fullscreen-visualizer__lyrics-empty">
             <AppIcon name="ph:music-notes-duotone" />
@@ -810,6 +809,23 @@ function getStyleIcon(style: string) {
     }
   }
 
+  &__lyric-text {
+    display: block;
+  }
+
+  &__lyric-translated {
+    display: block;
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin-top: 0.35rem;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+
+    @media (max-width: 768px) {
+      font-size: 1.15rem;
+    }
+  }
+
   body.audio-reactive-lyrics &__lyric-line--active {
     transform: scale(calc(1 + var(--audio-bass, 0) * 0.15));
     text-shadow: 0 0 calc(10px + var(--audio-bass, 0) * 30px)
@@ -842,6 +858,14 @@ function getStyleIcon(style: string) {
       margin: 0;
       white-space: pre-line;
     }
+  }
+
+  &__plain-translated {
+    display: block;
+    font-size: 1.4rem;
+    line-height: 2;
+    color: var(--color-primary);
+    margin-top: 1.5rem;
   }
 
   &__unsync-badge {

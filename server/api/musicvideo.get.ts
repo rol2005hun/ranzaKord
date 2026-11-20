@@ -8,14 +8,15 @@ interface MusicVideoResult {
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event);
-  const artist = query['artist'] as string | undefined;
-  const title = query['title'] as string | undefined;
+  const artist = (query['artist'] as string | undefined)?.trim();
+  const title = (query['title'] as string | undefined)?.trim();
 
-  if (!artist || !title) {
-    throw createError({ statusCode: 400, message: 'artist and title are required' });
+  if (!artist && !title) {
+    throw createError({ statusCode: 400, message: 'artist or title is required' });
   }
 
-  const searchQuery = `${artist} ${title} official music video`;
+  const queryParts = [artist, title, 'official music video'].filter(Boolean);
+  const searchQuery = queryParts.join(' ');
   const innertube = await createInnertube(false);
 
   const results = await innertube.search(searchQuery, { type: 'video' });

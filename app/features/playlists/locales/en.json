@@ -31,7 +31,7 @@
   "removedSuccess": "Removed from playlist",
   "removeFailed": "Failed to remove from playlist",
   "importPlaylist": "Import Playlist",
-  "importUrlPlaceholder": "https://open.spotify.com/playlist/... or YouTube link",
+  "importUrlPlaceholder": "Spotify or YouTube link",
   "importUrlLabel": "Playlist URL",
   "importing": "Importing…",
   "importComplete": "Import Complete",

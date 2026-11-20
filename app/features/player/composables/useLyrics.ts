@@ -43,6 +43,87 @@ function parseLrc(lrc: string): LyricLine[] {
   return lines.sort((a, b) => a.time - b.time);
 }
 
+function normalizeString(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '')
+    .trim();
+}
+
+function matchesArtist(
+  candidateArtist: string,
+  targetArtist: string,
+  artists?: Array<{ name: string }> | null
+): boolean {
+  const cand = normalizeString(candidateArtist);
+  const target = normalizeString(targetArtist);
+  if (!cand || !target) return false;
+
+  if (cand === target || cand.includes(target) || target.includes(cand)) {
+    return true;
+  }
+
+  const primaryTarget = normalizeString(targetArtist.split(/[,&/]|feat\.?|ft\.?/i)[0] ?? '');
+  if (
+    primaryTarget &&
+    (cand === primaryTarget || cand.includes(primaryTarget) || primaryTarget.includes(cand))
+  ) {
+    return true;
+  }
+
+  if (artists && artists.length > 0) {
+    for (const a of artists) {
+      const aNorm = normalizeString(a.name);
+      if (aNorm && (cand === aNorm || cand.includes(aNorm) || aNorm.includes(cand))) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+function matchesTitle(candidateTitle: string, targetTitle: string): boolean {
+  const cand = normalizeString(candidateTitle);
+  const target = normalizeString(targetTitle);
+  if (!cand || !target) return false;
+
+  return cand === target || cand.includes(target) || target.includes(cand);
+}
+
+function findBestMatch(
+  results: LrclibSearchResult[],
+  artist: string,
+  title: string,
+  durationSeconds: number,
+  artists?: Array<{ name: string }> | null
+): LrclibSearchResult | null {
+  const valid = results.filter((r) => {
+    if (!r.syncedLyrics && !r.plainLyrics) return false;
+    if (!matchesArtist(r.artistName, artist, artists)) return false;
+    if (!matchesTitle(r.trackName, title)) return false;
+    if (durationSeconds > 0 && r.duration > 0 && Math.abs(r.duration - durationSeconds) > 18) {
+      return false;
+    }
+    return true;
+  });
+
+  if (valid.length === 0) return null;
+
+  return (
+    valid.sort((a, b) => {
+      if (a.syncedLyrics && !b.syncedLyrics) return -1;
+      if (!a.syncedLyrics && b.syncedLyrics) return 1;
+      if (durationSeconds > 0) {
+        return Math.abs(a.duration - durationSeconds) - Math.abs(b.duration - durationSeconds);
+      }
+      return 0;
+    })[0] ?? null
+  );
+}
+
 const lyricsData = ref<LyricsData | null>(null);
 const isLoading = ref(false);
 const isTranslating = ref(false);
@@ -55,7 +136,14 @@ const MAX_CACHE_SIZE = 50;
 
 export function useLyrics() {
   if (!lyricsCache) {
-    lyricsCache = useLocalStorage<Record<string, LyricsData>>('ranzakord_lyrics_cache', {});
+    if (typeof localStorage !== 'undefined') {
+      try {
+        localStorage.removeItem('ranzakord_lyrics_cache');
+      } catch (err) {
+        void err;
+      }
+    }
+    lyricsCache = useLocalStorage<Record<string, LyricsData>>('ranzakord_lyrics_cache_v2', {});
   }
 
   async function fetchLyrics(track: Track): Promise<void> {
@@ -123,9 +211,16 @@ export function useLyrics() {
 
       if (!response || (!response.syncedLyrics && !response.plainLyrics)) {
         try {
-          const searchQueries = [`${cleanArtist} ${cleanTitle}`, cleanTitle, track.title].filter(
-            Boolean
-          );
+          const primaryArtist = cleanArtist.split(/[,&/]|feat\.?|ft\.?/i)[0]?.trim() || cleanArtist;
+          const searchQueries: string[] = [];
+
+          searchQueries.push(`${cleanArtist} ${cleanTitle}`);
+          if (primaryArtist !== cleanArtist) {
+            searchQueries.push(`${primaryArtist} ${cleanTitle}`);
+          }
+          if (track.title !== cleanTitle || track.artist !== cleanArtist) {
+            searchQueries.push(`${track.artist} ${track.title}`);
+          }
 
           for (const query of searchQueries) {
             const searchResults = await $fetch<LrclibSearchResult[]>(
@@ -138,13 +233,13 @@ export function useLyrics() {
             );
 
             if (searchResults && searchResults.length > 0) {
-              const matched =
-                searchResults.find((r) => {
-                  if (durationSeconds > 0 && r.duration > 0) {
-                    return Math.abs(r.duration - durationSeconds) <= 12;
-                  }
-                  return true;
-                }) || searchResults[0];
+              const matched = findBestMatch(
+                searchResults,
+                cleanArtist,
+                cleanTitle,
+                durationSeconds,
+                track.artists
+              );
 
               if (matched && (matched.syncedLyrics || matched.plainLyrics)) {
                 response = {
