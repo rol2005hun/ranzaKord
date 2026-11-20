@@ -27,7 +27,7 @@ const localSeekTime = ref(0);
 
 const displayTime = computed(() => {
   if (isDraggingSeek.value) return localSeekTime.value;
-  if (!isHydrated.value || player.isLoading.value) return 0;
+  if (!isHydrated.value) return 0;
   return player.currentTimeSeconds.value;
 });
 const displayDuration = computed(() => (isHydrated.value ? player.durationSeconds.value : 0));

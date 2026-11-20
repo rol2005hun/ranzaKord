@@ -227,7 +227,7 @@ export const usePlayerStore = defineStore(
             } = res.lastPlayback;
             if (currentTrack.value?.videoId === videoId) {
               const localTime = currentTimeSeconds.value;
-              if (Math.abs(currentTime - localTime) > 10) {
+              if (currentTime > 0 && (localTime === 0 || currentTime > localTime)) {
                 currentTimeSeconds.value = currentTime;
                 localStorage.setItem('player_currentTimeSeconds', String(currentTime));
                 if (currentTrack.value) {
@@ -235,6 +235,23 @@ export const usePlayerStore = defineStore(
                     track: currentTrack.value,
                     currentTime
                   };
+                }
+              } else if (localTime > 0 && currentTime < localTime && currentTrack.value) {
+                try {
+                  $fetch(useApiUrl('/api/me/playback'), {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: {
+                      videoId,
+                      currentTime: localTime,
+                      title: currentTrack.value.title,
+                      artist: currentTrack.value.artist,
+                      thumbnailUrl: currentTrack.value.thumbnailUrl,
+                      durationSeconds: currentTrack.value.durationSeconds
+                    }
+                  });
+                } catch {
+                  void 0;
                 }
               }
             } else if (!currentTrack.value && videoId) {
@@ -616,6 +633,7 @@ export const usePlayerStore = defineStore(
       {
         pick: [
           'currentTrack',
+          'currentTimeSeconds',
           'volume',
           'durationSeconds',
           'playbackOrder',
