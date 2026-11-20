@@ -27,6 +27,17 @@ function getMongoUri(): string | undefined {
   return process.env.NUXT_MONGODB_URI || process.env.MONGODB_URI;
 }
 
+function extractFromJson(str: string): { poToken?: string; visitorData?: string } {
+  try {
+    const parsed = JSON.parse(str.trim());
+    const poToken = parsed?.serviceIntegrityDimensions?.poToken;
+    const visitorData = parsed?.context?.client?.visitorData;
+    return { poToken, visitorData };
+  } catch {
+    return {};
+  }
+}
+
 async function run(): Promise<void> {
   const uri = getMongoUri();
   if (!uri) {
@@ -44,9 +55,9 @@ async function run(): Promise<void> {
     console.log('1. Open an Incognito browser window and go to youtube.com');
     console.log('2. Press F12 -> Network tab -> type "player" into the filter');
     console.log('3. Play any video, click on the "v1/player" POST request:');
-    console.log('   - Cookie:      Under "Headers" -> "Request Headers" -> "cookie:"');
-    console.log('   - PO Token:    Under "Payload" -> "serviceIntegrityDimensions" -> "poToken"');
-    console.log('   - VisitorData: Under "Payload" -> "context" -> "client" -> "visitorData"');
+    console.log('   - Cookie:  Under "Headers" -> "Request Headers" -> "cookie:"');
+    console.log('   - Payload: You can copy and paste the entire "Payload" JSON,');
+    console.log('              or individually copy poToken and visitorData.');
     console.log('='.repeat(60) + '\n');
 
     let cookie = process.argv[2];
@@ -55,18 +66,42 @@ async function run(): Promise<void> {
     }
 
     cookie = cookie.trim();
+    if (cookie.toLowerCase().startsWith('cookie:')) {
+      cookie = cookie.slice(7).trim();
+    }
+    if (
+      (cookie.startsWith('"') && cookie.endsWith('"')) ||
+      (cookie.startsWith("'") && cookie.endsWith("'"))
+    ) {
+      cookie = cookie.slice(1, -1).trim();
+    }
+
     if (!cookie) {
       console.error('No cookie provided. Aborting.');
       process.exit(1);
     }
 
-    const poTokenInput = await rl.question('\n2. Optional: Paste PO Token (press Enter to skip): ');
-    const poToken = poTokenInput.trim() || undefined;
-
-    const visitorDataInput = await rl.question(
-      '3. Optional: Paste Visitor Data (press Enter to skip): '
+    const payloadOrPo = await rl.question(
+      '\n2. Optional: Paste entire Player Payload JSON (or just PO Token, or Enter to skip): '
     );
-    const visitorData = visitorDataInput.trim() || undefined;
+
+    let poToken: string | undefined;
+    let visitorData: string | undefined;
+
+    const extracted = extractFromJson(payloadOrPo);
+    if (extracted.poToken || extracted.visitorData) {
+      poToken = extracted.poToken;
+      visitorData = extracted.visitorData;
+      console.log(
+        '\x1b[32mSuccessfully extracted poToken and visitorData from JSON payload!\x1b[0m'
+      );
+    } else {
+      poToken = payloadOrPo.trim() || undefined;
+      const visitorInput = await rl.question(
+        '3. Optional: Paste Visitor Data (press Enter to skip): '
+      );
+      visitorData = visitorInput.trim() || undefined;
+    }
 
     console.log('\nValidating credentials with YouTube...');
     try {
