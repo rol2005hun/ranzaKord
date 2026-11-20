@@ -5,7 +5,7 @@ import type {
 
 export const useStreamStatsStore = defineStore('streamStats', () => {
   const data = ref<StreamStatsResponse | null>(null);
-  const isLoading = ref<boolean>(false);
+  const isLoading = ref<boolean>(true);
   const isClearing = ref<boolean>(false);
   const error = ref<string | null>(null);
   const currentPage = ref<number>(1);

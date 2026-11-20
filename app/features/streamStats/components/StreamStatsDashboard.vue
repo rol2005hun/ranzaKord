@@ -82,7 +82,22 @@ function maxAvgDuration(averages: { avgDurationMs: number }[]): number {
       </div>
     </div>
 
-    <div v-if="store.isLoading && !store.data" class="stream-stats__content">
+    <div v-if="store.error && !store.data" class="stream-stats__content">
+      <AppCard>
+        <div class="stream-stats__empty">
+          <p>{{ store.error }}</p>
+          <AppButton
+            variant="secondary"
+            size="sm"
+            style="margin-top: var(--space-4)"
+            @click="handleRefresh">
+            {{ $t('streamStats.actions.refresh') }}
+          </AppButton>
+        </div>
+      </AppCard>
+    </div>
+
+    <div v-else-if="!store.data" class="stream-stats__content">
       <div class="stream-stats__kpis">
         <AppCard v-for="i in 4" :key="i" class="stream-stats__kpi-card">
           <div class="stream-stats__kpi-inner">
@@ -206,7 +221,14 @@ function maxAvgDuration(averages: { avgDurationMs: number }[]): number {
                   <th>{{ $t('streamStats.clients.maxSpeed') }}</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody v-if="store.isLoading">
+                <tr v-for="i in 3" :key="i">
+                  <td colspan="5">
+                    <AppSkeleton width="100%" height="28px" border-radius="var(--radius-sm)" />
+                  </td>
+                </tr>
+              </tbody>
+              <tbody v-else>
                 <tr v-for="client in store.data.clientAverages" :key="client._id">
                   <td class="stream-stats__client-name">
                     <span class="stream-stats__client-badge">{{ client._id }}</span>
@@ -255,7 +277,14 @@ function maxAvgDuration(averages: { avgDurationMs: number }[]): number {
                   <th>{{ $t('streamStats.logs.size') }}</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody v-if="store.isLoading">
+                <tr v-for="i in Math.min(store.itemsPerPage, 10)" :key="i">
+                  <td colspan="7">
+                    <AppSkeleton width="100%" height="28px" border-radius="var(--radius-sm)" />
+                  </td>
+                </tr>
+              </tbody>
+              <tbody v-else>
                 <tr v-for="log in store.data.recentLogs" :key="log._id">
                   <td class="stream-stats__muted">{{ formatDate(log.createdAt) }}</td>
                   <td>
