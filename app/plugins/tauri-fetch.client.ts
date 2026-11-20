@@ -12,9 +12,7 @@ export default defineNuxtPlugin({
   setup() {
     const config = useRuntimeConfig();
     const isTauri = isTauriApp();
-    const rawBaseUrl = isTauri
-      ? config.public.tauriBaseUrl || 'https://kord.ranzak.dev'
-      : config.public.baseUrl || 'https://kord.ranzak.dev';
+    const rawBaseUrl = (config.public.baseUrl as string) || 'https://kord.ranzak.dev';
     const defaultBaseUrl = rawBaseUrl.replace(/\/+$/, '');
 
     if (typeof window !== 'undefined' && !window.__TAURI_FETCH_HOOKED__) {
@@ -35,10 +33,7 @@ export default defineNuxtPlugin({
         if (isTauri) {
           if (
             rewrittenUrl.startsWith('http://tauri.localhost') ||
-            rewrittenUrl.startsWith('https://tauri.localhost') ||
-            rewrittenUrl.startsWith('http://localhost:3000/') ||
-            rewrittenUrl.startsWith('http://127.0.0.1:3000/') ||
-            /^http:\/\/192\.168\.\d+\.\d+:3000\//.test(rewrittenUrl)
+            rewrittenUrl.startsWith('https://tauri.localhost')
           ) {
             rewrittenUrl = rewrittenUrl.replace(/^https?:\/\/[^/]+/, defaultBaseUrl);
           } else if (
@@ -53,7 +48,10 @@ export default defineNuxtPlugin({
           rewrittenUrl.startsWith('/api') ||
           rewrittenUrl.startsWith('/auth') ||
           rewrittenUrl.includes('kord.ranzak.dev') ||
-          Boolean(defaultBaseUrl && rewrittenUrl.startsWith(defaultBaseUrl));
+          Boolean(defaultBaseUrl && rewrittenUrl.startsWith(defaultBaseUrl)) ||
+          rewrittenUrl.startsWith('http://localhost') ||
+          rewrittenUrl.startsWith('http://127.0.0.1') ||
+          rewrittenUrl.includes('192.168.');
 
         if (isInternalApi) {
           const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
@@ -97,10 +95,7 @@ export default defineNuxtPlugin({
         if (isTauri) {
           if (
             requestUrl.startsWith('http://tauri.localhost') ||
-            requestUrl.startsWith('https://tauri.localhost') ||
-            requestUrl.startsWith('http://localhost:3000/') ||
-            requestUrl.startsWith('http://127.0.0.1:3000/') ||
-            /^http:\/\/192\.168\.\d+\.\d+:3000\//.test(requestUrl)
+            requestUrl.startsWith('https://tauri.localhost')
           ) {
             requestUrl = requestUrl.replace(/^https?:\/\/[^/]+/, defaultBaseUrl);
             context.request = requestUrl;

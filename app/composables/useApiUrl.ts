@@ -2,21 +2,15 @@ import { isTauriApp } from '@/utils/tauri';
 
 export const useApiUrl = (path: string): string => {
   const config = useRuntimeConfig();
+  const rawBaseUrl = (config.public.baseUrl as string) || 'https://kord.ranzak.dev';
+  const baseUrl = rawBaseUrl.replace(/\/+$/, '');
   const isTauri =
     (typeof window !== 'undefined' && window.location.origin.includes('tauri.localhost')) ||
     (import.meta.client && isTauriApp());
-  const tauriBase = (config.public.tauriBaseUrl || 'https://kord.ranzak.dev').replace(/\/+$/, '');
 
   if (path.startsWith('http://') || path.startsWith('https://')) {
-    if (
-      path.startsWith('http://tauri.localhost') ||
-      path.startsWith('https://tauri.localhost') ||
-      (isTauri &&
-        (path.startsWith('http://localhost:3000/') ||
-          path.startsWith('http://127.0.0.1:3000/') ||
-          /^http:\/\/192\.168\.\d+\.\d+:3000\//.test(path)))
-    ) {
-      return path.replace(/^https?:\/\/[^/]+/, tauriBase);
+    if (path.startsWith('http://tauri.localhost') || path.startsWith('https://tauri.localhost')) {
+      return path.replace(/^https?:\/\/[^/]+/, baseUrl);
     }
     return path;
   }
@@ -24,7 +18,7 @@ export const useApiUrl = (path: string): string => {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
 
   if (isTauri) {
-    return `${tauriBase}${normalizedPath}`;
+    return `${baseUrl}${normalizedPath}`;
   }
 
   return normalizedPath;
