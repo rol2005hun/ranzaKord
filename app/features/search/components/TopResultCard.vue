@@ -42,6 +42,11 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
 
   return parts.map((name) => ({ name: formatArtistName(name) }));
 }
+
+const hasBadge = computed(() => {
+  if (!props.result?.type) return false;
+  return ['song', 'artist', 'album', 'playlist', 'profile'].includes(props.result.type);
+});
 </script>
 
 <template>
@@ -118,7 +123,7 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
               </NuxtLink>
             </template>
           </span>
-          <span v-if="props.result?.type" class="top-result-card__badge">
+          <span v-if="hasBadge" class="top-result-card__badge">
             {{ $t(`search.badge.${props.result.type}`) }}
           </span>
         </div>
@@ -201,7 +206,7 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
               </NuxtLink>
             </template>
           </span>
-          <span v-if="props.result?.type" class="top-result-card__badge">
+          <span v-if="hasBadge" class="top-result-card__badge">
             {{ $t(`search.badge.${props.result.type}`) }}
           </span>
         </div>

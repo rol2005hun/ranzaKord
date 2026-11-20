@@ -182,9 +182,9 @@ export function usePlayer() {
       el.addEventListener(
         'timeupdate',
         () => {
-          if (isRestoring || store.isLoading) return;
+          if (isRestoring || store.isLoading || el.seeking) return;
           if (index === activeAudioIndex.value) {
-            if (el.currentTime === 0 && store.currentTimeSeconds > 0) {
+            if (el.currentTime < 1 && store.currentTimeSeconds >= 1 && !store.isPlaying) {
               return;
             }
             store.currentTimeSeconds = el.currentTime;
@@ -376,13 +376,17 @@ export function usePlayer() {
             });
         } else {
           isRestoring = false;
+          store.currentTimeSeconds = savedTime;
         }
         el.removeEventListener('loadedmetadata', onLoaded);
       });
 
       const onCanPlay = () => {
         applySavedTime();
-        isRestoring = false;
+        if (!wasPlaying) {
+          isRestoring = false;
+          store.currentTimeSeconds = savedTime;
+        }
         el.removeEventListener('canplay', onCanPlay);
       };
       el.addEventListener('canplay', onCanPlay);

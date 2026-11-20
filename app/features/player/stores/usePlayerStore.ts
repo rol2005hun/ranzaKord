@@ -641,7 +641,6 @@ export const usePlayerStore = defineStore(
           'repeatMode',
           'queue',
           'unshuffledQueue',
-          'isPlaying',
           'crossfadeEnabled',
           'crossfadeDuration',
           'crossfadeType',

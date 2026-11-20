@@ -90,7 +90,7 @@ export function useSearch() {
 
         if (type === 'all') {
           const cat = data as CategorizedSearchResults;
-          if (!Array.isArray(cat.songs)) {
+          if (!cat || !Array.isArray(cat.songs)) {
             store.setError('Search failed. Please try again.');
             return;
           }
@@ -101,16 +101,13 @@ export function useSearch() {
           searchCache.set(fetchUrl, cat);
           store.setCategorizedResults(cat);
         } else {
-          if (!Array.isArray(data)) {
-            store.setError('Search failed. Please try again.');
-            return;
-          }
+          const arr = Array.isArray(data) ? data : [];
           if (searchCache.size >= MAX_CACHE_SIZE) {
             const firstKey = searchCache.keys().next().value;
             if (firstKey) searchCache.delete(firstKey);
           }
-          searchCache.set(fetchUrl, data);
-          store.setResults(data as SearchResult[]);
+          searchCache.set(fetchUrl, arr);
+          store.setResults(arr);
         }
       } catch {
         store.setError('Search failed. Please try again.');

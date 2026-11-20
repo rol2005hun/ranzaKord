@@ -48,6 +48,7 @@
     "song": "Song",
     "artist": "Artist",
     "album": "Album",
-    "profile": "Profile"
+    "profile": "Profile",
+    "playlist": "Playlist"
   }
 }

@@ -108,7 +108,7 @@ const featuredTracks: Ref<SearchResult[] | null> = computed(() => {
   else if (isChristmas.value) tracks = christmasTracks.value ?? null;
   else tracks = featuredTracksData.value ?? null;
   if (!Array.isArray(tracks)) return null;
-  return tracks;
+  return tracks.map((t) => ({ ...t, type: t.type || 'song' }));
 });
 
 const pending = computed(() => {
