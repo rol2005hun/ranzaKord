@@ -58,7 +58,9 @@ interface CandidateFormat {
 
 const streamCache = new Map<string, CachedStream>();
 const inFlightDiscovery = new Map<string, Promise<CachedStream | null>>();
+const recentHitLogTimestamps = new Map<string, number>();
 const STREAM_CACHE_TTL = 2 * 60 * 60 * 1000;
+const HIT_LOG_DEDUPE_MS = 15_000;
 const CHUNK_SIZE = 512 * 1024;
 const CLIENT_TIMEOUT_MS = 5000;
 const STREAM_CONNECT_TIMEOUT_MS = 6000;
@@ -553,15 +555,27 @@ export default defineEventHandler(async (event) => {
 
   if (cached && Date.now() < cached.expiresAt) {
     if (parsedRange.start === 0) {
-      recordStreamStat(event, {
-        videoId: vid,
-        client: cached.client,
-        durationMs: 0,
-        status: 'hit',
-        isDeciphered: false,
-        formatsCount: 0,
-        contentLength: cached.contentLength
-      });
+      const lastHit = recentHitLogTimestamps.get(vid) || 0;
+      if (Date.now() - lastHit > HIT_LOG_DEDUPE_MS) {
+        recentHitLogTimestamps.set(vid, Date.now());
+        if (recentHitLogTimestamps.size > 500) {
+          const now = Date.now();
+          for (const [k, ts] of recentHitLogTimestamps.entries()) {
+            if (now - ts > HIT_LOG_DEDUPE_MS * 2) {
+              recentHitLogTimestamps.delete(k);
+            }
+          }
+        }
+        recordStreamStat(event, {
+          videoId: vid,
+          client: cached.client,
+          durationMs: 0,
+          status: 'hit',
+          isDeciphered: false,
+          formatsCount: 0,
+          contentLength: cached.contentLength
+        });
+      }
     }
 
     const validRange = getValidRange(parsedRange, cached.contentLength);
