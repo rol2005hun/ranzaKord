@@ -1,5 +1,5 @@
 export default defineEventHandler((event) => {
-  if (!event.path.startsWith('/api/')) return;
+  if (!event.path.startsWith('/api/') && !event.path.startsWith('/auth/')) return;
 
   const origin =
     (event.node?.req?.headers?.origin as string) ||
@@ -24,8 +24,7 @@ export default defineEventHandler((event) => {
   );
 
   if (event.method === 'OPTIONS') {
-    setResponseStatus(event, 204, 'No Content');
-    return;
+    return sendNoContent(event);
   }
 
   return;
