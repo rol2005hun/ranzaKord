@@ -43,11 +43,21 @@ export function usePlayer() {
   const config = useRuntimeConfig();
   const toast = useToast();
 
+  function setPlaybackError(message: string): void {
+    if (store.error !== message) {
+      store.error = message;
+      toast.danger(message);
+    }
+  }
+
   function getApiUrl(path: string) {
     if (path.startsWith('http://') || path.startsWith('https://')) return path;
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
     const isTauriProd = import.meta.client && '__TAURI_INTERNALS__' in window && !import.meta.dev;
-    if (isTauriProd) return `${config.public.baseUrl}${normalizedPath}`;
+    if (isTauriProd) {
+      const base = (config.public.baseUrl || 'https://kord.ranzak.dev').replace(/\/+$/, '');
+      return `${base}${normalizedPath}`;
+    }
     return normalizedPath;
   }
 
@@ -182,6 +192,9 @@ export function usePlayer() {
         () => {
           if (isRestoring || store.isLoading) return;
           if (index === activeAudioIndex.value) {
+            if (el.currentTime === 0 && store.currentTimeSeconds > 0) {
+              return;
+            }
             store.currentTimeSeconds = el.currentTime;
             if ('mediaSession' in navigator && isFinite(el.duration) && el.duration > 0) {
               try {
@@ -257,6 +270,7 @@ export function usePlayer() {
       el.addEventListener(
         'playing',
         () => {
+          isRestoring = false;
           if (index === activeAudioIndex.value) {
             store.isPlaying = true;
             resumeAudioContext();
@@ -316,7 +330,7 @@ export function usePlayer() {
           if (index === activeAudioIndex.value) {
             store.isLoading = false;
             store.isPlaying = false;
-            store.error = t('player.errors.playback');
+            setPlaybackError(t('player.errors.playback'));
           }
         },
         { signal }
@@ -342,28 +356,44 @@ export function usePlayer() {
         el.load();
       });
 
-      el.addEventListener('loadedmetadata', function onLoaded() {
+      const applySavedTime = () => {
         if (savedTime > 0) {
-          el.currentTime = savedTime;
+          try {
+            el.currentTime = savedTime;
+          } catch {
+            void 0;
+          }
           store.currentTimeSeconds = savedTime;
-          setTimeout(() => {
-            isRestoring = false;
-          }, 50);
         }
+      };
+
+      el.addEventListener('loadedmetadata', function onLoaded() {
+        applySavedTime();
         if (wasPlaying) {
           el.play()
             .then(() => {
               store.isPlaying = true;
+              isRestoring = false;
             })
             .catch(() => {
               store.isPlaying = false;
+              isRestoring = false;
             })
             .finally(() => {
               store.isLoading = false;
             });
+        } else {
+          isRestoring = false;
         }
         el.removeEventListener('loadedmetadata', onLoaded);
       });
+
+      const onCanPlay = () => {
+        applySavedTime();
+        isRestoring = false;
+        el.removeEventListener('canplay', onCanPlay);
+      };
+      el.addEventListener('canplay', onCanPlay);
     }
   }
 
@@ -567,7 +597,12 @@ export function usePlayer() {
     return null;
   }
 
-  async function playTrack(track: Track, fromHistory = false, force = false): Promise<void> {
+  async function playTrack(
+    track: Track,
+    fromHistory = false,
+    force = false,
+    startTime?: number
+  ): Promise<void> {
     if (
       !force &&
       store.currentTrack?.videoId === track.videoId &&
@@ -594,13 +629,13 @@ export function usePlayer() {
     preloadedTrackId = null;
     stopCrossfadeTimers();
 
-    if (store.currentTrack && store.currentTimeSeconds > 0) {
+    if (store.currentTrack && store.currentTimeSeconds > 0 && startTime === undefined) {
       const skipped = store.currentTimeSeconds < store.durationSeconds * 0.9;
       recordTrackStat(store.currentTrack, Math.floor(store.currentTimeSeconds), skipped);
     }
 
     store.setTrack(track, fromHistory);
-    store.currentTimeSeconds = 0;
+    store.currentTimeSeconds = startTime ?? 0;
     store.isLoading = true;
     store.isPlaying = false;
     store.error = null;
@@ -634,6 +669,15 @@ export function usePlayer() {
       el.src = streamUrl;
       el.load();
 
+      if (startTime && startTime > 0) {
+        isRestoring = true;
+        try {
+          el.currentTime = startTime;
+        } catch {
+          void 0;
+        }
+      }
+
       const { connect } = useAudioVisualizer();
       if (audio1Ref.value && audio2Ref.value) {
         connect(audio1Ref.value, audio2Ref.value, store.volume);
@@ -643,6 +687,15 @@ export function usePlayer() {
       await el.play();
       if (requestId !== currentPlayRequestId) return;
 
+      if (startTime && startTime > 0) {
+        try {
+          el.currentTime = startTime;
+        } catch {
+          void 0;
+        }
+      }
+      isRestoring = false;
+
       store.isPlaying = true;
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'playing';
@@ -650,7 +703,7 @@ export function usePlayer() {
       prefetchNextTrack();
     } catch {
       if (requestId === currentPlayRequestId) {
-        store.error = t('player.errors.stream');
+        setPlaybackError(t('player.errors.stream'));
       }
     } finally {
       if (requestId === currentPlayRequestId) {
@@ -682,14 +735,26 @@ export function usePlayer() {
   function resume() {
     resumeAudioContext();
     if (activeAudio.value && store.currentTrack) {
+      if (
+        store.currentTimeSeconds > 0 &&
+        Math.abs(activeAudio.value.currentTime - store.currentTimeSeconds) > 1
+      ) {
+        try {
+          activeAudio.value.currentTime = store.currentTimeSeconds;
+        } catch {
+          void 0;
+        }
+      }
       activeAudio.value
         .play()
         .then(() => {
           store.isPlaying = true;
+          isRestoring = false;
           if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
         })
         .catch(() => {
           store.isPlaying = false;
+          setPlaybackError(t('player.errors.playback'));
         });
     }
   }
@@ -708,6 +773,7 @@ export function usePlayer() {
 
   function seek(seconds: number) {
     if (activeAudio.value) {
+      isRestoring = false;
       activeAudio.value.currentTime = seconds;
       store.currentTimeSeconds = seconds;
       store.syncDiscordPresence();

@@ -1,4 +1,6 @@
 import { createInnertube } from '../../utils/innertube';
+import { cleanTrackMetadata } from '../../../app/utils/trackMetadata';
+
 import type { Track } from '../../../app/features/player/types/player.types';
 
 export default defineEventHandler(async (event) => {
@@ -55,7 +57,6 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    // Try to get thumbnail from header, if not available use first track's thumbnail
     let coverUrl = '';
     const headerThumbnails = header?.thumbnails || [];
     if (headerThumbnails && headerThumbnails.length > 0) {
@@ -88,6 +89,7 @@ export default defineEventHandler(async (event) => {
       artists?: YtAuthor[];
       author?:
         YtAuthor | YtAuthor[] | { toString: () => string; name?: string; channel_id?: string };
+      item_type?: string;
     }
 
     for (const item of items) {
@@ -167,14 +169,17 @@ export default defineEventHandler(async (event) => {
         channelId: a.channel_id
       }));
 
+      const { cleanTitle, cleanArtist } = cleanTrackMetadata(videoTitle, artistName);
+
       tracks.push({
         videoId: video.id,
-        title: videoTitle,
-        artist: artistName || 'Unknown Artist',
+        title: cleanTitle,
+        artist: cleanArtist || 'Unknown Artist',
         artistId,
         artists: artistsList,
         thumbnailUrl: bestThumbnail,
-        durationSeconds: durationSeconds
+        durationSeconds: durationSeconds,
+        isSong: video.item_type === 'song'
       });
     }
 

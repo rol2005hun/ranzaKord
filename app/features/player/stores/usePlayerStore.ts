@@ -12,6 +12,15 @@ export const usePlayerStore = defineStore(
     const currentTimeSeconds = ref(0);
     const authStore = useAuthStore();
 
+    const cookieLastPlayback = useCookie<{
+      track: Track | null;
+      currentTime: number;
+    } | null>('player_last_playback', {
+      default: () => null,
+      maxAge: 31536000,
+      path: '/'
+    });
+
     function shuffleArray<T>(array: T[]): T[] {
       const result = [...array];
       for (let i = result.length - 1; i > 0; i--) {
@@ -21,24 +30,49 @@ export const usePlayerStore = defineStore(
       return result;
     }
 
-    if (import.meta.client) {
-      currentTimeSeconds.value = Number(localStorage.getItem('player_currentTimeSeconds')) || 0;
+    function getAuthHeaders(): Record<string, string> {
+      if (!import.meta.client) return {};
+      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+      if (!token) return {};
+      return {
+        Authorization: `Bearer ${token}`,
+        'x-h3-session': token
+      };
+    }
 
+    if (import.meta.client) {
+      const savedTime = localStorage.getItem('player_currentTimeSeconds');
       const savedTrack = localStorage.getItem('player_currentTrack');
+
       if (savedTrack) {
         try {
           currentTrack.value = JSON.parse(savedTrack);
-        } catch (e) {
-          console.error('Failed to parse saved track', e);
+        } catch {
+          void 0;
         }
+      } else if (cookieLastPlayback.value?.track) {
+        currentTrack.value = cookieLastPlayback.value.track;
+      }
+
+      if (savedTime) {
+        currentTimeSeconds.value = Number(savedTime) || 0;
+      } else if (cookieLastPlayback.value?.currentTime) {
+        currentTimeSeconds.value = cookieLastPlayback.value.currentTime || 0;
+      }
+
+      if (currentTrack.value && !cookieLastPlayback.value?.track) {
+        cookieLastPlayback.value = {
+          track: currentTrack.value,
+          currentTime: currentTimeSeconds.value
+        };
       }
 
       const savedQueue = localStorage.getItem('player_queue');
       if (savedQueue) {
         try {
           queue.value = JSON.parse(savedQueue);
-        } catch (e) {
-          console.error('Failed to parse saved queue', e);
+        } catch {
+          void 0;
         }
       }
 
@@ -46,16 +80,24 @@ export const usePlayerStore = defineStore(
       if (savedUnshuffled) {
         try {
           unshuffledQueue.value = JSON.parse(savedUnshuffled);
-        } catch (e) {
-          console.error('Failed to parse saved unshuffled queue', e);
+        } catch {
+          void 0;
         }
       }
 
       watch(
         currentTrack,
         (val) => {
-          if (val) localStorage.setItem('player_currentTrack', JSON.stringify(val));
-          else localStorage.removeItem('player_currentTrack');
+          if (val) {
+            localStorage.setItem('player_currentTrack', JSON.stringify(val));
+            cookieLastPlayback.value = {
+              track: val,
+              currentTime: currentTimeSeconds.value
+            };
+          } else {
+            localStorage.removeItem('player_currentTrack');
+            cookieLastPlayback.value = null;
+          }
         },
         { deep: true }
       );
@@ -83,14 +125,25 @@ export const usePlayerStore = defineStore(
         currentTimeSeconds,
         (val) => {
           localStorage.setItem('player_currentTimeSeconds', String(val));
+          if (currentTrack.value) {
+            cookieLastPlayback.value = {
+              track: currentTrack.value,
+              currentTime: val
+            };
+          }
 
           if (authStore.isAuthenticated && currentTrack.value?.videoId) {
             try {
-              const res = $fetch('/api/me/playback', {
+              const res = $fetch(useApiUrl('/api/me/playback'), {
                 method: 'PUT',
+                headers: getAuthHeaders(),
                 body: {
                   videoId: currentTrack.value.videoId,
-                  currentTime: val
+                  currentTime: val,
+                  title: currentTrack.value.title,
+                  artist: currentTrack.value.artist,
+                  thumbnailUrl: currentTrack.value.thumbnailUrl,
+                  durationSeconds: currentTrack.value.durationSeconds
                 }
               });
               if (res && res.catch) {
@@ -109,17 +162,39 @@ export const usePlayerStore = defineStore(
       window.addEventListener('beforeunload', () => {
         const val = currentTimeSeconds.value;
         localStorage.setItem('player_currentTimeSeconds', String(val));
+        if (currentTrack.value) {
+          cookieLastPlayback.value = {
+            track: currentTrack.value,
+            currentTime: val
+          };
+        }
         if (authStore.isAuthenticated && currentTrack.value?.videoId) {
           try {
-            $fetch('/api/me/playback', {
+            $fetch(useApiUrl('/api/me/playback'), {
               method: 'PUT',
+              headers: getAuthHeaders(),
               body: {
                 videoId: currentTrack.value.videoId,
-                currentTime: val
+                currentTime: val,
+                title: currentTrack.value.title,
+                artist: currentTrack.value.artist,
+                thumbnailUrl: currentTrack.value.thumbnailUrl,
+                durationSeconds: currentTrack.value.durationSeconds
               }
             });
           } catch {
             void 0;
+          }
+        }
+
+        if (typeof window !== 'undefined') {
+          const tauriWindow = window as unknown as {
+            __TAURI_INTERNALS__?: {
+              invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
+            };
+          };
+          if (tauriWindow.__TAURI_INTERNALS__) {
+            tauriWindow.__TAURI_INTERNALS__.invoke('clear_discord_presence').catch(() => {});
           }
         }
       });
@@ -130,18 +205,71 @@ export const usePlayerStore = defineStore(
         }
         try {
           const res = await $fetch<{
-            lastPlayback: { videoId: string; currentTime: number } | null;
-          }>('/api/me/playback');
+            lastPlayback: {
+              videoId: string;
+              currentTime: number;
+              title?: string;
+              artist?: string;
+              thumbnailUrl?: string;
+              durationSeconds?: number;
+            } | null;
+          }>(useApiUrl('/api/me/playback'), {
+            headers: getAuthHeaders()
+          });
           if (res?.lastPlayback) {
-            const { videoId, currentTime } = res.lastPlayback;
+            const {
+              videoId,
+              currentTime,
+              title,
+              artist,
+              thumbnailUrl,
+              durationSeconds: dur
+            } = res.lastPlayback;
             if (currentTrack.value?.videoId === videoId) {
               const localTime = currentTimeSeconds.value;
-              if (Math.abs(currentTime - localTime) > 10) {
+              if (currentTime > 0 && (localTime === 0 || currentTime > localTime)) {
                 currentTimeSeconds.value = currentTime;
                 localStorage.setItem('player_currentTimeSeconds', String(currentTime));
+                if (currentTrack.value) {
+                  cookieLastPlayback.value = {
+                    track: currentTrack.value,
+                    currentTime
+                  };
+                }
+              } else if (localTime > 0 && currentTime < localTime && currentTrack.value) {
+                try {
+                  $fetch(useApiUrl('/api/me/playback'), {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: {
+                      videoId,
+                      currentTime: localTime,
+                      title: currentTrack.value.title,
+                      artist: currentTrack.value.artist,
+                      thumbnailUrl: currentTrack.value.thumbnailUrl,
+                      durationSeconds: currentTrack.value.durationSeconds
+                    }
+                  });
+                } catch {
+                  void 0;
+                }
               }
-            } else if (!currentTrack.value) {
-              void 0;
+            } else if (!currentTrack.value && videoId) {
+              const restoredTrack: Track = {
+                videoId,
+                title: title || '',
+                artist: artist || '',
+                thumbnailUrl: thumbnailUrl || '',
+                durationSeconds: dur || 0
+              };
+              currentTrack.value = restoredTrack;
+              currentTimeSeconds.value = currentTime;
+              localStorage.setItem('player_currentTrack', JSON.stringify(restoredTrack));
+              localStorage.setItem('player_currentTimeSeconds', String(currentTime));
+              cookieLastPlayback.value = {
+                track: restoredTrack,
+                currentTime
+              };
             }
           }
         } catch {
@@ -353,14 +481,12 @@ export const usePlayerStore = defineStore(
         const { isTauri, invoke } = await import('@tauri-apps/api/core');
         if (isTauri()) {
           if (isPlaying.value && currentTrack.value) {
-            // Add 1 second to startTimestamp so Discord always appears slightly delayed, never ahead.
             const startTimestamp = Math.round(Date.now() / 1000 - currentTimeSeconds.value) + 1;
 
             const isSameTrack = lastTrackId === currentTrack.value.videoId;
             const isSamePlaying = lastIsPlaying === isPlaying.value;
             const drift = Math.abs(startTimestamp - lastStartTimestamp);
 
-            // Only update if state changed, track changed, or time drifted by > 2 seconds
             if (isSameTrack && isSamePlaying && drift <= 2) {
               return;
             }
@@ -375,7 +501,10 @@ export const usePlayerStore = defineStore(
                 : null;
 
             const config = useRuntimeConfig();
-            const baseUrl = config.public.baseUrl;
+            const baseUrl = (config.public.baseUrl || 'https://kord.ranzak.dev').replace(
+              /\/+$/,
+              ''
+            );
             const buttonUrl = `${baseUrl}/?play=${currentTrack.value.videoId}`;
 
             await invoke('set_discord_presence', {
@@ -394,41 +523,13 @@ export const usePlayerStore = defineStore(
           }
         }
       } catch {
-        // Ignore Discord RPC errors (e.g. not supported on mobile)
+        void 0;
       }
     };
 
     const syncDiscordPresence = useThrottleFn(doSyncDiscord, 2000);
 
     if (import.meta.client) {
-      window.addEventListener('beforeunload', () => {
-        const authStore = useAuthStore();
-        if (authStore.isAuthenticated && currentTrack.value) {
-          localStorage.setItem('player_currentTimeSeconds', String(currentTimeSeconds.value));
-          fetch('/api/player/sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              videoId: currentTrack.value.videoId,
-              currentTime: currentTimeSeconds.value
-            }),
-            keepalive: true
-          }).catch(() => {});
-        }
-
-        // Clear Discord RPC synchronously on unload
-        if (typeof window !== 'undefined') {
-          const tauriWindow = window as unknown as {
-            __TAURI_INTERNALS__?: {
-              invoke: (cmd: string, args?: Record<string, unknown>) => Promise<unknown>;
-            };
-          };
-          if (tauriWindow.__TAURI_INTERNALS__) {
-            tauriWindow.__TAURI_INTERNALS__.invoke('clear_discord_presence').catch(() => {});
-          }
-        }
-      });
-
       watch([isPlaying, currentTrack], () => {
         syncDiscordPresence();
       });
@@ -532,6 +633,7 @@ export const usePlayerStore = defineStore(
       {
         pick: [
           'currentTrack',
+          'currentTimeSeconds',
           'volume',
           'durationSeconds',
           'playbackOrder',

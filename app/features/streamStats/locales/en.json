@@ -1,0 +1,53 @@
+{
+  "title": "Stream Speed Analytics",
+  "subtitle": "YouTube client resolution performance and caching (Production)",
+  "navLabel": "Stream Stats",
+  "kpi": {
+    "totalRequests": "Total Requests",
+    "cacheHitRate": "Cache Hit Rate",
+    "avgResolutionTime": "Avg Resolution Time",
+    "fastestClient": "Fastest Client"
+  },
+  "clients": {
+    "title": "Client Speed Comparison",
+    "name": "Client",
+    "resolvedCount": "Resolved Streams",
+    "avgSpeed": "Average",
+    "minSpeed": "Fastest",
+    "maxSpeed": "Slowest"
+  },
+  "logs": {
+    "title": "Recent Stream Logs",
+    "time": "Time",
+    "videoId": "Video ID",
+    "client": "Client",
+    "duration": "Duration",
+    "status": "Status",
+    "deciphered": "Deciphered",
+    "size": "Audio Size"
+  },
+  "actions": {
+    "refresh": "Refresh",
+    "clearData": "Clear All Data",
+    "clearing": "Clearing...",
+    "clearConfirm": "Are you sure you want to delete all stream speed records? This cannot be undone."
+  },
+  "status": {
+    "hit": "Cache Hit",
+    "resolved": "Resolved",
+    "failed": "Failed"
+  },
+  "pagination": {
+    "first": "First",
+    "prev": "Previous",
+    "next": "Next",
+    "last": "Last",
+    "showing": "Showing {from}-{to} of {total} records",
+    "perPage": "Per page:"
+  },
+  "empty": "No stream statistics recorded yet.",
+  "toast": {
+    "clearedSuccess": "Stream statistics cleared successfully.",
+    "loadError": "Failed to load stream statistics."
+  }
+}

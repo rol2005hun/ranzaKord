@@ -5,7 +5,8 @@ export default defineNuxtPlugin({
   enforce: 'pre',
   setup(nuxtApp) {
     const config = useRuntimeConfig();
-    const defaultBaseUrl = config.public.baseUrl ? config.public.baseUrl.replace(/\/+$/, '') : '';
+    const rawBaseUrl = config.public.baseUrl || 'https://kord.ranzak.dev';
+    const defaultBaseUrl = rawBaseUrl.replace(/\/+$/, '');
 
     if (import.meta.test && !process.env.TEST_TAURI_FETCH) return;
 

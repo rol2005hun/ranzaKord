@@ -171,18 +171,10 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
 
   if (anonymousInstance) return anonymousInstance;
 
-  const cookies = await getStoredCookies();
-  const { poToken, visitorData } = await getStoredPoData();
-  const hasPo = Boolean(poToken && visitorData);
-
   anonymousInstance = await Innertube.create({
     cache: new UniversalCache(false),
     retrieve_player: true,
-    lang: 'en',
-    cookie: cookies,
-    po_token: poToken,
-    visitor_data: visitorData,
-    generate_session_locally: hasPo
+    lang: 'en'
   });
 
   return anonymousInstance;

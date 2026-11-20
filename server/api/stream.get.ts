@@ -58,7 +58,9 @@ interface CandidateFormat {
 
 const streamCache = new Map<string, CachedStream>();
 const inFlightDiscovery = new Map<string, Promise<CachedStream | null>>();
+const recentHitLogTimestamps = new Map<string, number>();
 const STREAM_CACHE_TTL = 2 * 60 * 60 * 1000;
+const HIT_LOG_DEDUPE_MS = 15_000;
 const CHUNK_SIZE = 512 * 1024;
 const CLIENT_TIMEOUT_MS = 5000;
 const STREAM_CONNECT_TIMEOUT_MS = 6000;
@@ -104,6 +106,23 @@ function getValidRange(range: ByteRange, contentLength?: number): ByteRange | nu
   return range;
 }
 
+function sendRangeNotSatisfiable(
+  event: H3Event,
+  contentLength?: number,
+  mimeType?: string
+): unknown {
+  setResponseStatus(event, 416);
+  setResponseHeaders(event, {
+    'content-type': mimeType || 'audio/mp4',
+    'content-range': `bytes */${contentLength || '*'}`,
+    'content-length': 0,
+    'accept-ranges': 'bytes',
+    'access-control-allow-origin': '*',
+    'access-control-expose-headers': 'Content-Range, Content-Length, Accept-Ranges'
+  });
+  return send(event, new Uint8Array(0));
+}
+
 const DEFAULT_USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
@@ -131,14 +150,6 @@ async function fetchYouTubeStream(
     'Accept-Encoding': 'identity',
     Range: rangeHeader
   };
-
-  if (client === 'YTMUSIC') {
-    headers['Origin'] = 'https://music.youtube.com';
-    headers['Referer'] = 'https://music.youtube.com/';
-  } else if (client === 'MWEB' || client === 'WEB') {
-    headers['Origin'] = 'https://www.youtube.com';
-    headers['Referer'] = 'https://www.youtube.com/';
-  }
 
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
@@ -300,17 +311,29 @@ interface DiscoveryCandidateResult {
   formatsCount: number;
 }
 
-function recordStreamStat(stat: {
-  videoId: string;
-  client: string;
-  durationMs: number;
-  status: 'hit' | 'resolved' | 'failed';
-  isDeciphered: boolean;
-  formatsCount: number;
-  contentLength?: number;
-  errorMessage?: string;
-}): void {
-  StreamSpeedStat.create(stat).catch(() => {});
+function recordStreamStat(
+  event: H3Event,
+  stat: {
+    videoId: string;
+    client: string;
+    durationMs: number;
+    status: 'hit' | 'resolved' | 'failed';
+    isDeciphered: boolean;
+    formatsCount: number;
+    contentLength?: number;
+    errorMessage?: string;
+  }
+): void {
+  try {
+    if (import.meta.dev) return;
+    const host = (getRequestHeader(event, 'host') || '').toLowerCase();
+    if (host.includes('localhost') || host.includes('127.0.0.1')) {
+      return;
+    }
+    StreamSpeedStat.create(stat).catch(() => {});
+  } catch {
+    void 0;
+  }
 }
 
 async function resolveCandidate(
@@ -424,6 +447,7 @@ async function resolveCandidate(
 }
 
 async function discoverStream(
+  event: H3Event,
   vid: string,
   streamType: string,
   debugInfo: Record<string, string>
@@ -487,7 +511,7 @@ async function discoverStream(
   }
 
   if (result) {
-    recordStreamStat({
+    recordStreamStat(event, {
       videoId: vid,
       client: result.client,
       durationMs: result.durationMs,
@@ -500,7 +524,7 @@ async function discoverStream(
   }
 
   resetAnonymousInnertube();
-  recordStreamStat({
+  recordStreamStat(event, {
     videoId: vid,
     client: 'ALL_FAILED',
     durationMs: Date.now() - discoveryStart,
@@ -530,22 +554,33 @@ export default defineEventHandler(async (event) => {
   const cached = streamCache.get(cacheKey);
 
   if (cached && Date.now() < cached.expiresAt) {
-    recordStreamStat({
-      videoId: vid,
-      client: cached.client,
-      durationMs: 0,
-      status: 'hit',
-      isDeciphered: false,
-      formatsCount: 0,
-      contentLength: cached.contentLength
-    });
+    if (parsedRange.start === 0) {
+      const lastHit = recentHitLogTimestamps.get(vid) || 0;
+      if (Date.now() - lastHit > HIT_LOG_DEDUPE_MS) {
+        recentHitLogTimestamps.set(vid, Date.now());
+        if (recentHitLogTimestamps.size > 500) {
+          const now = Date.now();
+          for (const [k, ts] of recentHitLogTimestamps.entries()) {
+            if (now - ts > HIT_LOG_DEDUPE_MS * 2) {
+              recentHitLogTimestamps.delete(k);
+            }
+          }
+        }
+        recordStreamStat(event, {
+          videoId: vid,
+          client: cached.client,
+          durationMs: 0,
+          status: 'hit',
+          isDeciphered: false,
+          formatsCount: 0,
+          contentLength: cached.contentLength
+        });
+      }
+    }
 
     const validRange = getValidRange(parsedRange, cached.contentLength);
     if (!validRange) {
-      setResponseStatus(event, 416);
-      setResponseHeader(event, 'content-range', `bytes */${cached.contentLength || '*'}`);
-      setResponseHeader(event, 'content-length', 0);
-      return '';
+      return sendRangeNotSatisfiable(event, cached.contentLength, cached.mimeType);
     }
 
     if (shouldRedirect) {
@@ -563,10 +598,7 @@ export default defineEventHandler(async (event) => {
     }
 
     if (isRangeNotSatisfiable) {
-      setResponseStatus(event, 416);
-      setResponseHeader(event, 'content-range', `bytes */${cached.contentLength || '*'}`);
-      setResponseHeader(event, 'content-length', 0);
-      return '';
+      return sendRangeNotSatisfiable(event, cached.contentLength, cached.mimeType);
     }
 
     if (isFatalError) {
@@ -578,7 +610,7 @@ export default defineEventHandler(async (event) => {
 
   let discoveryPromise = inFlightDiscovery.get(cacheKey);
   if (!discoveryPromise) {
-    discoveryPromise = discoverStream(vid, streamType, debugInfo);
+    discoveryPromise = discoverStream(event, vid, streamType, debugInfo);
     inFlightDiscovery.set(cacheKey, discoveryPromise);
   }
 
@@ -591,10 +623,7 @@ export default defineEventHandler(async (event) => {
 
     const validRange = getValidRange(parsedRange, discovered.contentLength);
     if (!validRange) {
-      setResponseStatus(event, 416);
-      setResponseHeader(event, 'content-range', `bytes */${discovered.contentLength || '*'}`);
-      setResponseHeader(event, 'content-length', 0);
-      return '';
+      return sendRangeNotSatisfiable(event, discovered.contentLength, discovered.mimeType);
     }
 
     if (shouldRedirect) {
@@ -618,10 +647,7 @@ export default defineEventHandler(async (event) => {
     }
 
     if (isRangeNotSatisfiable) {
-      setResponseStatus(event, 416);
-      setResponseHeader(event, 'content-range', `bytes */${discovered.contentLength || '*'}`);
-      setResponseHeader(event, 'content-length', 0);
-      return '';
+      return sendRangeNotSatisfiable(event, discovered.contentLength, discovered.mimeType);
     }
 
     debugInfo[discovered.client] = `Stream fetch failed: ${statusText || 'unknown error'}`;

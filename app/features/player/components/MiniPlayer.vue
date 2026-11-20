@@ -551,11 +551,17 @@ onUnmounted(() => {
       font-size: 1rem;
       background: rgba(255, 255, 255, 0.9);
       color: #111;
+      --spinner-color: #111;
       backdrop-filter: blur(4px);
+
+      :deep(.spinner) {
+        color: #111;
+      }
 
       &:hover:not(:disabled) {
         background: #fff;
         color: #111;
+        --spinner-color: #111;
         transform: scale(1.06);
       }
 

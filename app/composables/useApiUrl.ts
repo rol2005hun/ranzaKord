@@ -11,8 +11,8 @@ export const useApiUrl = (path: string) => {
 
   const isTauriProd = import.meta.client && isTauri() && !import.meta.dev;
 
-  if (isTauriProd && config.public.baseUrl) {
-    const base = config.public.baseUrl.replace(/\/+$/, '');
+  if (isTauriProd) {
+    const base = (config.public.baseUrl || 'https://kord.ranzak.dev').replace(/\/+$/, '');
     return `${base}${normalizedPath}`;
   }
 

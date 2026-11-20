@@ -9,6 +9,10 @@ export interface IUser extends Document {
   lastPlayback?: {
     videoId: string;
     currentTime: number;
+    title?: string;
+    artist?: string;
+    thumbnailUrl?: string;
+    durationSeconds?: number;
     updatedAt: Date;
   };
   settings?: {
@@ -46,6 +50,10 @@ const userSchema = new Schema<IUser>(
     lastPlayback: {
       videoId: { type: String },
       currentTime: { type: Number },
+      title: { type: String },
+      artist: { type: String },
+      thumbnailUrl: { type: String },
+      durationSeconds: { type: Number },
       updatedAt: { type: Date }
     },
     settings: {

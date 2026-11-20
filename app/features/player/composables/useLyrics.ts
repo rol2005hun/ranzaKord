@@ -1,7 +1,20 @@
+import { cleanTrackMetadata } from '@/utils/trackMetadata';
+
 import type { LyricLine, LyricsData } from '../types/sidebar.types';
 import type { Track } from '../types/player.types';
 
 interface LrclibResponse {
+  syncedLyrics: string | null;
+  plainLyrics: string | null;
+}
+
+interface LrclibSearchResult {
+  id: number;
+  name: string;
+  trackName: string;
+  artistName: string;
+  albumName?: string;
+  duration: number;
   syncedLyrics: string | null;
   plainLyrics: string | null;
 }
@@ -62,24 +75,96 @@ export function useLyrics() {
     lyricsData.value = null;
 
     try {
+      const { cleanTitle, cleanArtist } = cleanTrackMetadata(track.title, track.artist);
       const durationSeconds = Math.round(track.durationSeconds);
-      const params = new URLSearchParams({
-        artist_name: track.artist,
-        track_name: track.title
-      });
 
-      if (durationSeconds > 0 && durationSeconds <= 3600) {
-        params.append('duration', String(durationSeconds));
-      }
+      let response: LrclibResponse | null = null;
 
-      const response = await $fetch<LrclibResponse>(
-        `https://lrclib.net/api/get?${params.toString()}`,
-        {
+      try {
+        const params = new URLSearchParams({
+          artist_name: cleanArtist,
+          track_name: cleanTitle
+        });
+        if (durationSeconds > 0 && durationSeconds <= 3600) {
+          params.append('duration', String(durationSeconds));
+        }
+
+        response = await $fetch<LrclibResponse>(`https://lrclib.net/api/get?${params.toString()}`, {
           headers: {
             'Lrclib-Client': 'ranzaKord v0.1.0 (https://github.com/rol2005hun/ranzaKord)'
           }
+        });
+      } catch {
+        response = null;
+      }
+
+      if (!response && track.title !== cleanTitle) {
+        try {
+          const rawParams = new URLSearchParams({
+            artist_name: track.artist,
+            track_name: track.title
+          });
+          if (durationSeconds > 0 && durationSeconds <= 3600) {
+            rawParams.append('duration', String(durationSeconds));
+          }
+
+          response = await $fetch<LrclibResponse>(
+            `https://lrclib.net/api/get?${rawParams.toString()}`,
+            {
+              headers: {
+                'Lrclib-Client': 'ranzaKord v0.1.0 (https://github.com/rol2005hun/ranzaKord)'
+              }
+            }
+          );
+        } catch {
+          response = null;
         }
-      );
+      }
+
+      if (!response || (!response.syncedLyrics && !response.plainLyrics)) {
+        try {
+          const searchQueries = [`${cleanArtist} ${cleanTitle}`, cleanTitle, track.title].filter(
+            Boolean
+          );
+
+          for (const query of searchQueries) {
+            const searchResults = await $fetch<LrclibSearchResult[]>(
+              `https://lrclib.net/api/search?q=${encodeURIComponent(query)}`,
+              {
+                headers: {
+                  'Lrclib-Client': 'ranzaKord v0.1.0 (https://github.com/rol2005hun/ranzaKord)'
+                }
+              }
+            );
+
+            if (searchResults && searchResults.length > 0) {
+              const matched =
+                searchResults.find((r) => {
+                  if (durationSeconds > 0 && r.duration > 0) {
+                    return Math.abs(r.duration - durationSeconds) <= 12;
+                  }
+                  return true;
+                }) || searchResults[0];
+
+              if (matched && (matched.syncedLyrics || matched.plainLyrics)) {
+                response = {
+                  syncedLyrics: matched.syncedLyrics,
+                  plainLyrics: matched.plainLyrics
+                };
+                break;
+              }
+            }
+          }
+        } catch {
+          response = null;
+        }
+      }
+
+      if (!response || (!response.syncedLyrics && !response.plainLyrics)) {
+        error.value = 'lyrics.notFound';
+        lyricsData.value = { trackId, synced: null, plain: null };
+        return;
+      }
 
       const result: LyricsData = {
         trackId,
@@ -92,7 +177,6 @@ export function useLyrics() {
       lyricsCache.value[trackId] = result;
       const keys = Object.keys(lyricsCache.value);
       if (keys.length > MAX_CACHE_SIZE) {
-        // Remove oldest entries to keep size within limit
         const keysToRemove = keys.slice(0, keys.length - MAX_CACHE_SIZE);
         lyricsCache.value = Object.fromEntries(
           Object.entries(lyricsCache.value).filter(([k]) => !keysToRemove.includes(k))
@@ -127,7 +211,6 @@ export function useLyrics() {
   async function translateLyrics(targetLang: string = 'hu') {
     if (!lyricsData.value || isTranslating.value) return;
 
-    // If we already translated it to this language for this track, do nothing
     if (
       translatedLanguage.value === targetLang &&
       (lyricsData.value.synced?.[0]?.translatedText || lyricsData.value.translatedPlain)
@@ -151,13 +234,16 @@ export function useLyrics() {
     error.value = null;
 
     try {
-      const response = await $fetch<{ translatedText: string }>('/api/player/translate', {
-        method: 'POST',
-        body: {
-          text: textToTranslate,
-          targetLang
+      const response = await $fetch<{ translatedText: string }>(
+        useApiUrl('/api/player/translate'),
+        {
+          method: 'POST',
+          body: {
+            text: textToTranslate,
+            targetLang
+          }
         }
-      });
+      );
 
       if (lyricsData.value.synced) {
         const translatedLines = response.translatedText.split('\n');
@@ -180,6 +266,9 @@ export function useLyrics() {
   function clearLyrics() {
     lyricsData.value = null;
     error.value = null;
+    if (lyricsCache) {
+      lyricsCache.value = {};
+    }
   }
 
   function resetTranslation() {

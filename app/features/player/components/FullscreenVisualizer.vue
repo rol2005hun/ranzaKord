@@ -1119,12 +1119,18 @@ function getStyleIcon(style: string) {
       height: 48px;
       background: white;
       color: black;
+      --spinner-color: black;
       border-radius: 50%;
+
+      :deep(.spinner) {
+        color: currentColor;
+      }
 
       &:hover:not(:disabled) {
         transform: scale(1.05);
         background: var(--color-primary);
         color: white;
+        --spinner-color: white;
         box-shadow: 0 4px 15px var(--color-primary-glow);
       }
     }

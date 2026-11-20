@@ -220,6 +220,11 @@ onMounted(() => {
             :class="{
               'app-track-list__track--playing':
                 isHydrated && track && player.currentTrack.value?.videoId === track.id,
+              'app-track-list__track--loading':
+                isHydrated &&
+                track &&
+                player.currentTrack.value?.videoId === track.id &&
+                player.isLoading.value,
               'app-track-list__track--skeleton': !track,
               'app-track-list__track--dragged': dragIndex === index,
               'app-track-list__track--drag-over': dragOverIndex === index
@@ -276,7 +281,11 @@ onMounted(() => {
                           isHydrated && player.currentTrack.value?.videoId === track.id
                       }">
                       <AppPlayingIndicator
-                        v-if="isHydrated && player.currentTrack.value?.videoId === track.id"
+                        v-if="
+                          isHydrated &&
+                          player.currentTrack.value?.videoId === track.id &&
+                          !player.isLoading.value
+                        "
                         data-allow-mismatch
                         class="text-primary" />
                       <template v-else>{{ index + 1 }}</template>
@@ -413,6 +422,8 @@ onMounted(() => {
         :class="{
           'app-track-list__track--playing':
             isHydrated && player.currentTrack.value?.videoId === track.id,
+          'app-track-list__track--loading':
+            isHydrated && player.currentTrack.value?.videoId === track.id && player.isLoading.value,
           'app-track-list__track--dragged': dragIndex === index,
           'app-track-list__track--drag-over': dragOverIndex === index
         }"
@@ -436,7 +447,11 @@ onMounted(() => {
                     isHydrated && player.currentTrack.value?.videoId === track.id
                 }">
                 <AppPlayingIndicator
-                  v-if="isHydrated && player.currentTrack.value?.videoId === track.id"
+                  v-if="
+                    isHydrated &&
+                    player.currentTrack.value?.videoId === track.id &&
+                    !player.isLoading.value
+                  "
                   data-allow-mismatch
                   class="text-primary" />
                 <template v-else>{{ index + 1 }}</template>
@@ -703,6 +718,16 @@ onMounted(() => {
       }
 
       .app-track-list__action-btn {
+        opacity: 1;
+      }
+    }
+
+    &--loading {
+      .app-track-list__track-num {
+        opacity: 0;
+      }
+
+      .app-track-list__track-play {
         opacity: 1;
       }
     }

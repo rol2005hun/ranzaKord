@@ -1,3 +1,12 @@
+[images]
+  remote_images = [
+    'https://.*\.googleusercontent\.com/.*',
+    'https://.*\.ytimg\.com/.*',
+    'https://.*\.spotifycdn\.com/.*',
+    'https://.*\.scdn\.co/.*',
+    'https://.*\.imgur\.com/.*'
+  ]
+
 [functions]
   node_bundler = "esbuild"
   external_node_modules = ["mongoose"]

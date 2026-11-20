@@ -63,6 +63,11 @@ onMounted(() => {
             :label="$t('stats.title')"
             is-new />
           <AppSidebarItem
+            v-if="useAuthStore().isDeveloper"
+            to="/stream-stats"
+            icon="ph:chart-line-up"
+            :label="$t('streamStats.navLabel')" />
+          <AppSidebarItem
             to="/offline"
             icon="ph:wifi-slash-duotone"
             :label="$t('offline.navLabel')" />
@@ -250,6 +255,15 @@ onMounted(() => {
               </span>
             </div>
             {{ $t('stats.title') }}
+          </NuxtLink>
+
+          <NuxtLink
+            v-if="useAuthStore().isDeveloper"
+            to="/stream-stats"
+            class="mobile-playlists__nav-item"
+            @click="showMobilePlaylists = false">
+            <AppIcon name="ph:chart-line-up" />
+            {{ $t('streamStats.navLabel') }}
           </NuxtLink>
           <NuxtLink
             to="/offline"

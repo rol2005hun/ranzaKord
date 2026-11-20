@@ -14,6 +14,10 @@ export interface MeResponse {
   lastPlayback?: {
     videoId: string;
     currentTime: number;
+    title?: string;
+    artist?: string;
+    thumbnailUrl?: string;
+    durationSeconds?: number;
     updatedAt: string;
   };
 }
@@ -53,6 +57,10 @@ export default defineEventHandler(async (event): Promise<MeResponse> => {
       ? {
           videoId: userDoc.lastPlayback.videoId,
           currentTime: userDoc.lastPlayback.currentTime,
+          title: userDoc.lastPlayback.title,
+          artist: userDoc.lastPlayback.artist,
+          thumbnailUrl: userDoc.lastPlayback.thumbnailUrl,
+          durationSeconds: userDoc.lastPlayback.durationSeconds,
           updatedAt: userDoc.lastPlayback.updatedAt.toISOString()
         }
       : undefined

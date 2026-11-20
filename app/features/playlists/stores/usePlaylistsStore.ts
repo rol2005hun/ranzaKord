@@ -482,44 +482,54 @@ export const usePlaylistsStore = defineStore('playlists', () => {
               return;
             }
 
-            if (platform === 'spotify') {
-              const searchQuery = `${track.title} ${track.artist}`;
-              try {
-                const searchRes = await $fetch<SearchResult[]>(`/api/search`, {
-                  query: { q: searchQuery, type: 'song' }
-                });
-                if (searchRes && searchRes.length > 0) {
-                  const ytTrack = searchRes[0];
-                  if (!ytTrack) {
+            const needsSongResolution =
+              platform === 'spotify' ||
+              (platform === 'youtube' && (!track.isSong || originalTitle !== track.title));
+
+            if (needsSongResolution) {
+              const searchQuery = `${track.title} ${track.artist}`.trim();
+              if (searchQuery) {
+                try {
+                  const searchRes = await $fetch<SearchResult[]>(`/api/search`, {
+                    query: { q: searchQuery, type: 'song' }
+                  });
+                  if (searchRes && searchRes.length > 0) {
+                    const ytTrack = searchRes[0];
+                    if (ytTrack) {
+                      const resolvedArtist = ytTrack.artist || track.artist;
+                      const resolvedArtists =
+                        ytTrack.artists && ytTrack.artists.length > 0
+                          ? ytTrack.artists.map((a) => ({ name: a.name, channelId: a.id }))
+                          : splitArtistString(resolvedArtist);
+                      track = {
+                        ...track,
+                        videoId: ytTrack.id,
+                        title: ytTrack.title,
+                        artist: resolvedArtist,
+                        artistId: ytTrack.artistId,
+                        artists: resolvedArtists,
+                        thumbnailUrl: ytTrack.thumbnailUrl,
+                        durationSeconds: ytTrack.durationSeconds ?? track.durationSeconds,
+                        isSong: true
+                      };
+                    } else if (platform === 'spotify') {
+                      failedCount++;
+                      failedTracks.push({ title: originalTitle, artist: originalArtist });
+                      return;
+                    }
+                  } else if (platform === 'spotify') {
                     failedCount++;
                     failedTracks.push({ title: originalTitle, artist: originalArtist });
                     return;
                   }
-                  const resolvedArtist = ytTrack.artist || track.artist;
-                  const resolvedArtists =
-                    ytTrack.artists && ytTrack.artists.length > 0
-                      ? ytTrack.artists.map((a) => ({ name: a.name, channelId: a.id }))
-                      : splitArtistString(resolvedArtist);
-                  track = {
-                    ...track,
-                    videoId: ytTrack.id,
-                    title: ytTrack.title,
-                    artist: resolvedArtist,
-                    artistId: ytTrack.artistId,
-                    artists: resolvedArtists,
-                    thumbnailUrl: ytTrack.thumbnailUrl,
-                    durationSeconds: ytTrack.durationSeconds ?? 0
-                  };
-                } else {
-                  failedCount++;
-                  failedTracks.push({ title: originalTitle, artist: originalArtist });
-                  return;
+                } catch (e) {
+                  if (platform === 'spotify') {
+                    console.error(`Search failed for ${searchQuery}`, e);
+                    failedCount++;
+                    failedTracks.push({ title: originalTitle, artist: originalArtist });
+                    return;
+                  }
                 }
-              } catch (e) {
-                console.error(`Search failed for ${searchQuery}`, e);
-                failedCount++;
-                failedTracks.push({ title: originalTitle, artist: originalArtist });
-                return;
               }
             }
 
