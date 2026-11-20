@@ -299,29 +299,22 @@ async function discoverStream(
 ): Promise<CachedStream | null> {
   const innertube = await createInnertube(true);
   const isTvOAuth = Boolean(innertube.session.logged_in && innertube.session.oauth?.oauth2_tokens);
-  const candidateSpecs: CandidateSpec[] = isTvOAuth
-    ? [
-        { client: 'TV_SIMPLY', useAuth: true },
-        { client: 'TV', useAuth: true },
-        { client: 'TV_EMBEDDED', useAuth: true },
-        { client: 'ANDROID_VR', useAuth: false },
-        { client: 'VISIONOS', useAuth: false },
-        { client: 'ANDROID', useAuth: false },
-        { client: 'YTMUSIC', useAuth: false },
-        { client: 'IOS', useAuth: false },
-        { client: 'MWEB', useAuth: false },
-        { client: 'WEB', useAuth: false }
-      ]
-    : [
-        { client: 'TV_SIMPLY', useAuth: false },
-        { client: 'ANDROID_VR', useAuth: false },
-        { client: 'VISIONOS', useAuth: false },
-        { client: 'ANDROID', useAuth: false },
-        { client: 'YTMUSIC', useAuth: false },
-        { client: 'IOS', useAuth: false },
-        { client: 'MWEB', useAuth: false },
-        { client: 'WEB', useAuth: false }
-      ];
+  const candidateSpecs: CandidateSpec[] = [
+    { client: 'ANDROID_VR', useAuth: false },
+    { client: 'VISIONOS', useAuth: false },
+    ...(isTvOAuth
+      ? [
+          { client: 'TV_SIMPLY' as ClientType, useAuth: true },
+          { client: 'TV' as ClientType, useAuth: true },
+          { client: 'TV_EMBEDDED' as ClientType, useAuth: true }
+        ]
+      : [{ client: 'TV_SIMPLY' as ClientType, useAuth: false }]),
+    { client: 'ANDROID', useAuth: false },
+    { client: 'YTMUSIC', useAuth: false },
+    { client: 'IOS', useAuth: false },
+    { client: 'MWEB', useAuth: false },
+    { client: 'WEB', useAuth: false }
+  ];
 
   const startTime = Date.now();
   let anonInnertube: Innertube | null = null;
