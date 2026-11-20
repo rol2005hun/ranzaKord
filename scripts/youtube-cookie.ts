@@ -39,13 +39,19 @@ async function run(): Promise<void> {
   try {
     console.log('\n' + '='.repeat(60));
     console.log(' YouTube Cookie & Session Setup for Production (MongoDB)');
+    console.log('='.repeat(60));
+    console.log('\nHow to get the required values:');
+    console.log('1. Open an Incognito browser window and go to youtube.com');
+    console.log('2. Press F12 -> Network tab -> type "player" into the filter');
+    console.log('3. Play any video, click on the "v1/player" POST request:');
+    console.log('   - Cookie:      Under "Headers" -> "Request Headers" -> "cookie:"');
+    console.log('   - PO Token:    Under "Payload" -> "serviceIntegrityDimensions" -> "poToken"');
+    console.log('   - VisitorData: Under "Payload" -> "context" -> "client" -> "visitorData"');
     console.log('='.repeat(60) + '\n');
 
     let cookie = process.argv[2];
     if (!cookie) {
-      console.log('Open YouTube in your browser (preferably Incognito), open DevTools (F12),');
-      console.log('copy the Cookie header from any youtube.com request, and paste it here:\n');
-      cookie = await rl.question('Paste YouTube Cookie string: ');
+      cookie = await rl.question('1. Paste YouTube Cookie string: ');
     }
 
     cookie = cookie.trim();
@@ -54,11 +60,11 @@ async function run(): Promise<void> {
       process.exit(1);
     }
 
-    const poTokenInput = await rl.question('\nOptional: Paste PO Token (press Enter to skip): ');
+    const poTokenInput = await rl.question('\n2. Optional: Paste PO Token (press Enter to skip): ');
     const poToken = poTokenInput.trim() || undefined;
 
     const visitorDataInput = await rl.question(
-      'Optional: Paste Visitor Data (press Enter to skip): '
+      '3. Optional: Paste Visitor Data (press Enter to skip): '
     );
     const visitorData = visitorDataInput.trim() || undefined;
 
