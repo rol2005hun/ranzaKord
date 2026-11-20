@@ -69,10 +69,16 @@ export const usePlaylistsStore = defineStore('playlists', () => {
       const response = await $fetch<{
         myPlaylists: PlaylistSummary[];
         sharedPlaylists: PlaylistSummary[];
-      }>('/api/playlists', fetchOptions);
-      playlists.value = response.myPlaylists;
-      sharedPlaylists.value = response.sharedPlaylists;
-      hasLoaded.value = true;
+      }>(useApiUrl('/api/playlists'), fetchOptions);
+      if (response && Array.isArray(response.myPlaylists)) {
+        playlists.value = response.myPlaylists;
+        sharedPlaylists.value = Array.isArray(response.sharedPlaylists)
+          ? response.sharedPlaylists
+          : [];
+        hasLoaded.value = true;
+      } else {
+        error.value = t('playlists.errors.load');
+      }
     } catch {
       error.value = t('playlists.errors.load');
     } finally {
@@ -101,7 +107,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     }
 
     try {
-      const created = await $fetch<PlaylistSummary>('/api/playlists', {
+      const created = await $fetch<PlaylistSummary>(useApiUrl('/api/playlists'), {
         method: 'POST',
         body: payload
       });
@@ -130,7 +136,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     }
 
     try {
-      await $fetch(`/api/playlists/${id}`, { method: 'PATCH', body: payload });
+      await $fetch(useApiUrl(`/api/playlists/${id}`), { method: 'PATCH', body: payload });
       await fetchAll(true);
     } catch {
       error.value = t('playlists.errors.update');
@@ -148,7 +154,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     }
 
     try {
-      await $fetch(`/api/playlists/${id}`, { method: 'DELETE' });
+      await $fetch(useApiUrl(`/api/playlists/${id}`), { method: 'DELETE' });
       playlists.value = playlists.value.filter((p) => p.id !== id);
       return true;
     } catch {
@@ -205,7 +211,10 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     }
 
     try {
-      await $fetch(`/api/playlists/${playlistId}/tracks`, { method: 'POST', body: track });
+      await $fetch(useApiUrl(`/api/playlists/${playlistId}/tracks`), {
+        method: 'POST',
+        body: track
+      });
     } catch (err) {
       if (playlist && !wasAlreadyIn) {
         playlist.trackCount = Math.max(0, playlist.trackCount - 1);
@@ -239,7 +248,9 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     }
 
     try {
-      await $fetch(`/api/playlists/${playlistId}/tracks/${videoId}`, { method: 'DELETE' });
+      await $fetch(useApiUrl(`/api/playlists/${playlistId}/tracks/${videoId}`), {
+        method: 'DELETE'
+      });
     } catch (err) {
       if (playlist && wasIn) {
         playlist.trackCount++;
@@ -311,7 +322,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
       }
 
       const suffix = searchParams.toString() ? `?${searchParams.toString()}` : '';
-      return await $fetch<PlaylistDetail>(`/api/playlists/${id}${suffix}`, fetchOptions);
+      return await $fetch<PlaylistDetail>(useApiUrl(`/api/playlists/${id}${suffix}`), fetchOptions);
     } catch {
       return null;
     }
@@ -356,7 +367,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
         description: string;
         imageUrl: string;
         tracks: Track[];
-      }>(`/api/import/${platform}`, { method: 'POST', body: { url } });
+      }>(useApiUrl(`/api/import/${platform}`), { method: 'POST', body: { url } });
 
       importProgress.value = { current: 0, total: result.tracks.length };
 
@@ -490,7 +501,7 @@ export const usePlaylistsStore = defineStore('playlists', () => {
               const searchQuery = `${track.title} ${track.artist}`.trim();
               if (searchQuery) {
                 try {
-                  const searchRes = await $fetch<SearchResult[]>(`/api/search`, {
+                  const searchRes = await $fetch<SearchResult[]>(useApiUrl('/api/search'), {
                     query: { q: searchQuery, type: 'song' }
                   });
                   if (searchRes && searchRes.length > 0) {
@@ -610,10 +621,13 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     if (fromIndex === toIndex) return true;
 
     try {
-      const response = await $fetch<{ success: boolean }>(`/api/playlists/${playlistId}/reorder`, {
-        method: 'PATCH',
-        body: { fromIndex, toIndex }
-      });
+      const response = await $fetch<{ success: boolean }>(
+        useApiUrl(`/api/playlists/${playlistId}/reorder`),
+        {
+          method: 'PATCH',
+          body: { fromIndex, toIndex }
+        }
+      );
       return response.success;
     } catch {
       return false;

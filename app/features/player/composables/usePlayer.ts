@@ -40,7 +40,6 @@ export function usePlayer() {
   const store = usePlayerStore();
   const nuxtApp = useNuxtApp();
   const t = nuxtApp.$i18n.t;
-  const config = useRuntimeConfig();
   const toast = useToast();
 
   function setPlaybackError(message: string): void {
@@ -51,14 +50,7 @@ export function usePlayer() {
   }
 
   function getApiUrl(path: string) {
-    if (path.startsWith('http://') || path.startsWith('https://')) return path;
-    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-    const isTauriProd = import.meta.client && '__TAURI_INTERNALS__' in window && !import.meta.dev;
-    if (isTauriProd) {
-      const base = (config.public.baseUrl || 'https://kord.ranzak.dev').replace(/\/+$/, '');
-      return `${base}${normalizedPath}`;
-    }
-    return normalizedPath;
+    return useApiUrl(path);
   }
 
   async function getStreamUrl(videoId: string): Promise<string> {
@@ -493,7 +485,7 @@ export function usePlayer() {
       listeningSeconds,
       skipped
     };
-    $fetch('/api/player/track-stat', {
+    $fetch(useApiUrl('/api/player/track-stat'), {
       method: 'POST',
       body: payload
     }).catch(() => {});
@@ -584,7 +576,9 @@ export function usePlayer() {
     const authStore = useAuthStore();
     if (authStore.currentUser?.isDemo) return null;
 
-    const res = await $fetch<Track[]>(`/api/search/related?videoId=${videoId}`).catch(() => []);
+    const res = await $fetch<Track[]>(useApiUrl(`/api/search/related?videoId=${videoId}`)).catch(
+      () => []
+    );
     if (res && res.length > 0) {
       const filtered = res
         .filter((rt) => !store.queue.some((qt) => qt.videoId === rt.videoId))

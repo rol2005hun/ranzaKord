@@ -9,7 +9,7 @@ export default defineNuxtPlugin({
       options?: FetchOptions
     ) => Promise<unknown>;
 
-    globalThis.$fetch = (async (request: FetchRequest, options?: FetchOptions) => {
+    const wrappedFetch = (async (request: FetchRequest, options?: FetchOptions) => {
       try {
         return await originalFetch(request, options);
       } catch (error: unknown) {
@@ -42,5 +42,9 @@ export default defineNuxtPlugin({
         throw error;
       }
     }) as typeof $fetch;
+
+    Object.assign(wrappedFetch, originalFetch);
+    globalThis.$fetch = wrappedFetch;
+    nuxtApp.$fetch = wrappedFetch;
   }
 });

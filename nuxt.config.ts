@@ -16,11 +16,15 @@ export default defineNuxtConfig({
           innerHTML: `
             (function() {
               try {
+                var isTauri = '__TAURI_INTERNALS__' in window || window.location.origin.includes('tauri.localhost') || window.location.protocol === 'tauri:';
+                if (isTauri) {
+                  window.isTauri = true;
+                  if (!/android|ios|iphone|ipad/i.test(navigator.userAgent)) {
+                    document.documentElement.classList.add('is-tauri');
+                  }
+                }
                 var theme = document.cookie.match(/theme-id=([^;]+)/)?.[1] || 'dark';
                 document.documentElement.setAttribute('data-theme', theme);
-                if ('__TAURI_INTERNALS__' in window && !/android|ios|iphone|ipad/i.test(navigator.userAgent)) {
-                  document.documentElement.classList.add('is-tauri');
-                }
                 
                 if (!window.crypto) window.crypto = {};
                 if (!window.crypto.randomUUID) {

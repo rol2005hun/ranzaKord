@@ -118,7 +118,9 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
               </NuxtLink>
             </template>
           </span>
-          <span class="top-result-card__badge">{{ $t(`search.badge.${props.result.type}`) }}</span>
+          <span v-if="props.result?.type" class="top-result-card__badge">
+            {{ $t(`search.badge.${props.result.type}`) }}
+          </span>
         </div>
       </div>
     </NuxtLink>
@@ -199,7 +201,9 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
               </NuxtLink>
             </template>
           </span>
-          <span class="top-result-card__badge">{{ $t(`search.badge.${props.result.type}`) }}</span>
+          <span v-if="props.result?.type" class="top-result-card__badge">
+            {{ $t(`search.badge.${props.result.type}`) }}
+          </span>
         </div>
       </div>
       <button

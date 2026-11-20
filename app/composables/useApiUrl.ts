@@ -1,18 +1,19 @@
-import { isTauri } from '@tauri-apps/api/core';
+import { isTauriApp } from '@/utils/tauri';
 
-export const useApiUrl = (path: string) => {
+export const useApiUrl = (path: string): string => {
   const config = useRuntimeConfig();
+  const base = (config.public.baseUrl || 'https://kord.ranzak.dev').replace(/\/+$/, '');
 
   if (path.startsWith('http://') || path.startsWith('https://')) {
+    if (path.startsWith('http://tauri.localhost/')) {
+      return path.replace('http://tauri.localhost', base);
+    }
     return path;
   }
 
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
 
-  const isTauriProd = import.meta.client && isTauri() && !import.meta.dev;
-
-  if (isTauriProd) {
-    const base = (config.public.baseUrl || 'https://kord.ranzak.dev').replace(/\/+$/, '');
+  if (import.meta.client && isTauriApp()) {
     return `${base}${normalizedPath}`;
   }
 

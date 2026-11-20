@@ -12,7 +12,6 @@ export function useAuth(): UseAuthReturn {
   const requestFetch = import.meta.server
     ? (useRequestFetch() as unknown as (req: string) => Promise<unknown>)
     : null;
-  const globalFetch = $fetch as unknown as (req: string) => Promise<unknown>;
 
   async function loginWithRanzaKonnect(rememberMe: boolean = false): Promise<void> {
     const origin = encodeURIComponent(window.location.origin);
@@ -60,8 +59,7 @@ export function useAuth(): UseAuthReturn {
       const fetcher =
         import.meta.server && requestFetch
           ? requestFetch
-          : (nuxtApp.$fetch as unknown as (req: string, opts?: unknown) => Promise<unknown>) ||
-            globalFetch;
+          : ($fetch as unknown as (req: string, opts?: unknown) => Promise<unknown>);
       const token = import.meta.client
         ? localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
         : null;

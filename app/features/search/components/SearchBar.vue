@@ -37,21 +37,23 @@ function onInput(event: Event) {
   debounceTimer = setTimeout(async () => {
     try {
       const data = await $fetch<CategorizedSearchResults>(
-        `/api/search?q=${encodeURIComponent(text.trim())}`
+        useApiUrl(`/api/search?q=${encodeURIComponent(text.trim())}`)
       );
       const items = [];
       const seenIds = new Set();
 
-      if (data.topResult) {
-        items.push(data.topResult);
-        seenIds.add(data.topResult.id);
-      }
+      if (data && typeof data === 'object') {
+        if (data.topResult) {
+          items.push(data.topResult);
+          seenIds.add(data.topResult.id);
+        }
 
-      if (data.songs) {
-        for (const song of data.songs) {
-          if (!seenIds.has(song.id)) {
-            items.push(song);
-            seenIds.add(song.id);
+        if (Array.isArray(data.songs)) {
+          for (const song of data.songs) {
+            if (!seenIds.has(song.id)) {
+              items.push(song);
+              seenIds.add(song.id);
+            }
           }
         }
       }
