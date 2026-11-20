@@ -5,12 +5,13 @@ export default defineNuxtPlugin({
   enforce: 'pre',
   setup() {
     const config = useRuntimeConfig();
-    const rawBaseUrl = config.public.baseUrl || 'https://kord.ranzak.dev';
+    const isTauri = isTauriApp();
+    const rawBaseUrl = isTauri
+      ? config.public.tauriBaseUrl || 'https://kord.ranzak.dev'
+      : config.public.baseUrl || 'https://kord.ranzak.dev';
     const defaultBaseUrl = rawBaseUrl.replace(/\/+$/, '');
 
     if (import.meta.test && !process.env.TEST_TAURI_FETCH) return;
-
-    const isTauri = isTauriApp();
 
     const customFetch = $fetch.create({
       baseURL: isTauri ? defaultBaseUrl : undefined,
@@ -19,8 +20,13 @@ export default defineNuxtPlugin({
           typeof context.request === 'string' ? context.request : context.request.url;
 
         if (isTauri) {
-          if (requestUrl.startsWith('http://tauri.localhost/')) {
-            requestUrl = requestUrl.replace('http://tauri.localhost', defaultBaseUrl);
+          if (
+            requestUrl.startsWith('http://tauri.localhost/') ||
+            requestUrl.startsWith('http://localhost:3000/') ||
+            requestUrl.startsWith('http://127.0.0.1:3000/') ||
+            /^http:\/\/192\.168\.\d+\.\d+:3000\//.test(requestUrl)
+          ) {
+            requestUrl = requestUrl.replace(/^https?:\/\/[^/]+/, defaultBaseUrl);
             context.request = requestUrl;
             context.options.baseURL = undefined;
           } else if (
@@ -36,7 +42,8 @@ export default defineNuxtPlugin({
           requestUrl.startsWith('/auth') ||
           Boolean(defaultBaseUrl && requestUrl.startsWith(defaultBaseUrl)) ||
           requestUrl.startsWith('http://localhost') ||
-          requestUrl.startsWith('http://127.0.0.1');
+          requestUrl.startsWith('http://127.0.0.1') ||
+          requestUrl.includes('192.168.');
 
         if (isInternalApi) {
           context.options.credentials = isTauri ? 'omit' : 'include';

@@ -19,7 +19,7 @@ export function useAuth(): UseAuthReturn {
     const desktopAuth = isTauri.value ? '&desktop=1' : '';
     const rememberAuth = rememberMe ? '&remember=1' : '';
     const baseUrl = isTauri.value
-      ? config.public.baseUrl.replace(/\/+$/, '')
+      ? (config.public.tauriBaseUrl || 'https://kord.ranzak.dev').replace(/\/+$/, '')
       : window.location.origin;
     const loginUrl = isTauri.value
       ? `${baseUrl}/auth/login?source=${origin}&lang=${lang}${desktopAuth}${rememberAuth}`

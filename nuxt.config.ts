@@ -73,6 +73,7 @@ export default defineNuxtConfig({
     imgurClientId: '',
     public: {
       baseUrl: process.env.NUXT_PUBLIC_BASE_URL || 'https://kord.ranzak.dev',
+      tauriBaseUrl: process.env.NUXT_PUBLIC_TAURI_BASE_URL || 'https://kord.ranzak.dev',
       appVersion: pkg.version
     }
   },
