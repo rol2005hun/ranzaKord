@@ -137,11 +137,7 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
         try {
           const oauthInstance = await Innertube.create({
             cache: new UniversalCache(false),
-            retrieve_player: true,
-            cookie: cookies,
-            po_token: poToken,
-            visitor_data: visitorData,
-            generate_session_locally: hasPo
+            retrieve_player: true
           });
 
           oauthInstance.session.on('update-credentials', async ({ credentials }) => {
