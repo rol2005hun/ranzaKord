@@ -36,6 +36,22 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     return [...playlists.value, ...sharedPlaylists.value].some((p) => p.trackIds.includes(videoId));
   }
 
+  function withAuthOptions<
+    T extends {
+      method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+      headers?: Record<string, string>;
+      body?: unknown;
+    }
+  >(options: T): T {
+    const auth = getAuthHeaders();
+    if (Object.keys(auth).length === 0) return options;
+    const existingHeaders = options.headers || {};
+    return {
+      ...options,
+      headers: { ...existingHeaders, ...auth }
+    };
+  }
+
   async function fetchAll(force = false): Promise<void> {
     if (!force && hasLoaded.value) {
       isLoading.value = false;
@@ -59,11 +75,13 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     }
 
     try {
-      const fetchOptions: { headers?: Record<string, string> } = {};
+      const auth = getAuthHeaders();
+      const fetchOptions: { headers?: Record<string, string> } =
+        Object.keys(auth).length > 0 ? { headers: auth } : {};
       if (import.meta.server) {
         const headers = useRequestHeaders(['cookie']);
         if (headers.cookie) {
-          fetchOptions.headers = { cookie: headers.cookie };
+          fetchOptions.headers = { ...(fetchOptions.headers || {}), cookie: headers.cookie };
         }
       }
       const response = await $fetch<{
@@ -107,10 +125,13 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     }
 
     try {
-      const created = await $fetch<PlaylistSummary>(useApiUrl('/api/playlists'), {
-        method: 'POST',
-        body: payload
-      });
+      const created = await $fetch<PlaylistSummary>(
+        useApiUrl('/api/playlists'),
+        withAuthOptions({
+          method: 'POST',
+          body: payload
+        })
+      );
       playlists.value.unshift(created);
       return created;
     } catch {
@@ -136,7 +157,13 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     }
 
     try {
-      await $fetch(useApiUrl(`/api/playlists/${id}`), { method: 'PATCH', body: payload });
+      await $fetch(
+        useApiUrl(`/api/playlists/${id}`),
+        withAuthOptions({
+          method: 'PATCH',
+          body: payload
+        })
+      );
       await fetchAll(true);
     } catch {
       error.value = t('playlists.errors.update');
@@ -154,7 +181,12 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     }
 
     try {
-      await $fetch(useApiUrl(`/api/playlists/${id}`), { method: 'DELETE' });
+      await $fetch(
+        useApiUrl(`/api/playlists/${id}`),
+        withAuthOptions({
+          method: 'DELETE'
+        })
+      );
       playlists.value = playlists.value.filter((p) => p.id !== id);
       return true;
     } catch {
@@ -211,10 +243,13 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     }
 
     try {
-      await $fetch(useApiUrl(`/api/playlists/${playlistId}/tracks`), {
-        method: 'POST',
-        body: track
-      });
+      await $fetch(
+        useApiUrl(`/api/playlists/${playlistId}/tracks`),
+        withAuthOptions({
+          method: 'POST',
+          body: track
+        })
+      );
     } catch (err) {
       if (playlist && !wasAlreadyIn) {
         playlist.trackCount = Math.max(0, playlist.trackCount - 1);
@@ -248,9 +283,12 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     }
 
     try {
-      await $fetch(useApiUrl(`/api/playlists/${playlistId}/tracks/${videoId}`), {
-        method: 'DELETE'
-      });
+      await $fetch(
+        useApiUrl(`/api/playlists/${playlistId}/tracks/${videoId}`),
+        withAuthOptions({
+          method: 'DELETE'
+        })
+      );
     } catch (err) {
       if (playlist && wasIn) {
         playlist.trackCount++;
@@ -296,11 +334,13 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     }
 
     try {
-      const fetchOptions: { headers?: Record<string, string> } = {};
+      const auth = getAuthHeaders();
+      const fetchOptions: { headers?: Record<string, string> } =
+        Object.keys(auth).length > 0 ? { headers: auth } : {};
       if (import.meta.server) {
         const headers = useRequestHeaders(['cookie']);
         if (headers.cookie) {
-          fetchOptions.headers = { cookie: headers.cookie };
+          fetchOptions.headers = { ...(fetchOptions.headers || {}), cookie: headers.cookie };
         }
       }
 
@@ -367,7 +407,13 @@ export const usePlaylistsStore = defineStore('playlists', () => {
         description: string;
         imageUrl: string;
         tracks: Track[];
-      }>(useApiUrl(`/api/import/${platform}`), { method: 'POST', body: { url } });
+      }>(
+        useApiUrl(`/api/import/${platform}`),
+        withAuthOptions({
+          method: 'POST',
+          body: { url }
+        })
+      );
 
       importProgress.value = { current: 0, total: result.tracks.length };
 
@@ -623,10 +669,10 @@ export const usePlaylistsStore = defineStore('playlists', () => {
     try {
       const response = await $fetch<{ success: boolean }>(
         useApiUrl(`/api/playlists/${playlistId}/reorder`),
-        {
+        withAuthOptions({
           method: 'PATCH',
           body: { fromIndex, toIndex }
-        }
+        })
       );
       return response.success;
     } catch {

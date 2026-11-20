@@ -41,9 +41,29 @@ export const usePlayerStore = defineStore(
     }
 
     if (import.meta.client) {
-      const savedTime = localStorage.getItem('player_currentTimeSeconds');
-      const savedTrack = localStorage.getItem('player_currentTrack');
+      let initialTime = 0;
+      const persistedPlayer = localStorage.getItem('player');
+      if (persistedPlayer) {
+        try {
+          const parsed = JSON.parse(persistedPlayer);
+          if (typeof parsed?.currentTimeSeconds === 'number' && parsed.currentTimeSeconds > 0) {
+            initialTime = parsed.currentTimeSeconds;
+          }
+        } catch {
+          void 0;
+        }
+      }
 
+      const savedTime = localStorage.getItem('player_currentTimeSeconds');
+      if (!initialTime && savedTime) {
+        initialTime = Number(savedTime) || 0;
+      } else if (!initialTime && cookieLastPlayback.value?.currentTime) {
+        initialTime = cookieLastPlayback.value.currentTime || 0;
+      }
+
+      currentTimeSeconds.value = initialTime;
+
+      const savedTrack = localStorage.getItem('player_currentTrack');
       if (savedTrack) {
         try {
           currentTrack.value = JSON.parse(savedTrack);
@@ -52,12 +72,6 @@ export const usePlayerStore = defineStore(
         }
       } else if (cookieLastPlayback.value?.track) {
         currentTrack.value = cookieLastPlayback.value.track;
-      }
-
-      if (savedTime) {
-        currentTimeSeconds.value = Number(savedTime) || 0;
-      } else if (cookieLastPlayback.value?.currentTime) {
-        currentTimeSeconds.value = cookieLastPlayback.value.currentTime || 0;
       }
 
       if (currentTrack.value && !cookieLastPlayback.value?.track) {

@@ -10,24 +10,12 @@ const isWalker = computed(() => themeStore.themeId === 'walker');
 const isWc2026 = computed(() => false);
 const isChristmas = computed(() => themeStore.themeId === 'christmas');
 
-function getAuthHeaders(): Record<string, string> {
-  if (!import.meta.client) return {};
-  const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
-  if (!token) return {};
-  return {
-    Authorization: `Bearer ${token}`,
-    'x-h3-session': token
-  };
-}
-
-const authHeaders = computed(() => getAuthHeaders());
-
 const {
   data: featuredTracksData,
   pending: featuredPending,
   execute: executeFeatured
 } = useLazyFetch<SearchResult[]>(() => useApiUrl('/api/home/featured-tracks'), {
-  headers: authHeaders,
+  headers: () => getAuthHeaders(),
   immediate: false
 });
 
@@ -36,7 +24,7 @@ const {
   pending: topTracksPending,
   execute: executeTopTracks
 } = useLazyFetch<SearchResult[]>(() => useApiUrl('/api/home/top-tracks'), {
-  headers: authHeaders,
+  headers: () => getAuthHeaders(),
   immediate: false
 });
 

@@ -351,7 +351,9 @@ export function usePlayer() {
       const applySavedTime = () => {
         if (savedTime > 0) {
           try {
-            el.currentTime = savedTime;
+            if (Math.abs(el.currentTime - savedTime) > 0.5) {
+              el.currentTime = savedTime;
+            }
           } catch {
             void 0;
           }
@@ -374,9 +376,6 @@ export function usePlayer() {
             .finally(() => {
               store.isLoading = false;
             });
-        } else {
-          isRestoring = false;
-          store.currentTimeSeconds = savedTime;
         }
         el.removeEventListener('loadedmetadata', onLoaded);
       });
@@ -384,12 +383,24 @@ export function usePlayer() {
       const onCanPlay = () => {
         applySavedTime();
         if (!wasPlaying) {
-          isRestoring = false;
-          store.currentTimeSeconds = savedTime;
+          setTimeout(() => {
+            isRestoring = false;
+            store.currentTimeSeconds = savedTime;
+          }, 600);
         }
         el.removeEventListener('canplay', onCanPlay);
       };
       el.addEventListener('canplay', onCanPlay);
+
+      const onSeeked = () => {
+        if (isRestoring && !wasPlaying) {
+          isRestoring = false;
+          if (savedTime > 0 && Math.abs(el.currentTime - savedTime) <= 2) {
+            store.currentTimeSeconds = el.currentTime;
+          }
+        }
+      };
+      el.addEventListener('seeked', onSeeked);
     }
   }
 
@@ -724,6 +735,9 @@ export function usePlayer() {
     if (activeAudio.value) {
       activeAudio.value.pause();
       store.isPlaying = false;
+      if (import.meta.client && store.currentTimeSeconds > 0) {
+        localStorage.setItem('player_currentTimeSeconds', String(store.currentTimeSeconds));
+      }
       if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
     }
   }
@@ -774,6 +788,9 @@ export function usePlayer() {
       isRestoring = false;
       activeAudio.value.currentTime = seconds;
       store.currentTimeSeconds = seconds;
+      if (import.meta.client && seconds > 0) {
+        localStorage.setItem('player_currentTimeSeconds', String(seconds));
+      }
       store.syncDiscordPresence();
       if (
         'mediaSession' in navigator &&

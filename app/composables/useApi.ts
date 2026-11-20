@@ -2,7 +2,17 @@ import type { ApiResponse } from '@/types';
 
 export function useApi() {
   const customFetch = $fetch.create({
-    baseURL: '/api'
+    baseURL: '/api',
+    onRequest(context) {
+      const headers = new Headers(context.options.headers || {});
+      const auth = getAuthHeaders();
+      for (const [key, val] of Object.entries(auth)) {
+        if (!headers.has(key)) {
+          headers.set(key, val);
+        }
+      }
+      context.options.headers = headers;
+    }
   });
 
   const fetchData = async <T>(
@@ -13,19 +23,15 @@ export function useApi() {
     const nuxtApp = useNuxtApp();
     const toast = useToast();
 
-    // DEMO MÓD LOGIKA
     if (authStore.currentUser?.isDemo) {
       const method = (options?.method || 'GET').toUpperCase();
 
-      // Módosító kérések blokkolása
       if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
         toast.info(nuxtApp.$i18n.t('core.demoModeToast'));
         return { data: {} as T, status: 200 };
       }
 
-      // Lejátszási listák lekérésekor a demo listát adjuk vissza
       if (method === 'GET' && url.includes('/playlists')) {
-        // Dinamikus import, hogy elkerüljük a körkörös hivatkozást betöltéskor
         const { DEMO_PLAYLIST } = await import('@/features/core/utils/demoData');
 
         if (url === '/playlists') {

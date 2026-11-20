@@ -41,6 +41,7 @@ export default defineNuxtPlugin({
         const isInternalApi =
           requestUrl.startsWith('/api') ||
           requestUrl.startsWith('/auth') ||
+          requestUrl.includes('kord.ranzak.dev') ||
           Boolean(defaultBaseUrl && requestUrl.startsWith(defaultBaseUrl)) ||
           requestUrl.startsWith('http://localhost') ||
           requestUrl.startsWith('http://127.0.0.1') ||
