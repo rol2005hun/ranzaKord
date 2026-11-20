@@ -43,6 +43,13 @@ export function usePlayer() {
   const config = useRuntimeConfig();
   const toast = useToast();
 
+  function setPlaybackError(message: string): void {
+    if (store.error !== message) {
+      store.error = message;
+      toast.danger(message);
+    }
+  }
+
   function getApiUrl(path: string) {
     if (path.startsWith('http://') || path.startsWith('https://')) return path;
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
@@ -323,7 +330,7 @@ export function usePlayer() {
           if (index === activeAudioIndex.value) {
             store.isLoading = false;
             store.isPlaying = false;
-            store.error = t('player.errors.playback');
+            setPlaybackError(t('player.errors.playback'));
           }
         },
         { signal }
@@ -691,7 +698,7 @@ export function usePlayer() {
       prefetchNextTrack();
     } catch {
       if (requestId === currentPlayRequestId) {
-        store.error = t('player.errors.stream');
+        setPlaybackError(t('player.errors.stream'));
       }
     } finally {
       if (requestId === currentPlayRequestId) {
@@ -742,6 +749,7 @@ export function usePlayer() {
         })
         .catch(() => {
           store.isPlaying = false;
+          setPlaybackError(t('player.errors.playback'));
         });
     }
   }

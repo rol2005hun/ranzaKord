@@ -245,6 +245,7 @@ describe('usePlayer', () => {
     await nextTick();
 
     expect(store.error).toBe('Failed to load stream. Are you signed in?');
+    expect(useToast().toasts.value.some((toast) => toast.variant === 'danger')).toBe(true);
   });
 
   it('autoplay watcher fetches radio next', async () => {

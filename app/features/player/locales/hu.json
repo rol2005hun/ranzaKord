@@ -56,7 +56,7 @@
   },
   "errors": {
     "playback": "Lejátszási hiba. Kérlek próbáld újra.",
-    "stream": "A stream betöltése sikertelen. Be vagy jelentkezve?",
+    "stream": "A zene betöltése sikertelen. Kérlek próbáld újra.",
     "translationFailed": "A fordítás sikertelen. Kérlek próbáld újra."
   },
   "sleepTimer": "Elalváskapcsoló",
