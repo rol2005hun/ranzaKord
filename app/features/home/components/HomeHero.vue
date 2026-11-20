@@ -10,11 +10,24 @@ const isWalker = computed(() => themeStore.themeId === 'walker');
 const isWc2026 = computed(() => false);
 const isChristmas = computed(() => themeStore.themeId === 'christmas');
 
+function getAuthHeaders(): Record<string, string> {
+  if (!import.meta.client) return {};
+  const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+  if (!token) return {};
+  return {
+    Authorization: `Bearer ${token}`,
+    'x-h3-session': token
+  };
+}
+
+const authHeaders = computed(() => getAuthHeaders());
+
 const {
   data: featuredTracksData,
   pending: featuredPending,
   execute: executeFeatured
-} = useLazyFetch<SearchResult[]>(useApiUrl('/api/home/featured-tracks'), {
+} = useLazyFetch<SearchResult[]>(() => useApiUrl('/api/home/featured-tracks'), {
+  headers: authHeaders,
   immediate: false
 });
 
@@ -22,7 +35,8 @@ const {
   data: topTracks,
   pending: topTracksPending,
   execute: executeTopTracks
-} = useLazyFetch<SearchResult[]>(useApiUrl('/api/home/top-tracks'), {
+} = useLazyFetch<SearchResult[]>(() => useApiUrl('/api/home/top-tracks'), {
+  headers: authHeaders,
   immediate: false
 });
 
@@ -30,7 +44,7 @@ const {
   data: wcTracks,
   pending: wcPending,
   execute: executeWc
-} = useLazyFetch<SearchResult[]>(useApiUrl('/api/search'), {
+} = useLazyFetch<SearchResult[]>(() => useApiUrl('/api/search'), {
   query: { q: 'fifa world cup official songs', type: 'song' },
   immediate: false
 });
@@ -39,7 +53,7 @@ const {
   data: christmasTracks,
   pending: christmasPending,
   execute: executeChristmas
-} = useLazyFetch<SearchResult[]>(useApiUrl('/api/search'), {
+} = useLazyFetch<SearchResult[]>(() => useApiUrl('/api/search'), {
   query: { q: 'christmas holiday songs hits', type: 'song' },
   immediate: false
 });
