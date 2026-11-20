@@ -12,7 +12,7 @@ export default defineNuxtPlugin({
   setup() {
     const config = useRuntimeConfig();
     const isTauri = isTauriApp();
-    const rawBaseUrl = (config.public.baseUrl as string) || 'https://kord.ranzak.dev';
+    const rawBaseUrl = (config.public.baseUrl as string) || '';
     const defaultBaseUrl = rawBaseUrl.replace(/\/+$/, '');
 
     if (typeof window !== 'undefined' && !window.__TAURI_FETCH_HOOKED__) {
@@ -30,7 +30,7 @@ export default defineNuxtPlugin({
               : (input as Request).url;
 
         let rewrittenUrl = requestUrl;
-        if (isTauri) {
+        if (isTauri && defaultBaseUrl) {
           if (
             rewrittenUrl.startsWith('http://tauri.localhost') ||
             rewrittenUrl.startsWith('https://tauri.localhost')
@@ -47,7 +47,6 @@ export default defineNuxtPlugin({
         const isInternalApi =
           rewrittenUrl.startsWith('/api') ||
           rewrittenUrl.startsWith('/auth') ||
-          rewrittenUrl.includes('kord.ranzak.dev') ||
           Boolean(defaultBaseUrl && rewrittenUrl.startsWith(defaultBaseUrl)) ||
           rewrittenUrl.startsWith('http://localhost') ||
           rewrittenUrl.startsWith('http://127.0.0.1') ||
@@ -87,12 +86,12 @@ export default defineNuxtPlugin({
     if (import.meta.test && !process.env.TEST_TAURI_FETCH) return;
 
     const customFetch = $fetch.create({
-      baseURL: isTauri ? defaultBaseUrl : undefined,
+      baseURL: isTauri ? defaultBaseUrl || undefined : undefined,
       onRequest(context) {
         let requestUrl =
           typeof context.request === 'string' ? context.request : context.request.url;
 
-        if (isTauri) {
+        if (isTauri && defaultBaseUrl) {
           if (
             requestUrl.startsWith('http://tauri.localhost') ||
             requestUrl.startsWith('https://tauri.localhost')
@@ -111,7 +110,6 @@ export default defineNuxtPlugin({
         const isInternalApi =
           requestUrl.startsWith('/api') ||
           requestUrl.startsWith('/auth') ||
-          requestUrl.includes('kord.ranzak.dev') ||
           Boolean(defaultBaseUrl && requestUrl.startsWith(defaultBaseUrl)) ||
           requestUrl.startsWith('http://localhost') ||
           requestUrl.startsWith('http://127.0.0.1') ||

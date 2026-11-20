@@ -515,11 +515,11 @@ export const usePlayerStore = defineStore(
                 : null;
 
             const config = useRuntimeConfig();
-            const baseUrl = (config.public.baseUrl || 'https://kord.ranzak.dev').replace(
-              /\/+$/,
-              ''
-            );
-            const buttonUrl = `${baseUrl}/?play=${currentTrack.value.videoId}`;
+            const rawBaseUrl = (config.public.baseUrl as string) || '';
+            const baseUrl = rawBaseUrl.replace(/\/+$/, '');
+            const buttonUrl = baseUrl
+              ? `${baseUrl}/?play=${currentTrack.value.videoId}`
+              : undefined;
 
             await invoke('set_discord_presence', {
               details: currentTrack.value.title,
