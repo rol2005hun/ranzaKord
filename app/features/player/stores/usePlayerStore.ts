@@ -200,7 +200,7 @@ export const usePlayerStore = defineStore(
       });
 
       const syncPlaybackFromServer = async () => {
-        if (!authStore.isAuthenticated) {
+        if (!authStore?.isAuthenticated) {
           return;
         }
         try {

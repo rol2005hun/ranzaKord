@@ -45,6 +45,5 @@ export default defineNuxtPlugin({
 
     Object.assign(wrappedFetch, originalFetch);
     globalThis.$fetch = wrappedFetch;
-    nuxtApp.$fetch = wrappedFetch;
   }
 });

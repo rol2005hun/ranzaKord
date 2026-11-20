@@ -3,7 +3,7 @@ import { isTauriApp } from '@/utils/tauri';
 export default defineNuxtPlugin({
   name: 'tauri-fetch',
   enforce: 'pre',
-  setup(nuxtApp) {
+  setup() {
     const config = useRuntimeConfig();
     const rawBaseUrl = config.public.baseUrl || 'https://kord.ranzak.dev';
     const defaultBaseUrl = rawBaseUrl.replace(/\/+$/, '');
@@ -52,7 +52,6 @@ export default defineNuxtPlugin({
     });
 
     globalThis.$fetch = customFetch;
-    nuxtApp.$fetch = customFetch;
 
     return {
       provide: {
