@@ -97,10 +97,16 @@ export default defineNuxtConfig({
 
   image: {
     domains: [
+      'lh3.googleusercontent.com',
+      'lh4.googleusercontent.com',
+      'lh5.googleusercontent.com',
+      'lh6.googleusercontent.com',
       'yt3.googleusercontent.com',
+      'yt4.googleusercontent.com',
       'i.ytimg.com',
       'image-cdn-ak.spotifycdn.com',
       'i.scdn.co',
+      'mosaic.scdn.co',
       'i.imgur.com'
     ],
     format: ['webp', 'avif'],
