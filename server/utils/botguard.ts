@@ -1,9 +1,8 @@
-import { JSDOM } from 'jsdom';
-import { BotGuardClient } from 'bgutils-js/botguard';
-import { WebPoMinter } from 'bgutils-js/webpo';
 import { Innertube } from 'youtubei.js';
 
 import { SystemConfig } from '../models/SystemConfig';
+
+import type { WebPoMinter } from 'bgutils-js/webpo';
 
 interface CachedMinter {
   minter: WebPoMinter;
@@ -17,6 +16,11 @@ const MINTER_TTL_MS = 3 * 60 * 60 * 1000;
 
 async function initMinter(): Promise<CachedMinter | null> {
   try {
+    const [{ JSDOM }, { BotGuardClient }, { WebPoMinter }] = await Promise.all([
+      import('jsdom'),
+      import('bgutils-js/botguard'),
+      import('bgutils-js/webpo')
+    ]);
     const youtube = await Innertube.create({
       enable_session_cache: false,
       retrieve_player: false,

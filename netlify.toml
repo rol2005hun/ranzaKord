@@ -1,3 +1,7 @@
+[build.environment]
+  NODE_VERSION = "22"
+  NODE_OPTIONS = "--experimental-require-module"
+
 [images]
   remote_images = [
     'https://.*\.googleusercontent\.com/.*',
@@ -9,4 +13,4 @@
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["mongoose"]
+  external_node_modules = ["mongoose", "jsdom"]
