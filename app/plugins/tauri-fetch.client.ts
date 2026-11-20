@@ -129,11 +129,5 @@ export default defineNuxtPlugin({
     });
 
     globalThis.$fetch = customFetch;
-
-    return {
-      provide: {
-        fetch: customFetch
-      }
-    };
   }
 });
