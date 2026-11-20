@@ -44,6 +44,20 @@ export default defineNuxtPlugin({
     }) as typeof $fetch;
 
     Object.assign(wrappedFetch, originalFetch);
-    globalThis.$fetch = wrappedFetch;
+    try {
+      globalThis.$fetch = wrappedFetch;
+    } catch {
+      Object.defineProperty(globalThis, '$fetch', {
+        value: wrappedFetch,
+        writable: true,
+        configurable: true
+      });
+    }
+
+    return {
+      provide: {
+        fetch: wrappedFetch
+      }
+    };
   }
 });

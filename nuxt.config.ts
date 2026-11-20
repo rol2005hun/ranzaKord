@@ -8,6 +8,9 @@ export default defineNuxtConfig({
 
   app: {
     head: {
+      htmlAttrs: {
+        lang: 'en'
+      },
       titleTemplate: '%s | ranzaKord',
       viewport: 'width=device-width, initial-scale=1, viewport-fit=cover',
       link: [{ rel: 'icon', type: 'image/webp', href: '/logo.webp' }],

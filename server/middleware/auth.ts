@@ -12,7 +12,10 @@ export default defineEventHandler(async (event) => {
     !path.startsWith('/api/health') &&
     !path.startsWith('/api/proxy-image') &&
     !path.startsWith('/api/stream') &&
-    !path.startsWith('/api/updater')
+    !path.startsWith('/api/updater') &&
+    !path.startsWith('/api/search') &&
+    !path.startsWith('/api/home/featured-tracks') &&
+    !path.startsWith('/api/user/profile')
   ) {
     const { t } = useServerTranslation(event);
     let sessionData: Partial<ServerSession>;

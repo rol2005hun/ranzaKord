@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
+
+import { getAuthHeaders } from '@/utils/auth';
+
 import type { UserConnectionsResponse } from '../types/profile.types';
 
 interface Props {
@@ -29,11 +32,15 @@ watch(
 
       try {
         const response = await $fetch<UserConnectionsResponse>(
-          `/api/user/connections?id=${props.userId}&type=${props.type}`
+          useApiUrl(
+            `/api/user/connections?id=${encodeURIComponent(props.userId)}&type=${props.type}`
+          ),
+          {
+            headers: getAuthHeaders()
+          }
         );
         data.value = response;
       } catch (err) {
-        console.error('Failed to fetch connections:', err);
         error.value = err as Error;
       } finally {
         pending.value = false;
