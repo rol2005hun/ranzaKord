@@ -22,6 +22,8 @@ let crossfadeRafId: number | null = null;
 let crossfadeIntervalId: ReturnType<typeof setInterval> | null = null;
 let audioAbortController: AbortController | null = null;
 let currentPlayRequestId = 0;
+let preloadedTrackId: string | null = null;
+let isPreloading = false;
 
 function stopCrossfadeTimers() {
   if (crossfadeRafId !== null) {
@@ -69,6 +71,31 @@ export function usePlayer() {
       if (objectUrl) return objectUrl;
     }
     return getApiUrl(`/api/stream?v=${finalVideoId}`);
+  }
+
+  async function preloadNextTrack(track: Track): Promise<void> {
+    if (isPreloading) return;
+    isPreloading = true;
+    try {
+      const url = await getStreamUrl(track.videoId);
+      const inactiveAudio = activeAudioIndex.value === 0 ? audio2Ref.value : audio1Ref.value;
+      if (inactiveAudio && !isCrossfading && store.crossfadeEnabled) {
+        if (inactiveAudio.src !== url) {
+          inactiveAudio.src = url;
+          inactiveAudio.preload = 'auto';
+          inactiveAudio.load();
+        }
+      } else {
+        fetch(url, {
+          method: 'GET',
+          headers: { Range: 'bytes=0-1024' }
+        }).catch(() => {});
+      }
+    } catch {
+      void 0;
+    } finally {
+      isPreloading = false;
+    }
   }
 
   let isRestoring = false;
@@ -145,6 +172,7 @@ export function usePlayer() {
     crossfadeGain2 = 0.0;
     isCrossfading = false;
     crossfadeTriggered = false;
+    preloadedTrackId = null;
 
     const els = [el1, el2];
 
@@ -167,19 +195,34 @@ export function usePlayer() {
               }
             }
 
-            const actualDuration = store.currentTrack?.durationSeconds || 0;
-            if (
-              sleepTimerMode.value !== 'end-of-track' &&
-              store.crossfadeEnabled &&
-              store.crossfadeDuration > 0 &&
-              actualDuration > 0 &&
-              store.hasNext &&
-              !isCrossfading &&
-              !crossfadeTriggered
-            ) {
-              const safeCrossfade = Math.min(store.crossfadeDuration, actualDuration / 2);
+            const actualDuration = store.currentTrack?.durationSeconds || el.duration || 0;
+            if (actualDuration > 0 && store.hasNext && !isCrossfading) {
+              const safeCrossfade =
+                store.crossfadeEnabled && store.crossfadeDuration > 0
+                  ? Math.min(store.crossfadeDuration, actualDuration / 2)
+                  : 0;
               const timeLeft = actualDuration - el.currentTime;
-              if (timeLeft <= safeCrossfade) {
+              const preloadLeadTime = safeCrossfade + 3;
+
+              if (timeLeft > preloadLeadTime + 2 && preloadedTrackId) {
+                preloadedTrackId = null;
+              }
+
+              if (timeLeft <= preloadLeadTime && !preloadedTrackId) {
+                const next = store.nextTrack();
+                if (next && next.videoId !== preloadedTrackId) {
+                  preloadedTrackId = next.videoId;
+                  preloadNextTrack(next);
+                }
+              }
+
+              if (
+                sleepTimerMode.value !== 'end-of-track' &&
+                store.crossfadeEnabled &&
+                store.crossfadeDuration > 0 &&
+                !crossfadeTriggered &&
+                timeLeft <= safeCrossfade
+              ) {
                 crossfadeTriggered = true;
                 startCrossfade();
               }
@@ -339,8 +382,10 @@ export function usePlayer() {
     isCrossfading = true;
 
     getStreamUrl(nextTrack.videoId).then((url) => {
-      inAudio.src = url;
-      inAudio.load();
+      if (inAudio.src !== url) {
+        inAudio.src = url;
+        inAudio.load();
+      }
       inAudio.play().catch(() => {});
     });
 
@@ -546,6 +591,7 @@ export function usePlayer() {
 
     isCrossfading = false;
     crossfadeTriggered = false;
+    preloadedTrackId = null;
     stopCrossfadeTimers();
 
     if (store.currentTrack && store.currentTimeSeconds > 0) {

@@ -1,4 +1,5 @@
-import { resetAnonymousInnertube } from '../utils/innertube';
+import { StreamSpeedStat } from '../models/StreamSpeedStat';
+import { createInnertube, resetAnonymousInnertube } from '../utils/innertube';
 
 import type { H3Event } from 'h3';
 import type { Innertube } from 'youtubei.js';
@@ -59,7 +60,6 @@ const streamCache = new Map<string, CachedStream>();
 const inFlightDiscovery = new Map<string, Promise<CachedStream | null>>();
 const STREAM_CACHE_TTL = 2 * 60 * 60 * 1000;
 const CHUNK_SIZE = 512 * 1024;
-const MAX_DISCOVERY_TIME_MS = 25000;
 const CLIENT_TIMEOUT_MS = 5000;
 const STREAM_CONNECT_TIMEOUT_MS = 6000;
 
@@ -292,6 +292,137 @@ function parseCacheExpiry(streamUrl: string): number {
   return Date.now() + STREAM_CACHE_TTL;
 }
 
+interface DiscoveryCandidateResult {
+  cached: CachedStream;
+  client: ClientType;
+  durationMs: number;
+  isDeciphered: boolean;
+  formatsCount: number;
+}
+
+function recordStreamStat(stat: {
+  videoId: string;
+  client: string;
+  durationMs: number;
+  status: 'hit' | 'resolved' | 'failed';
+  isDeciphered: boolean;
+  formatsCount: number;
+  contentLength?: number;
+  errorMessage?: string;
+}): void {
+  StreamSpeedStat.create(stat).catch(() => {});
+}
+
+async function resolveCandidate(
+  candidate: CandidateSpec,
+  vid: string,
+  streamType: string,
+  targetInnertube: Innertube,
+  fallbackPlayer?: unknown
+): Promise<DiscoveryCandidateResult> {
+  const startTime = Date.now();
+  const info = await fetchBasicInfoWithTimeout(
+    targetInnertube,
+    vid,
+    candidate.client,
+    CLIENT_TIMEOUT_MS
+  );
+
+  const formats = [
+    ...(info.streaming_data?.formats || []),
+    ...(info.streaming_data?.adaptive_formats || [])
+  ] as CandidateFormat[];
+
+  const candidateFormats: CandidateFormat[] = [];
+  if (streamType === 'video') {
+    const v720 = formats.filter(
+      (f) =>
+        f.has_video &&
+        f.has_audio &&
+        isPlayableFormat(f) &&
+        (f as unknown as { height?: number }).height &&
+        ((f as unknown as { height?: number }).height as number) <= 720
+    );
+    const vAny = formats.filter((f) => f.has_video && f.has_audio && isPlayableFormat(f));
+    candidateFormats.push(...v720, ...vAny);
+  } else {
+    const audioOnly = formats.filter((f) => f.has_audio && !f.has_video && isPlayableFormat(f));
+    const audioCombined = formats.filter((f) => f.has_audio && isPlayableFormat(f));
+    candidateFormats.push(...audioOnly, ...audioCombined);
+  }
+
+  if (candidateFormats.length === 0) {
+    const status = info.playability_status?.status || 'UNKNOWN';
+    const reason = info.playability_status?.reason || 'No reason provided';
+    throw new Error(`No ${streamType} format found. Status: ${status}. Reason: ${reason}.`);
+  }
+
+  let lastCandidateError = 'No valid playable format';
+  let isDecipheredUsed = false;
+
+  for (const format of candidateFormats) {
+    const raw = format as unknown as { signature_cipher?: string; cipher?: string };
+    if (raw.signature_cipher || raw.cipher) {
+      isDecipheredUsed = true;
+    }
+
+    const decipherResult = await extractCandidateUrl(
+      format,
+      targetInnertube.session.player,
+      fallbackPlayer
+    );
+
+    const candidateUrl = decipherResult.url;
+    if (!candidateUrl) {
+      lastCandidateError = decipherResult.error || 'Failed to extract stream URL';
+      continue;
+    }
+
+    const testRange: ByteRange = { start: 0, end: 1024 };
+    const { res: streamRes, statusText } = await fetchYouTubeStream(
+      candidateUrl,
+      candidate.client,
+      testRange
+    );
+
+    if (!streamRes) {
+      lastCandidateError = `Stream fetch failed: ${statusText || 'unknown error'}`;
+      continue;
+    }
+    streamRes.body?.cancel();
+
+    if (format.content_length && format.content_length > 1048576) {
+      const testRange2: ByteRange = { start: 1048576, end: 1049600 };
+      const { res: streamRes2 } = await fetchYouTubeStream(
+        candidateUrl,
+        candidate.client,
+        testRange2
+      );
+      if (!streamRes2) {
+        lastCandidateError = 'Stream capped at 1MB by YouTube anti-bot restriction';
+        continue;
+      }
+      streamRes2.body?.cancel();
+    }
+
+    return {
+      cached: {
+        url: candidateUrl,
+        client: candidate.client,
+        contentLength: format.content_length,
+        mimeType: format.mime_type,
+        expiresAt: parseCacheExpiry(candidateUrl)
+      },
+      client: candidate.client,
+      durationMs: Date.now() - startTime,
+      isDeciphered: isDecipheredUsed,
+      formatsCount: formats.length
+    };
+  }
+
+  throw new Error(lastCandidateError);
+}
+
 async function discoverStream(
   vid: string,
   streamType: string,
@@ -299,132 +430,85 @@ async function discoverStream(
 ): Promise<CachedStream | null> {
   const innertube = await createInnertube(true);
   const isTvOAuth = Boolean(innertube.session.logged_in && innertube.session.oauth?.oauth2_tokens);
-  const candidateSpecs: CandidateSpec[] = [
+  const anonInnertube = await createInnertube(false);
+
+  const tier1Specs: CandidateSpec[] = [
     { client: 'ANDROID_VR', useAuth: false },
     { client: 'VISIONOS', useAuth: false },
     ...(isTvOAuth
+      ? [{ client: 'TV_SIMPLY' as ClientType, useAuth: true }]
+      : [{ client: 'TV_SIMPLY' as ClientType, useAuth: false }]),
+    { client: 'ANDROID', useAuth: false }
+  ];
+
+  const tier2Specs: CandidateSpec[] = [
+    ...(isTvOAuth
       ? [
-          { client: 'TV_SIMPLY' as ClientType, useAuth: true },
           { client: 'TV' as ClientType, useAuth: true },
           { client: 'TV_EMBEDDED' as ClientType, useAuth: true }
         ]
-      : [{ client: 'TV_SIMPLY' as ClientType, useAuth: false }]),
-    { client: 'ANDROID', useAuth: false },
+      : []),
     { client: 'YTMUSIC', useAuth: false },
     { client: 'IOS', useAuth: false },
     { client: 'MWEB', useAuth: false },
     { client: 'WEB', useAuth: false }
   ];
 
-  const startTime = Date.now();
-  let anonInnertube: Innertube | null = null;
-
-  for (const candidate of candidateSpecs) {
-    if (Date.now() - startTime > MAX_DISCOVERY_TIME_MS) {
-      debugInfo['timeout'] = 'Max discovery time exceeded, aborting candidate loop';
-      break;
-    }
-
-    try {
-      const targetInnertube = candidate.useAuth
-        ? innertube
-        : (anonInnertube ??= await createInnertube(false));
-
-      const info = await fetchBasicInfoWithTimeout(
-        targetInnertube,
-        vid,
-        candidate.client,
-        CLIENT_TIMEOUT_MS
-      );
-
-      const formats = [
-        ...(info.streaming_data?.formats || []),
-        ...(info.streaming_data?.adaptive_formats || [])
-      ] as CandidateFormat[];
-
-      const candidateFormats: CandidateFormat[] = [];
-      if (streamType === 'video') {
-        const v720 = formats.filter(
-          (f) =>
-            f.has_video &&
-            f.has_audio &&
-            isPlayableFormat(f) &&
-            (f as unknown as { height?: number }).height &&
-            ((f as unknown as { height?: number }).height as number) <= 720
-        );
-        const vAny = formats.filter((f) => f.has_video && f.has_audio && isPlayableFormat(f));
-        candidateFormats.push(...v720, ...vAny);
-      } else {
-        const audioOnly = formats.filter((f) => f.has_audio && !f.has_video && isPlayableFormat(f));
-        const audioCombined = formats.filter((f) => f.has_audio && isPlayableFormat(f));
-        candidateFormats.push(...audioOnly, ...audioCombined);
-      }
-
-      if (candidateFormats.length === 0) {
-        const status = info.playability_status?.status || 'UNKNOWN';
-        const reason = info.playability_status?.reason || 'No reason provided';
-        debugInfo[candidate.client] =
-          `No ${streamType} format found. Status: ${status}. Reason: ${reason}.`;
-        continue;
-      }
-
-      for (const format of candidateFormats) {
-        const decipherResult = await extractCandidateUrl(
-          format,
-          targetInnertube.session.player,
+  const executeTier = async (specs: CandidateSpec[]): Promise<DiscoveryCandidateResult | null> => {
+    if (specs.length === 0) return null;
+    const promises = specs.map(async (spec) => {
+      const targetInnertube = spec.useAuth ? innertube : anonInnertube;
+      try {
+        return await resolveCandidate(
+          spec,
+          vid,
+          streamType,
+          targetInnertube,
           innertube.session.player
         );
-
-        const candidateUrl = decipherResult.url;
-        if (!candidateUrl) {
-          debugInfo[candidate.client] = decipherResult.error
-            ? `Failed to decipher stream URL: ${decipherResult.error}`
-            : 'Failed to extract stream URL.';
-          continue;
-        }
-
-        const testRange: ByteRange = { start: 0, end: 1024 };
-        const { res: streamRes, statusText } = await fetchYouTubeStream(
-          candidateUrl,
-          candidate.client,
-          testRange
-        );
-
-        if (!streamRes) {
-          debugInfo[candidate.client] = `Stream fetch failed: ${statusText || 'unknown error'}`;
-          continue;
-        }
-        streamRes.body?.cancel();
-
-        if (format.content_length && format.content_length > 1048576) {
-          const testRange2: ByteRange = { start: 1048576, end: 1049600 };
-          const { res: streamRes2 } = await fetchYouTubeStream(
-            candidateUrl,
-            candidate.client,
-            testRange2
-          );
-          if (!streamRes2) {
-            debugInfo[candidate.client] =
-              'Stream capped at 1MB by YouTube anti-bot restriction, trying fallback format';
-            continue;
-          }
-          streamRes2.body?.cancel();
-        }
-
-        return {
-          url: candidateUrl,
-          client: candidate.client,
-          contentLength: format.content_length,
-          mimeType: format.mime_type,
-          expiresAt: parseCacheExpiry(candidateUrl)
-        };
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        debugInfo[spec.client] = msg;
+        throw err;
       }
-    } catch (e) {
-      debugInfo[candidate.client] = e instanceof Error ? e.message : String(e);
+    });
+
+    try {
+      return await Promise.any(promises);
+    } catch {
+      return null;
     }
+  };
+
+  const discoveryStart = Date.now();
+  let result = await executeTier(tier1Specs);
+  if (!result) {
+    result = await executeTier(tier2Specs);
+  }
+
+  if (result) {
+    recordStreamStat({
+      videoId: vid,
+      client: result.client,
+      durationMs: result.durationMs,
+      status: 'resolved',
+      isDeciphered: result.isDeciphered,
+      formatsCount: result.formatsCount,
+      contentLength: result.cached.contentLength
+    });
+    return result.cached;
   }
 
   resetAnonymousInnertube();
+  recordStreamStat({
+    videoId: vid,
+    client: 'ALL_FAILED',
+    durationMs: Date.now() - discoveryStart,
+    status: 'failed',
+    isDeciphered: false,
+    formatsCount: 0,
+    errorMessage: Object.values(debugInfo).join('; ')
+  });
   return null;
 }
 
@@ -446,6 +530,16 @@ export default defineEventHandler(async (event) => {
   const cached = streamCache.get(cacheKey);
 
   if (cached && Date.now() < cached.expiresAt) {
+    recordStreamStat({
+      videoId: vid,
+      client: cached.client,
+      durationMs: 0,
+      status: 'hit',
+      isDeciphered: false,
+      formatsCount: 0,
+      contentLength: cached.contentLength
+    });
+
     const validRange = getValidRange(parsedRange, cached.contentLength);
     if (!validRange) {
       setResponseStatus(event, 416);
