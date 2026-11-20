@@ -5,7 +5,7 @@ import type {
 
 export const useStreamStatsStore = defineStore('streamStats', () => {
   const data = ref<StreamStatsResponse | null>(null);
-  const isLoading = ref<boolean>(true);
+  const isLoading = ref<boolean>(false);
   const isClearing = ref<boolean>(false);
   const error = ref<string | null>(null);
   const currentPage = ref<number>(1);
@@ -59,7 +59,7 @@ export const useStreamStatsStore = defineStore('streamStats', () => {
   });
 
   async function fetchStats(page?: number, limit?: number): Promise<void> {
-    if (isLoading.value) return;
+    if (isLoading.value && data.value !== null) return;
     if (page !== undefined) {
       currentPage.value = Math.max(1, page);
     }
