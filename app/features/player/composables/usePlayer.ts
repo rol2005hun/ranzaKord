@@ -1,4 +1,6 @@
-import type { Track, TrackStatPayload } from '../types/player.types';
+import { useSponsorBlock } from '@/features/player/composables/useSponsorBlock';
+
+import type { Track, TrackStatPayload } from '@/features/player/types/player.types';
 
 const {
   registerPauseCallback,
@@ -41,6 +43,7 @@ export function usePlayer() {
   const nuxtApp = useNuxtApp();
   const t = nuxtApp.$i18n.t;
   const toast = useToast();
+  const { fetchSegments, clearSegments, shouldSkip, segments: sponsorSegments } = useSponsorBlock();
 
   function setPlaybackError(message: string): void {
     if (store.error !== message) {
@@ -188,6 +191,25 @@ export function usePlayer() {
               return;
             }
             store.currentTimeSeconds = el.currentTime;
+
+            if (store.sponsorBlockEnabled && sponsorSegments.value.length > 0) {
+              const skipTo = shouldSkip(el.currentTime);
+              if (skipTo !== null) {
+                const actualDuration = store.currentTrack?.durationSeconds || el.duration || 0;
+                if (
+                  actualDuration > 0 &&
+                  skipTo >= actualDuration - 2 &&
+                  store.hasNext &&
+                  !isCrossfading
+                ) {
+                  playNext();
+                  return;
+                }
+                el.currentTime = skipTo;
+                store.currentTimeSeconds = skipTo;
+              }
+            }
+
             if ('mediaSession' in navigator && isFinite(el.duration) && el.duration > 0) {
               try {
                 navigator.mediaSession.setPositionState({
@@ -649,6 +671,11 @@ export function usePlayer() {
     store.isPlaying = false;
     store.error = null;
 
+    clearSegments();
+    if (store.sponsorBlockEnabled) {
+      fetchSegments(track.videoId);
+    }
+
     checkAndFetchMore(track);
     updateMediaSession(track);
 
@@ -870,6 +897,17 @@ export function usePlayer() {
     (enabled) => {
       if (enabled && store.currentTrack) {
         checkAndFetchMore(store.currentTrack);
+      }
+    }
+  );
+
+  watch(
+    () => store.sponsorBlockEnabled,
+    (enabled) => {
+      if (enabled && store.currentTrack?.videoId) {
+        fetchSegments(store.currentTrack.videoId);
+      } else if (!enabled) {
+        clearSegments();
       }
     }
   );

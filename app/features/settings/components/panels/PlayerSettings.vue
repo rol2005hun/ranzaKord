@@ -27,6 +27,13 @@ const player = usePlayer();
       </AppSettingsItem>
 
       <AppSettingsItem
+        :title="$t('player.sponsorBlock.title')"
+        :description="$t('player.sponsorBlock.description')"
+        border>
+        <AppToggle v-model="playerStore.sponsorBlockEnabled" />
+      </AppSettingsItem>
+
+      <AppSettingsItem
         :title="$t('core.settings.globalShortcuts.title')"
         :description="$t('core.settings.globalShortcuts.description')"
         border>

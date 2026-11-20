@@ -52,3 +52,23 @@ export interface PlaybackContext {
   currentOffset: number;
   totalItems?: number;
 }
+
+export interface MusicVideoQueryResult {
+  videoId: string;
+}
+
+export interface MusicVideoSearchResponse {
+  results: MusicVideoQueryResult[];
+}
+
+export interface MusicVideoTrackInput {
+  title: string;
+  artist?: string;
+  artists?: TrackArtist[] | null;
+}
+
+export type SkipSegment = [number, number];
+
+export interface SponsorBlockApiResponse {
+  segments: SkipSegment[];
+}

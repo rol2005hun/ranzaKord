@@ -322,6 +322,7 @@ export const usePlayerStore = defineStore(
     const playbackContext = ref<PlaybackContext | null>(null);
     const autoplayEnabled = ref(false);
     const globalShortcutsEnabled = ref(true);
+    const sponsorBlockEnabled = ref(false);
 
     const hasNext = computed(() => {
       const track = currentTrack.value;
@@ -638,6 +639,7 @@ export const usePlayerStore = defineStore(
       playbackContext,
       autoplayEnabled,
       globalShortcutsEnabled,
+      sponsorBlockEnabled,
       visibleQueue,
       visibleQueueStartIndex
     };
@@ -666,7 +668,8 @@ export const usePlayerStore = defineStore(
           'eqBands',
           'playbackContext',
           'autoplayEnabled',
-          'globalShortcutsEnabled'
+          'globalShortcutsEnabled',
+          'sponsorBlockEnabled'
         ],
         storage: piniaPluginPersistedstate.localStorage()
       }

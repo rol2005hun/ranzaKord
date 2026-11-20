@@ -65,5 +65,10 @@
   "sleepTimerMinutes": "{n} perc",
   "sleepTimerActive": "Leáll {time} múlva",
   "sleepTimerSet": "Elalváskapcsoló beállítva",
-  "sleepTimerCleared": "Elalváskapcsoló törölve"
+  "sleepTimerCleared": "Elalváskapcsoló törölve",
+  "sponsorBlock": {
+    "title": "Nem-zenei szakaszok átugrása",
+    "description": "Zenei klipek intróinak, beszédes részeinek és stáblistájának automatikus átugrása a SponsorBlock segítségével",
+    "skippedToast": "Nem-zenei szakasz átugorva"
+  }
 }

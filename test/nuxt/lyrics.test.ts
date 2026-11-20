@@ -81,4 +81,34 @@ describe('useLyrics', () => {
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(lyricsData.value?.synced?.[0]?.text).toBe('Line 1');
   });
+
+  it('rejects search results from completely different artists and does not adopt random lyrics', async () => {
+    fetchSpy.mockRejectedValueOnce(new Error('404 Not Found'));
+    fetchSpy.mockResolvedValueOnce([
+      {
+        id: 99,
+        name: 'Nem szalad el',
+        trackName: 'Nem szalad el',
+        artistName: 'Intim Torna Illegál',
+        duration: 239,
+        syncedLyrics: null,
+        plainLyrics: 'Hajlékod emberként fogad'
+      }
+    ]);
+
+    const { lyricsData, fetchLyrics, error } = useLyrics();
+    const differentTrack: Track = {
+      videoId: 'iiBmMaWhg0A',
+      title: 'SZALAD EL',
+      artist: 'Beton.Hofi, Beatrick',
+      durationSeconds: 148,
+      thumbnailUrl: ''
+    };
+
+    await fetchLyrics(differentTrack);
+
+    expect(lyricsData.value?.synced).toBeNull();
+    expect(lyricsData.value?.plain).toBeNull();
+    expect(error.value).toBe('lyrics.notFound');
+  });
 });

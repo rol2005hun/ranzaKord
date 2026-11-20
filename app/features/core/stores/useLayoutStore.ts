@@ -1,5 +1,9 @@
 import type { SidebarMode } from '@/features/player/types/sidebar.types';
-import type { VisualizerStyle, FullscreenBackgroundMode } from '@/features/core/types/layout.types';
+import type {
+  VisualizerStyle,
+  FullscreenBackgroundMode,
+  SidebarBackgroundMode
+} from '@/features/core/types/layout.types';
 
 const RIGHT_SIDEBAR_DEFAULT_WIDTH = 300;
 const RIGHT_SIDEBAR_MIN_WIDTH = 220;
@@ -29,6 +33,7 @@ export const useLayoutStore = defineStore(
     const visualizerStyle = ref<VisualizerStyle>('circle');
     const isFullscreenVisualizer = ref(false);
     const fullscreenBackgroundMode = ref<FullscreenBackgroundMode>('visualizer');
+    const sidebarBackgroundMode = ref<SidebarBackgroundMode>('visualizer');
 
     const isMobileLyricsOpen = ref(false);
     const isAddToPlaylistOpen = ref(false);
@@ -77,6 +82,10 @@ export const useLayoutStore = defineStore(
 
     function setFullscreenBackgroundMode(mode: FullscreenBackgroundMode) {
       fullscreenBackgroundMode.value = mode;
+    }
+
+    function setSidebarBackgroundMode(mode: SidebarBackgroundMode) {
+      sidebarBackgroundMode.value = mode;
     }
 
     function toggleFullscreenVisualizer() {
@@ -128,6 +137,7 @@ export const useLayoutStore = defineStore(
       visualizerStyle,
       isFullscreenVisualizer,
       fullscreenBackgroundMode,
+      sidebarBackgroundMode,
       isMobileLyricsOpen,
 
       isAddToPlaylistOpen,
@@ -141,6 +151,7 @@ export const useLayoutStore = defineStore(
       closeSettings,
       setVisualizerStyle,
       setFullscreenBackgroundMode,
+      setSidebarBackgroundMode,
       toggleFullscreenVisualizer,
 
       toggleMobileLyrics,
@@ -158,7 +169,8 @@ export const useLayoutStore = defineStore(
           'isRightSidebarOpen',
           'rightSidebarMode',
           'visualizerStyle',
-          'fullscreenBackgroundMode'
+          'fullscreenBackgroundMode',
+          'sidebarBackgroundMode'
         ],
 
         storage: {

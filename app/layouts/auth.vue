@@ -1,5 +1,5 @@
 <template>
-  <main class="auth-layout">
+  <main class="auth-layout" :aria-label="$t('auth.login.title')">
     <slot />
   </main>
 </template>

@@ -1,6 +1,7 @@
 {
   "appName": "ranzaKord",
   "loading": "Betöltés…",
+  "mainContent": "Fő tartalom",
   "error": {
     "generic": "Valami hiba történt.",
     "notFound": "Az oldal nem található.",

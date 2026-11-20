@@ -211,7 +211,7 @@ onMounted(() => {
 
     <div class="music-layout__content">
       <AppNavbar @open-playlists="showMobilePlaylists = true" />
-      <main class="music-layout__main">
+      <main id="main-content" class="music-layout__main" :aria-label="$t('core.mainContent')">
         <slot />
       </main>
     </div>

@@ -36,6 +36,8 @@ describe('useLayoutStore', () => {
     expect(store.isSettingsOpen).toBe(false);
     expect(store.visualizerStyle).toBe('circle');
     expect(store.isFullscreenVisualizer).toBe(false);
+    expect(store.fullscreenBackgroundMode).toBe('visualizer');
+    expect(store.sidebarBackgroundMode).toBe('visualizer');
     expect(store.isMobileLyricsOpen).toBe(false);
     expect(store.isAddToPlaylistOpen).toBe(false);
     expect(store.isMiniPlayer).toBe(false);
@@ -98,6 +100,12 @@ describe('useLayoutStore', () => {
     const store = useLayoutStore();
     store.setVisualizerStyle('bars');
     expect(store.visualizerStyle).toBe('bars');
+
+    store.setFullscreenBackgroundMode('musicvideo');
+    expect(store.fullscreenBackgroundMode).toBe('musicvideo');
+
+    store.setSidebarBackgroundMode('musicvideo');
+    expect(store.sidebarBackgroundMode).toBe('musicvideo');
 
     store.toggleFullscreenVisualizer();
     expect(store.isFullscreenVisualizer).toBe(true);

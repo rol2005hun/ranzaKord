@@ -31,7 +31,7 @@
   "removedSuccess": "Eltávolítva a lejátszási listából",
   "removeFailed": "Nem sikerült eltávolítani a lejátszási listából",
   "importPlaylist": "Lejátszási lista importálása",
-  "importUrlPlaceholder": "https://open.spotify.com/playlist/... vagy YouTube link",
+  "importUrlPlaceholder": "Spotify vagy YouTube link",
   "importUrlLabel": "Lejátszási lista URL",
   "importing": "Importálás...",
   "importComplete": "Importálás kész",

@@ -10,7 +10,8 @@
         "Visible contrast loading spinners on play buttons and track rows during buffering",
         "Informative toast error notifications for playback and stream loading failures",
         "Resolved Range 416 audio stream issues and enhanced multi-client YouTube isolation",
-        "Tauri desktop app CORS preflight fixes and production backend fallback"
+        "Tauri desktop app CORS preflight fixes and production backend fallback",
+        "SponsorBlock integration: automatically skip music video intros, dialogues, and outros with visual seekbar indicators"
       ],
       "hu": [
         "Stream sebesség elemzés fejlesztői felület szerveroldali lapozással és kliens késleltetés statisztikával",
@@ -19,7 +20,8 @@
         "Jól látható, kontrasztos betöltési ikonok a lejátszás gombokon és a számlistában",
         "Egyértelmű felugró hibaüzenetek lejátszási és stream betöltési hibák esetén",
         "Range 416 audió hibák javítása és megbízhatóbb többklienses YouTube feloldás",
-        "Tauri asztali alkalmazás CORS előzetes kérések és backend kapcsolódás javítása"
+        "Tauri asztali alkalmazás CORS előzetes kérések és backend kapcsolódás javítása",
+        "SponsorBlock integráció: zenei klipek intróinak, beszédes részeinek és stáblistájának automatikus átugrása vizuális sávjelöléssel"
       ]
     }
   },

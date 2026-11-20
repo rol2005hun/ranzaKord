@@ -1,7 +1,11 @@
 <script setup lang="ts">
+import { useSponsorBlock } from '@/features/player/composables/useSponsorBlock';
+
 import OfflineDownloadButton from '@/features/offline/components/DownloadButton.vue';
 
 const player = usePlayer();
+const playerStore = usePlayerStore();
+const { segments: sponsorSegments } = useSponsorBlock();
 const audioEl1 = ref<HTMLAudioElement | null>(null);
 const audioEl2 = ref<HTMLAudioElement | null>(null);
 const layoutStore = useLayoutStore();
@@ -322,25 +326,41 @@ onClickOutside(moreMenuBtnRef, (e) => {
           <span class="player-bar__time" data-allow-mismatch>
             {{ formatTime(displayTime) }}
           </span>
-          <input
-            v-if="displayTrack"
-            id="player-seek"
-            class="player-bar__slider player-bar__slider--seek"
-            type="range"
-            min="0"
-            :max="displayDuration || 1"
-            :value="displayTime"
-            :disabled="!displayTrack"
-            step="any"
-            :aria-label="$t('player.seek')"
-            :style="{
-              '--progress': (displayTime / (displayDuration || 1)) * 100 + '%',
-              '--progress-ratio': displayTime / (displayDuration || 1)
-            }"
-            data-allow-mismatch
-            @input="onSeekInput"
-            @change="onSeekChange" />
-          <AppSkeleton v-else height="4px" class="player-bar__slider--seek" />
+          <div class="player-bar__slider-wrap">
+            <input
+              v-if="displayTrack"
+              id="player-seek"
+              class="player-bar__slider player-bar__slider--seek"
+              type="range"
+              min="0"
+              :max="displayDuration || 1"
+              :value="displayTime"
+              :disabled="!displayTrack"
+              step="any"
+              :aria-label="$t('player.seek')"
+              :style="{
+                '--progress': (displayTime / (displayDuration || 1)) * 100 + '%',
+                '--progress-ratio': displayTime / (displayDuration || 1)
+              }"
+              data-allow-mismatch
+              @input="onSeekInput"
+              @change="onSeekChange" />
+            <div
+              v-if="
+                playerStore.sponsorBlockEnabled && displayDuration > 0 && sponsorSegments.length > 0
+              "
+              class="player-bar__sponsor-segments">
+              <div
+                v-for="(seg, idx) in sponsorSegments"
+                :key="idx"
+                class="player-bar__sponsor-segment"
+                :style="{
+                  left: `${(seg[0] / displayDuration) * 100}%`,
+                  width: `${((seg[1] - seg[0]) / displayDuration) * 100}%`
+                }" />
+            </div>
+            <AppSkeleton v-if="!displayTrack" height="4px" class="player-bar__slider--seek" />
+          </div>
           <span class="player-bar__time" data-allow-mismatch>
             {{ formatTime(displayDuration) }}
           </span>
@@ -796,6 +816,32 @@ onClickOutside(moreMenuBtnRef, (e) => {
     flex-shrink: 0;
   }
 
+  &__slider-wrap {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+  }
+
+  &__sponsor-segments {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    height: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+
+  &__sponsor-segment {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: rgba(0, 210, 130, 0.45);
+    border-radius: 2px;
+  }
+
   &__slider {
     -webkit-appearance: none;
     appearance: none;
@@ -806,7 +852,7 @@ onClickOutside(moreMenuBtnRef, (e) => {
     cursor: pointer;
 
     &--seek {
-      flex: 1;
+      width: 100%;
     }
 
     &--volume {

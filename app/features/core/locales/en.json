@@ -1,6 +1,7 @@
 {
   "appName": "ranzaKord",
   "loading": "Loading…",
+  "mainContent": "Main Content",
   "error": {
     "generic": "Something went wrong.",
     "notFound": "Page not found.",

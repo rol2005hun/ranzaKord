@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import type { NuxtError } from '#app';
-import { useThemeStore } from '~/features/theme/stores/useThemeStore';
 import { computed } from 'vue';
+
+import { useThemeStore } from '@/features/theme/stores/useThemeStore';
+
+import type { NuxtError } from '#app';
 
 const props = defineProps<{
   error: NuxtError;
@@ -14,7 +16,6 @@ const handleError = () => {
   clearError({ redirect: '/' });
 };
 
-// We apply the current theme manually here because error.vue is completely outside app.vue
 const themeDataAttr = computed(() => themeStore.themeId || 'dark');
 
 const customColorStyle = computed(() => {
@@ -44,7 +45,6 @@ const errorDesc = computed(() =>
 
 <template>
   <div class="error-layout">
-    <!-- Grid background mimicking app layout structure -->
     <div class="error-grid-overlay"></div>
 
     <div class="error-container">
