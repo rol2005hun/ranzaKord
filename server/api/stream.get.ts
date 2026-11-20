@@ -4,7 +4,15 @@ import type { H3Event } from 'h3';
 import type { Innertube } from 'youtubei.js';
 
 type ClientType =
-  'ANDROID' | 'MWEB' | 'IOS' | 'YTMUSIC' | 'WEB' | 'TV' | 'TV_EMBEDDED' | 'WEB_CREATOR';
+  | 'ANDROID'
+  | 'MWEB'
+  | 'IOS'
+  | 'YTMUSIC'
+  | 'WEB'
+  | 'TV'
+  | 'TV_SIMPLY'
+  | 'TV_EMBEDDED'
+  | 'WEB_CREATOR';
 
 interface CachedStream {
   url: string;
@@ -278,19 +286,25 @@ async function discoverStream(
 ): Promise<CachedStream | null> {
   const innertube = await createInnertube(true);
   const isTvOAuth = Boolean(innertube.session.logged_in && innertube.session.oauth?.oauth2_tokens);
-  const candidateSpecs: CandidateSpec[] = [
-    { client: 'YTMUSIC', useAuth: true },
-    { client: 'WEB', useAuth: true },
-    { client: 'MWEB', useAuth: true },
-    ...(isTvOAuth
-      ? [
-          { client: 'TV' as ClientType, useAuth: true },
-          { client: 'TV_EMBEDDED' as ClientType, useAuth: true }
-        ]
-      : []),
-    { client: 'ANDROID', useAuth: false },
-    { client: 'IOS', useAuth: false }
-  ];
+  const candidateSpecs: CandidateSpec[] = isTvOAuth
+    ? [
+        { client: 'TV_SIMPLY', useAuth: true },
+        { client: 'TV', useAuth: true },
+        { client: 'TV_EMBEDDED', useAuth: true },
+        { client: 'ANDROID', useAuth: false },
+        { client: 'YTMUSIC', useAuth: false },
+        { client: 'IOS', useAuth: false },
+        { client: 'MWEB', useAuth: false },
+        { client: 'WEB', useAuth: false }
+      ]
+    : [
+        { client: 'TV_SIMPLY', useAuth: false },
+        { client: 'ANDROID', useAuth: false },
+        { client: 'YTMUSIC', useAuth: false },
+        { client: 'IOS', useAuth: false },
+        { client: 'MWEB', useAuth: false },
+        { client: 'WEB', useAuth: false }
+      ];
 
   const startTime = Date.now();
   let anonInnertube: Innertube | null = null;

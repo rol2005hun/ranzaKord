@@ -19,6 +19,18 @@ let isAuthenticating = false;
 let lastAuthCheck = 0;
 const AUTH_CACHE_TTL = 60_000;
 
+async function getStoredCookies(): Promise<string | undefined> {
+  try {
+    const cookieRecord = await SystemConfig.findOne({ key: 'youtube_cookies' });
+    if (cookieRecord && cookieRecord.value) {
+      return String(cookieRecord.value).trim();
+    }
+  } catch {
+    void 0;
+  }
+  return process.env.NUXT_YOUTUBE_COOKIES || process.env.YOUTUBE_COOKIES;
+}
+
 export function resetAnonymousInnertube(): void {
   anonymousInstance = null;
 }
@@ -64,11 +76,14 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
         }
       }
 
+      const cookies = await getStoredCookies();
+
       if (oauthTokens) {
         try {
           const oauthInstance = await Innertube.create({
             cache: new UniversalCache(false),
-            retrieve_player: true
+            retrieve_player: true,
+            cookie: cookies
           });
 
           oauthInstance.session.on('update-credentials', async ({ credentials }) => {
@@ -98,7 +113,8 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
       if (!authenticatedInstance) {
         const instance = await Innertube.create({
           cache: new UniversalCache(false),
-          retrieve_player: true
+          retrieve_player: true,
+          cookie: cookies
         });
 
         authenticatedInstance = instance;
@@ -118,10 +134,13 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
 
   if (anonymousInstance) return anonymousInstance;
 
+  const cookies = await getStoredCookies();
+
   anonymousInstance = await Innertube.create({
     cache: new UniversalCache(false),
     retrieve_player: true,
-    lang: 'en'
+    lang: 'en',
+    cookie: cookies
   });
 
   return anonymousInstance;

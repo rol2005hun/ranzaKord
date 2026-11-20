@@ -54,6 +54,16 @@ const isTauriDesktop =
   '__TAURI_INTERNALS__' in window &&
   !/android|ios|iphone|ipad/i.test(navigator.userAgent);
 
+watch(
+  () => playerStore.isAudioReactiveLyrics,
+  (enabled) => {
+    if (import.meta.client) {
+      document.body.classList.toggle('audio-reactive-lyrics', Boolean(enabled));
+    }
+  },
+  { immediate: true }
+);
+
 useHead(() => ({
   htmlAttrs: {
     'data-theme': themeId.value,
