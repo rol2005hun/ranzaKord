@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0-alpha.2] - 2026-11-20
+
+### Added
+
+- **Stream Speed Analytics**: Added developer dashboard (`/stream-stats`) tracking YouTube client resolution latency, cache hit performance, and server-side paginated logs.
+- **Playback Persistence**: Automatically save and restore the last played track and timestamp across restarts via cookie, localStorage, and database.
+- **Search Fallback for Lyrics**: Added LRCLIB search fallback and metadata title cleaning to retrieve synced lyrics even when YouTube titles duplicate artist names.
+
+### Fixed
+
+- **Play Button Loading State**: Fixed invisible loading spinner inside primary play buttons by ensuring proper contrast foreground color.
+- **Tracklist Loading State**: Display loading spinner immediately on track rows during buffering instead of prematurely animating the sound wave indicator.
+- **Playback Error Feedback**: Display informative toast error notifications when audio streams fail to load or playback encounters an error.
+- **Range 416 Audio Issues**: Resolved partial content Range 416 issues and improved client stream isolation.
+- **Tauri Desktop CORS & API Resolution**: Added 204 No Content for preflight requests and fallback to production API in Tauri desktop apps.
+
 ## [0.2.0-alpha.1] - 2026-11-12
 
 ### Added

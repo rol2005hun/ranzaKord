@@ -1,5 +1,29 @@
 [
   {
+    "version": "v0.2.0-alpha.2",
+    "date": "2026-11-20",
+    "changes": {
+      "en": [
+        "Stream speed analytics developer dashboard with server-side pagination and client latency tracking",
+        "Persistent playback state: automatically saves and restores the last played track and timestamp",
+        "Improved LRCLIB lyrics synchronization with search fallback and title cleaning",
+        "Visible contrast loading spinners on play buttons and track rows during buffering",
+        "Informative toast error notifications for playback and stream loading failures",
+        "Resolved Range 416 audio stream issues and enhanced multi-client YouTube isolation",
+        "Tauri desktop app CORS preflight fixes and production backend fallback"
+      ],
+      "hu": [
+        "Stream sebesség elemzés fejlesztői felület szerveroldali lapozással és kliens késleltetés statisztikával",
+        "Utoljára hallgatott szám és lejátszási idő automatikus mentése és visszaállítása",
+        "Pontosabb dalszöveg szinkronizáció LRCLIB keresési tartalékkal és cím tisztítással",
+        "Jól látható, kontrasztos betöltési ikonok a lejátszás gombokon és a számlistában",
+        "Egyértelmű felugró hibaüzenetek lejátszási és stream betöltési hibák esetén",
+        "Range 416 audió hibák javítása és megbízhatóbb többklienses YouTube feloldás",
+        "Tauri asztali alkalmazás CORS előzetes kérések és backend kapcsolódás javítása"
+      ]
+    }
+  },
+  {
     "version": "v0.2.0-alpha.1",
     "date": "2026-11-12",
     "changes": {
