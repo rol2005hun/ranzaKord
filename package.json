@@ -27,7 +27,8 @@
     "test:e2e:ui": "playwright test --ui",
     "prepare": "husky",
     "sync-boilerplate": "tsx sync-boilerplate.ts",
-    "youtube:login": "tsx scripts/youtube-login.ts"
+    "youtube:login": "tsx scripts/youtube-login.ts",
+    "youtube:cookie": "tsx scripts/youtube-cookie.ts"
   },
   "dependencies": {
     "@pinia/colada": "1.4.9",
