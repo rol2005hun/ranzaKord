@@ -31,6 +31,35 @@ async function getStoredCookies(): Promise<string | undefined> {
   return process.env.NUXT_YOUTUBE_COOKIES || process.env.YOUTUBE_COOKIES;
 }
 
+interface StoredPoData {
+  poToken?: string;
+  visitorData?: string;
+}
+
+async function getStoredPoData(): Promise<StoredPoData> {
+  let poToken: string | undefined;
+  let visitorData: string | undefined;
+
+  try {
+    const poRecord = await SystemConfig.findOne({ key: 'youtube_po_token' });
+    if (poRecord && poRecord.value) {
+      poToken = String(poRecord.value).trim();
+    }
+    const visitorRecord = await SystemConfig.findOne({ key: 'youtube_visitor_data' });
+    if (visitorRecord && visitorRecord.value) {
+      visitorData = String(visitorRecord.value).trim();
+    }
+  } catch {
+    void 0;
+  }
+
+  poToken = poToken || process.env.NUXT_YOUTUBE_PO_TOKEN || process.env.YOUTUBE_PO_TOKEN;
+  visitorData =
+    visitorData || process.env.NUXT_YOUTUBE_VISITOR_DATA || process.env.YOUTUBE_VISITOR_DATA;
+
+  return { poToken, visitorData };
+}
+
 export function resetAnonymousInnertube(): void {
   anonymousInstance = null;
 }
@@ -77,13 +106,18 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
       }
 
       const cookies = await getStoredCookies();
+      const { poToken, visitorData } = await getStoredPoData();
+      const hasPo = Boolean(poToken && visitorData);
 
       if (oauthTokens) {
         try {
           const oauthInstance = await Innertube.create({
             cache: new UniversalCache(false),
             retrieve_player: true,
-            cookie: cookies
+            cookie: cookies,
+            po_token: poToken,
+            visitor_data: visitorData,
+            generate_session_locally: hasPo
           });
 
           oauthInstance.session.on('update-credentials', async ({ credentials }) => {
@@ -114,7 +148,10 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
         const instance = await Innertube.create({
           cache: new UniversalCache(false),
           retrieve_player: true,
-          cookie: cookies
+          cookie: cookies,
+          po_token: poToken,
+          visitor_data: visitorData,
+          generate_session_locally: hasPo
         });
 
         authenticatedInstance = instance;
@@ -135,12 +172,17 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
   if (anonymousInstance) return anonymousInstance;
 
   const cookies = await getStoredCookies();
+  const { poToken, visitorData } = await getStoredPoData();
+  const hasPo = Boolean(poToken && visitorData);
 
   anonymousInstance = await Innertube.create({
     cache: new UniversalCache(false),
     retrieve_player: true,
     lang: 'en',
-    cookie: cookies
+    cookie: cookies,
+    po_token: poToken,
+    visitor_data: visitorData,
+    generate_session_locally: hasPo
   });
 
   return anonymousInstance;
