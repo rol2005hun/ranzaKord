@@ -65,7 +65,9 @@ const isInAnyPlaylist = computed(() => playlistsStore.isTrackInAnyPlaylist(props
         </div>
       </div>
 
-      <AppPlayingIndicator v-if="isCurrentTrack" class="track-card__playing-indicator" />
+      <AppPlayingIndicator
+        v-if="isCurrentTrack && !player.isLoading.value"
+        class="track-card__playing-indicator" />
     </div>
 
     <div class="track-card__info">
