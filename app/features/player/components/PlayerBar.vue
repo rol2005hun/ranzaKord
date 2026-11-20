@@ -758,12 +758,18 @@ onClickOutside(moreMenuBtnRef, (e) => {
       font-size: var(--text-xl);
       background: var(--color-text-primary);
       color: var(--color-bg);
+      --spinner-color: var(--color-bg);
       border-radius: var(--radius-full);
       flex-shrink: 0;
+
+      :deep(.spinner) {
+        color: var(--color-bg);
+      }
 
       &:hover:not(:disabled) {
         background: var(--color-text-secondary);
         color: var(--color-bg);
+        --spinner-color: var(--color-bg);
         transform: scale(1.05);
       }
     }

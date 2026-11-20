@@ -583,6 +583,7 @@ onMounted(() => {
     border-radius: 50%;
     background-color: var(--color-primary);
     color: var(--color-primary-foreground);
+    --spinner-color: var(--color-primary-foreground);
     border: none;
     display: flex;
     align-items: center;
@@ -592,6 +593,10 @@ onMounted(() => {
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
     transition: all var(--transition-fast);
     flex-shrink: 0;
+
+    :deep(.spinner) {
+      color: var(--color-primary-foreground);
+    }
 
     &--small {
       width: 44px;
@@ -604,6 +609,7 @@ onMounted(() => {
       transform: scale(1.05);
       background-color: var(--color-primary-hover);
       color: var(--color-primary-foreground);
+      --spinner-color: var(--color-primary-foreground);
     }
 
     &:disabled {

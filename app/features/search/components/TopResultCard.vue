@@ -332,6 +332,7 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
     border-radius: 50%;
     background-color: var(--color-primary);
     color: var(--color-primary-foreground, #ffffff);
+    --spinner-color: var(--color-primary-foreground, #ffffff);
     border: none;
     display: flex;
     align-items: center;
@@ -342,6 +343,10 @@ function resolveArtists(result: SearchResult): { name: string; id?: string }[] {
     opacity: 0;
     transform: translateY(8px);
     transition: all 0.3s ease;
+
+    :deep(.spinner) {
+      color: var(--color-primary-foreground, #ffffff);
+    }
 
     &:hover {
       transform: scale(1.05) !important;
