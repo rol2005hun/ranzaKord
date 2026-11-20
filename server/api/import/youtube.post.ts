@@ -1,4 +1,6 @@
 import { createInnertube } from '../../utils/innertube';
+import { cleanTrackMetadata } from '../../../app/utils/trackMetadata';
+
 import type { Track } from '../../../app/features/player/types/player.types';
 
 export default defineEventHandler(async (event) => {
@@ -167,10 +169,12 @@ export default defineEventHandler(async (event) => {
         channelId: a.channel_id
       }));
 
+      const { cleanTitle, cleanArtist } = cleanTrackMetadata(videoTitle, artistName);
+
       tracks.push({
         videoId: video.id,
-        title: videoTitle,
-        artist: artistName || 'Unknown Artist',
+        title: cleanTitle,
+        artist: cleanArtist || 'Unknown Artist',
         artistId,
         artists: artistsList,
         thumbnailUrl: bestThumbnail,
