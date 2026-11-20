@@ -1,11 +1,10 @@
+import { useAppSession } from '../../utils/session';
+
 import type { ServerSession } from '../../types/auth.server.types';
 
 export default defineEventHandler(async (event): Promise<{ url: string }> => {
   const config = useRuntimeConfig();
-  const session = await useSession(event, {
-    password: config.sessionSecret as string,
-    maxAge: 60 * 60 * 24 * 30
-  });
+  const session = await useAppSession(event);
   const sessionData = session.data as Partial<ServerSession>;
   const { t } = useServerTranslation(event);
 
@@ -44,9 +43,7 @@ export default defineEventHandler(async (event): Promise<{ url: string }> => {
     }
 
     return { url: response.data.link };
-  } catch (error: unknown) {
-    const err = error as { data?: unknown; message?: string };
-    console.error('Imgur upload error:', err.data || err.message);
+  } catch {
     throw createError({ statusCode: 500, message: t('upload.errors.uploadFailed') });
   }
 });

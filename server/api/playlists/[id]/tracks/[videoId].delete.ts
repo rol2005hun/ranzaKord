@@ -1,6 +1,7 @@
 import type { H3Event } from 'h3';
 
 import { PlaylistModel } from '../../../../models/Playlist';
+import { useAppSession } from '../../../../utils/session';
 
 import type { ServerSession } from '../../../../types/auth.server.types';
 
@@ -20,13 +21,8 @@ function resolveParam(event: H3Event, key: string): string | undefined {
 }
 
 export default defineEventHandler(async (event): Promise<{ success: boolean }> => {
-  const config = useRuntimeConfig();
-  const session = await useSession(event, {
-    password: config.sessionSecret as string,
-    maxAge: 60 * 60 * 24 * 30
-  });
+  const session = await useAppSession(event);
   const sessionData = session.data as Partial<ServerSession>;
-
   const { t } = useServerTranslation(event);
 
   if (!sessionData.accessToken || !sessionData.user) {

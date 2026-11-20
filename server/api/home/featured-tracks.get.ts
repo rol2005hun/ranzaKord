@@ -6,19 +6,12 @@ export default defineCachedEventHandler(
   async (event): Promise<SearchResult[]> => {
     const session = await useAppSession(event);
     const sessionData = session.data as Partial<ServerSession>;
-    const { t } = useServerTranslation(event);
 
-    if (!sessionData.user) {
-      throw createError({ statusCode: 401, message: t('core.errors.unauthorized') });
-    }
+    const userId = sessionData.user?.sub;
 
-    const userId = sessionData.user.sub;
-
-    // 1. Get the user's top 3 tracks with most plays and fewest skips
-    const stats = await TrackStatModel.find({ userId })
-      .sort({ playCount: -1, skipCount: 1 })
-      .limit(3)
-      .lean();
+    const stats = userId
+      ? await TrackStatModel.find({ userId }).sort({ playCount: -1, skipCount: 1 }).limit(3).lean()
+      : [];
 
     const innertube = await createInnertube(false);
 
@@ -39,7 +32,6 @@ export default defineCachedEventHandler(
     };
 
     if (!stats.length) {
-      // 2. Fallback: If no history, fetch a generic "Charts" or "Top Hits" playlist
       try {
         const results = await innertube.music.search('top hits', { type: 'song' });
         const items: SearchResult[] = [];
@@ -117,7 +109,6 @@ export default defineCachedEventHandler(
       }
     }
 
-    // 3. User has history: use getUpNext based on a random top track
     const randomTopTrack = stats[Math.floor(Math.random() * stats.length)];
     if (!randomTopTrack) return [];
 
@@ -193,13 +184,12 @@ export default defineCachedEventHandler(
         }
       }
       return items;
-    } catch (e) {
-      console.error('Failed to fetch UpNext for featured tracks:', e);
+    } catch {
       return [];
     }
   },
   {
-    maxAge: 60 * 60 * 2, // 2 hours cache
+    maxAge: 60 * 60 * 2,
     name: 'featured-tracks',
     getKey: async (event) => {
       const session = await useAppSession(event);

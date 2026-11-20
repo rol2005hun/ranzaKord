@@ -1,5 +1,7 @@
-import type { ServerSession } from '../../types/auth.server.types';
 import { PlaylistModel } from '../../models/Playlist';
+import { useAppSession } from '../../utils/session';
+
+import type { ServerSession } from '../../types/auth.server.types';
 import type { PlaylistResponse } from './index.get';
 
 interface CreatePlaylistBody {
@@ -10,11 +12,7 @@ interface CreatePlaylistBody {
 }
 
 export default defineEventHandler(async (event): Promise<PlaylistResponse> => {
-  const config = useRuntimeConfig();
-  const session = await useSession(event, {
-    password: config.sessionSecret as string,
-    maxAge: 60 * 60 * 24 * 30
-  });
+  const session = await useAppSession(event);
   const sessionData = session.data as Partial<ServerSession>;
   const { t } = useServerTranslation(event);
 

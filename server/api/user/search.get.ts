@@ -1,12 +1,10 @@
-import type { ServerSession } from '../../types/auth.server.types';
 import { UserModel } from '../../models/User';
+import { useAppSession } from '../../utils/session';
+
+import type { ServerSession } from '../../types/auth.server.types';
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig();
-  const session = await useSession(event, {
-    password: config.sessionSecret as string,
-    maxAge: 60 * 60 * 24 * 30
-  });
+  const session = await useAppSession(event);
   const sessionData = session.data as Partial<ServerSession>;
   const { t } = useServerTranslation(event);
 

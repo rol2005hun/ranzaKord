@@ -1,6 +1,11 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
+
+import { getAuthHeaders } from '@/utils/auth';
+
 import type { UserProfileResponse } from '@/features/profile/types/profile.types';
+
 import ConnectionsModal from '@/features/profile/components/ConnectionsModal.vue';
 
 definePageMeta({
@@ -8,22 +13,24 @@ definePageMeta({
 });
 
 const route = useRoute();
-const userId = route.params.id as string;
+const userId = computed(() => (route.params.id as string) || '');
 const authStore = useAuthStore();
 const toast = useToast();
 const { t } = useI18n();
 
 const { data, status, error, refresh } = await useLazyFetch<UserProfileResponse>(
-  `/api/user/profile?id=${userId}`,
+  () => useApiUrl(`/api/user/profile?id=${encodeURIComponent(userId.value)}`),
   {
-    key: `user-profile-${userId}`,
-    server: false
+    key: `user-profile-${userId.value}`,
+    server: false,
+    headers: () => getAuthHeaders(),
+    immediate: Boolean(userId.value)
   }
 );
 
 const profile = computed(() => data.value?.profile);
 const playlists = computed(() => data.value?.playlists || []);
-const isSelf = computed(() => authStore.currentUser?.sub === userId);
+const isSelf = computed(() => authStore.currentUser?.sub === userId.value);
 
 useHead(() => ({
   title: profile.value ? profile.value.name : t('profile.badge')
@@ -32,24 +39,23 @@ useHead(() => ({
 const isFollowLoading = ref(false);
 
 const toggleFollow = async () => {
-  if (!data.value?.profile || isSelf.value || isFollowLoading.value) return;
+  if (!data.value?.profile || isSelf.value || isFollowLoading.value || !userId.value) return;
   const action = data.value.profile.isFollowing ? 'unfollow' : 'follow';
 
   isFollowLoading.value = true;
   try {
-    await $fetch(`/api/user/follow`, {
+    await $fetch(useApiUrl('/api/user/follow'), {
       method: 'POST',
-      body: { action, targetSub: userId }
+      headers: getAuthHeaders(),
+      body: { action, targetSub: userId.value }
     });
-    // Optimistic UI update
     data.value.profile.isFollowing = !data.value.profile.isFollowing;
     if (data.value.profile.isFollowing) {
       data.value.profile.followersCount++;
     } else {
       data.value.profile.followersCount--;
     }
-  } catch (err) {
-    console.error('Follow error:', err);
+  } catch {
     toast.danger(t('profile.followError'));
   } finally {
     isFollowLoading.value = false;

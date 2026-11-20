@@ -100,7 +100,7 @@ onMounted(() => {
 
     <div v-else-if="isError" class="music-page__error">
       <AppIcon name="ph:warning-circle" class="music-page__error-icon" />
-      <p>{{ errorText || $t('core.musicDetail.error') }}</p>
+      <h1 class="music-page__error-title">{{ errorText || $t('core.musicDetail.error') }}</h1>
     </div>
 
     <template v-else>
@@ -315,6 +315,13 @@ onMounted(() => {
   &__error-icon {
     font-size: 4rem;
     margin-bottom: var(--space-4);
+  }
+
+  &__error-title {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-normal);
+    color: inherit;
+    margin: 0;
   }
 
   &__header {

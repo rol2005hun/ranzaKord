@@ -1,24 +1,12 @@
+import { getAuthHeaders } from '@/utils/auth';
+
 import type { PlaylistSummary } from '@/features/playlists/types/playlists.types';
-
-export interface UserProfile {
-  sub: string;
-  name: string;
-  picture: string;
-  isPublicProfile: boolean;
-  followersCount: number;
-  followingCount: number;
-  isFollowing: boolean;
-}
-
-export interface UserProfileResponse {
-  profile: UserProfile;
-  playlists: PlaylistSummary[];
-}
+import type { UserProfileInfo, UserProfileResponse } from '../types/profile.types';
 
 export function useProfile(userId: string) {
   const toast = useToast();
 
-  const profile = ref<UserProfile | null>(null);
+  const profile = ref<UserProfileInfo | null>(null);
   const playlists = ref<PlaylistSummary[]>([]);
   const pending = ref(true);
   const error = ref<Error | null>(null);
@@ -27,9 +15,12 @@ export function useProfile(userId: string) {
     pending.value = true;
     error.value = null;
     try {
-      const response = await $fetch<UserProfileResponse>('/api/user/profile', {
-        query: { id: userId }
-      });
+      const response = await $fetch<UserProfileResponse>(
+        useApiUrl(`/api/user/profile?id=${encodeURIComponent(userId)}`),
+        {
+          headers: getAuthHeaders()
+        }
+      );
       profile.value = response.profile;
       playlists.value = response.playlists;
     } catch (err) {
@@ -48,17 +39,16 @@ export function useProfile(userId: string) {
     const prevFollowing = profile.value.isFollowing;
     const prevCount = profile.value.followersCount;
 
-    // Optimistic update
     profile.value.isFollowing = !prevFollowing;
     profile.value.followersCount += prevFollowing ? -1 : 1;
 
     try {
-      await $fetch('/api/user/follow', {
+      await $fetch(useApiUrl('/api/user/follow'), {
         method: 'POST',
+        headers: getAuthHeaders(),
         body: { targetSub: userId, action }
       });
     } catch {
-      // Revert on error
       profile.value.isFollowing = prevFollowing;
       profile.value.followersCount = prevCount;
       toast.danger('Failed to update follow status');
