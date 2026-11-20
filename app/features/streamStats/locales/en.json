@@ -37,6 +37,14 @@
     "resolved": "Resolved",
     "failed": "Failed"
   },
+  "pagination": {
+    "first": "First",
+    "prev": "Previous",
+    "next": "Next",
+    "last": "Last",
+    "showing": "Showing {from}-{to} of {total} records",
+    "perPage": "Per page:"
+  },
   "empty": "No stream statistics recorded yet.",
   "toast": {
     "clearedSuccess": "Stream statistics cleared successfully.",

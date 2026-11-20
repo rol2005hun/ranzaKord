@@ -1,10 +1,22 @@
 <script setup lang="ts">
-import { useStreamStats } from '../composables/useStreamStats';
+import { useStreamStats } from '@/features/streamStats/composables/useStreamStats';
 
 const { store, formatBytes, formatDuration, formatDate, getDurationBadgeVariant } =
   useStreamStats();
 const toast = useToast();
 const { t } = useI18n();
+
+const pageSizes: number[] = [15, 25, 50, 100];
+
+const paginationFrom = computed<number>(() => {
+  if (store.pagination.total === 0) return 0;
+  return (store.pagination.page - 1) * store.pagination.limit + 1;
+});
+
+const paginationTo = computed<number>(() => {
+  if (store.pagination.total === 0) return 0;
+  return Math.min(store.pagination.page * store.pagination.limit, store.pagination.total);
+});
 
 onMounted(() => {
   store.fetchStats();
@@ -241,6 +253,79 @@ function maxAvgDuration(averages: { avgDurationMs: number }[]): number {
                 </tr>
               </tbody>
             </table>
+          </div>
+
+          <div v-if="store.pagination.total > 0" class="stream-stats__pagination">
+            <div class="stream-stats__pagination-info">
+              <span>
+                {{
+                  $t('streamStats.pagination.showing', {
+                    from: paginationFrom,
+                    to: paginationTo,
+                    total: store.pagination.total
+                  })
+                }}
+              </span>
+
+              <div class="stream-stats__page-size">
+                <span class="stream-stats__page-size-label">
+                  {{ $t('streamStats.pagination.perPage') }}
+                </span>
+                <div class="stream-stats__page-size-options">
+                  <button
+                    v-for="size in pageSizes"
+                    :key="size"
+                    type="button"
+                    class="stream-stats__page-size-btn"
+                    :class="{ 'stream-stats__page-size-btn--active': store.itemsPerPage === size }"
+                    @click="store.setLimit(size)">
+                    {{ size }}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="stream-stats__pagination-nav">
+              <button
+                type="button"
+                class="stream-stats__nav-btn"
+                :disabled="store.currentPage <= 1 || store.isLoading"
+                :aria-label="$t('streamStats.pagination.first')"
+                @click="store.setPage(1)">
+                <AppIcon name="ph:caret-double-left" />
+              </button>
+
+              <button
+                type="button"
+                class="stream-stats__nav-btn"
+                :disabled="store.currentPage <= 1 || store.isLoading"
+                :aria-label="$t('streamStats.pagination.prev')"
+                @click="store.setPage(store.currentPage - 1)">
+                <AppIcon name="ph:caret-left" />
+              </button>
+
+              <span class="stream-stats__page-indicator">
+                {{ store.currentPage }} / {{ store.pagination.totalPages }}
+              </span>
+
+              <button
+                type="button"
+                class="stream-stats__nav-btn"
+                :disabled="store.currentPage >= store.pagination.totalPages || store.isLoading"
+                :aria-label="$t('streamStats.pagination.next')"
+                @click="store.setPage(store.currentPage + 1)">
+                <AppIcon name="ph:caret-right" />
+              </button>
+
+              <button
+                type="button"
+                class="stream-stats__nav-btn"
+                :disabled="store.currentPage >= store.pagination.totalPages || store.isLoading"
+                :aria-label="$t('streamStats.pagination.last')"
+                @click="store.setPage(store.pagination.totalPages)">
+                <AppIcon name="ph:caret-double-right" />
+              </button>
+            </div>
           </div>
         </AppCard>
       </div>
@@ -503,6 +588,97 @@ function maxAvgDuration(averages: { avgDurationMs: number }[]): number {
 
   &__muted {
     color: var(--color-text-secondary);
+  }
+
+  &__pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    border-top: 1px solid var(--color-border);
+  }
+
+  &__pagination-info {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+  }
+
+  &__page-size {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  &__page-size-options {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+
+  &__page-size-btn {
+    padding: var(--space-1) var(--space-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--color-text-secondary);
+    font-size: var(--text-xs);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+
+    &:hover:not(&--active) {
+      background: var(--color-surface-hover);
+      color: var(--color-text-primary);
+    }
+
+    &--active {
+      background: hsl(var(--color-primary-h) var(--color-primary-s) var(--color-primary-l) / 0.15);
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      font-weight: var(--font-weight-semibold);
+    }
+  }
+
+  &__pagination-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  &__nav-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--color-text-primary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+
+    &:hover:not(:disabled) {
+      background: var(--color-surface-hover);
+      border-color: var(--color-border-hover);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  &__page-indicator {
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    padding: 0 var(--space-2);
   }
 }
 </style>

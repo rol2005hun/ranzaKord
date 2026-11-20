@@ -64,6 +64,33 @@ describe('streamStats', () => {
       expect(store.cacheHitRate).toBe(0);
       expect(store.avgResolutionTime).toBe(0);
       expect(store.fastestClient).toBeNull();
+      expect(store.currentPage).toBe(1);
+      expect(store.itemsPerPage).toBe(25);
+      expect(store.pagination.page).toBe(1);
+      expect(store.pagination.limit).toBe(25);
+      expect(store.pagination.total).toBe(0);
+      expect(store.pagination.totalPages).toBe(1);
+    });
+
+    it('calculates pagination correctly from store data', () => {
+      const store = useStreamStatsStore();
+      store.data = {
+        totalCount: 55,
+        clientAverages: [],
+        statusCounts: [],
+        recentLogs: [],
+        pagination: {
+          page: 2,
+          limit: 25,
+          total: 55,
+          totalPages: 3
+        }
+      };
+
+      expect(store.pagination.page).toBe(2);
+      expect(store.pagination.limit).toBe(25);
+      expect(store.pagination.total).toBe(55);
+      expect(store.pagination.totalPages).toBe(3);
     });
 
     it('calculates derived metrics correctly', () => {

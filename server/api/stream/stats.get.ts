@@ -4,9 +4,14 @@ import { assertDeveloperSession } from '../../utils/session';
 export default defineEventHandler(async (event) => {
   await assertDeveloperSession(event);
 
+  const query = getQuery(event);
+  const page = Math.max(1, Number(query.page) || 1);
+  const limit = Math.min(100, Math.max(5, Number(query.limit) || 25));
+  const skip = (page - 1) * limit;
+
   const [totalCount, recentLogs, clientAverages, statusCounts] = await Promise.all([
     StreamSpeedStat.countDocuments(),
-    StreamSpeedStat.find().sort({ createdAt: -1 }).limit(50).lean(),
+    StreamSpeedStat.find().sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
     StreamSpeedStat.aggregate([
       { $match: { status: 'resolved' } },
       {
@@ -42,6 +47,12 @@ export default defineEventHandler(async (event) => {
     totalCount,
     clientAverages,
     statusCounts,
-    recentLogs
+    recentLogs,
+    pagination: {
+      page,
+      limit,
+      total: totalCount,
+      totalPages: Math.max(1, Math.ceil(totalCount / limit))
+    }
   };
 });

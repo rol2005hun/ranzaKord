@@ -37,6 +37,14 @@
     "resolved": "Feloldva",
     "failed": "Sikertelen"
   },
+  "pagination": {
+    "first": "Első oldal",
+    "prev": "Előző",
+    "next": "Következő",
+    "last": "Utolsó oldal",
+    "showing": "{from} - {to} / {total} bejegyzés",
+    "perPage": "Oldalméret:"
+  },
   "empty": "Még nem érkezett rögzített stream statisztika.",
   "toast": {
     "clearedSuccess": "Stream statisztikák sikeresen törölve.",

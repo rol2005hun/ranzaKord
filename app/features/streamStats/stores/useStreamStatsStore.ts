@@ -1,10 +1,15 @@
-import type { StreamStatsResponse } from '@/features/streamStats/types/streamStats.types';
+import type {
+  PaginationInfo,
+  StreamStatsResponse
+} from '@/features/streamStats/types/streamStats.types';
 
 export const useStreamStatsStore = defineStore('streamStats', () => {
   const data = ref<StreamStatsResponse | null>(null);
   const isLoading = ref<boolean>(false);
   const isClearing = ref<boolean>(false);
   const error = ref<string | null>(null);
+  const currentPage = ref<number>(1);
+  const itemsPerPage = ref<number>(25);
 
   const totalRequests = computed<number>(() => data.value?.totalCount ?? 0);
 
@@ -40,19 +45,55 @@ export const useStreamStatsStore = defineStore('streamStats', () => {
     return clients[0]?._id ?? null;
   });
 
-  async function fetchStats(): Promise<void> {
+  const pagination = computed<PaginationInfo>(() => {
+    if (data.value?.pagination) {
+      return data.value.pagination;
+    }
+    const total = data.value?.totalCount ?? 0;
+    return {
+      page: currentPage.value,
+      limit: itemsPerPage.value,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / itemsPerPage.value))
+    };
+  });
+
+  async function fetchStats(page?: number, limit?: number): Promise<void> {
     if (isLoading.value) return;
+    if (page !== undefined) {
+      currentPage.value = Math.max(1, page);
+    }
+    if (limit !== undefined) {
+      itemsPerPage.value = Math.max(1, limit);
+    }
+
     isLoading.value = true;
     error.value = null;
     try {
-      const url = useApiUrl('/api/stream/stats');
+      const url = useApiUrl(
+        `/api/stream/stats?page=${currentPage.value}&limit=${itemsPerPage.value}`
+      );
       const response = await $fetch<StreamStatsResponse>(url);
       data.value = response;
+      if (response.pagination) {
+        currentPage.value = response.pagination.page;
+        itemsPerPage.value = response.pagination.limit;
+      }
     } catch (err) {
       error.value = err instanceof Error ? err.message : String(err);
     } finally {
       isLoading.value = false;
     }
+  }
+
+  async function setPage(page: number): Promise<void> {
+    if (page === currentPage.value || page < 1 || page > pagination.value.totalPages) return;
+    await fetchStats(page);
+  }
+
+  async function setLimit(limit: number): Promise<void> {
+    if (limit === itemsPerPage.value || limit < 1) return;
+    await fetchStats(1, limit);
   }
 
   async function clearStats(): Promise<boolean> {
@@ -62,11 +103,18 @@ export const useStreamStatsStore = defineStore('streamStats', () => {
     try {
       const url = useApiUrl('/api/stream/stats');
       await $fetch(url, { method: 'DELETE' });
+      currentPage.value = 1;
       data.value = {
         totalCount: 0,
         clientAverages: [],
         statusCounts: [],
-        recentLogs: []
+        recentLogs: [],
+        pagination: {
+          page: 1,
+          limit: itemsPerPage.value,
+          total: 0,
+          totalPages: 1
+        }
       };
       return true;
     } catch (err) {
@@ -82,6 +130,9 @@ export const useStreamStatsStore = defineStore('streamStats', () => {
     isLoading,
     isClearing,
     error,
+    currentPage,
+    itemsPerPage,
+    pagination,
     totalRequests,
     cacheHits,
     resolvedCount,
@@ -90,6 +141,8 @@ export const useStreamStatsStore = defineStore('streamStats', () => {
     avgResolutionTime,
     fastestClient,
     fetchStats,
+    setPage,
+    setLimit,
     clearStats
   };
 });

@@ -24,9 +24,17 @@ export interface StreamLogItem {
   createdAt: string;
 }
 
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
 export interface StreamStatsResponse {
   totalCount: number;
   clientAverages: ClientSpeedSummary[];
   statusCounts: StatusCountSummary[];
   recentLogs: StreamLogItem[];
+  pagination?: PaginationInfo;
 }
