@@ -56,6 +56,7 @@ onMounted(() => {
 
 <template>
   <div class="music-page">
+    <h1 v-if="isLoading" class="music-page__sr-title">{{ props.title || 'Music' }}</h1>
     <div v-if="isLoading" class="music-page__skeleton" aria-hidden="true">
       <div class="music-page__skeleton-header">
         <div
@@ -207,6 +208,18 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+
+  &__sr-title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
 
   &__skeleton {
     display: flex;

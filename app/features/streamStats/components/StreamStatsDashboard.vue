@@ -40,18 +40,30 @@ function maxAvgDuration(averages: { avgDurationMs: number }[]): number {
           <AppIcon name="ph:chart-line-up" class="stream-stats__main-icon" />
         </div>
         <div>
-          <h1 class="stream-stats__title">{{ $t('streamStats.title') }}</h1>
+          <h1 class="stream-stats__title">
+            {{ $t('streamStats.title') || 'Stream Speed Analytics' }}
+          </h1>
           <p class="stream-stats__subtitle">{{ $t('streamStats.subtitle') }}</p>
         </div>
       </div>
 
       <div class="stream-stats__actions">
-        <AppButton variant="secondary" size="md" :loading="store.isLoading" @click="handleRefresh">
+        <AppButton
+          variant="secondary"
+          size="md"
+          :aria-label="$t('streamStats.actions.refresh')"
+          :loading="store.isLoading"
+          @click="handleRefresh">
           <AppIcon name="ph:arrows-clockwise" />
           <span>{{ $t('streamStats.actions.refresh') }}</span>
         </AppButton>
 
-        <AppButton variant="danger" size="md" :loading="store.isClearing" @click="handleClear">
+        <AppButton
+          variant="danger"
+          size="md"
+          :aria-label="$t('streamStats.actions.clearData')"
+          :loading="store.isClearing"
+          @click="handleClear">
           <AppIcon name="ph:trash" />
           <span>{{ $t('streamStats.actions.clearData') }}</span>
         </AppButton>

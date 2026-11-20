@@ -104,6 +104,23 @@ function getValidRange(range: ByteRange, contentLength?: number): ByteRange | nu
   return range;
 }
 
+function sendRangeNotSatisfiable(
+  event: H3Event,
+  contentLength?: number,
+  mimeType?: string
+): unknown {
+  setResponseStatus(event, 416);
+  setResponseHeaders(event, {
+    'content-type': mimeType || 'audio/mp4',
+    'content-range': `bytes */${contentLength || '*'}`,
+    'content-length': 0,
+    'accept-ranges': 'bytes',
+    'access-control-allow-origin': '*',
+    'access-control-expose-headers': 'Content-Range, Content-Length, Accept-Ranges'
+  });
+  return send(event, new Uint8Array(0));
+}
+
 const DEFAULT_USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
@@ -131,14 +148,6 @@ async function fetchYouTubeStream(
     'Accept-Encoding': 'identity',
     Range: rangeHeader
   };
-
-  if (client === 'YTMUSIC') {
-    headers['Origin'] = 'https://music.youtube.com';
-    headers['Referer'] = 'https://music.youtube.com/';
-  } else if (client === 'MWEB' || client === 'WEB') {
-    headers['Origin'] = 'https://www.youtube.com';
-    headers['Referer'] = 'https://www.youtube.com/';
-  }
 
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
@@ -313,12 +322,16 @@ function recordStreamStat(
     errorMessage?: string;
   }
 ): void {
-  if (import.meta.dev) return;
-  const host = (getRequestHeader(event, 'host') || '').toLowerCase();
-  if (host.includes('localhost') || host.includes('127.0.0.1')) {
-    return;
+  try {
+    if (import.meta.dev) return;
+    const host = (getRequestHeader(event, 'host') || '').toLowerCase();
+    if (host.includes('localhost') || host.includes('127.0.0.1')) {
+      return;
+    }
+    StreamSpeedStat.create(stat).catch(() => {});
+  } catch {
+    void 0;
   }
-  StreamSpeedStat.create(stat).catch(() => {});
 }
 
 async function resolveCandidate(
@@ -553,10 +566,7 @@ export default defineEventHandler(async (event) => {
 
     const validRange = getValidRange(parsedRange, cached.contentLength);
     if (!validRange) {
-      setResponseStatus(event, 416);
-      setResponseHeader(event, 'content-range', `bytes */${cached.contentLength || '*'}`);
-      setResponseHeader(event, 'content-length', 0);
-      return '';
+      return sendRangeNotSatisfiable(event, cached.contentLength, cached.mimeType);
     }
 
     if (shouldRedirect) {
@@ -574,10 +584,7 @@ export default defineEventHandler(async (event) => {
     }
 
     if (isRangeNotSatisfiable) {
-      setResponseStatus(event, 416);
-      setResponseHeader(event, 'content-range', `bytes */${cached.contentLength || '*'}`);
-      setResponseHeader(event, 'content-length', 0);
-      return '';
+      return sendRangeNotSatisfiable(event, cached.contentLength, cached.mimeType);
     }
 
     if (isFatalError) {
@@ -602,10 +609,7 @@ export default defineEventHandler(async (event) => {
 
     const validRange = getValidRange(parsedRange, discovered.contentLength);
     if (!validRange) {
-      setResponseStatus(event, 416);
-      setResponseHeader(event, 'content-range', `bytes */${discovered.contentLength || '*'}`);
-      setResponseHeader(event, 'content-length', 0);
-      return '';
+      return sendRangeNotSatisfiable(event, discovered.contentLength, discovered.mimeType);
     }
 
     if (shouldRedirect) {
@@ -629,10 +633,7 @@ export default defineEventHandler(async (event) => {
     }
 
     if (isRangeNotSatisfiable) {
-      setResponseStatus(event, 416);
-      setResponseHeader(event, 'content-range', `bytes */${discovered.contentLength || '*'}`);
-      setResponseHeader(event, 'content-length', 0);
-      return '';
+      return sendRangeNotSatisfiable(event, discovered.contentLength, discovered.mimeType);
     }
 
     debugInfo[discovered.client] = `Stream fetch failed: ${statusText || 'unknown error'}`;

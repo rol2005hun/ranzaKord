@@ -6,6 +6,7 @@ interface Props {
   type?: 'button' | 'submit' | 'reset';
   disabled?: boolean;
   loading?: boolean;
+  ariaLabel?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -14,7 +15,8 @@ const props = withDefaults(defineProps<Props>(), {
   size: 'md',
   type: 'button',
   disabled: false,
-  loading: false
+  loading: false,
+  ariaLabel: undefined
 });
 </script>
 
@@ -26,6 +28,7 @@ const props = withDefaults(defineProps<Props>(), {
     :disabled="props.href ? undefined : props.disabled || props.loading"
     :aria-disabled="props.disabled || props.loading"
     :aria-busy="props.loading"
+    :aria-label="props.ariaLabel"
     class="btn"
     :class="[`btn--${props.variant}`, `btn--${props.size}`, { 'btn--loading': props.loading }]">
     <span v-if="props.loading" class="btn__spinner" />
@@ -142,7 +145,8 @@ const props = withDefaults(defineProps<Props>(), {
     gap: inherit;
 
     &--hidden {
-      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
     }
   }
 }
