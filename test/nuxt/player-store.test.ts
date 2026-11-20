@@ -7,6 +7,7 @@ describe('usePlayerStore', () => {
     setActivePinia(createPinia());
     vi.resetAllMocks();
     localStorage.clear();
+    useCookie('player_last_playback').value = null;
   });
 
   afterEach(() => {
@@ -227,6 +228,30 @@ describe('usePlayerStore', () => {
       });
       expect(store.visibleQueueStartIndex).toBe(0);
       expect(store.visibleQueue.length).toBe(21);
+    });
+  });
+
+  describe('lastPlayback persistence', () => {
+    it('initializes from localStorage if present', () => {
+      localStorage.setItem('player_currentTrack', JSON.stringify(mockTrack1));
+      localStorage.setItem('player_currentTimeSeconds', '42');
+
+      const store = usePlayerStore();
+      expect(store.currentTrack).toEqual(mockTrack1);
+      expect(store.currentTimeSeconds).toBe(42);
+    });
+
+    it('updates cookie and localStorage when track is set', async () => {
+      const store = usePlayerStore();
+      store.setTrack(mockTrack1);
+      await nextTick();
+
+      const cookie = useCookie<{
+        track: typeof mockTrack1;
+        currentTime: number;
+      }>('player_last_playback');
+      expect(cookie.value?.track?.videoId).toBe('v1');
+      expect(localStorage.getItem('player_currentTrack')).toContain('v1');
     });
   });
 });

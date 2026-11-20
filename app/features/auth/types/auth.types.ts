@@ -27,6 +27,15 @@ export interface OAuthUser {
   isPublicProfile?: boolean;
   showPlaylists?: boolean;
   settings?: UserSettings;
+  lastPlayback?: {
+    videoId: string;
+    currentTime: number;
+    title?: string;
+    artist?: string;
+    thumbnailUrl?: string;
+    durationSeconds?: number;
+    updatedAt?: string;
+  };
 }
 
 export interface OAuthSession {

@@ -20,6 +20,8 @@ describe('usePlayer', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
     vi.resetAllMocks();
+    localStorage.clear();
+    useCookie('player_last_playback').value = null;
     useOfflineStore().getObjectUrl = vi.fn().mockResolvedValue(null);
   });
 

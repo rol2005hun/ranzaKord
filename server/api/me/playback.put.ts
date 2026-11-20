@@ -16,7 +16,7 @@ export default defineEventHandler(async (event) => {
   }
   const body = await readBody(event);
 
-  const { videoId, currentTime } = body;
+  const { videoId, currentTime, title, artist, thumbnailUrl, durationSeconds } = body;
 
   if (typeof videoId !== 'string' || typeof currentTime !== 'number') {
     throw createError({
@@ -25,15 +25,22 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  const update: Record<string, unknown> = {
+    videoId,
+    currentTime,
+    updatedAt: new Date()
+  };
+
+  if (typeof title === 'string') update.title = title;
+  if (typeof artist === 'string') update.artist = artist;
+  if (typeof thumbnailUrl === 'string') update.thumbnailUrl = thumbnailUrl;
+  if (typeof durationSeconds === 'number') update.durationSeconds = durationSeconds;
+
   const updatedUser = await UserModel.findOneAndUpdate(
     { sub: sessionData.user.sub },
     {
       $set: {
-        lastPlayback: {
-          videoId,
-          currentTime,
-          updatedAt: new Date()
-        }
+        lastPlayback: update
       }
     },
     { returnDocument: 'after' }
