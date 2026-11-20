@@ -49,9 +49,11 @@
   "importInvalidUrl": "Kérjük, érvényes Spotify vagy YouTube lejátszási lista URL-t adj meg.",
   "loadingUserPlaylists": "Lejátszási listák betöltése...",
   "errors": {
-    "create": "Failed to create playlist",
-    "update": "Failed to update playlist",
-    "delete": "Failed to delete playlist"
+    "load": "Nem sikerült betölteni a lejátszási listákat",
+    "import": "Nem sikerült importálni a lejátszási listát",
+    "create": "Nem sikerült létrehozni a lejátszási listát",
+    "update": "Nem sikerült frissíteni a lejátszási listát",
+    "delete": "Nem sikerült törölni a lejátszási listát"
   },
   "myPlaylist": "Saját lejátszási lista",
   "collaborators": "Kollaborátorok",

@@ -36,8 +36,8 @@ const props = withDefaults(defineProps<Props>(), {
   }
 
   &--primary {
-    background-color: var(--color-primary);
-    color: var(--color-primary-foreground);
+    background-color: hsl(var(--color-primary-h) var(--color-primary-s) 36%);
+    color: #ffffff;
   }
 
   &--success {

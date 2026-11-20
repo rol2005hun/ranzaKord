@@ -1,3 +1,6 @@
+import { useApiUrl } from '@/composables/useApiUrl';
+import { getAuthHeaders } from '@/utils/auth';
+
 import type { TopTrackAggregated, TopArtistAggregated } from '../types/stats.types';
 
 interface StatsResponse {
@@ -16,7 +19,9 @@ export const useStatsStore = defineStore('stats', () => {
     if (isLoading.value) return;
     isLoading.value = true;
     try {
-      const data = await $fetch<StatsResponse>('/api/stats');
+      const data = await $fetch<StatsResponse>(useApiUrl('/api/stats'), {
+        headers: getAuthHeaders()
+      });
       topTracks.value = data.topTracks;
       topArtists.value = data.topArtists;
       totalListeningSeconds.value = data.totalListenSeconds;

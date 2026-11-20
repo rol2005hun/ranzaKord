@@ -1,3 +1,5 @@
+import { getAuthHeaders } from '@/utils/auth';
+
 import type {
   PaginationInfo,
   StreamStatsResponse
@@ -73,7 +75,9 @@ export const useStreamStatsStore = defineStore('streamStats', () => {
       const url = useApiUrl(
         `/api/stream/stats?page=${currentPage.value}&limit=${itemsPerPage.value}`
       );
-      const response = await $fetch<StreamStatsResponse>(url);
+      const response = await $fetch<StreamStatsResponse>(url, {
+        headers: getAuthHeaders()
+      });
       data.value = response;
       if (response.pagination) {
         currentPage.value = response.pagination.page;
@@ -102,7 +106,7 @@ export const useStreamStatsStore = defineStore('streamStats', () => {
     error.value = null;
     try {
       const url = useApiUrl('/api/stream/stats');
-      await $fetch(url, { method: 'DELETE' });
+      await $fetch(url, { method: 'DELETE', headers: getAuthHeaders() });
       currentPage.value = 1;
       data.value = {
         totalCount: 0,

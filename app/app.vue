@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import { getContrastColor } from '@/utils/color';
+import { isTauriApp } from '@/utils/tauri';
 
 const { themeId, currentCustomPalette } = useTheme();
 const themeStore = useThemeStore();
@@ -49,10 +50,7 @@ const playerStore = usePlayerStore();
 useGlobalShortcuts();
 useAdaptiveTheme();
 
-const isTauriDesktop =
-  typeof window !== 'undefined' &&
-  '__TAURI_INTERNALS__' in window &&
-  !/android|ios|iphone|ipad/i.test(navigator.userAgent);
+const isTauriDesktop = ref(false);
 
 watch(
   () => playerStore.isAudioReactiveLyrics,
@@ -76,8 +74,12 @@ useHead(() => ({
 }));
 
 onMounted(async () => {
+  if (isTauriApp() && !/android|ios|iphone|ipad/i.test(navigator.userAgent)) {
+    isTauriDesktop.value = true;
+  }
+
   try {
-    if (isTauriDesktop) {
+    if (isTauriDesktop.value) {
       const { Window, getCurrentWindow } = await import('@tauri-apps/api/window');
       setTimeout(async () => {
         const splashscreen = await Window.getByLabel('splashscreen');
@@ -95,7 +97,9 @@ onMounted(async () => {
 
 <template>
   <div :class="{ 'is-tauri': isTauriDesktop }">
-    <AppTitlebar v-if="isTauriDesktop" />
+    <ClientOnly>
+      <AppTitlebar v-if="isTauriDesktop" />
+    </ClientOnly>
     <NuxtRouteAnnouncer />
     <NuxtLayout>
       <NuxtPage />

@@ -14,7 +14,8 @@ const {
   data: featuredTracksData,
   pending: featuredPending,
   execute: executeFeatured
-} = useLazyFetch<SearchResult[]>('/api/home/featured-tracks', {
+} = useLazyFetch<SearchResult[]>(() => useApiUrl('/api/home/featured-tracks'), {
+  headers: () => getAuthHeaders(),
   immediate: false
 });
 
@@ -22,7 +23,8 @@ const {
   data: topTracks,
   pending: topTracksPending,
   execute: executeTopTracks
-} = useLazyFetch<SearchResult[]>('/api/home/top-tracks', {
+} = useLazyFetch<SearchResult[]>(() => useApiUrl('/api/home/top-tracks'), {
+  headers: () => getAuthHeaders(),
   immediate: false
 });
 
@@ -30,7 +32,7 @@ const {
   data: wcTracks,
   pending: wcPending,
   execute: executeWc
-} = useLazyFetch<SearchResult[]>('/api/search', {
+} = useLazyFetch<SearchResult[]>(() => useApiUrl('/api/search'), {
   query: { q: 'fifa world cup official songs', type: 'song' },
   immediate: false
 });
@@ -39,7 +41,7 @@ const {
   data: christmasTracks,
   pending: christmasPending,
   execute: executeChristmas
-} = useLazyFetch<SearchResult[]>('/api/search', {
+} = useLazyFetch<SearchResult[]>(() => useApiUrl('/api/search'), {
   query: { q: 'christmas holiday songs hits', type: 'song' },
   immediate: false
 });
@@ -102,10 +104,13 @@ const featuredTracks: Ref<SearchResult[] | null> = computed(() => {
       }
     ];
   }
-  if (isWalker.value) return topTracks.value ?? null;
-  if (isWc2026.value) return wcTracks.value ?? null;
-  if (isChristmas.value) return christmasTracks.value ?? null;
-  return featuredTracksData.value ?? null;
+  let tracks: SearchResult[] | null = null;
+  if (isWalker.value) tracks = topTracks.value ?? null;
+  else if (isWc2026.value) tracks = wcTracks.value ?? null;
+  else if (isChristmas.value) tracks = christmasTracks.value ?? null;
+  else tracks = featuredTracksData.value ?? null;
+  if (!Array.isArray(tracks)) return null;
+  return tracks.map((t) => ({ ...t, type: t.type || 'song' }));
 });
 
 const pending = computed(() => {

@@ -40,7 +40,6 @@ export function usePlayer() {
   const store = usePlayerStore();
   const nuxtApp = useNuxtApp();
   const t = nuxtApp.$i18n.t;
-  const config = useRuntimeConfig();
   const toast = useToast();
 
   function setPlaybackError(message: string): void {
@@ -51,14 +50,7 @@ export function usePlayer() {
   }
 
   function getApiUrl(path: string) {
-    if (path.startsWith('http://') || path.startsWith('https://')) return path;
-    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-    const isTauriProd = import.meta.client && '__TAURI_INTERNALS__' in window && !import.meta.dev;
-    if (isTauriProd) {
-      const base = (config.public.baseUrl || 'https://kord.ranzak.dev').replace(/\/+$/, '');
-      return `${base}${normalizedPath}`;
-    }
-    return normalizedPath;
+    return useApiUrl(path);
   }
 
   async function getStreamUrl(videoId: string): Promise<string> {
@@ -190,9 +182,9 @@ export function usePlayer() {
       el.addEventListener(
         'timeupdate',
         () => {
-          if (isRestoring || store.isLoading) return;
+          if (isRestoring || store.isLoading || el.seeking) return;
           if (index === activeAudioIndex.value) {
-            if (el.currentTime === 0 && store.currentTimeSeconds > 0) {
+            if (el.currentTime < 1 && store.currentTimeSeconds >= 1 && !store.isPlaying) {
               return;
             }
             store.currentTimeSeconds = el.currentTime;
@@ -359,7 +351,9 @@ export function usePlayer() {
       const applySavedTime = () => {
         if (savedTime > 0) {
           try {
-            el.currentTime = savedTime;
+            if (Math.abs(el.currentTime - savedTime) > 0.5) {
+              el.currentTime = savedTime;
+            }
           } catch {
             void 0;
           }
@@ -382,18 +376,31 @@ export function usePlayer() {
             .finally(() => {
               store.isLoading = false;
             });
-        } else {
-          isRestoring = false;
         }
         el.removeEventListener('loadedmetadata', onLoaded);
       });
 
       const onCanPlay = () => {
         applySavedTime();
-        isRestoring = false;
+        if (!wasPlaying) {
+          setTimeout(() => {
+            isRestoring = false;
+            store.currentTimeSeconds = savedTime;
+          }, 600);
+        }
         el.removeEventListener('canplay', onCanPlay);
       };
       el.addEventListener('canplay', onCanPlay);
+
+      const onSeeked = () => {
+        if (isRestoring && !wasPlaying) {
+          isRestoring = false;
+          if (savedTime > 0 && Math.abs(el.currentTime - savedTime) <= 2) {
+            store.currentTimeSeconds = el.currentTime;
+          }
+        }
+      };
+      el.addEventListener('seeked', onSeeked);
     }
   }
 
@@ -493,7 +500,7 @@ export function usePlayer() {
       listeningSeconds,
       skipped
     };
-    $fetch('/api/player/track-stat', {
+    $fetch(useApiUrl('/api/player/track-stat'), {
       method: 'POST',
       body: payload
     }).catch(() => {});
@@ -584,7 +591,9 @@ export function usePlayer() {
     const authStore = useAuthStore();
     if (authStore.currentUser?.isDemo) return null;
 
-    const res = await $fetch<Track[]>(`/api/search/related?videoId=${videoId}`).catch(() => []);
+    const res = await $fetch<Track[]>(useApiUrl(`/api/search/related?videoId=${videoId}`)).catch(
+      () => []
+    );
     if (res && res.length > 0) {
       const filtered = res
         .filter((rt) => !store.queue.some((qt) => qt.videoId === rt.videoId))
@@ -726,6 +735,9 @@ export function usePlayer() {
     if (activeAudio.value) {
       activeAudio.value.pause();
       store.isPlaying = false;
+      if (import.meta.client && store.currentTimeSeconds > 0) {
+        localStorage.setItem('player_currentTimeSeconds', String(store.currentTimeSeconds));
+      }
       if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
     }
   }
@@ -776,6 +788,9 @@ export function usePlayer() {
       isRestoring = false;
       activeAudio.value.currentTime = seconds;
       store.currentTimeSeconds = seconds;
+      if (import.meta.client && seconds > 0) {
+        localStorage.setItem('player_currentTimeSeconds', String(seconds));
+      }
       store.syncDiscordPresence();
       if (
         'mediaSession' in navigator &&

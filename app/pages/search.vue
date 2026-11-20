@@ -89,12 +89,14 @@ function onPlay(track: SearchResult) {
 
   let tracksToQueue: SearchResult[] = [];
   if (currentTab.value === 'all' && categorizedResults.value) {
-    tracksToQueue = categorizedResults.value.songs || [];
+    tracksToQueue = Array.isArray(categorizedResults.value.songs)
+      ? categorizedResults.value.songs
+      : [];
   } else if (currentTab.value === 'video' || currentTab.value === 'song') {
-    tracksToQueue = results.value;
+    tracksToQueue = Array.isArray(results.value) ? results.value : [];
   }
 
-  if (tracksToQueue.length === 0) {
+  if (!Array.isArray(tracksToQueue) || tracksToQueue.length === 0) {
     tracksToQueue = [track];
   }
 
@@ -214,7 +216,9 @@ function onPlay(track: SearchResult) {
           <TopResultCard :result="categorizedResults.topResult" @play="onPlay" />
         </div>
 
-        <div v-if="categorizedResults.songs.length > 0" class="search-page__songs-col">
+        <div
+          v-if="categorizedResults.songs && categorizedResults.songs.length > 0"
+          class="search-page__songs-col">
           <h2 class="search-page__section-title">{{ $t('search.page.songs') }}</h2>
           <div class="search-page__list">
             <SearchListItem
@@ -226,7 +230,9 @@ function onPlay(track: SearchResult) {
         </div>
       </div>
 
-      <div v-if="categorizedResults.artists.length > 0" class="search-page__section">
+      <div
+        v-if="categorizedResults.artists && categorizedResults.artists.length > 0"
+        class="search-page__section">
         <h2 class="search-page__section-title">{{ $t('search.page.artists') }}</h2>
         <div class="search-page__grid">
           <TopResultCard
@@ -237,7 +243,9 @@ function onPlay(track: SearchResult) {
         </div>
       </div>
 
-      <div v-if="categorizedResults.albums.length > 0" class="search-page__section">
+      <div
+        v-if="categorizedResults.albums && categorizedResults.albums.length > 0"
+        class="search-page__section">
         <h2 class="search-page__section-title">{{ $t('search.page.albums') }}</h2>
         <div class="search-page__grid">
           <TopResultCard
@@ -251,7 +259,7 @@ function onPlay(track: SearchResult) {
       <div
         v-if="categorizedResults.profiles && categorizedResults.profiles.length > 0"
         class="search-page__section">
-        <h2 class="search-page__section-title">Profilok</h2>
+        <h2 class="search-page__section-title">{{ $t('search.page.profiles') }}</h2>
         <div class="search-page__grid">
           <TopResultCard
             v-for="profile in categorizedResults.profiles.slice(0, 5)"
@@ -264,9 +272,9 @@ function onPlay(track: SearchResult) {
       <div
         v-if="
           !categorizedResults.topResult &&
-          categorizedResults.songs.length === 0 &&
-          categorizedResults.artists.length === 0 &&
-          categorizedResults.albums.length === 0 &&
+          (!categorizedResults.songs || categorizedResults.songs.length === 0) &&
+          (!categorizedResults.artists || categorizedResults.artists.length === 0) &&
+          (!categorizedResults.albums || categorizedResults.albums.length === 0) &&
           (!categorizedResults.profiles || categorizedResults.profiles.length === 0)
         "
         class="search-page__empty">

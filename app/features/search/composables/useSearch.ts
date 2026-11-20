@@ -65,10 +65,11 @@ export function useSearch() {
       }
 
       try {
-        const fetchUrl =
+        const path =
           type === 'all'
             ? `/api/search?q=${encodeURIComponent(q.trim())}&_v=2`
             : `/api/search?q=${encodeURIComponent(q.trim())}&type=${type}&_v=2`;
+        const fetchUrl = useApiUrl(path);
 
         if (searchCache.has(fetchUrl)) {
           const cachedData = searchCache.get(fetchUrl);
@@ -82,16 +83,31 @@ export function useSearch() {
 
         const data = await $fetch<CategorizedSearchResults | SearchResult[]>(fetchUrl);
 
-        if (searchCache.size >= MAX_CACHE_SIZE) {
-          const firstKey = searchCache.keys().next().value;
-          if (firstKey) searchCache.delete(firstKey);
+        if (typeof data !== 'object' || data === null) {
+          store.setError('Search failed. Please try again.');
+          return;
         }
-        searchCache.set(fetchUrl, data);
 
         if (type === 'all') {
-          store.setCategorizedResults(data as CategorizedSearchResults);
+          const cat = data as CategorizedSearchResults;
+          if (!cat || !Array.isArray(cat.songs)) {
+            store.setError('Search failed. Please try again.');
+            return;
+          }
+          if (searchCache.size >= MAX_CACHE_SIZE) {
+            const firstKey = searchCache.keys().next().value;
+            if (firstKey) searchCache.delete(firstKey);
+          }
+          searchCache.set(fetchUrl, cat);
+          store.setCategorizedResults(cat);
         } else {
-          store.setResults(data as SearchResult[]);
+          const arr = Array.isArray(data) ? data : [];
+          if (searchCache.size >= MAX_CACHE_SIZE) {
+            const firstKey = searchCache.keys().next().value;
+            if (firstKey) searchCache.delete(firstKey);
+          }
+          searchCache.set(fetchUrl, arr);
+          store.setResults(arr);
         }
       } catch {
         store.setError('Search failed. Please try again.');

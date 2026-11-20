@@ -1,4 +1,5 @@
 import { StreamSpeedStat } from '../models/StreamSpeedStat';
+import { mintPoTokenForVideo } from '../utils/botguard';
 import { createInnertube, resetAnonymousInnertube } from '../utils/innertube';
 
 import type { H3Event } from 'h3';
@@ -151,6 +152,14 @@ async function fetchYouTubeStream(
     Range: rangeHeader
   };
 
+  if (client === 'YTMUSIC') {
+    headers['Origin'] = 'https://music.youtube.com';
+    headers['Referer'] = 'https://music.youtube.com/';
+  } else if (client === 'MWEB' || client === 'WEB') {
+    headers['Origin'] = 'https://www.youtube.com';
+    headers['Referer'] = 'https://www.youtube.com/';
+  }
+
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const res = await fetch(url, {
@@ -243,7 +252,8 @@ async function fetchBasicInfoWithTimeout(
   innertube: Innertube,
   videoId: string,
   client: ClientType,
-  timeoutMs: number
+  timeoutMs: number,
+  poToken?: string
 ) {
   let timer: NodeJS.Timeout | undefined;
   const timeoutPromise = new Promise<never>((_, reject) => {
@@ -253,7 +263,11 @@ async function fetchBasicInfoWithTimeout(
   });
 
   try {
-    return await Promise.race([innertube.getBasicInfo(videoId, { client }), timeoutPromise]);
+    const options: { client: ClientType; po_token?: string } = { client };
+    if (poToken) {
+      options.po_token = poToken;
+    }
+    return await Promise.race([innertube.getBasicInfo(videoId, options), timeoutPromise]);
   } finally {
     if (timer) {
       clearTimeout(timer);
@@ -341,14 +355,16 @@ async function resolveCandidate(
   vid: string,
   streamType: string,
   targetInnertube: Innertube,
-  fallbackPlayer?: unknown
+  fallbackPlayer?: unknown,
+  poToken?: string
 ): Promise<DiscoveryCandidateResult> {
   const startTime = Date.now();
   const info = await fetchBasicInfoWithTimeout(
     targetInnertube,
     vid,
     candidate.client,
-    CLIENT_TIMEOUT_MS
+    CLIENT_TIMEOUT_MS,
+    poToken
   );
 
   const formats = [
@@ -455,10 +471,12 @@ async function discoverStream(
   const innertube = await createInnertube(true);
   const isTvOAuth = Boolean(innertube.session.logged_in && innertube.session.oauth?.oauth2_tokens);
   const anonInnertube = await createInnertube(false);
+  const poData = await mintPoTokenForVideo(vid);
 
   const tier1Specs: CandidateSpec[] = [
     { client: 'ANDROID_VR', useAuth: false },
     { client: 'VISIONOS', useAuth: false },
+    { client: 'WEB', useAuth: false },
     ...(isTvOAuth
       ? [{ client: 'TV_SIMPLY' as ClientType, useAuth: true }]
       : [{ client: 'TV_SIMPLY' as ClientType, useAuth: false }]),
@@ -474,21 +492,26 @@ async function discoverStream(
       : []),
     { client: 'YTMUSIC', useAuth: false },
     { client: 'IOS', useAuth: false },
-    { client: 'MWEB', useAuth: false },
-    { client: 'WEB', useAuth: false }
+    { client: 'MWEB', useAuth: false }
   ];
 
   const executeTier = async (specs: CandidateSpec[]): Promise<DiscoveryCandidateResult | null> => {
     if (specs.length === 0) return null;
     const promises = specs.map(async (spec) => {
       const targetInnertube = spec.useAuth ? innertube : anonInnertube;
+      const poToken =
+        spec.client === 'WEB' || spec.client === 'YTMUSIC' || spec.client === 'MWEB'
+          ? poData?.poToken
+          : undefined;
+
       try {
         return await resolveCandidate(
           spec,
           vid,
           streamType,
           targetInnertube,
-          innertube.session.player
+          innertube.session.player,
+          poToken
         );
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
