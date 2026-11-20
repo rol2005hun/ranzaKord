@@ -73,7 +73,9 @@ export const useOfflineStore = defineStore('offline', () => {
     try {
       const config = useRuntimeConfig();
       const isTauriProd = import.meta.client && '__TAURI_INTERNALS__' in window && !import.meta.dev;
-      const baseUrl = isTauriProd ? config.public.baseUrl : '';
+      const baseUrl = isTauriProd
+        ? (config.public.baseUrl || 'https://kord.ranzak.dev').replace(/\/+$/, '')
+        : '';
       const streamUrl = `${baseUrl}/api/stream?v=${track.videoId}`;
 
       const response = await fetch(streamUrl);

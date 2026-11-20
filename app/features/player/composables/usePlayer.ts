@@ -47,7 +47,10 @@ export function usePlayer() {
     if (path.startsWith('http://') || path.startsWith('https://')) return path;
     const normalizedPath = path.startsWith('/') ? path : `/${path}`;
     const isTauriProd = import.meta.client && '__TAURI_INTERNALS__' in window && !import.meta.dev;
-    if (isTauriProd) return `${config.public.baseUrl}${normalizedPath}`;
+    if (isTauriProd) {
+      const base = (config.public.baseUrl || 'https://kord.ranzak.dev').replace(/\/+$/, '');
+      return `${base}${normalizedPath}`;
+    }
     return normalizedPath;
   }
 

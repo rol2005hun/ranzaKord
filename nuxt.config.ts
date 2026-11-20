@@ -68,7 +68,7 @@ export default defineNuxtConfig({
     ranzakonnectClientSecret: '',
     imgurClientId: '',
     public: {
-      baseUrl: process.env.NUXT_PUBLIC_BASE_URL || '',
+      baseUrl: process.env.NUXT_PUBLIC_BASE_URL || 'https://kord.ranzak.dev',
       appVersion: pkg.version
     }
   },
