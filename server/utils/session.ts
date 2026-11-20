@@ -1,6 +1,9 @@
-import { useSession, unsealSession, getRequestHeader } from 'h3';
+import { useSession, unsealSession, getRequestHeader, createError } from 'h3';
+
+import { UserModel } from '../models/User';
 
 import type { H3Event, Session, SessionConfig } from 'h3';
+import type { ServerSession } from '../types/auth.server.types';
 
 export function getSessionConfig(event: H3Event): SessionConfig {
   const config = useRuntimeConfig();
@@ -98,4 +101,33 @@ export async function useAppSession(event: H3Event) {
   }
 
   return useSession(event, sessionConfig);
+}
+
+export async function assertDeveloperSession(event: H3Event): Promise<ServerSession> {
+  const { t } = useServerTranslation(event);
+  let session;
+  try {
+    session = await useAppSession(event);
+  } catch {
+    throw createError({ statusCode: 401, message: t('core.errors.unauthorized') });
+  }
+
+  const sessionData = session.data as Partial<ServerSession>;
+  if (!sessionData.accessToken || !sessionData.user) {
+    throw createError({ statusCode: 401, message: t('core.errors.unauthorized') });
+  }
+
+  if (sessionData.expiresAt && Date.now() > sessionData.expiresAt) {
+    await session.clear();
+    throw createError({ statusCode: 401, message: t('auth.errors.sessionExpired') });
+  }
+
+  const userDoc = await UserModel.findOne({ sub: sessionData.user.sub });
+  const roles = (userDoc?.roles || []).map((r) => r.toLowerCase());
+  const isDev = roles.some((r) => ['developer', 'dev', 'admin', 'ranzakreator'].includes(r));
+  if (!isDev) {
+    throw createError({ statusCode: 403, message: 'Forbidden' });
+  }
+
+  return sessionData as ServerSession;
 }

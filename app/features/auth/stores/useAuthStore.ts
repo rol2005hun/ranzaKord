@@ -5,6 +5,12 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => !!user.value);
   const currentUser = computed(() => user.value);
+  const isDeveloper = computed(() => {
+    const roles = user.value?.roles || [];
+    return roles.some((r) =>
+      ['developer', 'dev', 'admin', 'ranzakreator'].includes(r.toLowerCase())
+    );
+  });
 
   function setUser(data: OAuthUser | null) {
     user.value = data;
@@ -32,5 +38,5 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  return { user, isAuthenticated, currentUser, setUser, clearSession, loginAsDemo };
+  return { user, isAuthenticated, currentUser, isDeveloper, setUser, clearSession, loginAsDemo };
 });

@@ -2,6 +2,7 @@
 const { currentUser, logout, isAuthenticated } = useAuth();
 const { updateInfo, showUpdateModal } = useAppUpdate();
 const layoutStore = useLayoutStore();
+const authStore = useAuthStore();
 
 const isDropdownOpen = ref(false);
 const isTauriApp = ref(false);
@@ -98,6 +99,15 @@ function closeDropdown() {
             @click="closeDropdown">
             <AppIcon name="ph:user" class="app-navbar__dropdown-icon" />
             <span class="app-navbar__dropdown-label">{{ $t('auth.profile') }}</span>
+          </NuxtLink>
+
+          <NuxtLink
+            v-if="authStore.isDeveloper"
+            to="/stream-stats"
+            class="app-navbar__dropdown-item"
+            @click="closeDropdown">
+            <AppIcon name="ph:chart-line-up" class="app-navbar__dropdown-icon" />
+            <span class="app-navbar__dropdown-label">{{ $t('streamStats.title') }}</span>
           </NuxtLink>
 
           <button

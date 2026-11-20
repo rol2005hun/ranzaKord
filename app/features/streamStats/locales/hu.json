@@ -1,0 +1,45 @@
+{
+  "title": "Stream Sebesség Elemzés",
+  "subtitle": "YouTube kliensek feloldási sebessége és cache hatékonysága (Production)",
+  "navLabel": "Stream Statisztika",
+  "kpi": {
+    "totalRequests": "Összes Kérés",
+    "cacheHitRate": "Cache Találati Arány",
+    "avgResolutionTime": "Átlagos Feloldási Idő",
+    "fastestClient": "Leggyorsabb Kliens"
+  },
+  "clients": {
+    "title": "Kliensek Sebességének Összehasonlítása",
+    "name": "Kliens",
+    "resolvedCount": "Feloldott Zenék",
+    "avgSpeed": "Átlagos Idő",
+    "minSpeed": "Leggyorsabb",
+    "maxSpeed": "Leglassabb"
+  },
+  "logs": {
+    "title": "Legutóbbi Feloldási Napló",
+    "time": "Időpont",
+    "videoId": "Videó Azonosító",
+    "client": "Kliens",
+    "duration": "Időtartam",
+    "status": "Állapot",
+    "deciphered": "Kódfejtett",
+    "size": "Méret"
+  },
+  "actions": {
+    "refresh": "Frissítés",
+    "clearData": "Összes Adat Törlése",
+    "clearing": "Törlés...",
+    "clearConfirm": "Biztosan törölni szeretnéd az összes rögzített stream sebesség adatot? Ez a művelet nem vonható vissza."
+  },
+  "status": {
+    "hit": "Cache Találat",
+    "resolved": "Feloldva",
+    "failed": "Sikertelen"
+  },
+  "empty": "Még nem érkezett rögzített stream statisztika.",
+  "toast": {
+    "clearedSuccess": "Stream statisztikák sikeresen törölve.",
+    "loadError": "Nem sikerült betölteni a stream statisztikákat."
+  }
+}

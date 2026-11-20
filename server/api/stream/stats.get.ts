@@ -1,6 +1,9 @@
 import { StreamSpeedStat } from '../../models/StreamSpeedStat';
+import { assertDeveloperSession } from '../../utils/session';
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (event) => {
+  await assertDeveloperSession(event);
+
   const [totalCount, recentLogs, clientAverages, statusCounts] = await Promise.all([
     StreamSpeedStat.countDocuments(),
     StreamSpeedStat.find().sort({ createdAt: -1 }).limit(50).lean(),

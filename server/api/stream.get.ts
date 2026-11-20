@@ -300,16 +300,24 @@ interface DiscoveryCandidateResult {
   formatsCount: number;
 }
 
-function recordStreamStat(stat: {
-  videoId: string;
-  client: string;
-  durationMs: number;
-  status: 'hit' | 'resolved' | 'failed';
-  isDeciphered: boolean;
-  formatsCount: number;
-  contentLength?: number;
-  errorMessage?: string;
-}): void {
+function recordStreamStat(
+  event: H3Event,
+  stat: {
+    videoId: string;
+    client: string;
+    durationMs: number;
+    status: 'hit' | 'resolved' | 'failed';
+    isDeciphered: boolean;
+    formatsCount: number;
+    contentLength?: number;
+    errorMessage?: string;
+  }
+): void {
+  if (import.meta.dev) return;
+  const host = (getRequestHeader(event, 'host') || '').toLowerCase();
+  if (host.includes('localhost') || host.includes('127.0.0.1')) {
+    return;
+  }
   StreamSpeedStat.create(stat).catch(() => {});
 }
 
@@ -424,6 +432,7 @@ async function resolveCandidate(
 }
 
 async function discoverStream(
+  event: H3Event,
   vid: string,
   streamType: string,
   debugInfo: Record<string, string>
@@ -487,7 +496,7 @@ async function discoverStream(
   }
 
   if (result) {
-    recordStreamStat({
+    recordStreamStat(event, {
       videoId: vid,
       client: result.client,
       durationMs: result.durationMs,
@@ -500,7 +509,7 @@ async function discoverStream(
   }
 
   resetAnonymousInnertube();
-  recordStreamStat({
+  recordStreamStat(event, {
     videoId: vid,
     client: 'ALL_FAILED',
     durationMs: Date.now() - discoveryStart,
@@ -530,15 +539,17 @@ export default defineEventHandler(async (event) => {
   const cached = streamCache.get(cacheKey);
 
   if (cached && Date.now() < cached.expiresAt) {
-    recordStreamStat({
-      videoId: vid,
-      client: cached.client,
-      durationMs: 0,
-      status: 'hit',
-      isDeciphered: false,
-      formatsCount: 0,
-      contentLength: cached.contentLength
-    });
+    if (parsedRange.start === 0) {
+      recordStreamStat(event, {
+        videoId: vid,
+        client: cached.client,
+        durationMs: 0,
+        status: 'hit',
+        isDeciphered: false,
+        formatsCount: 0,
+        contentLength: cached.contentLength
+      });
+    }
 
     const validRange = getValidRange(parsedRange, cached.contentLength);
     if (!validRange) {
@@ -578,7 +589,7 @@ export default defineEventHandler(async (event) => {
 
   let discoveryPromise = inFlightDiscovery.get(cacheKey);
   if (!discoveryPromise) {
-    discoveryPromise = discoverStream(vid, streamType, debugInfo);
+    discoveryPromise = discoverStream(event, vid, streamType, debugInfo);
     inFlightDiscovery.set(cacheKey, discoveryPromise);
   }
 
