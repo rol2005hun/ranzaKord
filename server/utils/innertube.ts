@@ -65,6 +65,7 @@ Platform.shim.eval = evaluateScript;
 
 let anonymousInstance: Innertube | null = null;
 let authenticatedInstance: Innertube | null = null;
+let cleanInstance: Innertube | null = null;
 let isAuthenticating = false;
 let lastAuthCheck = 0;
 let lastAnonCheck = 0;
@@ -139,12 +140,33 @@ async function getStoredPoData(): Promise<StoredPoData> {
 
 export function resetAnonymousInnertube(): void {
   anonymousInstance = null;
+  cleanInstance = null;
   lastAnonCheck = 0;
   lastCachedCookies = undefined;
 }
 
-export async function createInnertube(withAuth = false): Promise<Innertube> {
+export async function createInnertube(withAuth = false, withCookie = true): Promise<Innertube> {
   Platform.shim.eval = evaluateScript;
+
+  if (!withAuth && !withCookie) {
+    if (cleanInstance) {
+      return cleanInstance;
+    }
+    try {
+      cleanInstance = await Innertube.create({
+        cache: new SafeCache(),
+        retrieve_player: true,
+        lang: 'en'
+      });
+    } catch {
+      cleanInstance = await Innertube.create({
+        cache: new SafeCache(),
+        retrieve_player: false,
+        lang: 'en'
+      });
+    }
+    return cleanInstance;
+  }
 
   if (withAuth) {
     if (authenticatedInstance && Date.now() - lastAuthCheck < AUTH_CACHE_TTL) {
