@@ -7,6 +7,13 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html,
+body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
   tab-size: 4;
@@ -53,11 +60,26 @@ ol {
   transition: none !important;
 }
 
-/* Custom Scrollbar only for desktop */
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 @media (hover: hover) and (pointer: fine) {
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
+  }
+
+  ::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
   }
 
   ::-webkit-scrollbar-track {
@@ -73,7 +95,10 @@ ol {
     background: var(--color-border-hover);
   }
 
-  /* Firefox scrollbar */
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
   * {
     scrollbar-width: thin;
     scrollbar-color: var(--color-surface-raised) transparent;

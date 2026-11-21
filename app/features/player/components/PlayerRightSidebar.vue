@@ -1026,6 +1026,12 @@ const sidebarStyle = computed(() => ({
       background: var(--color-border);
       border-radius: var(--radius-full);
     }
+
+    &::-webkit-scrollbar-button {
+      display: none;
+      width: 0;
+      height: 0;
+    }
   }
 
   &__lyric-line {
@@ -1079,6 +1085,7 @@ const sidebarStyle = computed(() => ({
   &__plain-lyrics-wrap {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: var(--space-4);
     display: flex;
     flex-direction: column;
@@ -1096,6 +1103,12 @@ const sidebarStyle = computed(() => ({
     &::-webkit-scrollbar-thumb {
       background: var(--color-border);
       border-radius: var(--radius-full);
+    }
+
+    &::-webkit-scrollbar-button {
+      display: none;
+      width: 0;
+      height: 0;
     }
   }
 
