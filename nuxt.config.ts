@@ -8,9 +8,6 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      htmlAttrs: {
-        lang: 'en'
-      },
       titleTemplate: '%s | ranzaKord',
       viewport: 'width=device-width, initial-scale=1, viewport-fit=cover',
       link: [{ rel: 'icon', type: 'image/webp', href: '/logo.webp' }],
@@ -106,6 +103,7 @@ export default defineNuxtConfig({
   },
 
   image: {
+    provider: 'none',
     domains: [
       'lh3.googleusercontent.com',
       'lh4.googleusercontent.com',
@@ -124,7 +122,7 @@ export default defineNuxtConfig({
   },
 
   site: {
-    url: process.env.NUXT_PUBLIC_BASE_URL,
+    url: 'https://kord.ranzak.dev',
     name: 'ranzaKord',
     description: 'Premium music streaming.'
   },

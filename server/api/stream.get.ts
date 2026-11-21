@@ -512,32 +512,25 @@ async function discoverStream(
 
   const videoTier1Specs: CandidateSpec[] = [
     { client: 'VISIONOS', useAuth: false },
-    ...(isTvOAuth
-      ? [{ client: 'TV_SIMPLY' as ClientType, useAuth: true }]
-      : [{ client: 'TV_SIMPLY' as ClientType, useAuth: false }]),
+    { client: 'TV_SIMPLY' as ClientType, useAuth: false },
+    ...(isTvOAuth ? [{ client: 'TV' as ClientType, useAuth: true }] : []),
     { client: 'ANDROID_VR', useAuth: false },
     { client: 'IOS', useAuth: false }
   ];
 
   const audioTier1Specs: CandidateSpec[] = [
+    { client: 'TV_SIMPLY' as ClientType, useAuth: false },
+    ...(isTvOAuth ? [{ client: 'TV' as ClientType, useAuth: true }] : []),
     { client: 'ANDROID_VR', useAuth: false },
     { client: 'VISIONOS', useAuth: false },
     { client: 'WEB', useAuth: false },
-    ...(isTvOAuth
-      ? [{ client: 'TV_SIMPLY' as ClientType, useAuth: true }]
-      : [{ client: 'TV_SIMPLY' as ClientType, useAuth: false }]),
     { client: 'ANDROID', useAuth: false }
   ];
 
   const tier1Specs = streamType === 'video' ? videoTier1Specs : audioTier1Specs;
 
   const tier2Specs: CandidateSpec[] = [
-    ...(isTvOAuth
-      ? [
-          { client: 'TV' as ClientType, useAuth: true },
-          { client: 'TV_EMBEDDED' as ClientType, useAuth: true }
-        ]
-      : []),
+    ...(isTvOAuth ? [{ client: 'TV_EMBEDDED' as ClientType, useAuth: true }] : []),
     { client: 'YTMUSIC', useAuth: false },
     { client: 'IOS', useAuth: false },
     { client: 'MWEB', useAuth: false }
