@@ -141,7 +141,7 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
       if (oauthTokens) {
         try {
           const oauthInstance = await Innertube.create({
-            cache: new UniversalCache(false),
+            cache: new UniversalCache(true, './.cache/youtubei'),
             retrieve_player: true
           });
 
@@ -171,7 +171,7 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
 
       if (!authenticatedInstance) {
         const instance = await Innertube.create({
-          cache: new UniversalCache(false),
+          cache: new UniversalCache(true, './.cache/youtubei'),
           retrieve_player: true,
           cookie: cookies,
           po_token: poToken,
@@ -208,7 +208,7 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
   const hasPo = Boolean(poToken && visitorData);
 
   anonymousInstance = await Innertube.create({
-    cache: new UniversalCache(false),
+    cache: new UniversalCache(true, './.cache/youtubei'),
     retrieve_player: true,
     lang: 'en',
     cookie: cookies,
