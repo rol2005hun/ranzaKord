@@ -3,6 +3,56 @@ import { Innertube, UniversalCache, Platform } from 'youtubei.js';
 import { SystemConfig } from '../models/SystemConfig';
 
 import type { OAuth2Tokens } from 'youtubei.js';
+import type { InnertubeCache } from '../types/innertube.types';
+
+class SafeCache implements InnertubeCache {
+  private memory = new Map<string, ArrayBuffer>();
+  private diskCache: UniversalCache | null = null;
+  public cache_dir: string;
+
+  constructor() {
+    try {
+      this.diskCache = new UniversalCache(false);
+      this.cache_dir = this.diskCache.cache_dir;
+    } catch {
+      this.diskCache = null;
+      this.cache_dir = 'memory';
+    }
+  }
+
+  async get(key: string): Promise<ArrayBuffer | undefined> {
+    if (this.diskCache) {
+      try {
+        return await this.diskCache.get(key);
+      } catch {
+        void 0;
+      }
+    }
+    return this.memory.get(key);
+  }
+
+  async set(key: string, value: ArrayBuffer): Promise<void> {
+    this.memory.set(key, value);
+    if (this.diskCache) {
+      try {
+        await this.diskCache.set(key, value);
+      } catch {
+        void 0;
+      }
+    }
+  }
+
+  async remove(key: string): Promise<void> {
+    this.memory.delete(key);
+    if (this.diskCache) {
+      try {
+        await this.diskCache.remove(key);
+      } catch {
+        void 0;
+      }
+    }
+  }
+}
 
 function evaluateScript(
   data: Parameters<typeof Platform.shim.eval>[0],
@@ -141,7 +191,7 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
       if (oauthTokens) {
         try {
           const oauthInstance = await Innertube.create({
-            cache: new UniversalCache(true, './.cache/youtubei'),
+            cache: new SafeCache(),
             retrieve_player: true
           });
 
@@ -163,26 +213,29 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
 
           await oauthInstance.session.signIn(oauthTokens);
           authenticatedInstance = oauthInstance;
-        } catch (oauthError) {
-          console.error('Failed to sign in with stored YouTube OAuth tokens:', oauthError);
+        } catch {
           authenticatedInstance = null;
         }
       }
 
       if (!authenticatedInstance) {
-        const instance = await Innertube.create({
-          cache: new UniversalCache(true, './.cache/youtubei'),
-          retrieve_player: true,
-          cookie: cookies,
-          po_token: poToken,
-          visitor_data: visitorData,
-          generate_session_locally: hasPo
-        });
-
-        authenticatedInstance = instance;
+        try {
+          authenticatedInstance = await Innertube.create({
+            cache: new SafeCache(),
+            retrieve_player: true,
+            cookie: cookies,
+            po_token: poToken,
+            visitor_data: visitorData,
+            generate_session_locally: hasPo
+          });
+        } catch {
+          authenticatedInstance = await Innertube.create({
+            cache: new SafeCache(),
+            retrieve_player: true
+          });
+        }
       }
-    } catch (e) {
-      console.error('Failed to initialize authenticated Innertube instance:', e);
+    } catch {
       authenticatedInstance = null;
     } finally {
       isAuthenticating = false;
@@ -207,15 +260,27 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
   const { poToken, visitorData } = await getStoredPoData();
   const hasPo = Boolean(poToken && visitorData);
 
-  anonymousInstance = await Innertube.create({
-    cache: new UniversalCache(true, './.cache/youtubei'),
-    retrieve_player: true,
-    lang: 'en',
-    cookie: cookies,
-    po_token: hasPo ? poToken : undefined,
-    visitor_data: hasPo ? visitorData : undefined,
-    generate_session_locally: hasPo
-  });
+  try {
+    anonymousInstance = await Innertube.create({
+      cache: new SafeCache(),
+      retrieve_player: true,
+      lang: 'en',
+      cookie: cookies,
+      po_token: hasPo ? poToken : undefined,
+      visitor_data: hasPo ? visitorData : undefined,
+      generate_session_locally: hasPo
+    });
+  } catch {
+    anonymousInstance = await Innertube.create({
+      cache: new SafeCache(),
+      retrieve_player: true,
+      lang: 'en'
+    });
+  }
+
+  if (!anonymousInstance) {
+    throw new Error('Failed to create anonymous Innertube instance.');
+  }
 
   return anonymousInstance;
 }

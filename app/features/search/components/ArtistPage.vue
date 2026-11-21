@@ -31,16 +31,9 @@ const {
 const { playTrack } = usePlayer();
 const playerStore = usePlayerStore();
 
-useHead(() => ({
-  title: artist.value?.name || t('search.artist.titleFallback'),
-  meta: [
-    {
-      property: 'og:url',
-      content: `https://kord.ranzak.dev/artist/${encodeURIComponent(artist.value?.id || props.artistId)}`,
-      processTemplateParams: false
-    }
-  ]
-}));
+useHead({
+  title: computed(() => artist.value?.name || t('search.artist.titleFallback'))
+});
 
 watch(
   () => artist.value?.id,
