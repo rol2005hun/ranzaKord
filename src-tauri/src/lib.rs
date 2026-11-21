@@ -82,7 +82,15 @@ fn set_discord_presence(
 fn clear_discord_presence(state: State<'_, DiscordState>) -> Result<(), String> {
     let mut client_guard = state.0.lock().unwrap();
     if let Some(client) = client_guard.as_mut() {
-        let _ = client.clear_activity();
+        if let Err(e) = client.clear_activity() {
+            eprintln!("[Discord RPC] Failed to clear activity: {:?}", e);
+            let _ = client.close();
+            if let Err(e2) = client.connect() {
+                eprintln!("[Discord RPC] Failed to reconnect on clear: {:?}", e2);
+            } else {
+                let _ = client.clear_activity();
+            }
+        }
     }
     Ok(())
 }
