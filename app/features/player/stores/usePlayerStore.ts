@@ -3,15 +3,6 @@ import type { Track, CrossfadeType, PlaybackContext } from '../types/player.type
 export const usePlayerStore = defineStore(
   'player',
   () => {
-    const currentTrack = ref<Track | null>(null);
-    const queue = shallowRef<Track[]>([]);
-    const unshuffledQueue = shallowRef<Track[]>([]);
-    const playHistory = shallowRef<Track[]>([]);
-    const isPlaying = ref(false);
-    const volume = ref(0.8);
-    const currentTimeSeconds = ref(0);
-    const authStore = useAuthStore();
-
     const cookieLastPlayback = useCookie<{
       track: Track | null;
       currentTime: number;
@@ -20,6 +11,15 @@ export const usePlayerStore = defineStore(
       maxAge: 31536000,
       path: '/'
     });
+
+    const currentTrack = ref<Track | null>(cookieLastPlayback.value?.track || null);
+    const queue = shallowRef<Track[]>([]);
+    const unshuffledQueue = shallowRef<Track[]>([]);
+    const playHistory = shallowRef<Track[]>([]);
+    const isPlaying = ref(false);
+    const volume = ref(0.8);
+    const currentTimeSeconds = ref(0);
+    const authStore = useAuthStore();
 
     function shuffleArray<T>(array: T[]): T[] {
       const result = [...array];

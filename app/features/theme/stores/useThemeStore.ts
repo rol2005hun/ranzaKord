@@ -18,21 +18,29 @@ const DEFAULT_THEME_COLORS: Record<ThemeId, string> = {
 export const useThemeStore = defineStore('theme', () => {
   const cookieThemeId = useCookie<ThemeId>('theme-id', {
     default: () => 'dark',
-    maxAge: 31536000
+    maxAge: 31536000,
+    path: '/',
+    sameSite: 'lax'
   });
   const cookieCustomColors = useCookie<Record<string, string>>('theme-custom-colors', {
     default: () => ({}),
-    maxAge: 31536000
+    maxAge: 31536000,
+    path: '/',
+    sameSite: 'lax'
   });
 
   const cookieIsAdaptive = useCookie<boolean>('theme-adaptive', {
     default: () => false,
-    maxAge: 31536000
+    maxAge: 31536000,
+    path: '/',
+    sameSite: 'lax'
   });
 
   const cookieAdaptivePalette = useCookie<ColorPalette | null>('theme-adaptive-palette', {
     default: () => null,
-    maxAge: 31536000
+    maxAge: 31536000,
+    path: '/',
+    sameSite: 'lax'
   });
 
   const themeId = ref<ThemeId>(cookieThemeId.value);

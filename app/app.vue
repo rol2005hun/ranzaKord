@@ -13,7 +13,7 @@ const customColorStyle = computed(() => {
   const sec = currentCustomPalette.value.secondary;
   const h = cc.h;
 
-  let style = `:root { 
+  let style = `html[data-theme] { 
     --color-primary-h: ${cc.h}; 
     --color-primary-s: ${cc.s}%; 
     --color-primary-l: ${cc.l}%; 
@@ -22,7 +22,7 @@ const customColorStyle = computed(() => {
 
   if (themeStore.isAdaptiveThemeEnabled) {
     style += `
-      :root {
+      html[data-theme] {
         --color-bg: hsl(${h} 20% 4%);
         --color-surface: hsl(${h} 20% 8%);
         --color-surface-hover: hsl(${h} 20% 12%);
@@ -39,6 +39,38 @@ const customColorStyle = computed(() => {
   }
 
   return style;
+});
+
+const htmlInlineStyle = computed(() => {
+  if (!currentCustomPalette.value) return undefined;
+  const cc = currentCustomPalette.value.primary;
+  const sec = currentCustomPalette.value.secondary;
+  const h = cc.h;
+
+  const styles = [
+    `--color-primary-h: ${cc.h}`,
+    `--color-primary-s: ${cc.s}%`,
+    `--color-primary-l: ${cc.l}%`,
+    `--color-primary-foreground: ${getContrastColor(cc.hex)}`
+  ];
+
+  if (themeStore.isAdaptiveThemeEnabled) {
+    styles.push(
+      `--color-bg: hsl(${h} 20% 4%)`,
+      `--color-surface: hsl(${h} 20% 8%)`,
+      `--color-surface-hover: hsl(${h} 20% 12%)`,
+      `--color-surface-raised: hsl(${h} 20% 16%)`,
+      `--color-surface-glass: hsl(${h} 20% 8% / 0.78)`,
+      `--color-border: hsl(${h} 20% 16%)`,
+      `--color-border-hover: hsl(${h} 20% 24%)`,
+      `--color-text-primary: hsl(${h} 10% 95%)`,
+      `--color-text-secondary: hsl(${h} 15% 75%)`,
+      `--color-text-tertiary: hsl(${h} 15% 55%)`,
+      `--gradient-hero: linear-gradient(135deg, hsl(${sec.h} 30% 12%) 0%, hsl(${h} 20% 4%) 100%)`
+    );
+  }
+
+  return styles.join('; ');
 });
 
 const { locale } = useI18n({ useScope: 'global' });
@@ -68,12 +100,19 @@ watch(
 useHead(() => ({
   htmlAttrs: {
     'data-theme': themeId.value,
+    style: htmlInlineStyle.value,
     lang: locale.value
   },
   bodyAttrs: {
     class: playerStore.isAudioReactiveLyrics ? 'audio-reactive-lyrics' : ''
   },
-  style: [{ innerHTML: customColorStyle.value, id: 'theme-custom-color' }]
+  style: [
+    {
+      textContent: customColorStyle.value,
+      innerHTML: customColorStyle.value,
+      id: 'theme-custom-color'
+    }
+  ]
 }));
 
 onMounted(async () => {
