@@ -768,7 +768,7 @@ export const usePlayerStore = defineStore(
           'globalShortcutsEnabled',
           'sponsorBlockEnabled'
         ],
-        storage: piniaPluginPersistedstate.localStorage()
+        storage: import.meta.client ? piniaPluginPersistedstate.localStorage() : undefined
       }
     ]
   }
