@@ -26,6 +26,7 @@ let audioAbortController: AbortController | null = null;
 let currentPlayRequestId = 0;
 let preloadedTrackId: string | null = null;
 let isPreloading = false;
+let lastErrorToastTime = 0;
 
 function stopCrossfadeTimers() {
   if (crossfadeRafId !== null) {
@@ -46,8 +47,10 @@ export function usePlayer() {
   const { fetchSegments, clearSegments, shouldSkip, segments: sponsorSegments } = useSponsorBlock();
 
   function setPlaybackError(message: string): void {
-    if (store.error !== message) {
+    const now = Date.now();
+    if (!store.error || now - lastErrorToastTime > 2500) {
       store.error = message;
+      lastErrorToastTime = now;
       toast.danger(message);
     }
   }
@@ -780,8 +783,11 @@ export function usePlayer() {
         navigator.mediaSession.playbackState = 'playing';
       }
       prefetchNextTrack();
-    } catch {
-      if (requestId === currentPlayRequestId) {
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return;
+      }
+      if (requestId === currentPlayRequestId && !store.error) {
         setPlaybackError(t('player.errors.stream'));
       }
     } finally {
@@ -834,7 +840,10 @@ export function usePlayer() {
           isRestoring = false;
           if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
         })
-        .catch(() => {
+        .catch((err) => {
+          if (err instanceof DOMException && err.name === 'AbortError') {
+            return;
+          }
           store.isPlaying = false;
           setPlaybackError(t('player.errors.playback'));
         });
