@@ -40,11 +40,13 @@ async function run(): Promise<void> {
     console.log('\n' + '='.repeat(60));
     console.log(' YouTube Cookie Setup for Production (MongoDB)');
     console.log('='.repeat(60));
-    console.log('\nHow to get the cookie:');
+    console.log('\nHow to get the credentials:');
     console.log('1. Open an Incognito browser window and go to youtube.com');
     console.log('2. Press F12 -> Network tab -> type "player" into the filter');
     console.log('3. Play any video, click on the "v1/player" POST request:');
-    console.log('   - Copy the "cookie:" value under Request Headers');
+    console.log('   - Headers tab: Copy the "cookie:" value');
+    console.log('   - Payload tab: Find "serviceIntegrityDimensions" -> "poToken"');
+    console.log('   - Payload tab: Find "context" -> "client" -> "visitorData"');
     console.log('='.repeat(60) + '\n');
 
     let cookie = process.argv[2];
@@ -68,12 +70,31 @@ async function run(): Promise<void> {
       process.exit(1);
     }
 
+    let poToken = process.argv[3];
+    if (!poToken && !process.argv[2]) {
+      poToken = await rl.question(
+        'Paste PO Token (from Payload -> serviceIntegrityDimensions.poToken, optional): '
+      );
+    }
+    poToken = poToken?.trim() || '';
+
+    let visitorData = process.argv[4];
+    if (!visitorData && !process.argv[2]) {
+      visitorData = await rl.question(
+        'Paste Visitor Data (from Payload -> context.client.visitorData, optional): '
+      );
+    }
+    visitorData = visitorData?.trim() || '';
+
     console.log('\nValidating credentials with YouTube (WEB client)...');
     try {
       const yt = await Innertube.create({
         cache: new UniversalCache(false),
         retrieve_player: true,
-        cookie
+        cookie,
+        po_token: poToken || undefined,
+        visitor_data: visitorData || undefined,
+        generate_session_locally: Boolean(poToken && visitorData)
       });
 
       const testInfo = await yt.getBasicInfo('vz6y3DDBTXA', { client: 'WEB' });
@@ -107,8 +128,23 @@ async function run(): Promise<void> {
     );
     console.log('\x1b[32mSaved YouTube cookies to MongoDB (youtube_cookies)!\x1b[0m');
 
-    await SystemConfig.deleteOne({ key: 'youtube_po_token' });
-    await SystemConfig.deleteOne({ key: 'youtube_visitor_data' });
+    if (poToken) {
+      await SystemConfig.findOneAndUpdate(
+        { key: 'youtube_po_token' },
+        { value: poToken },
+        { upsert: true }
+      );
+      console.log('\x1b[32mSaved PO Token to MongoDB (youtube_po_token)!\x1b[0m');
+    }
+
+    if (visitorData) {
+      await SystemConfig.findOneAndUpdate(
+        { key: 'youtube_visitor_data' },
+        { value: visitorData },
+        { upsert: true }
+      );
+      console.log('\x1b[32mSaved Visitor Data to MongoDB (youtube_visitor_data)!\x1b[0m');
+    }
 
     await mongoose.disconnect();
     console.log(
