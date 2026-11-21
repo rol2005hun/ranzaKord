@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import type { TrackArtist } from '~/features/player/types/player.types';
-import { getTrackArtists } from '~/utils/artist';
+import { getTrackArtists } from '@/utils/artist';
+
+import type { TrackArtist } from '@/features/player/types/player.types';
 
 const props = defineProps<{
   track?: { artist?: string; artists?: TrackArtist[]; artistId?: string } | null;
@@ -18,16 +19,7 @@ const artists = computed(() => getTrackArtists(props.track || undefined));
         class="app-track-artists__artist"
         data-allow-mismatch="children">
         <NuxtLink
-          v-if="artist.id"
-          :to="`/artist/${artist.id}`"
-          class="app-track-artists__link"
-          data-allow-mismatch
-          @click.stop>
-          {{ artist.name }}
-        </NuxtLink>
-        <NuxtLink
-          v-else
-          :to="{ path: '/search', query: { q: artist.name, type: 'artist' } }"
+          :to="`/artist/${encodeURIComponent(artist.id || artist.name)}`"
           class="app-track-artists__link"
           data-allow-mismatch
           @click.stop>

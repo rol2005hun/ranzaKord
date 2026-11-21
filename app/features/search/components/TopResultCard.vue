@@ -94,11 +94,7 @@ const hasBadge = computed(() => {
             <template v-if="resolveArtists(props.result).length > 0">
               <template v-for="(artist, index) in resolveArtists(props.result)" :key="index">
                 <NuxtLink
-                  :to="
-                    artist.id
-                      ? `/artist/${artist.id}`
-                      : `/search?q=${encodeURIComponent(artist.name)}&type=artist`
-                  "
+                  :to="`/artist/${encodeURIComponent(artist.id || artist.name)}`"
                   class="artist-link"
                   @click.stop>
                   {{ artist.name }}
@@ -116,7 +112,7 @@ const hasBadge = computed(() => {
               </NuxtLink>
               <NuxtLink
                 v-else-if="props.result.artist"
-                :to="`/search?q=${encodeURIComponent(props.result.artist)}&type=artist`"
+                :to="`/artist/${encodeURIComponent(props.result.artist)}`"
                 class="artist-link"
                 @click.stop>
                 {{ formatArtistName(props.result.artist) }}
@@ -177,11 +173,7 @@ const hasBadge = computed(() => {
             <template v-if="resolveArtists(props.result).length > 0">
               <template v-for="(artist, index) in resolveArtists(props.result)" :key="index">
                 <NuxtLink
-                  :to="
-                    artist.id
-                      ? `/artist/${artist.id}`
-                      : `/search?q=${encodeURIComponent(artist.name)}&type=artist`
-                  "
+                  :to="`/artist/${encodeURIComponent(artist.id || artist.name)}`"
                   class="artist-link"
                   @click.stop>
                   {{ artist.name }}
@@ -199,7 +191,7 @@ const hasBadge = computed(() => {
               </NuxtLink>
               <NuxtLink
                 v-else-if="props.result.artist"
-                :to="`/search?q=${encodeURIComponent(props.result.artist)}&type=artist`"
+                :to="`/artist/${encodeURIComponent(props.result.artist)}`"
                 class="artist-link"
                 @click.stop>
                 {{ formatArtistName(props.result.artist) }}

@@ -1,4 +1,4 @@
-import type { TrackArtist } from '~/features/player/types/player.types';
+import type { TrackArtist } from '@/features/player/types/player.types';
 
 export function formatArtistName(name: string): string {
   if (!name) return name;
@@ -25,7 +25,10 @@ export function getTrackArtists(track?: {
   if (track.artist) {
     const parts = track.artist.split(/\s*,\s*/);
     if (parts.length > 1) {
-      return parts.map((name) => ({ name: formatArtistName(name.trim()), id: undefined }));
+      return parts.map((name, idx) => ({
+        name: formatArtistName(name.trim()),
+        id: idx === 0 ? track.artistId : undefined
+      }));
     }
     return [{ name: formatArtistName(track.artist), id: track.artistId }];
   }

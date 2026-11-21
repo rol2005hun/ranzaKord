@@ -14,8 +14,6 @@ export default defineCachedEventHandler(
     const innertube = await createInnertube(false);
 
     try {
-      const artist = await innertube.music.getArtist(id);
-
       type YTHeader = {
         title?: { toString: () => string };
         description?: { toString: () => string };
@@ -39,6 +37,35 @@ export default defineCachedEventHandler(
           title?: { toString: () => string; runs?: Array<{ text: string }> };
         }>;
       };
+
+      let targetBrowseId = id;
+      if (
+        !targetBrowseId.startsWith('UC') &&
+        !targetBrowseId.startsWith('FEmusic_library_corpus_track_artists_')
+      ) {
+        try {
+          const cleanName = targetBrowseId.replace(/\s*-\s*(topic|téma)$/i, '').trim();
+          const searchRes = await innertube.music.search(cleanName, { type: 'artist' });
+          if (searchRes.contents) {
+            for (const section of searchRes.contents) {
+              if (!('contents' in section) || !Array.isArray(section.contents)) continue;
+              for (const raw of section.contents) {
+                const it = raw as YTItem;
+                const foundId = it.id || it.endpoint?.payload?.browseId;
+                if (foundId) {
+                  targetBrowseId = foundId;
+                  break;
+                }
+              }
+              if (targetBrowseId !== id) break;
+            }
+          }
+        } catch {
+          void 0;
+        }
+      }
+
+      const artist = await innertube.music.getArtist(targetBrowseId);
 
       const header = artist.header as YTHeader | undefined;
 
@@ -180,7 +207,7 @@ export default defineCachedEventHandler(
               for (const raw of section.contents) {
                 const it = raw as YTItem;
                 const foundId = it.id || it.endpoint?.payload?.browseId;
-                if (foundId && foundId !== id) {
+                if (foundId && foundId !== targetBrowseId) {
                   officialId = foundId;
                   break;
                 }
@@ -189,6 +216,7 @@ export default defineCachedEventHandler(
             }
           }
           if (officialId) {
+            targetBrowseId = officialId;
             const officialArtist = await innertube.music.getArtist(officialId);
             const offHeader = officialArtist.header as YTHeader | undefined;
             if (offHeader) {
@@ -286,7 +314,7 @@ export default defineCachedEventHandler(
       }
 
       return {
-        id,
+        id: targetBrowseId,
         name,
         description,
         thumbnailUrl,
@@ -303,7 +331,7 @@ export default defineCachedEventHandler(
     }
   },
   {
-    maxAge: 60 * 60 * 12, // Cache for 12 hours
+    maxAge: 60 * 60 * 12,
     name: 'artist-details-v3',
     getKey: (event) => {
       const query = getQuery(event);
