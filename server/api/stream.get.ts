@@ -511,6 +511,7 @@ async function discoverStream(
   const poData = await mintPoTokenForVideo(vid);
 
   const videoTier1Specs: CandidateSpec[] = [
+    { client: 'WEB', useAuth: false },
     { client: 'VISIONOS', useAuth: false },
     { client: 'TV_SIMPLY' as ClientType, useAuth: false },
     ...(isTvOAuth ? [{ client: 'TV' as ClientType, useAuth: true }] : []),
@@ -519,11 +520,12 @@ async function discoverStream(
   ];
 
   const audioTier1Specs: CandidateSpec[] = [
+    { client: 'WEB', useAuth: false },
+    { client: 'YTMUSIC', useAuth: false },
     { client: 'TV_SIMPLY' as ClientType, useAuth: false },
     ...(isTvOAuth ? [{ client: 'TV' as ClientType, useAuth: true }] : []),
     { client: 'ANDROID_VR', useAuth: false },
     { client: 'VISIONOS', useAuth: false },
-    { client: 'WEB', useAuth: false },
     { client: 'ANDROID', useAuth: false }
   ];
 
