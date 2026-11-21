@@ -508,72 +508,72 @@ async function discoverStream(
   const innertube = await createInnertube(true);
   const isTvOAuth = Boolean(innertube.session.logged_in && innertube.session.oauth?.oauth2_tokens);
   const anonInnertube = await createInnertube(false);
-  const poData = await mintPoTokenForVideo(vid);
 
-  const videoTier1Specs: CandidateSpec[] = [
-    { client: 'WEB', useAuth: false },
-    { client: 'VISIONOS', useAuth: false },
-    { client: 'TV_SIMPLY' as ClientType, useAuth: false },
-    ...(isTvOAuth ? [{ client: 'TV' as ClientType, useAuth: true }] : []),
-    { client: 'ANDROID_VR', useAuth: false },
-    { client: 'IOS', useAuth: false }
-  ];
+  const primarySpec: CandidateSpec =
+    streamType === 'video' ? { client: 'WEB', useAuth: false } : { client: 'WEB', useAuth: false };
 
-  const audioTier1Specs: CandidateSpec[] = [
-    { client: 'WEB', useAuth: false },
-    { client: 'YTMUSIC', useAuth: false },
-    { client: 'TV_SIMPLY' as ClientType, useAuth: false },
-    ...(isTvOAuth ? [{ client: 'TV' as ClientType, useAuth: true }] : []),
-    { client: 'ANDROID_VR', useAuth: false },
-    { client: 'VISIONOS', useAuth: false },
-    { client: 'ANDROID', useAuth: false }
-  ];
+  const secondarySpec: CandidateSpec =
+    streamType === 'video'
+      ? { client: 'VISIONOS', useAuth: false }
+      : { client: 'YTMUSIC', useAuth: false };
 
-  const tier1Specs = streamType === 'video' ? videoTier1Specs : audioTier1Specs;
+  const fallbackSpecs: CandidateSpec[] =
+    streamType === 'video'
+      ? [
+          { client: 'ANDROID_VR', useAuth: false },
+          { client: 'TV_SIMPLY' as ClientType, useAuth: false },
+          { client: 'IOS', useAuth: false }
+        ]
+      : [
+          { client: 'TV_SIMPLY' as ClientType, useAuth: false },
+          { client: 'ANDROID_VR', useAuth: false },
+          { client: 'VISIONOS', useAuth: false },
+          { client: 'IOS', useAuth: false },
+          { client: 'ANDROID', useAuth: false },
+          ...(isTvOAuth ? [{ client: 'TV' as ClientType, useAuth: true }] : [])
+        ];
 
-  const tier2Specs: CandidateSpec[] = [
-    ...(isTvOAuth ? [{ client: 'TV_EMBEDDED' as ClientType, useAuth: true }] : []),
-    { client: 'YTMUSIC', useAuth: false },
-    { client: 'IOS', useAuth: false },
-    { client: 'MWEB', useAuth: false }
-  ];
+  const discoveryStart = Date.now();
 
-  const executeTier = async (specs: CandidateSpec[]): Promise<DiscoveryCandidateResult | null> => {
-    if (specs.length === 0) return null;
-    const promises = specs.map(async (spec) => {
-      const targetInnertube = spec.useAuth ? innertube : anonInnertube;
-      const poToken =
-        spec.client === 'WEB' || spec.client === 'YTMUSIC' || spec.client === 'MWEB'
-          ? poData?.poToken
-          : undefined;
-
-      try {
-        return await resolveCandidate(
-          spec,
-          vid,
-          streamType,
-          targetInnertube,
-          innertube.session.player,
-          poToken
-        );
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        debugInfo[spec.client] = msg;
-        throw err;
-      }
-    });
-
+  const trySpec = async (
+    spec: CandidateSpec,
+    poToken?: string
+  ): Promise<DiscoveryCandidateResult | null> => {
+    const targetInnertube = spec.useAuth ? innertube : anonInnertube;
     try {
-      return await Promise.any(promises);
-    } catch {
+      return await resolveCandidate(
+        spec,
+        vid,
+        streamType,
+        targetInnertube,
+        innertube.session.player,
+        poToken
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      debugInfo[spec.client] = msg;
       return null;
     }
   };
 
-  const discoveryStart = Date.now();
-  let result = await executeTier(tier1Specs);
+  let result = await trySpec(primarySpec);
+
   if (!result) {
-    result = await executeTier(tier2Specs);
+    result = await trySpec(secondarySpec);
+  }
+
+  if (!result) {
+    for (const spec of fallbackSpecs) {
+      result = await trySpec(spec);
+      if (result) break;
+    }
+  }
+
+  if (!result) {
+    const poData = await mintPoTokenForVideo(vid);
+    if (poData?.poToken) {
+      result = await trySpec(primarySpec, poData.poToken);
+    }
   }
 
   if (result) {
