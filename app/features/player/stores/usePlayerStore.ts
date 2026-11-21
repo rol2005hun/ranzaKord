@@ -531,10 +531,10 @@ export const usePlayerStore = defineStore(
               endTimestamp
             });
           } else {
-            if (lastIsPlaying !== false) {
-              await invoke('clear_discord_presence');
-              lastIsPlaying = false;
-            }
+            lastIsPlaying = false;
+            lastTrackId = '';
+            lastStartTimestamp = 0;
+            await invoke('clear_discord_presence');
           }
         }
       } catch {
@@ -542,18 +542,32 @@ export const usePlayerStore = defineStore(
       }
     };
 
-    const syncDiscordPresence = useThrottleFn(doSyncDiscord, 2000);
+    const syncDiscordPresence = useThrottleFn(doSyncDiscord, 2000, true);
 
     if (import.meta.client) {
-      watch([isPlaying, currentTrack], () => {
-        syncDiscordPresence();
-      });
+      watch(
+        () => isPlaying.value,
+        (playing) => {
+          if (!playing) {
+            doSyncDiscord();
+          } else {
+            syncDiscordPresence();
+          }
+        }
+      );
+
+      watch(
+        () => currentTrack.value?.videoId,
+        () => {
+          syncDiscordPresence();
+        }
+      );
 
       useIntervalFn(() => {
         if (isPlaying.value) {
           syncDiscordPresence();
         }
-      }, 2000);
+      }, 5000);
 
       watch(playbackOrder, (newOrder, oldOrder) => {
         if (newOrder === 'random' && oldOrder !== 'random') {

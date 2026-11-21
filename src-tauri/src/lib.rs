@@ -1,12 +1,12 @@
 #[cfg(desktop)]
 use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
 #[cfg(desktop)]
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 #[cfg(desktop)]
 use tauri::{Manager, State};
 
 #[cfg(desktop)]
-struct DiscordState(Mutex<Option<DiscordIpcClient>>);
+struct DiscordState(Arc<Mutex<Option<DiscordIpcClient>>>);
 
 #[cfg(desktop)]
 #[tauri::command]
@@ -20,6 +20,12 @@ fn set_discord_presence(
     end_timestamp: Option<i64>,
 ) -> Result<(), String> {
     let mut client_guard = state.0.lock().unwrap();
+    if client_guard.is_none() {
+        let mut new_client = DiscordIpcClient::new("1510265493443973140");
+        if new_client.connect().is_ok() {
+            *client_guard = Some(new_client);
+        }
+    }
     if let Some(client) = client_guard.as_mut() {
         let mut activity = activity::Activity::new()
             .details(&details)
@@ -76,7 +82,15 @@ fn set_discord_presence(
 fn clear_discord_presence(state: State<'_, DiscordState>) -> Result<(), String> {
     let mut client_guard = state.0.lock().unwrap();
     if let Some(client) = client_guard.as_mut() {
-        let _ = client.clear_activity();
+        if let Err(e) = client.clear_activity() {
+            eprintln!("[Discord RPC] Failed to clear activity: {:?}", e);
+            let _ = client.close();
+            if let Err(e2) = client.connect() {
+                eprintln!("[Discord RPC] Failed to reconnect on clear: {:?}", e2);
+            } else {
+                let _ = client.clear_activity();
+            }
+        }
     }
     Ok(())
 }
@@ -90,9 +104,18 @@ pub fn run() {
 
     #[cfg(desktop)]
     {
-        let mut client = DiscordIpcClient::new("1510265493443973140");
-        let _ = client.connect();
-        
+        let client_state = Arc::new(Mutex::new(None));
+        let client_clone = Arc::clone(&client_state);
+
+        std::thread::spawn(move || {
+            let mut client = DiscordIpcClient::new("1510265493443973140");
+            if client.connect().is_ok() {
+                if let Ok(mut guard) = client_clone.lock() {
+                    *guard = Some(client);
+                }
+            }
+        });
+
         builder = builder
             .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
                 if let Some(window) = app.get_webview_window("main") {
@@ -102,7 +125,7 @@ pub fn run() {
             }))
             .plugin(tauri_plugin_updater::Builder::new().build())
             .plugin(tauri_plugin_global_shortcut::Builder::new().build())
-            .manage(DiscordState(Mutex::new(Some(client))))
+            .manage(DiscordState(client_state))
             .invoke_handler(tauri::generate_handler![
                 set_discord_presence,
                 clear_discord_presence

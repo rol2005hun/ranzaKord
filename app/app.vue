@@ -46,11 +46,14 @@ const { showUpdateModal } = useAppUpdate();
 const layoutStore = useLayoutStore();
 const playerStore = usePlayerStore();
 
-// Initialize global features
 useGlobalShortcuts();
 useAdaptiveTheme();
 
-const isTauriDesktop = ref(false);
+const isTauriDesktop = ref(
+  typeof window !== 'undefined' &&
+    isTauriApp() &&
+    !/android|ios|iphone|ipad/i.test(navigator.userAgent)
+);
 
 watch(
   () => playerStore.isAudioReactiveLyrics,
@@ -76,21 +79,12 @@ useHead(() => ({
 onMounted(async () => {
   if (isTauriApp() && !/android|ios|iphone|ipad/i.test(navigator.userAgent)) {
     isTauriDesktop.value = true;
-  }
-
-  try {
-    if (isTauriDesktop.value) {
-      const { Window, getCurrentWindow } = await import('@tauri-apps/api/window');
-      setTimeout(async () => {
-        const splashscreen = await Window.getByLabel('splashscreen');
-        if (splashscreen) {
-          await splashscreen.close();
-        }
-        await getCurrentWindow().show();
-      }, 50);
+    try {
+      const { getCurrentWindow } = await import('@tauri-apps/api/window');
+      await getCurrentWindow().show();
+    } catch (err) {
+      console.error('Failed to initialize Tauri window:', err);
     }
-  } catch (err) {
-    console.error('Failed to initialize Tauri window:', err);
   }
 });
 </script>

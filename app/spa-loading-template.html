@@ -1,13 +1,9 @@
-<!-- Nuxt SPA Loading Template -->
-<!-- This is shown before Vue hydrates -->
 <script>
   if (localStorage.getItem('window-maximized') === 'true') {
     document.documentElement.classList.add('is-maximized');
   }
 </script>
-<!-- [html-validate-disable element-permitted-content] -->
 <style>
-  /* Base reset for the loading screen */
   body,
   html {
     margin: 0;
@@ -31,9 +27,14 @@
     flex-direction: column;
     height: 100vh;
     width: 100vw;
+    background: radial-gradient(
+      circle at 50% 50%,
+      rgba(124, 58, 237, 0.14) 0%,
+      rgba(9, 9, 15, 0.95) 55%,
+      #09090f 100%
+    );
   }
 
-  /* Exact Titlebar Styles from Titlebar.vue */
   #spa-loading-titlebar {
     display: none;
     height: var(--titlebar-height, 32px);
@@ -106,31 +107,211 @@
     color: #fff;
   }
 
-  /* Loading Spinner Styles */
   .spa-loading-content {
     flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
     margin-top: var(--titlebar-height, 32px);
+    user-select: none;
+    -webkit-user-select: none;
   }
 
   html.is-mobile .spa-loading-content {
     margin-top: 0;
   }
 
-  .spa-spinner {
-    width: 48px;
-    height: 48px;
-    border: 4px solid var(--color-border, #1e1e40);
-    border-top-color: var(--color-primary, #7c3aed);
-    border-radius: 50%;
-    animation: spa-spin 1s linear infinite;
+  .spa-brand-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    position: relative;
   }
 
-  @keyframes spa-spin {
+  .spa-logo-wrapper {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .spa-pulse-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 1.5px solid rgba(139, 92, 246, 0.45);
+    animation: spa-ripple 3s cubic-bezier(0.2, 0.8, 0.4, 1) infinite;
+    pointer-events: none;
+  }
+
+  .spa-pulse-ring-1 {
+    animation-delay: 0s;
+  }
+
+  .spa-pulse-ring-2 {
+    animation-delay: 1s;
+  }
+
+  .spa-pulse-ring-3 {
+    animation-delay: 2s;
+  }
+
+  .spa-logo-glow {
+    position: absolute;
+    width: 86px;
+    height: 86px;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      rgba(139, 92, 246, 0.65) 0%,
+      rgba(99, 102, 241, 0.25) 55%,
+      transparent 75%
+    );
+    filter: blur(14px);
+    animation: spa-glow-pulse 2.6s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .spa-brand-logo {
+    width: 76px;
+    height: 76px;
+    object-fit: contain;
+    border-radius: 22px;
+    position: relative;
+    z-index: 2;
+    filter: drop-shadow(0 8px 24px rgba(124, 58, 237, 0.55));
+    animation: spa-breathe 2.6s ease-in-out infinite;
+  }
+
+  .spa-brand-name {
+    font-family:
+      'Inter',
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    color: #ffffff;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+  }
+
+  .spa-brand-name span {
+    background: linear-gradient(135deg, #a855f7 0%, #ec4899 50%, #6366f1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .spa-eq-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 22px;
+  }
+
+  .spa-eq-bar {
+    width: 3.5px;
+    height: 18px;
+    border-radius: 9999px;
+    background: linear-gradient(180deg, #c084fc, #7c3aed);
+    animation: spa-eq 1.2s ease-in-out infinite;
+    transform-origin: bottom;
+  }
+
+  .spa-eq-bar:nth-child(1) {
+    animation-delay: 0.1s;
+    height: 14px;
+  }
+
+  .spa-eq-bar:nth-child(2) {
+    animation-delay: 0.35s;
+    height: 20px;
+  }
+
+  .spa-eq-bar:nth-child(3) {
+    animation-delay: 0.55s;
+    height: 22px;
+  }
+
+  .spa-eq-bar:nth-child(4) {
+    animation-delay: 0.25s;
+    height: 18px;
+  }
+
+  .spa-eq-bar:nth-child(5) {
+    animation-delay: 0.45s;
+    height: 13px;
+  }
+
+  .spa-status-text {
+    font-family:
+      'Inter',
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #9494c7;
+    letter-spacing: 0.2px;
+    min-height: 20px;
+    text-align: center;
+    transition: opacity 0.25s ease;
+  }
+
+  @keyframes spa-breathe {
+    0%,
     100% {
-      transform: rotate(360deg);
+      transform: scale(1) translateY(0);
+      filter: drop-shadow(0 8px 24px rgba(124, 58, 237, 0.45));
+    }
+    50% {
+      transform: scale(1.06) translateY(-2px);
+      filter: drop-shadow(0 12px 32px rgba(139, 92, 246, 0.7));
+    }
+  }
+
+  @keyframes spa-glow-pulse {
+    0%,
+    100% {
+      transform: scale(0.95);
+      opacity: 0.65;
+    }
+    50% {
+      transform: scale(1.15);
+      opacity: 0.95;
+    }
+  }
+
+  @keyframes spa-ripple {
+    0% {
+      transform: scale(0.85);
+      opacity: 0.8;
+    }
+    100% {
+      transform: scale(2.4);
+      opacity: 0;
+    }
+  }
+
+  @keyframes spa-eq {
+    0%,
+    100% {
+      transform: scaleY(0.3);
+      opacity: 0.6;
+    }
+    50% {
+      transform: scaleY(1);
+      opacity: 1;
     }
   }
 </style>
@@ -153,7 +334,6 @@
         </svg>
       </div>
       <div id="spa-maximize" class="spa-tb-btn">
-        <!-- Maximize icon (square) -->
         <svg
           id="spa-icon-maximize"
           xmlns="http://www.w3.org/2000/svg"
@@ -164,7 +344,6 @@
             fill="currentColor"
             d="M208 32H48a16 16 0 0 0-16 16v160a16 16 0 0 0 16 16h160a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16m0 176H48V48h160z" />
         </svg>
-        <!-- Restore icon (copy) - hidden by default -->
         <svg
           id="spa-icon-restore"
           xmlns="http://www.w3.org/2000/svg"
@@ -188,7 +367,30 @@
   </div>
 
   <div class="spa-loading-content">
-    <div class="spa-spinner"></div>
+    <div class="spa-brand-container">
+      <div class="spa-logo-wrapper">
+        <div class="spa-pulse-ring spa-pulse-ring-1"></div>
+        <div class="spa-pulse-ring spa-pulse-ring-2"></div>
+        <div class="spa-pulse-ring spa-pulse-ring-3"></div>
+        <div class="spa-logo-glow"></div>
+        <img src="/logo.webp" alt="ranzaKord" class="spa-brand-logo" />
+      </div>
+
+      <div class="spa-brand-name">
+        ranza
+        <span>Kord</span>
+      </div>
+
+      <div class="spa-eq-container" aria-hidden="true">
+        <span class="spa-eq-bar"></span>
+        <span class="spa-eq-bar"></span>
+        <span class="spa-eq-bar"></span>
+        <span class="spa-eq-bar"></span>
+        <span class="spa-eq-bar"></span>
+      </div>
+
+      <div id="spa-loading-status" class="spa-status-text">Hangolódás a hullámhosszra...</div>
+    </div>
   </div>
 </div>
 
@@ -201,10 +403,31 @@
     document.documentElement.classList.add('is-mobile');
   }
 
+  const quotes = [
+    'Hangolódás a hullámhosszra...',
+    'Ütemek szinkronizálása a felhővel...',
+    'Basszus optimalizálása...',
+    'Lejátszási listák betöltése...',
+    'Csatlakozás a zenei térhez...',
+    'Kristálytiszta hangzás előkészítése...',
+    'Készülj a dropra...'
+  ];
+  let quoteIdx = 0;
+  const statusEl = document.getElementById('spa-loading-status');
+  if (statusEl) {
+    setInterval(() => {
+      statusEl.style.opacity = '0';
+      setTimeout(() => {
+        quoteIdx = (quoteIdx + 1) % quotes.length;
+        statusEl.textContent = quotes[quoteIdx];
+        statusEl.style.opacity = '1';
+      }, 250);
+    }, 2200);
+  }
+
   if (window.__TAURI_INTERNALS__ && !isMobile) {
     document.getElementById('spa-loading-titlebar').style.display = 'flex';
 
-    // Check initial maximized state
     window.__TAURI_INTERNALS__
       .invoke('plugin:window|is_maximized', { label: 'main' })
       .then((isMaximized) => {

@@ -17,7 +17,10 @@ let anonymousInstance: Innertube | null = null;
 let authenticatedInstance: Innertube | null = null;
 let isAuthenticating = false;
 let lastAuthCheck = 0;
+let lastAnonCheck = 0;
+let lastCachedCookies: string | undefined = undefined;
 const AUTH_CACHE_TTL = 60_000;
+const ANON_CACHE_TTL = 300_000;
 
 async function getStoredCookies(): Promise<string | undefined> {
   try {
@@ -86,6 +89,8 @@ async function getStoredPoData(): Promise<StoredPoData> {
 
 export function resetAnonymousInnertube(): void {
   anonymousInstance = null;
+  lastAnonCheck = 0;
+  lastCachedCookies = undefined;
 }
 
 export async function createInnertube(withAuth = false): Promise<Innertube> {
@@ -189,9 +194,16 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
     return authenticatedInstance;
   }
 
-  if (anonymousInstance) return anonymousInstance;
-
   const cookies = await getStoredCookies();
+  const cookiesChanged = cookies !== lastCachedCookies;
+
+  if (anonymousInstance && !cookiesChanged && Date.now() - lastAnonCheck < ANON_CACHE_TTL) {
+    return anonymousInstance;
+  }
+
+  lastAnonCheck = Date.now();
+  lastCachedCookies = cookies;
+
   const { poToken, visitorData } = await getStoredPoData();
   const hasPo = Boolean(poToken && visitorData);
 
@@ -200,8 +212,8 @@ export async function createInnertube(withAuth = false): Promise<Innertube> {
     retrieve_player: true,
     lang: 'en',
     cookie: cookies,
-    po_token: poToken,
-    visitor_data: visitorData,
+    po_token: hasPo ? poToken : undefined,
+    visitor_data: hasPo ? visitorData : undefined,
     generate_session_locally: hasPo
   });
 

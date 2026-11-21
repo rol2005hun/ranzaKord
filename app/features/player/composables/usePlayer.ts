@@ -78,10 +78,48 @@ export function usePlayer() {
     return getApiUrl(`/api/stream?v=${finalVideoId}`);
   }
 
+  function getEffectiveTrackEnd(actualDuration: number): number {
+    if (!store.sponsorBlockEnabled || sponsorSegments.value.length === 0) {
+      return actualDuration;
+    }
+    for (const [start, end] of sponsorSegments.value) {
+      if (end >= actualDuration - 3 && start < actualDuration) {
+        return start;
+      }
+    }
+    return actualDuration;
+  }
+
+  function getEffectiveTimeLeft(currentTime: number, actualDuration: number): number {
+    if (!store.sponsorBlockEnabled || sponsorSegments.value.length === 0) {
+      return Math.max(0, actualDuration - currentTime);
+    }
+    const effectiveEnd = getEffectiveTrackEnd(actualDuration);
+    if (currentTime >= effectiveEnd) return 0;
+
+    let skippedAhead = 0;
+    for (const [start, end] of sponsorSegments.value) {
+      if (end >= actualDuration - 3) continue;
+      if (end <= currentTime) continue;
+      if (start >= effectiveEnd) continue;
+
+      const clampedStart = Math.max(start, currentTime);
+      const clampedEnd = Math.min(end, effectiveEnd);
+      if (clampedEnd > clampedStart) {
+        skippedAhead += clampedEnd - clampedStart;
+      }
+    }
+
+    return Math.max(0, effectiveEnd - currentTime - skippedAhead);
+  }
+
   async function preloadNextTrack(track: Track): Promise<void> {
     if (isPreloading) return;
     isPreloading = true;
     try {
+      if (store.sponsorBlockEnabled) {
+        fetchSegments(track.videoId).catch(() => {});
+      }
       const url = await getStreamUrl(track.videoId);
       const inactiveAudio = activeAudioIndex.value === 0 ? audio2Ref.value : audio1Ref.value;
       if (inactiveAudio && !isCrossfading && store.crossfadeEnabled) {
@@ -192,15 +230,16 @@ export function usePlayer() {
             }
             store.currentTimeSeconds = el.currentTime;
 
-            if (store.sponsorBlockEnabled && sponsorSegments.value.length > 0) {
+            const actualDuration = store.currentTrack?.durationSeconds || el.duration || 0;
+            const effectiveEnd = getEffectiveTrackEnd(actualDuration);
+
+            if (store.sponsorBlockEnabled && sponsorSegments.value.length > 0 && !isCrossfading) {
               const skipTo = shouldSkip(el.currentTime);
               if (skipTo !== null) {
-                const actualDuration = store.currentTrack?.durationSeconds || el.duration || 0;
                 if (
                   actualDuration > 0 &&
-                  skipTo >= actualDuration - 2 &&
-                  store.hasNext &&
-                  !isCrossfading
+                  (skipTo >= actualDuration - 2 || el.currentTime >= effectiveEnd - 1) &&
+                  store.hasNext
                 ) {
                   playNext();
                   return;
@@ -222,13 +261,12 @@ export function usePlayer() {
               }
             }
 
-            const actualDuration = store.currentTrack?.durationSeconds || el.duration || 0;
             if (actualDuration > 0 && store.hasNext && !isCrossfading) {
               const safeCrossfade =
                 store.crossfadeEnabled && store.crossfadeDuration > 0
                   ? Math.min(store.crossfadeDuration, actualDuration / 2)
                   : 0;
-              const timeLeft = actualDuration - el.currentTime;
+              const timeLeft = getEffectiveTimeLeft(el.currentTime, actualDuration);
               const preloadLeadTime = safeCrossfade + 3;
 
               if (timeLeft > preloadLeadTime + 2 && preloadedTrackId) {
@@ -439,6 +477,11 @@ export function usePlayer() {
     if (!inAudio) return;
 
     isCrossfading = true;
+
+    clearSegments();
+    if (store.sponsorBlockEnabled) {
+      fetchSegments(nextTrack.videoId).catch(() => {});
+    }
 
     getStreamUrl(nextTrack.videoId).then((url) => {
       if (inAudio.src !== url) {
