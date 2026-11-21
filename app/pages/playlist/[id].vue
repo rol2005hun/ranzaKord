@@ -408,13 +408,24 @@ async function onDelete(): Promise<void> {
   }
 }
 
-async function onImageError(): Promise<void> {
-  const firstTrackThumb = virtualTracks.value.find(
-    (t) => t !== null && t.thumbnailUrl
-  )?.thumbnailUrl;
-  if (!firstTrackThumb || !playlist.value) return;
-  await store.update(id.value, { imageUrl: firstTrackThumb });
-  await refresh();
+const hasCoverError = ref(false);
+
+watch(id, () => {
+  hasCoverError.value = false;
+});
+
+const coverImageUrl = computed(() => {
+  if (hasCoverError.value) {
+    const firstTrackThumb = virtualTracks.value.find(
+      (t) => t !== null && t.thumbnailUrl
+    )?.thumbnailUrl;
+    return firstTrackThumb || null;
+  }
+  return playlist.value?.imageUrl || null;
+});
+
+function onImageError(): void {
+  hasCoverError.value = true;
 }
 
 const isDownloadingPlaylist = ref(false);
@@ -463,7 +474,7 @@ const showStickyMobileMenu = ref(false);
       :is-error="isError"
       :title="playlist?.name"
       :badge="$t('playlists.myPlaylist')"
-      :image-url="playlist?.imageUrl"
+      :image-url="coverImageUrl"
       :is-list-playing="isCurrentPlaylistPlaying"
       :is-list-loading="isCurrentPlaylistLoading"
       :disable-play-button="trackCount === 0"

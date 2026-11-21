@@ -43,8 +43,22 @@ function onContentScroll(event: Event): void {
 }
 
 const img = useImage();
+const hasImageError = ref(false);
+
+watch(
+  () => props.imageUrl,
+  () => {
+    hasImageError.value = false;
+  }
+);
+
+function handleImageError(): void {
+  hasImageError.value = true;
+  emit('image-error');
+}
+
 const optimizedBgUrl = computed(() => {
-  if (!props.imageUrl) return '';
+  if (!props.imageUrl || hasImageError.value) return '';
   return img(props.imageUrl, { format: 'webp', width: 800, quality: 50 });
 });
 
@@ -146,7 +160,7 @@ onMounted(() => {
           <div class="music-page__header-content">
             <div class="music-page__cover" :class="{ 'music-page__cover--rounded': roundedImage }">
               <NuxtImg
-                v-if="imageUrl"
+                v-if="imageUrl && !hasImageError"
                 :src="imageUrl"
                 :alt="props.title || 'Cover'"
                 width="120"
@@ -155,7 +169,7 @@ onMounted(() => {
                 loading="eager"
                 fetchpriority="high"
                 preload
-                @error="emit('image-error')" />
+                @error="handleImageError" />
               <slot v-else name="fallback-icon">
                 <AppIcon name="ph:music-notes" />
               </slot>
