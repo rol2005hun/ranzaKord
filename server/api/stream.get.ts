@@ -510,26 +510,27 @@ async function discoverStream(
   const anonInnertube = await createInnertube(false);
 
   const primarySpec: CandidateSpec =
-    streamType === 'video' ? { client: 'WEB', useAuth: false } : { client: 'WEB', useAuth: false };
+    streamType === 'video'
+      ? { client: 'VISIONOS', useAuth: false }
+      : { client: 'IOS', useAuth: false };
 
   const secondarySpec: CandidateSpec =
     streamType === 'video'
-      ? { client: 'VISIONOS', useAuth: false }
-      : { client: 'YTMUSIC', useAuth: false };
+      ? { client: 'IOS', useAuth: false }
+      : { client: 'VISIONOS', useAuth: false };
 
   const fallbackSpecs: CandidateSpec[] =
     streamType === 'video'
       ? [
-          { client: 'ANDROID_VR', useAuth: false },
+          { client: 'WEB', useAuth: false },
           { client: 'TV_SIMPLY' as ClientType, useAuth: false },
-          { client: 'IOS', useAuth: false }
+          { client: 'ANDROID_VR', useAuth: false }
         ]
       : [
+          { client: 'WEB', useAuth: false },
           { client: 'TV_SIMPLY' as ClientType, useAuth: false },
-          { client: 'ANDROID_VR', useAuth: false },
-          { client: 'VISIONOS', useAuth: false },
-          { client: 'IOS', useAuth: false },
           { client: 'ANDROID', useAuth: false },
+          { client: 'ANDROID_VR', useAuth: false },
           ...(isTvOAuth ? [{ client: 'TV' as ClientType, useAuth: true }] : [])
         ];
 
