@@ -67,7 +67,7 @@ const inFlightDiscovery = new Map<string, Promise<CachedStream | null>>();
 const recentHitLogTimestamps = new Map<string, number>();
 const STREAM_CACHE_TTL = 2 * 60 * 60 * 1000;
 const HIT_LOG_DEDUPE_MS = 15_000;
-const CHUNK_SIZE = 512 * 1024;
+const CHUNK_SIZE = 2 * 1024 * 1024;
 const CLIENT_TIMEOUT_MS = 5000;
 const STREAM_CONNECT_TIMEOUT_MS = 6000;
 

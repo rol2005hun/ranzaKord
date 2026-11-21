@@ -38,14 +38,7 @@ export function useMusicVideo() {
         if (!vidId) {
           isNotFound.value = true;
         } else {
-          const streamData = await $fetch<string>(useApiUrl(`/api/stream?v=${vidId}&type=video`), {
-            responseType: 'text'
-          }).catch(() => null);
-          if (streamData) {
-            musicVideoUrl.value = useApiUrl(`/api/stream?v=${vidId}&type=video`);
-          } else {
-            isNotFound.value = true;
-          }
+          musicVideoUrl.value = useApiUrl(`/api/stream?v=${vidId}&type=video`);
         }
       } else {
         isNotFound.value = true;
