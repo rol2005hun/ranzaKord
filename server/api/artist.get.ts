@@ -14,8 +14,6 @@ export default defineCachedEventHandler(
     const innertube = await createInnertube(false);
 
     try {
-      const artist = await innertube.music.getArtist(id);
-
       type YTHeader = {
         title?: { toString: () => string };
         description?: { toString: () => string };
@@ -40,12 +38,62 @@ export default defineCachedEventHandler(
         }>;
       };
 
+      let targetBrowseId = id;
+      if (
+        !targetBrowseId.startsWith('UC') &&
+        !targetBrowseId.startsWith('FEmusic_library_corpus_track_artists_')
+      ) {
+        try {
+          const cleanName = targetBrowseId.replace(/\s*-\s*(topic|téma)$/i, '').trim();
+          const searchRes = await innertube.music.search(cleanName, { type: 'artist' });
+          if (searchRes.contents) {
+            for (const section of searchRes.contents) {
+              if (!('contents' in section) || !Array.isArray(section.contents)) continue;
+              for (const raw of section.contents) {
+                const it = raw as YTItem;
+                const foundId = it.id || it.endpoint?.payload?.browseId;
+                if (foundId) {
+                  targetBrowseId = foundId;
+                  break;
+                }
+              }
+              if (targetBrowseId !== id) break;
+            }
+          }
+        } catch {
+          void 0;
+        }
+      }
+
+      const artist = await innertube.music.getArtist(targetBrowseId);
+
       const header = artist.header as YTHeader | undefined;
 
       const name = header?.title?.toString() || 'Unknown Artist';
-      const description = header?.description?.toString() || '';
+      let description = header?.description?.toString() || '';
 
       let thumbnailUrl = '';
+
+      if (header) {
+        const h = header as unknown as {
+          thumbnails?: Array<{ url: string }>;
+          foreground_thumbnails?: Array<{ url: string }>;
+          thumbnail?: { contents?: Array<{ url: string }> };
+        };
+        const hThumb =
+          h.thumbnails?.[0]?.url ||
+          h.foreground_thumbnails?.[0]?.url ||
+          h.thumbnail?.contents?.[0]?.url;
+        if (hThumb) thumbnailUrl = hThumb;
+      }
+
+      if (!thumbnailUrl) {
+        const rawVisuals = (artist as unknown as { visuals?: { avatar?: Array<{ url: string }> } })
+          ?.visuals;
+        if (rawVisuals?.avatar?.[0]?.url) {
+          thumbnailUrl = rawVisuals.avatar[0].url;
+        }
+      }
 
       const topSongs: SearchResult[] = [];
       const albums: SearchResult[] = [];
@@ -55,7 +103,14 @@ export default defineCachedEventHandler(
           const section = rawSection as YTSection;
           const title = section.title?.toString()?.toLowerCase() || '';
 
-          if (title.includes('song') || title.includes('dal') || title.includes('top')) {
+          if (
+            title.includes('song') ||
+            title.includes('dal') ||
+            title.includes('top') ||
+            title.includes('szám') ||
+            title.includes('popular') ||
+            title.includes('népszerű')
+          ) {
             if (section.contents) {
               for (const rawItem of section.contents) {
                 const item = rawItem as YTItem;
@@ -110,7 +165,13 @@ export default defineCachedEventHandler(
                 });
               }
             }
-          } else if (title.includes('album') || title.includes('single')) {
+          } else if (
+            title.includes('album') ||
+            title.includes('single') ||
+            title.includes('kiadás') ||
+            title.includes('kislemez') ||
+            title.includes('ep')
+          ) {
             if (section.contents) {
               for (const rawItem of section.contents) {
                 const item = rawItem as YTItem;
@@ -135,8 +196,125 @@ export default defineCachedEventHandler(
         }
       }
 
+      if (topSongs.length === 0 && albums.length === 0 && name && name !== 'Unknown Artist') {
+        try {
+          const cleanName = name.replace(/\s*-\s*(topic|téma)$/i, '').trim();
+          const searchRes = await innertube.music.search(cleanName, { type: 'artist' });
+          let officialId = '';
+          if (searchRes.contents) {
+            for (const section of searchRes.contents) {
+              if (!('contents' in section) || !Array.isArray(section.contents)) continue;
+              for (const raw of section.contents) {
+                const it = raw as YTItem;
+                const foundId = it.id || it.endpoint?.payload?.browseId;
+                if (foundId && foundId !== targetBrowseId) {
+                  officialId = foundId;
+                  break;
+                }
+              }
+              if (officialId) break;
+            }
+          }
+          if (officialId) {
+            targetBrowseId = officialId;
+            const officialArtist = await innertube.music.getArtist(officialId);
+            const offHeader = officialArtist.header as YTHeader | undefined;
+            if (offHeader) {
+              const h = offHeader as unknown as {
+                thumbnails?: Array<{ url: string }>;
+                foreground_thumbnails?: Array<{ url: string }>;
+                thumbnail?: { contents?: Array<{ url: string }> };
+              };
+              const hThumb =
+                h.thumbnails?.[0]?.url ||
+                h.foreground_thumbnails?.[0]?.url ||
+                h.thumbnail?.contents?.[0]?.url;
+              if (hThumb && !thumbnailUrl) thumbnailUrl = hThumb;
+              if (offHeader.description?.toString() && !description) {
+                description = offHeader.description.toString();
+              }
+            }
+
+            if (officialArtist.sections) {
+              for (const rawSection of officialArtist.sections) {
+                const section = rawSection as YTSection;
+                const secTitle = section.title?.toString()?.toLowerCase() || '';
+
+                if (
+                  secTitle.includes('song') ||
+                  secTitle.includes('dal') ||
+                  secTitle.includes('top') ||
+                  secTitle.includes('szám') ||
+                  secTitle.includes('popular') ||
+                  secTitle.includes('népszerű')
+                ) {
+                  if (section.contents && topSongs.length === 0) {
+                    for (const rawItem of section.contents) {
+                      const item = rawItem as YTItem;
+                      const videoId = item.id || item.endpoint?.payload?.videoId;
+                      if (!videoId) continue;
+
+                      const trackTitle = item.title?.toString() || item.name?.toString() || '';
+                      const trackArtist = item.authors?.[0]?.name || name;
+                      const trackArtistId = item.authors?.[0]?.channel_id || id;
+                      const trackThumb = item.thumbnails?.[0]?.url || '';
+
+                      if (!thumbnailUrl && trackThumb) thumbnailUrl = trackThumb;
+
+                      let duration = 0;
+                      if (item.duration?.seconds) {
+                        duration = item.duration.seconds;
+                      }
+
+                      topSongs.push({
+                        id: videoId,
+                        type: 'song',
+                        title: trackTitle,
+                        artist: trackArtist,
+                        artistId: trackArtistId,
+                        thumbnailUrl: trackThumb,
+                        durationSeconds: duration
+                      });
+                    }
+                  }
+                } else if (
+                  secTitle.includes('album') ||
+                  secTitle.includes('single') ||
+                  secTitle.includes('kiadás') ||
+                  secTitle.includes('kislemez') ||
+                  secTitle.includes('ep')
+                ) {
+                  if (section.contents && albums.length === 0) {
+                    for (const rawItem of section.contents) {
+                      const item = rawItem as YTItem;
+                      const browseId = item.id || item.endpoint?.payload?.browseId;
+                      if (!browseId) continue;
+
+                      const albumTitle = item.title?.toString() || item.name?.toString() || '';
+                      const albumThumb = item.thumbnails?.[0]?.url || '';
+
+                      if (!thumbnailUrl && albumThumb) thumbnailUrl = albumThumb;
+
+                      albums.push({
+                        id: browseId,
+                        type: 'album',
+                        title: albumTitle,
+                        artist: name,
+                        thumbnailUrl: albumThumb
+                      });
+                    }
+                  }
+                }
+              }
+            }
+          }
+        } catch {
+          void 0;
+        }
+      }
+
       return {
-        id,
+        id: targetBrowseId,
         name,
         description,
         thumbnailUrl,
@@ -153,7 +331,7 @@ export default defineCachedEventHandler(
     }
   },
   {
-    maxAge: 60 * 60 * 12, // Cache for 12 hours
+    maxAge: 60 * 60 * 12,
     name: 'artist-details-v3',
     getKey: (event) => {
       const query = getQuery(event);

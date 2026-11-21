@@ -35,6 +35,13 @@ describe('getTrackArtists', () => {
     expect(result[0]?.id).toBeUndefined();
   });
 
+  it('splits comma separated artists and assigns artistId to first artist', () => {
+    const result = getTrackArtists({ artist: 'Dzsúdló, Desh', artistId: 'UC123' });
+    expect(result).toHaveLength(2);
+    expect(result[0]).toEqual({ name: 'Dzsúdló', id: 'UC123' });
+    expect(result[1]).toEqual({ name: 'Desh', id: undefined });
+  });
+
   it('returns empty array when artists is empty and artist string is missing', () => {
     expect(getTrackArtists({ artists: [] })).toEqual([]);
   });

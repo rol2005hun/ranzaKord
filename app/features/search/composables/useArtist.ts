@@ -4,6 +4,9 @@ import type { TrackListItem } from '@/components/shared/TrackList.vue';
 
 export function useArtist(id: string) {
   const headers = useRequestHeaders(['cookie']);
+  const { playTrack, togglePlay, isPlaying, currentTrack, playQueue } = usePlayer();
+  const playerStore = usePlayerStore();
+
   const {
     data: artist,
     status,
@@ -11,20 +14,17 @@ export function useArtist(id: string) {
   } = useFetch<ArtistDetail>('/api/artist', {
     headers,
     query: { id },
-    lazy: true,
     getCachedData(key) {
       const nuxtApp = useNuxtApp();
       return nuxtApp.payload.data[key] || nuxtApp.static.data[key];
     }
   });
 
-  const { playTrack, togglePlay, isPlaying, currentTrack, playQueue } = usePlayer();
-  const playerStore = usePlayerStore();
-
   const allSongs = ref<SearchResult[]>([]);
 
   const continuation = ref<string | null>(null);
-  const isLoadingSongs = ref(false);
+  const isLoadingSongs = ref(true);
+  const hasLoadedInitialSongs = ref(false);
   const retryCount = ref(0);
 
   const isArtistPlaying = computed(() => {
@@ -88,10 +88,16 @@ export function useArtist(id: string) {
   );
 
   async function loadSongs() {
-    if (isLoadingSongs.value || (!artist.value?.name && !continuation.value)) return;
+    if (isLoadingSongs.value && hasLoadedInitialSongs.value) return;
+    if (!artist.value?.name && !continuation.value) {
+      isLoadingSongs.value = false;
+      hasLoadedInitialSongs.value = true;
+      return;
+    }
     isLoadingSongs.value = true;
     try {
       const data = await $fetch<PaginatedSongs>('/api/artist/songs', {
+        headers,
         query: {
           q: artist.value?.name,
           continuation: continuation.value || undefined
@@ -124,9 +130,10 @@ export function useArtist(id: string) {
       }
       continuation.value = data.continuation || null;
     } catch {
-      // silent fail – songs section just won't render
+      void 0;
     } finally {
       isLoadingSongs.value = false;
+      hasLoadedInitialSongs.value = true;
     }
   }
 
@@ -226,6 +233,7 @@ export function useArtist(id: string) {
     error,
     allSongs,
     isLoadingSongs,
+    hasLoadedInitialSongs,
     isArtistPlaying,
     isArtistLoading,
     mappedTopSongs,

@@ -16,15 +16,19 @@ export default defineNuxtPlugin((nuxtApp) => {
           isSyncingFromServer = true;
           const s = user.settings;
 
-          if (s.theme !== undefined) themeStore.setTheme(s.theme as ThemeId);
-          if (s.customColors !== undefined)
+          if (s.theme !== undefined && themeStore.themeId !== s.theme) {
+            themeStore.setTheme(s.theme as ThemeId);
+          }
+          if (s.customColors !== undefined) {
             themeStore.customColors = s.customColors as Record<string, string>;
-          // Keep backward compatibility if old users only have customColor
-          else if (s.customColor !== undefined && s.theme) {
+          } else if (s.customColor !== undefined && s.theme) {
             themeStore.customColors[s.theme] = s.customColor;
           }
 
-          if (s.isAdaptiveThemeEnabled !== undefined) {
+          if (
+            s.isAdaptiveThemeEnabled !== undefined &&
+            themeStore.isAdaptiveThemeEnabled !== s.isAdaptiveThemeEnabled
+          ) {
             themeStore.isAdaptiveThemeEnabled = s.isAdaptiveThemeEnabled;
           }
 

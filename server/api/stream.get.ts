@@ -56,6 +56,9 @@ interface CandidateFormat {
   has_video?: boolean;
   has_audio?: boolean;
   height?: number;
+  itag?: number;
+  bitrate?: number;
+  average_bitrate?: number;
   decipher?: (player: unknown) => Promise<string>;
 }
 
@@ -64,7 +67,7 @@ const inFlightDiscovery = new Map<string, Promise<CachedStream | null>>();
 const recentHitLogTimestamps = new Map<string, number>();
 const STREAM_CACHE_TTL = 2 * 60 * 60 * 1000;
 const HIT_LOG_DEDUPE_MS = 15_000;
-const CHUNK_SIZE = 512 * 1024;
+const CHUNK_SIZE = 2 * 1024 * 1024;
 const CLIENT_TIMEOUT_MS = 5000;
 const STREAM_CONNECT_TIMEOUT_MS = 6000;
 
@@ -97,16 +100,27 @@ function parseByteRange(clientRange: string | undefined): ByteRange {
   return { start, end: start + CHUNK_SIZE - 1 };
 }
 
-function getValidRange(range: ByteRange, contentLength?: number): ByteRange | null {
+function getValidRange(
+  range: ByteRange,
+  contentLength?: number,
+  client?: string
+): ByteRange | null {
+  let { start, end } = range;
+  if (client === 'IOS') {
+    const maxIosChunk = 512 * 1024;
+    if (end - start + 1 > maxIosChunk) {
+      end = start + maxIosChunk - 1;
+    }
+  }
   if (contentLength && contentLength > 0) {
-    if (range.start >= contentLength) {
+    if (start >= contentLength) {
       return null;
     }
-    const end = Math.min(range.end, contentLength - 1);
-    const start = Math.min(range.start, end);
+    end = Math.min(end, contentLength - 1);
+    start = Math.min(start, end);
     return { start, end };
   }
-  return range;
+  return { start, end };
 }
 
 function sendRangeNotSatisfiable(
@@ -403,8 +417,18 @@ async function resolveCandidate(
     });
     candidateFormats.push(...videoFormats);
   } else {
+    const getAudioScore = (f: CandidateFormat): number => {
+      const itag = f.itag;
+      const bitrate = f.bitrate || f.average_bitrate || 0;
+      if (itag === 140) return 2000000 + bitrate;
+      if (itag === 251) return 1500000 + bitrate;
+      if (itag === 139) return 10;
+      return bitrate;
+    };
     const audioOnly = formats.filter((f) => f.has_audio && !f.has_video && isPlayableFormat(f));
     const audioCombined = formats.filter((f) => f.has_audio && isPlayableFormat(f));
+    audioOnly.sort((a, b) => getAudioScore(b) - getAudioScore(a));
+    audioCombined.sort((a, b) => getAudioScore(b) - getAudioScore(a));
     candidateFormats.push(...audioOnly, ...audioCombined);
   }
 
@@ -435,7 +459,11 @@ async function resolveCandidate(
       continue;
     }
 
-    const testRange: ByteRange = { start: 0, end: 1024 };
+    const probeLimit =
+      candidate.client === 'IOS'
+        ? Math.min(524287, (format.content_length || 524288) - 1)
+        : Math.min(CHUNK_SIZE - 1, (format.content_length || CHUNK_SIZE) - 1);
+    const testRange: ByteRange = { start: 0, end: Math.max(1024, probeLimit) };
     const { res: streamRes, statusText } = await fetchYouTubeStream(
       candidateUrl,
       candidate.client,
@@ -448,7 +476,7 @@ async function resolveCandidate(
     }
     streamRes.body?.cancel();
 
-    if (format.content_length && format.content_length > 1048576) {
+    if (format.content_length && format.content_length > 1048576 && candidate.client !== 'IOS') {
       const testRange2: ByteRange = { start: 1048576, end: 1049600 };
       const { res: streamRes2 } = await fetchYouTubeStream(
         candidateUrl,
@@ -509,15 +537,8 @@ async function discoverStream(
   const isTvOAuth = Boolean(innertube.session.logged_in && innertube.session.oauth?.oauth2_tokens);
   const anonInnertube = await createInnertube(false);
 
-  const primarySpec: CandidateSpec =
-    streamType === 'video'
-      ? { client: 'VISIONOS', useAuth: false }
-      : { client: 'IOS', useAuth: false };
-
-  const secondarySpec: CandidateSpec =
-    streamType === 'video'
-      ? { client: 'IOS', useAuth: false }
-      : { client: 'VISIONOS', useAuth: false };
+  const primarySpec: CandidateSpec = { client: 'VISIONOS', useAuth: false };
+  const secondarySpec: CandidateSpec = { client: 'IOS', useAuth: false };
 
   const fallbackSpecs: CandidateSpec[] =
     streamType === 'video'
@@ -527,6 +548,8 @@ async function discoverStream(
           { client: 'ANDROID_VR', useAuth: false }
         ]
       : [
+          { client: 'MWEB', useAuth: false },
+          { client: 'YTMUSIC', useAuth: false },
           { client: 'WEB', useAuth: false },
           { client: 'TV_SIMPLY' as ClientType, useAuth: false },
           { client: 'ANDROID', useAuth: false },
@@ -645,7 +668,7 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    const validRange = getValidRange(parsedRange, cached.contentLength);
+    const validRange = getValidRange(parsedRange, cached.contentLength, cached.client);
     if (!validRange) {
       return sendRangeNotSatisfiable(event, cached.contentLength, cached.mimeType);
     }
@@ -688,7 +711,7 @@ export default defineEventHandler(async (event) => {
   if (discovered) {
     streamCache.set(cacheKey, discovered);
 
-    const validRange = getValidRange(parsedRange, discovered.contentLength);
+    const validRange = getValidRange(parsedRange, discovered.contentLength, discovered.client);
     if (!validRange) {
       return sendRangeNotSatisfiable(event, discovered.contentLength, discovered.mimeType);
     }
@@ -717,6 +740,7 @@ export default defineEventHandler(async (event) => {
       return sendRangeNotSatisfiable(event, discovered.contentLength, discovered.mimeType);
     }
 
+    streamCache.delete(cacheKey);
     debugInfo[discovered.client] = `Stream fetch failed: ${statusText || 'unknown error'}`;
   }
 

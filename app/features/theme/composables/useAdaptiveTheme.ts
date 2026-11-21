@@ -41,13 +41,21 @@ export function useAdaptiveTheme() {
 
     const currentTrack = playerStore.currentTrack;
     if (!currentTrack || !currentTrack.thumbnailUrl) {
-      themeStore.adaptivePalette = null;
       return;
     }
 
     try {
       if (paletteCache.has(currentTrack.thumbnailUrl)) {
-        themeStore.adaptivePalette = paletteCache.get(currentTrack.thumbnailUrl) || null;
+        const cached = paletteCache.get(currentTrack.thumbnailUrl) || null;
+        if (
+          cached &&
+          themeStore.adaptivePalette &&
+          themeStore.adaptivePalette.primary === cached.primary &&
+          themeStore.adaptivePalette.secondary === cached.secondary
+        ) {
+          return;
+        }
+        themeStore.adaptivePalette = cached;
         return;
       }
 
@@ -58,12 +66,9 @@ export function useAdaptiveTheme() {
         paletteCache.set(currentTrack.thumbnailUrl, palette);
         savePaletteCache();
         themeStore.adaptivePalette = palette;
-      } else {
-        themeStore.adaptivePalette = null;
       }
-    } catch (error) {
-      console.warn('Failed to update adaptive color:', error);
-      themeStore.adaptivePalette = null;
+    } catch {
+      void 0;
     }
   }
 

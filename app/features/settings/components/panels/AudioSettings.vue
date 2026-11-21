@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { usePlayerStore } from '../../../player/stores/usePlayerStore';
+import { useAudioVisualizer } from '@/features/player/composables/useAudioVisualizer';
+import { usePlayerStore } from '@/features/player/stores/usePlayerStore';
 
 const playerStore = usePlayerStore();
+const { applyReverbPreset, setStereoWidener, setBassBoost } = useAudioVisualizer();
 
 const presets = {
   flat: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -32,6 +34,50 @@ watch(
 function onSliderChange() {
   playerStore.eqPreset = 'custom';
 }
+
+function onSpatialToggle(val: boolean) {
+  playerStore.setSpatialAudio(val);
+}
+
+function onWidenerToggle(val: boolean) {
+  playerStore.setStereoWidener(val);
+  setStereoWidener(val);
+}
+
+function onSlowedReverbToggle(val: boolean) {
+  playerStore.setSlowedReverb(val);
+  applyReverbPreset(playerStore.reverbPreset);
+}
+
+function onNightcoreToggle(val: boolean) {
+  playerStore.setNightcore(val);
+  applyReverbPreset(playerStore.reverbPreset);
+}
+
+function onReverbChange(val: string | number) {
+  const preset = String(val);
+  playerStore.reverbPreset = preset as
+    'none' | 'room' | 'hall' | 'cathedral' | 'shower' | 'muffled';
+  applyReverbPreset(preset);
+}
+
+function onBassBoostToggle(val: boolean) {
+  playerStore.bassBoostEnabled = val;
+  setBassBoost(val);
+}
+
+function onSpeedSliderChange(event: Event) {
+  const target = event.target as HTMLInputElement;
+  const speed = Number.parseFloat(target.value);
+  if (!Number.isNaN(speed)) {
+    playerStore.setSpeed(speed);
+  }
+}
+
+function resetSpeed() {
+  playerStore.setSpeed(1.0);
+  playerStore.preservesPitch = true;
+}
 </script>
 
 <template>
@@ -40,9 +86,124 @@ function onSliderChange() {
 
     <AppSettingsSection>
       <AppSettingsItem
+        :title="$t('settings.audio.slowedReverb.title')"
+        :description="$t('settings.audio.slowedReverb.description')">
+        <AppToggle
+          :model-value="playerStore.isSlowedReverb"
+          @update:model-value="onSlowedReverbToggle" />
+      </AppSettingsItem>
+
+      <AppSettingsItem
+        :title="$t('settings.audio.nightcore.title')"
+        :description="$t('settings.audio.nightcore.description')">
+        <AppToggle :model-value="playerStore.isNightcore" @update:model-value="onNightcoreToggle" />
+      </AppSettingsItem>
+
+      <AppSettingsItem
+        :title="$t('settings.audio.speed.title')"
+        :description="$t('settings.audio.speed.description')">
+        <div class="speed-controls">
+          <span class="speed-value">{{ playerStore.playbackSpeed.toFixed(2) }}x</span>
+          <input
+            type="range"
+            min="0.5"
+            max="2.0"
+            step="0.05"
+            :value="playerStore.playbackSpeed"
+            class="speed-slider"
+            :style="{
+              '--speed-progress': `${Math.max(
+                0,
+                Math.min(100, ((playerStore.playbackSpeed - 0.5) / 1.5) * 100)
+              )}%`
+            }"
+            :aria-label="$t('settings.audio.speed.title')"
+            @input="onSpeedSliderChange" />
+          <div class="speed-reset-slot">
+            <AppButton
+              variant="secondary"
+              size="sm"
+              class="speed-reset-btn"
+              :class="{ 'speed-reset-btn--hidden': playerStore.playbackSpeed === 1.0 }"
+              @click="resetSpeed">
+              <AppIcon name="ph:arrow-counter-clockwise-bold" />
+              1.0x
+            </AppButton>
+          </div>
+        </div>
+      </AppSettingsItem>
+
+      <AppSettingsItem
+        :title="$t('settings.audio.speed.preservePitch')"
+        :description="$t('settings.audio.speed.preservePitchDescription')">
+        <AppToggle
+          v-model="playerStore.preservesPitch"
+          :disabled="playerStore.playbackSpeed === 1.0" />
+      </AppSettingsItem>
+
+      <AppSettingsItem
+        :title="$t('settings.audio.reverb.title')"
+        :description="$t('settings.audio.reverb.description')">
+        <AppSelect
+          :model-value="playerStore.reverbPreset"
+          class="settings-select"
+          :options="[
+            {
+              label: $t('settings.audio.reverb.presets.none'),
+              value: 'none',
+              icon: 'ph:prohibit-bold'
+            },
+            {
+              label: $t('settings.audio.reverb.presets.room'),
+              value: 'room',
+              icon: 'ph:house-bold'
+            },
+            {
+              label: $t('settings.audio.reverb.presets.hall'),
+              value: 'hall',
+              icon: 'ph:buildings-bold'
+            },
+            {
+              label: $t('settings.audio.reverb.presets.cathedral'),
+              value: 'cathedral',
+              icon: 'ph:church-bold'
+            },
+            {
+              label: $t('settings.audio.reverb.presets.shower'),
+              value: 'shower',
+              icon: 'ph:drop-bold'
+            },
+            {
+              label: $t('settings.audio.reverb.presets.muffled'),
+              value: 'muffled',
+              icon: 'ph:door-bold'
+            }
+          ]"
+          @update:model-value="onReverbChange" />
+      </AppSettingsItem>
+
+      <AppSettingsItem
         :title="$t('settings.audio.spatialAudio.title')"
         :description="$t('settings.audio.spatialAudio.description')">
-        <AppToggle v-model="playerStore.isSpatialAudio" />
+        <AppToggle
+          :model-value="playerStore.isSpatialAudio"
+          @update:model-value="onSpatialToggle" />
+      </AppSettingsItem>
+
+      <AppSettingsItem
+        :title="$t('settings.audio.stereoWidener.title')"
+        :description="$t('settings.audio.stereoWidener.description')">
+        <AppToggle
+          :model-value="playerStore.isStereoWidener"
+          @update:model-value="onWidenerToggle" />
+      </AppSettingsItem>
+
+      <AppSettingsItem
+        :title="$t('settings.audio.bassBoost.title')"
+        :description="$t('settings.audio.bassBoost.description')">
+        <AppToggle
+          :model-value="playerStore.bassBoostEnabled"
+          @update:model-value="onBassBoostToggle" />
       </AppSettingsItem>
 
       <AppSettingsItem
@@ -236,6 +397,115 @@ function onSliderChange() {
 
   &:hover::-moz-range-thumb {
     transform: scale(1.2);
+  }
+}
+
+.speed-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 36px;
+}
+
+.speed-value {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  width: 44px;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.speed-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 150px;
+  flex-shrink: 0;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+
+  &::-webkit-slider-runnable-track {
+    box-sizing: border-box;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(
+      to right,
+      var(--color-primary) var(--speed-progress, 33%),
+      var(--color-surface-hover) var(--speed-progress, 33%)
+    );
+    border: 1px solid var(--color-border);
+  }
+
+  &::-webkit-slider-thumb {
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid var(--color-primary);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+    margin-top: -5px !important;
+    transition: transform var(--transition-fast, 0.2s);
+  }
+
+  &:hover::-webkit-slider-thumb {
+    transform: scale(1.2);
+  }
+
+  &::-moz-range-track {
+    box-sizing: border-box;
+    height: 6px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(
+      to right,
+      var(--color-primary) var(--speed-progress, 33%),
+      var(--color-surface-hover) var(--speed-progress, 33%)
+    );
+    border: 1px solid var(--color-border);
+  }
+
+  &::-moz-range-thumb {
+    box-sizing: border-box;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid var(--color-primary);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  }
+
+  &:hover::-moz-range-thumb {
+    transform: scale(1.2);
+  }
+}
+
+.speed-reset-slot {
+  width: 68px;
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.speed-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  transition: opacity var(--transition-fast, 0.2s);
+
+  &--hidden {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
   }
 }
 

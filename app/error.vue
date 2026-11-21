@@ -22,14 +22,20 @@ const customColorStyle = computed(() => {
   const palette = themeStore.currentCustomPalette;
   if (!palette) return '';
   const cc = palette.primary;
-  return `:root { --color-primary-h: ${cc.h}; --color-primary-s: ${cc.s}%; --color-primary-l: ${cc.l}%; }`;
+  return `html[data-theme] { --color-primary-h: ${cc.h}; --color-primary-s: ${cc.s}%; --color-primary-l: ${cc.l}%; }`;
 });
 
 useHead(() => ({
   htmlAttrs: {
     'data-theme': themeDataAttr.value
   },
-  style: [{ innerHTML: customColorStyle.value, id: 'theme-custom-color' }]
+  style: [
+    {
+      textContent: customColorStyle.value,
+      innerHTML: customColorStyle.value,
+      id: 'theme-custom-color'
+    }
+  ]
 }));
 
 const is404 = computed(() => props.error.status === 404 || props.error.statusCode === 404);

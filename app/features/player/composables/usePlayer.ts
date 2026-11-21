@@ -26,6 +26,7 @@ let audioAbortController: AbortController | null = null;
 let currentPlayRequestId = 0;
 let preloadedTrackId: string | null = null;
 let isPreloading = false;
+let lastErrorToastTime = 0;
 
 function stopCrossfadeTimers() {
   if (crossfadeRafId !== null) {
@@ -46,11 +47,45 @@ export function usePlayer() {
   const { fetchSegments, clearSegments, shouldSkip, segments: sponsorSegments } = useSponsorBlock();
 
   function setPlaybackError(message: string): void {
-    if (store.error !== message) {
+    const now = Date.now();
+    if (!store.error || now - lastErrorToastTime > 2500) {
       store.error = message;
+      lastErrorToastTime = now;
       toast.danger(message);
     }
   }
+
+  function applyPlaybackRate() {
+    const rate = store.playbackSpeed ?? 1.0;
+    const preservesPitch = store.preservesPitch ?? true;
+    if (audio1Ref.value) {
+      audio1Ref.value.playbackRate = rate;
+      (
+        audio1Ref.value as HTMLAudioElement & {
+          preservesPitch?: boolean;
+          mozPreservesPitch?: boolean;
+          webkitPreservesPitch?: boolean;
+        }
+      ).preservesPitch = preservesPitch;
+    }
+    if (audio2Ref.value) {
+      audio2Ref.value.playbackRate = rate;
+      (
+        audio2Ref.value as HTMLAudioElement & {
+          preservesPitch?: boolean;
+          mozPreservesPitch?: boolean;
+          webkitPreservesPitch?: boolean;
+        }
+      ).preservesPitch = preservesPitch;
+    }
+  }
+
+  watch(
+    () => [store.playbackSpeed, store.preservesPitch],
+    () => {
+      applyPlaybackRate();
+    }
+  );
 
   function getApiUrl(path: string) {
     return useApiUrl(path);
@@ -143,7 +178,14 @@ export function usePlayer() {
 
   let isRestoring = false;
 
-  const { setGains, setEqGains, resumeAudioContext } = useAudioVisualizer();
+  const {
+    setGains,
+    setEqGains,
+    setStereoWidener,
+    setBassBoost,
+    applyReverbPreset,
+    resumeAudioContext
+  } = useAudioVisualizer();
 
   watch(
     () => store.eqEnabled,
@@ -154,6 +196,21 @@ export function usePlayer() {
     () => store.eqBands,
     (bands) => setEqGains(bands, store.eqEnabled),
     { deep: true }
+  );
+
+  watch(
+    () => store.isStereoWidener,
+    (widener) => setStereoWidener(widener)
+  );
+
+  watch(
+    () => store.bassBoostEnabled,
+    (enabled) => setBassBoost(enabled)
+  );
+
+  watch(
+    () => store.reverbPreset,
+    (preset) => applyReverbPreset(preset)
   );
 
   function applyVolumes() {
@@ -216,6 +273,7 @@ export function usePlayer() {
     isCrossfading = false;
     crossfadeTriggered = false;
     preloadedTrackId = null;
+    applyPlaybackRate();
 
     const els = [el1, el2];
 
@@ -763,6 +821,7 @@ export function usePlayer() {
       }
 
       resumeAudioContext();
+      applyPlaybackRate();
       await el.play();
       if (requestId !== currentPlayRequestId) return;
 
@@ -780,8 +839,11 @@ export function usePlayer() {
         navigator.mediaSession.playbackState = 'playing';
       }
       prefetchNextTrack();
-    } catch {
-      if (requestId === currentPlayRequestId) {
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return;
+      }
+      if (requestId === currentPlayRequestId && !store.error) {
         setPlaybackError(t('player.errors.stream'));
       }
     } finally {
@@ -834,7 +896,10 @@ export function usePlayer() {
           isRestoring = false;
           if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
         })
-        .catch(() => {
+        .catch((err) => {
+          if (err instanceof DOMException && err.name === 'AbortError') {
+            return;
+          }
           store.isPlaying = false;
           setPlaybackError(t('player.errors.playback'));
         });

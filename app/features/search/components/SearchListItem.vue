@@ -118,11 +118,7 @@ function resolveArtists(track: SearchResult): { name: string; id?: string }[] {
             <template v-if="resolveArtists(track).length > 0">
               <template v-for="(artist, index) in resolveArtists(track)" :key="index">
                 <NuxtLink
-                  :to="
-                    artist.id
-                      ? `/artist/${artist.id}`
-                      : `/search?q=${encodeURIComponent(artist.name)}&type=artist`
-                  "
+                  :to="`/artist/${encodeURIComponent(artist.id || artist.name)}`"
                   class="artist-link"
                   @click.stop>
                   {{ artist.name }}
@@ -140,7 +136,7 @@ function resolveArtists(track: SearchResult): { name: string; id?: string }[] {
               </NuxtLink>
               <NuxtLink
                 v-else-if="track.artist"
-                :to="`/search?q=${encodeURIComponent(track.artist)}&type=artist`"
+                :to="`/artist/${encodeURIComponent(track.artist)}`"
                 class="artist-link"
                 @click.stop>
                 {{ formatArtistName(track.artist) }}
@@ -156,11 +152,7 @@ function resolveArtists(track: SearchResult): { name: string; id?: string }[] {
             <template v-if="resolveArtists(track).length > 0">
               <template v-for="(artist, index) in resolveArtists(track)" :key="index">
                 <NuxtLink
-                  :to="
-                    artist.id
-                      ? `/artist/${artist.id}`
-                      : `/search?q=${encodeURIComponent(artist.name)}&type=artist`
-                  "
+                  :to="`/artist/${encodeURIComponent(artist.id || artist.name)}`"
                   class="artist-link"
                   @click.stop>
                   {{ artist.name }}
@@ -178,7 +170,7 @@ function resolveArtists(track: SearchResult): { name: string; id?: string }[] {
               </NuxtLink>
               <NuxtLink
                 v-else-if="track.artist"
-                :to="`/search?q=${encodeURIComponent(track.artist)}&type=artist`"
+                :to="`/artist/${encodeURIComponent(track.artist)}`"
                 class="artist-link"
                 @click.stop>
                 {{ formatArtistName(track.artist) }}
@@ -197,7 +189,7 @@ function resolveArtists(track: SearchResult): { name: string; id?: string }[] {
             </template>
             <template v-else-if="track.artist">
               <NuxtLink
-                :to="`/search?q=${encodeURIComponent(track.artist)}&type=artist`"
+                :to="`/artist/${encodeURIComponent(track.artist)}`"
                 class="artist-link"
                 @click.stop>
                 {{ formatArtistName(track.artist) }}

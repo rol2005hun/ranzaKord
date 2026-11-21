@@ -136,14 +136,16 @@ const MAX_CACHE_SIZE = 50;
 
 export function useLyrics() {
   if (!lyricsCache) {
-    if (typeof localStorage !== 'undefined') {
+    if (import.meta.client) {
       try {
         localStorage.removeItem('ranzakord_lyrics_cache');
-      } catch (err) {
-        void err;
+      } catch {
+        void 0;
       }
+      lyricsCache = useLocalStorage<Record<string, LyricsData>>('ranzakord_lyrics_cache_v2', {});
+    } else {
+      lyricsCache = ref<Record<string, LyricsData>>({});
     }
-    lyricsCache = useLocalStorage<Record<string, LyricsData>>('ranzakord_lyrics_cache_v2', {});
   }
 
   async function fetchLyrics(track: Track): Promise<void> {

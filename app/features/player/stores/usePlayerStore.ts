@@ -3,15 +3,6 @@ import type { Track, CrossfadeType, PlaybackContext } from '../types/player.type
 export const usePlayerStore = defineStore(
   'player',
   () => {
-    const currentTrack = ref<Track | null>(null);
-    const queue = shallowRef<Track[]>([]);
-    const unshuffledQueue = shallowRef<Track[]>([]);
-    const playHistory = shallowRef<Track[]>([]);
-    const isPlaying = ref(false);
-    const volume = ref(0.8);
-    const currentTimeSeconds = ref(0);
-    const authStore = useAuthStore();
-
     const cookieLastPlayback = useCookie<{
       track: Track | null;
       currentTime: number;
@@ -20,6 +11,15 @@ export const usePlayerStore = defineStore(
       maxAge: 31536000,
       path: '/'
     });
+
+    const currentTrack = ref<Track | null>(cookieLastPlayback.value?.track || null);
+    const queue = shallowRef<Track[]>([]);
+    const unshuffledQueue = shallowRef<Track[]>([]);
+    const playHistory = shallowRef<Track[]>([]);
+    const isPlaying = ref(false);
+    const volume = ref(0.8);
+    const currentTimeSeconds = ref(0);
+    const authStore = useAuthStore();
 
     function shuffleArray<T>(array: T[]): T[] {
       const result = [...array];
@@ -314,6 +314,13 @@ export const usePlayerStore = defineStore(
     const crossfadeType = ref<CrossfadeType>('dj');
     const isKaraoke = ref(false);
     const isSpatialAudio = ref(false);
+    const isStereoWidener = ref(false);
+    const bassBoostEnabled = ref(false);
+    const playbackSpeed = ref(1.0);
+    const preservesPitch = ref(true);
+    const isSlowedReverb = ref(false);
+    const isNightcore = ref(false);
+    const reverbPreset = ref<'none' | 'room' | 'hall' | 'cathedral' | 'shower' | 'muffled'>('none');
     const isAudioReactiveLyrics = ref(true);
     const eqEnabled = ref(false);
     const eqPreset = ref('flat');
@@ -618,6 +625,63 @@ export const usePlayerStore = defineStore(
       return queue.value.slice(start, end);
     });
 
+    function setSlowedReverb(enable: boolean) {
+      isSlowedReverb.value = enable;
+      if (enable) {
+        isNightcore.value = false;
+        playbackSpeed.value = 0.85;
+        preservesPitch.value = false;
+        reverbPreset.value = 'hall';
+      } else {
+        if (playbackSpeed.value === 0.85) {
+          playbackSpeed.value = 1.0;
+          preservesPitch.value = true;
+        }
+        if (reverbPreset.value === 'hall') {
+          reverbPreset.value = 'none';
+        }
+      }
+    }
+
+    function setNightcore(enable: boolean) {
+      isNightcore.value = enable;
+      if (enable) {
+        isSlowedReverb.value = false;
+        playbackSpeed.value = 1.25;
+        preservesPitch.value = false;
+        reverbPreset.value = 'none';
+      } else {
+        if (playbackSpeed.value === 1.25) {
+          playbackSpeed.value = 1.0;
+          preservesPitch.value = true;
+        }
+      }
+    }
+
+    function setSpeed(speed: number) {
+      playbackSpeed.value = Math.round(speed * 100) / 100;
+      if (playbackSpeed.value !== 0.85 && isSlowedReverb.value) {
+        isSlowedReverb.value = false;
+      }
+      if (playbackSpeed.value !== 1.25 && isNightcore.value) {
+        isNightcore.value = false;
+      }
+    }
+
+    function setSpatialAudio(enable: boolean) {
+      isSpatialAudio.value = enable;
+      if (enable) {
+        isStereoWidener.value = false;
+      }
+    }
+
+    function setStereoWidener(enable: boolean) {
+      isStereoWidener.value = enable;
+      if (enable) {
+        isSpatialAudio.value = false;
+      }
+    }
+
     return {
       currentTrack,
       queue,
@@ -646,6 +710,18 @@ export const usePlayerStore = defineStore(
       syncDiscordPresence,
       isKaraoke,
       isSpatialAudio,
+      isStereoWidener,
+      bassBoostEnabled,
+      playbackSpeed,
+      preservesPitch,
+      isSlowedReverb,
+      isNightcore,
+      reverbPreset,
+      setSlowedReverb,
+      setNightcore,
+      setSpeed,
+      setSpatialAudio,
+      setStereoWidener,
       isAudioReactiveLyrics,
       eqEnabled,
       eqPreset,
@@ -676,6 +752,13 @@ export const usePlayerStore = defineStore(
           'crossfadeType',
           'isKaraoke',
           'isSpatialAudio',
+          'isStereoWidener',
+          'bassBoostEnabled',
+          'playbackSpeed',
+          'preservesPitch',
+          'isSlowedReverb',
+          'isNightcore',
+          'reverbPreset',
           'isAudioReactiveLyrics',
           'eqEnabled',
           'eqPreset',
@@ -685,7 +768,7 @@ export const usePlayerStore = defineStore(
           'globalShortcutsEnabled',
           'sponsorBlockEnabled'
         ],
-        storage: piniaPluginPersistedstate.localStorage()
+        storage: import.meta.client ? piniaPluginPersistedstate.localStorage() : undefined
       }
     ]
   }
