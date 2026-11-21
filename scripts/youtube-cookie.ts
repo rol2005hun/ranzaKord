@@ -27,6 +27,60 @@ function getMongoUri(): string | undefined {
   return process.env.NUXT_MONGODB_URI || process.env.MONGODB_URI;
 }
 
+function extractCredentials(raw: string): {
+  cookie?: string;
+  poToken?: string;
+  visitorData?: string;
+} {
+  let cookie: string | undefined;
+  let poToken: string | undefined;
+  let visitorData: string | undefined;
+
+  const cookieMatch = raw.match(/cookie:\s*([^\r\n]+)/i);
+  if (cookieMatch?.[1]) {
+    cookie = cookieMatch[1].trim();
+  }
+
+  const poMatch = raw.match(/"poToken"\s*:\s*"([^"]+)"/i);
+  if (poMatch?.[1]) {
+    poToken = poMatch[1].trim();
+  }
+
+  const visitorMatch = raw.match(/"visitorData"\s*:\s*"([^"]+)"/i);
+  if (visitorMatch?.[1]) {
+    visitorData = visitorMatch[1].trim();
+  }
+
+  if (visitorData && visitorData.includes('%')) {
+    try {
+      visitorData = decodeURIComponent(visitorData);
+    } catch {
+      void 0;
+    }
+  }
+
+  return { cookie, poToken, visitorData };
+}
+
+async function readMultilineInput(rl: readline.Interface, promptText: string): Promise<string> {
+  console.log(promptText);
+  return new Promise((resolve) => {
+    let accumulated = '';
+    let timeout: NodeJS.Timeout | null = null;
+
+    const onLine = (line: string) => {
+      accumulated += (accumulated ? '\n' : '') + line;
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        rl.removeListener('line', onLine);
+        resolve(accumulated.trim());
+      }, 350);
+    };
+
+    rl.on('line', onLine);
+  });
+}
+
 async function run(): Promise<void> {
   const uri = getMongoUri();
   if (!uri) {
@@ -40,16 +94,20 @@ async function run(): Promise<void> {
     console.log('\n' + '='.repeat(60));
     console.log(' YouTube Cookie Setup for Production (MongoDB)');
     console.log('='.repeat(60));
-    console.log('\nHow to get the cookie:');
+    console.log('\nHow to get the credentials:');
     console.log('1. Open an Incognito browser window and go to youtube.com');
     console.log('2. Press F12 -> Network tab -> type "player" into the filter');
     console.log('3. Play any video, click on the "v1/player" POST request:');
-    console.log('   - Copy the "cookie:" value under Request Headers');
+    console.log('   - Headers tab: Copy the "cookie:" value');
+    console.log('   - Payload tab: Find "serviceIntegrityDimensions" -> "poToken"');
+    console.log('   - Payload tab: Find "context" -> "client" -> "visitorData"');
     console.log('='.repeat(60) + '\n');
 
     let cookie = process.argv[2];
     if (!cookie) {
-      cookie = await rl.question('Paste YouTube Cookie string: ');
+      cookie = await rl.question(
+        '1. Paste YouTube Cookie string (from Headers, or press Enter if already in MongoDB): '
+      );
     }
 
     cookie = cookie.trim();
@@ -63,8 +121,51 @@ async function run(): Promise<void> {
       cookie = cookie.slice(1, -1).trim();
     }
 
+    let poToken = process.argv[3] || '';
+    let visitorData = process.argv[4] || '';
+
+    if (!poToken || !visitorData) {
+      const payloadInput = await readMultilineInput(
+        rl,
+        '\n2. Paste Payload (you can paste the ENTIRE JSON from the Payload tab, or press Enter to skip):'
+      );
+      if (payloadInput) {
+        const extracted = extractCredentials(payloadInput);
+        if (extracted.cookie && !cookie) {
+          cookie = extracted.cookie;
+        }
+        if (extracted.poToken) {
+          poToken = extracted.poToken;
+          console.log('\x1b[32m✔ Auto-extracted poToken from payload!\x1b[0m');
+        }
+        if (extracted.visitorData) {
+          visitorData = extracted.visitorData;
+          console.log('\x1b[32m✔ Auto-extracted visitorData from payload!\x1b[0m');
+        }
+        if (!extracted.poToken && !extracted.visitorData && payloadInput.length > 20) {
+          if (payloadInput.includes('.')) {
+            poToken = payloadInput;
+          } else {
+            visitorData = payloadInput;
+          }
+        }
+      }
+    }
+
+    console.log('\nConnecting to MongoDB...');
+    await mongoose.connect(uri);
+    console.log('Connected to MongoDB.');
+
     if (!cookie) {
-      console.error('No cookie provided. Aborting.');
+      const existing = await SystemConfig.findOne({ key: 'youtube_cookies' });
+      if (existing?.value) {
+        cookie = String(existing.value);
+        console.log('Using existing YouTube cookies from MongoDB.');
+      }
+    }
+
+    if (!cookie) {
+      console.error('No cookie provided and none found in MongoDB. Aborting.');
       process.exit(1);
     }
 
@@ -73,7 +174,10 @@ async function run(): Promise<void> {
       const yt = await Innertube.create({
         cache: new UniversalCache(false),
         retrieve_player: true,
-        cookie
+        cookie,
+        po_token: poToken || undefined,
+        visitor_data: visitorData || undefined,
+        generate_session_locally: Boolean(poToken && visitorData)
       });
 
       const testInfo = await yt.getBasicInfo('vz6y3DDBTXA', { client: 'WEB' });
@@ -96,10 +200,6 @@ async function run(): Promise<void> {
       console.log('\x1b[33mValidation check encountered an error, saving anyway:\x1b[0m', testErr);
     }
 
-    console.log('\nConnecting to MongoDB...');
-    await mongoose.connect(uri);
-    console.log('Connected to MongoDB.');
-
     await SystemConfig.findOneAndUpdate(
       { key: 'youtube_cookies' },
       { value: cookie },
@@ -107,8 +207,23 @@ async function run(): Promise<void> {
     );
     console.log('\x1b[32mSaved YouTube cookies to MongoDB (youtube_cookies)!\x1b[0m');
 
-    await SystemConfig.deleteOne({ key: 'youtube_po_token' });
-    await SystemConfig.deleteOne({ key: 'youtube_visitor_data' });
+    if (poToken) {
+      await SystemConfig.findOneAndUpdate(
+        { key: 'youtube_po_token' },
+        { value: poToken },
+        { upsert: true }
+      );
+      console.log('\x1b[32mSaved PO Token to MongoDB (youtube_po_token)!\x1b[0m');
+    }
+
+    if (visitorData) {
+      await SystemConfig.findOneAndUpdate(
+        { key: 'youtube_visitor_data' },
+        { value: visitorData },
+        { upsert: true }
+      );
+      console.log('\x1b[32mSaved Visitor Data to MongoDB (youtube_visitor_data)!\x1b[0m');
+    }
 
     await mongoose.disconnect();
     console.log(

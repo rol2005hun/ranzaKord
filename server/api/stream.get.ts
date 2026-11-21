@@ -535,7 +535,8 @@ async function discoverStream(
 ): Promise<CachedStream | null> {
   const innertube = await createInnertube(true);
   const isTvOAuth = Boolean(innertube.session.logged_in && innertube.session.oauth?.oauth2_tokens);
-  const anonInnertube = await createInnertube(false);
+  const webInnertube = await createInnertube(false, true);
+  const cleanInnertube = await createInnertube(false, false);
 
   const primarySpec: CandidateSpec = { client: 'VISIONOS', useAuth: false };
   const secondarySpec: CandidateSpec = { client: 'IOS', useAuth: false };
@@ -543,6 +544,7 @@ async function discoverStream(
   const fallbackSpecs: CandidateSpec[] =
     streamType === 'video'
       ? [
+          { client: 'ANDROID', useAuth: false },
           { client: 'WEB', useAuth: false },
           { client: 'TV_SIMPLY' as ClientType, useAuth: false },
           { client: 'ANDROID_VR', useAuth: false }
@@ -563,7 +565,14 @@ async function discoverStream(
     spec: CandidateSpec,
     poToken?: string
   ): Promise<DiscoveryCandidateResult | null> => {
-    const targetInnertube = spec.useAuth ? innertube : anonInnertube;
+    const isMobileClient = ['IOS', 'VISIONOS', 'ANDROID', 'ANDROID_VR', 'TV_SIMPLY'].includes(
+      spec.client
+    );
+    const targetInnertube = spec.useAuth
+      ? innertube
+      : isMobileClient
+        ? cleanInnertube
+        : webInnertube;
     try {
       return await resolveCandidate(
         spec,
