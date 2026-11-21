@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { usePlayerStore } from '../../../player/stores/usePlayerStore';
+import { usePlayerStore } from '@/features/player/stores/usePlayerStore';
 
 const playerStore = usePlayerStore();
 
@@ -32,6 +32,35 @@ watch(
 function onSliderChange() {
   playerStore.eqPreset = 'custom';
 }
+
+function onSpatialToggle(val: boolean) {
+  playerStore.setSpatialAudio(val);
+}
+
+function onWidenerToggle(val: boolean) {
+  playerStore.setStereoWidener(val);
+}
+
+function onSlowedReverbToggle(val: boolean) {
+  playerStore.setSlowedReverb(val);
+}
+
+function onNightcoreToggle(val: boolean) {
+  playerStore.setNightcore(val);
+}
+
+function onSpeedSliderChange(event: Event) {
+  const target = event.target as HTMLInputElement;
+  const speed = Number.parseFloat(target.value);
+  if (!Number.isNaN(speed)) {
+    playerStore.setSpeed(speed);
+  }
+}
+
+function resetSpeed() {
+  playerStore.setSpeed(1.0);
+  playerStore.preservesPitch = true;
+}
 </script>
 
 <template>
@@ -40,9 +69,103 @@ function onSliderChange() {
 
     <AppSettingsSection>
       <AppSettingsItem
+        :title="$t('settings.audio.slowedReverb.title')"
+        :description="$t('settings.audio.slowedReverb.description')">
+        <AppToggle
+          :model-value="playerStore.isSlowedReverb"
+          @update:model-value="onSlowedReverbToggle" />
+      </AppSettingsItem>
+
+      <AppSettingsItem
+        :title="$t('settings.audio.nightcore.title')"
+        :description="$t('settings.audio.nightcore.description')">
+        <AppToggle :model-value="playerStore.isNightcore" @update:model-value="onNightcoreToggle" />
+      </AppSettingsItem>
+
+      <AppSettingsItem
+        :title="$t('settings.audio.speed.title')"
+        :description="$t('settings.audio.speed.description')">
+        <div class="speed-controls">
+          <span class="speed-value">{{ playerStore.playbackSpeed.toFixed(2) }}x</span>
+          <input
+            type="range"
+            min="0.5"
+            max="2.0"
+            step="0.05"
+            :value="playerStore.playbackSpeed"
+            class="speed-slider"
+            @input="onSpeedSliderChange" />
+          <AppButton variant="ghost" size="sm" @click="resetSpeed">1.0x</AppButton>
+        </div>
+      </AppSettingsItem>
+
+      <AppSettingsItem
+        v-if="playerStore.playbackSpeed !== 1.0"
+        :title="$t('settings.audio.speed.preservePitch')"
+        description="">
+        <AppToggle v-model="playerStore.preservesPitch" />
+      </AppSettingsItem>
+
+      <AppSettingsItem
+        :title="$t('settings.audio.reverb.title')"
+        :description="$t('settings.audio.reverb.description')">
+        <AppSelect
+          v-model="playerStore.reverbPreset"
+          class="settings-select"
+          :options="[
+            {
+              label: $t('settings.audio.reverb.presets.none'),
+              value: 'none',
+              icon: 'ph:prohibit-bold'
+            },
+            {
+              label: $t('settings.audio.reverb.presets.room'),
+              value: 'room',
+              icon: 'ph:house-bold'
+            },
+            {
+              label: $t('settings.audio.reverb.presets.hall'),
+              value: 'hall',
+              icon: 'ph:buildings-bold'
+            },
+            {
+              label: $t('settings.audio.reverb.presets.cathedral'),
+              value: 'cathedral',
+              icon: 'ph:church-bold'
+            },
+            {
+              label: $t('settings.audio.reverb.presets.shower'),
+              value: 'shower',
+              icon: 'ph:drop-bold'
+            },
+            {
+              label: $t('settings.audio.reverb.presets.muffled'),
+              value: 'muffled',
+              icon: 'ph:door-bold'
+            }
+          ]" />
+      </AppSettingsItem>
+
+      <AppSettingsItem
         :title="$t('settings.audio.spatialAudio.title')"
         :description="$t('settings.audio.spatialAudio.description')">
-        <AppToggle v-model="playerStore.isSpatialAudio" />
+        <AppToggle
+          :model-value="playerStore.isSpatialAudio"
+          @update:model-value="onSpatialToggle" />
+      </AppSettingsItem>
+
+      <AppSettingsItem
+        :title="$t('settings.audio.stereoWidener.title')"
+        :description="$t('settings.audio.stereoWidener.description')">
+        <AppToggle
+          :model-value="playerStore.isStereoWidener"
+          @update:model-value="onWidenerToggle" />
+      </AppSettingsItem>
+
+      <AppSettingsItem
+        :title="$t('settings.audio.bassBoost.title')"
+        :description="$t('settings.audio.bassBoost.description')">
+        <AppToggle v-model="playerStore.bassBoostEnabled" />
       </AppSettingsItem>
 
       <AppSettingsItem
@@ -237,6 +360,26 @@ function onSliderChange() {
   &:hover::-moz-range-thumb {
     transform: scale(1.2);
   }
+}
+
+.speed-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.speed-value {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  min-width: 44px;
+  font-variant-numeric: tabular-nums;
+}
+
+.speed-slider {
+  width: 140px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
 }
 
 .settings-select {

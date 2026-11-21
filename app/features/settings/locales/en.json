@@ -59,6 +59,40 @@
       "title": "8D Spatial Audio",
       "description": "Creates a 3D immersive experience by moving the sound around your head."
     },
+    "stereoWidener": {
+      "title": "Ultra-Wide Stereo",
+      "description": "Expands the stereo soundstage far beyond your headphones."
+    },
+    "bassBoost": {
+      "title": "Super Bass (Sub-Bass)",
+      "description": "Adds deep, punchy sub-bass boost and warm analog harmonic weight."
+    },
+    "slowedReverb": {
+      "title": "Slowed + Reverb",
+      "description": "Slows playback to 0.85x with deep pitch and lush hall reverberation."
+    },
+    "nightcore": {
+      "title": "Nightcore Mode",
+      "description": "Speeds up playback to 1.25x with raised pitch for an energetic anime vibe."
+    },
+    "speed": {
+      "title": "Playback Speed",
+      "description": "Adjust the playback tempo from 0.5x to 2.0x.",
+      "preservePitch": "Preserve original pitch"
+    },
+    "reverb": {
+      "title": "Acoustic Environment (Reverb)",
+      "description": "Simulates listening to music in real spaces and venues.",
+      "preset": "Environment",
+      "presets": {
+        "none": "Off (Direct)",
+        "room": "Room",
+        "hall": "Concert Hall",
+        "cathedral": "Cathedral",
+        "shower": "Bathroom / Shower",
+        "muffled": "Party Next Door (Muffled)"
+      }
+    },
     "eq": {
       "title": "Equalizer",
       "description": "Adjust the 10-band audio equalizer to your liking.",

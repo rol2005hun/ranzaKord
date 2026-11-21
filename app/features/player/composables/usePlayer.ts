@@ -55,6 +55,38 @@ export function usePlayer() {
     }
   }
 
+  function applyPlaybackRate() {
+    const rate = store.playbackSpeed ?? 1.0;
+    const preservesPitch = store.preservesPitch ?? true;
+    if (audio1Ref.value) {
+      audio1Ref.value.playbackRate = rate;
+      (
+        audio1Ref.value as HTMLAudioElement & {
+          preservesPitch?: boolean;
+          mozPreservesPitch?: boolean;
+          webkitPreservesPitch?: boolean;
+        }
+      ).preservesPitch = preservesPitch;
+    }
+    if (audio2Ref.value) {
+      audio2Ref.value.playbackRate = rate;
+      (
+        audio2Ref.value as HTMLAudioElement & {
+          preservesPitch?: boolean;
+          mozPreservesPitch?: boolean;
+          webkitPreservesPitch?: boolean;
+        }
+      ).preservesPitch = preservesPitch;
+    }
+  }
+
+  watch(
+    () => [store.playbackSpeed, store.preservesPitch],
+    () => {
+      applyPlaybackRate();
+    }
+  );
+
   function getApiUrl(path: string) {
     return useApiUrl(path);
   }
@@ -146,7 +178,14 @@ export function usePlayer() {
 
   let isRestoring = false;
 
-  const { setGains, setEqGains, resumeAudioContext } = useAudioVisualizer();
+  const {
+    setGains,
+    setEqGains,
+    setStereoWidener,
+    setBassBoost,
+    applyReverbPreset,
+    resumeAudioContext
+  } = useAudioVisualizer();
 
   watch(
     () => store.eqEnabled,
@@ -157,6 +196,21 @@ export function usePlayer() {
     () => store.eqBands,
     (bands) => setEqGains(bands, store.eqEnabled),
     { deep: true }
+  );
+
+  watch(
+    () => store.isStereoWidener,
+    (widener) => setStereoWidener(widener)
+  );
+
+  watch(
+    () => store.bassBoostEnabled,
+    (enabled) => setBassBoost(enabled)
+  );
+
+  watch(
+    () => store.reverbPreset,
+    (preset) => applyReverbPreset(preset)
   );
 
   function applyVolumes() {
@@ -219,6 +273,7 @@ export function usePlayer() {
     isCrossfading = false;
     crossfadeTriggered = false;
     preloadedTrackId = null;
+    applyPlaybackRate();
 
     const els = [el1, el2];
 
@@ -766,6 +821,7 @@ export function usePlayer() {
       }
 
       resumeAudioContext();
+      applyPlaybackRate();
       await el.play();
       if (requestId !== currentPlayRequestId) return;
 

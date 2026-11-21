@@ -8,6 +8,17 @@ let masterGainNode: GainNode | null = null;
 let dryGainNode: GainNode | null = null;
 let wetGainNode: GainNode | null = null;
 let spatialPannerNode: PannerNode | null = null;
+let widenerDryGain: GainNode | null = null;
+let widenerWetGain: GainNode | null = null;
+let bassLowShelf: BiquadFilterNode | null = null;
+let bassPeak: BiquadFilterNode | null = null;
+let reverbInputNode: GainNode | null = null;
+let reverbCombinerNode: GainNode | null = null;
+let reverbConvolver: ConvolverNode | null = null;
+let reverbDryGain: GainNode | null = null;
+let reverbWetGain: GainNode | null = null;
+let muffledFilter: BiquadFilterNode | null = null;
+const impulseCache = new Map<string, AudioBuffer>();
 let eqFilters: BiquadFilterNode[] = [];
 let isConnected = false;
 
@@ -101,35 +112,103 @@ export function useAudioVisualizer() {
 
         dryGainNode.connect(spatialPannerNode);
         wetGainNode.connect(spatialPannerNode);
-        spatialPannerNode.connect(masterGainNode);
 
-        // --- Pure Phase Cancellation (L - R) Vocal Remover ---
-        // Filters cause phase distortion (comb filtering) when summed.
-        // We revert to a pure mathematical L-R subtraction to avoid any distortion.
+        const widenerInput = audioCtx.createGain();
+        spatialPannerNode.connect(widenerInput);
+
+        widenerDryGain = audioCtx.createGain();
+        widenerWetGain = audioCtx.createGain();
+        widenerDryGain.gain.value = 1;
+        widenerWetGain.gain.value = 0;
+
+        const widenerSplitter = audioCtx.createChannelSplitter(2);
+        const widenerMerger = audioCtx.createChannelMerger(2);
+
+        const gainLL = audioCtx.createGain();
+        const gainLR = audioCtx.createGain();
+        const gainRR = audioCtx.createGain();
+        const gainRL = audioCtx.createGain();
+
+        gainLL.gain.value = 1.35;
+        gainLR.gain.value = -0.35;
+        gainRR.gain.value = 1.35;
+        gainRL.gain.value = -0.35;
+
+        widenerInput.connect(widenerDryGain);
+        widenerInput.connect(widenerSplitter);
+
+        widenerSplitter.connect(gainLL, 0);
+        widenerSplitter.connect(gainLR, 0);
+        widenerSplitter.connect(gainRR, 1);
+        widenerSplitter.connect(gainRL, 1);
+
+        gainLL.connect(widenerMerger, 0, 0);
+        gainRL.connect(widenerMerger, 0, 0);
+        gainRR.connect(widenerMerger, 0, 1);
+        gainLR.connect(widenerMerger, 0, 1);
+
+        widenerMerger.connect(widenerWetGain);
+
+        const bassBoostInput = audioCtx.createGain();
+        widenerDryGain.connect(bassBoostInput);
+        widenerWetGain.connect(bassBoostInput);
+
+        bassLowShelf = audioCtx.createBiquadFilter();
+        bassLowShelf.type = 'lowshelf';
+        bassLowShelf.frequency.value = 70;
+        bassLowShelf.gain.value = 0;
+
+        bassPeak = audioCtx.createBiquadFilter();
+        bassPeak.type = 'peaking';
+        bassPeak.frequency.value = 120;
+        bassPeak.Q.value = 1.0;
+        bassPeak.gain.value = 0;
+
+        bassBoostInput.connect(bassLowShelf);
+        bassLowShelf.connect(bassPeak);
+
+        reverbInputNode = audioCtx.createGain();
+        bassPeak.connect(reverbInputNode);
+
+        reverbCombinerNode = audioCtx.createGain();
+        reverbDryGain = audioCtx.createGain();
+        reverbWetGain = audioCtx.createGain();
+        reverbDryGain.gain.value = 1;
+        reverbWetGain.gain.value = 0;
+
+        reverbInputNode.connect(reverbDryGain);
+        reverbDryGain.connect(reverbCombinerNode);
+        reverbWetGain.connect(reverbCombinerNode);
+
+        muffledFilter = audioCtx.createBiquadFilter();
+        muffledFilter.type = 'lowpass';
+        muffledFilter.frequency.value = 22050;
+        muffledFilter.Q.value = 0.7;
+
+        reverbCombinerNode.connect(muffledFilter);
+        muffledFilter.connect(masterGainNode);
+
         const splitter = audioCtx.createChannelSplitter(2);
         karaokeInput.connect(splitter);
 
         const leftGain = audioCtx.createGain();
         leftGain.gain.value = 1;
-        splitter.connect(leftGain, 0); // L
+        splitter.connect(leftGain, 0);
 
         const rightGain = audioCtx.createGain();
         rightGain.gain.value = -1;
-        splitter.connect(rightGain, 1); // R
+        splitter.connect(rightGain, 1);
 
-        // Sum L and -R
         const diffMono = audioCtx.createGain();
         leftGain.connect(diffMono);
         rightGain.connect(diffMono);
 
-        // Upmix the L-R mono signal to both ears
         const upmixMerger = audioCtx.createChannelMerger(2);
         diffMono.connect(upmixMerger, 0, 0);
         diffMono.connect(upmixMerger, 0, 1);
 
         upmixMerger.connect(wetGainNode);
 
-        // --- Equalizer Chain ---
         let prevNode: AudioNode = masterGainNode;
         eqFilters = [];
 
@@ -137,7 +216,7 @@ export function useAudioVisualizer() {
           const filter = (audioCtx as AudioContext).createBiquadFilter();
           filter.type = 'peaking';
           filter.frequency.value = freq;
-          filter.Q.value = 1.41; // Standard Q factor
+          filter.Q.value = 1.41;
           filter.gain.value = 0;
           eqFilters.push(filter);
 
@@ -150,18 +229,19 @@ export function useAudioVisualizer() {
         isConnected = true;
         setGains(1, 0, currentVolume, audioEl1, audioEl2);
 
-        // Restore karaoke and EQ state if they were enabled
         const playerStore = usePlayerStore();
         if (playerStore.isKaraoke) {
           setKaraoke(true);
         }
         setEqGains(playerStore.eqBands, playerStore.eqEnabled);
+        setStereoWidener(playerStore.isStereoWidener);
+        setBassBoost(playerStore.bassBoostEnabled);
+        applyReverbPreset(playerStore.reverbPreset);
 
-        // Start continuous background loop for CSS variables (--audio-bass)
         startAudioReactiveLoop();
       }
     } catch {
-      // Audio element already connected or Web Audio not available
+      void 0;
     }
 
     return analyserNode;
@@ -213,6 +293,120 @@ export function useAudioVisualizer() {
     wetGainNode.gain.setValueAtTime(enabled ? 1 : 0, now);
   }
 
+  function setStereoWidener(enabled: boolean) {
+    if (!audioCtx || !widenerDryGain || !widenerWetGain) return;
+    const now = audioCtx.currentTime;
+    widenerDryGain.gain.setTargetAtTime(enabled ? 0 : 1, now, 0.08);
+    widenerWetGain.gain.setTargetAtTime(enabled ? 1 : 0, now, 0.08);
+  }
+
+  function setBassBoost(enabled: boolean) {
+    if (!audioCtx || !bassLowShelf || !bassPeak) return;
+    const now = audioCtx.currentTime;
+    bassLowShelf.gain.setTargetAtTime(enabled ? 8.5 : 0, now, 0.1);
+    bassPeak.gain.setTargetAtTime(enabled ? 3.5 : 0, now, 0.1);
+  }
+
+  function getOrCreateImpulse(ctx: AudioContext, preset: string): AudioBuffer {
+    const cached = impulseCache.get(preset);
+    if (cached) return cached;
+
+    let duration = 2.0;
+    let decay = 2.0;
+
+    if (preset === 'room') {
+      duration = 0.9;
+      decay = 2.8;
+    } else if (preset === 'hall') {
+      duration = 2.2;
+      decay = 1.8;
+    } else if (preset === 'cathedral') {
+      duration = 4.2;
+      decay = 1.2;
+    } else if (preset === 'shower') {
+      duration = 1.2;
+      decay = 3.8;
+    } else if (preset === 'muffled') {
+      duration = 1.8;
+      decay = 2.2;
+    }
+
+    const sampleRate = ctx.sampleRate;
+    const length = Math.floor(sampleRate * duration);
+    const buffer = ctx.createBuffer(2, length, sampleRate);
+    const left = buffer.getChannelData(0);
+    const right = buffer.getChannelData(1);
+
+    for (let i = 0; i < length; i++) {
+      const env = Math.exp(-i / (sampleRate * (decay / 4.5)));
+      left[i] = (Math.random() * 2 - 1) * env;
+      right[i] = (Math.random() * 2 - 1) * env;
+    }
+
+    impulseCache.set(preset, buffer);
+    return buffer;
+  }
+
+  function applyReverbPreset(preset: string) {
+    if (
+      !audioCtx ||
+      !reverbInputNode ||
+      !reverbCombinerNode ||
+      !reverbDryGain ||
+      !reverbWetGain ||
+      !muffledFilter
+    ) {
+      return;
+    }
+    const now = audioCtx.currentTime;
+
+    if (preset === 'none') {
+      reverbDryGain.gain.setTargetAtTime(1.0, now, 0.05);
+      reverbWetGain.gain.setTargetAtTime(0.0, now, 0.05);
+      muffledFilter.frequency.setTargetAtTime(22050, now, 0.05);
+      return;
+    }
+
+    const impulse = getOrCreateImpulse(audioCtx, preset);
+    if (reverbConvolver) {
+      try {
+        reverbConvolver.disconnect();
+      } catch {
+        void 0;
+      }
+    }
+    reverbConvolver = audioCtx.createConvolver();
+    reverbConvolver.buffer = impulse;
+    reverbInputNode.connect(reverbConvolver);
+    reverbConvolver.connect(reverbWetGain);
+
+    let dry = 0.8;
+    let wet = 0.4;
+    let cutoff = 22050;
+
+    if (preset === 'room') {
+      dry = 0.85;
+      wet = 0.35;
+    } else if (preset === 'hall') {
+      dry = 0.75;
+      wet = 0.45;
+    } else if (preset === 'cathedral') {
+      dry = 0.65;
+      wet = 0.65;
+    } else if (preset === 'shower') {
+      dry = 0.7;
+      wet = 0.55;
+    } else if (preset === 'muffled') {
+      dry = 0.7;
+      wet = 0.4;
+      cutoff = 450;
+    }
+
+    reverbDryGain.gain.setTargetAtTime(dry, now, 0.05);
+    reverbWetGain.gain.setTargetAtTime(wet, now, 0.05);
+    muffledFilter.frequency.setTargetAtTime(cutoff, now, 0.05);
+  }
+
   let rAFId: number | null = null;
   const dataArray = new Uint8Array(512);
   let smoothedBass = 0;
@@ -230,16 +424,14 @@ export function useAudioVisualizer() {
           analyserNode.getByteFrequencyData(dataArray);
 
           let bassSum = 0;
-          const bassBins = 8; // First 8 bins (~0-300Hz)
+          const bassBins = 8;
           for (let i = 0; i < bassBins; i++) {
             bassSum += dataArray[i] ?? 0;
           }
-          // Normalize 0..1 and apply a slight curve to make it punchier
           rawBass = bassSum / bassBins / 255;
           rawBass = Math.pow(rawBass, 1.5);
         }
 
-        // Fast attack, fast decay for punchier beat syncing
         if (rawBass > smoothedBass) {
           smoothedBass = rawBass;
         } else {
@@ -259,7 +451,7 @@ export function useAudioVisualizer() {
 
         if (spatialPannerNode) {
           if (cachedPlayerStore?.isSpatialAudio) {
-            const speed = 2000; // 2 seconds per radian = ~12.5s full rotation
+            const speed = 2000;
             const t = performance.now() / speed;
             const x = Math.sin(t) * 2;
             const z = Math.cos(t) * 2;
@@ -293,6 +485,9 @@ export function useAudioVisualizer() {
     setMasterVolume,
     setKaraoke,
     setEqGains,
+    setStereoWidener,
+    setBassBoost,
+    applyReverbPreset,
     isConnected,
     startAudioReactiveLoop,
     resumeAudioContext

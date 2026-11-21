@@ -59,6 +59,40 @@
       "title": "8D Térhatású Hangzás",
       "description": "Egy 3D-s, lenyűgöző élményt hoz létre úgy, hogy a hang körbe-körbe mozog a fejed körül."
     },
+    "stereoWidener": {
+      "title": "Ultraszéles térhangzás (Stereo Widener)",
+      "description": "Kiterjeszti a sztereó hangteret a fülhallgató határain túlra."
+    },
+    "bassBoost": {
+      "title": "Super Bass (Sub-Basszus)",
+      "description": "Mély, ütős sub-basszus kiemelést és meleg analóg teltséget ad a hangzásnak."
+    },
+    "slowedReverb": {
+      "title": "Slowed + Reverb",
+      "description": "Lehúzza a tempót 0.85x-re, mélyíti a hangmagasságot és lágy terem visszhangot ad hozzá."
+    },
+    "nightcore": {
+      "title": "Nightcore mód",
+      "description": "Felgyorsítja a tempót 1.25x-re emelt hangmagassággal a pörgős anime hangulatért."
+    },
+    "speed": {
+      "title": "Lejátszási sebesség",
+      "description": "Állítsd be a zene sebességét 0.5x és 2.0x között.",
+      "preservePitch": "Eredeti hangmagasság megtartása"
+    },
+    "reverb": {
+      "title": "Virtuális Helyszínek (Visszhang)",
+      "description": "Szimulálja a zene megszólalását különböző valós akusztikai terekben.",
+      "preset": "Környezet",
+      "presets": {
+        "none": "Kikapcsolva (Közvetlen)",
+        "room": "Szoba",
+        "hall": "Koncertterem",
+        "cathedral": "Katedrális",
+        "shower": "Fürdőszoba / Zuhanyzó",
+        "muffled": "Buli a szomszéd szobában (Muffled)"
+      }
+    },
     "eq": {
       "title": "Hangszínszabályzó (Equalizer)",
       "description": "Állítsd be a 10-sávos hangszínszabályzót a saját ízlésed szerint.",
