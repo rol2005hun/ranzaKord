@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { useAudioVisualizer } from '@/features/player/composables/useAudioVisualizer';
 import { usePlayerStore } from '@/features/player/stores/usePlayerStore';
 
 const playerStore = usePlayerStore();
+const { applyReverbPreset, setStereoWidener, setBassBoost } = useAudioVisualizer();
 
 const presets = {
   flat: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -39,14 +41,29 @@ function onSpatialToggle(val: boolean) {
 
 function onWidenerToggle(val: boolean) {
   playerStore.setStereoWidener(val);
+  setStereoWidener(val);
 }
 
 function onSlowedReverbToggle(val: boolean) {
   playerStore.setSlowedReverb(val);
+  applyReverbPreset(playerStore.reverbPreset);
 }
 
 function onNightcoreToggle(val: boolean) {
   playerStore.setNightcore(val);
+  applyReverbPreset(playerStore.reverbPreset);
+}
+
+function onReverbChange(val: string | number) {
+  const preset = String(val);
+  playerStore.reverbPreset = preset as
+    'none' | 'room' | 'hall' | 'cathedral' | 'shower' | 'muffled';
+  applyReverbPreset(preset);
+}
+
+function onBassBoostToggle(val: boolean) {
+  playerStore.bassBoostEnabled = val;
+  setBassBoost(val);
 }
 
 function onSpeedSliderChange(event: Event) {
@@ -125,7 +142,7 @@ function resetSpeed() {
         :title="$t('settings.audio.reverb.title')"
         :description="$t('settings.audio.reverb.description')">
         <AppSelect
-          v-model="playerStore.reverbPreset"
+          :model-value="playerStore.reverbPreset"
           class="settings-select"
           :options="[
             {
@@ -158,7 +175,8 @@ function resetSpeed() {
               value: 'muffled',
               icon: 'ph:door-bold'
             }
-          ]" />
+          ]"
+          @update:model-value="onReverbChange" />
       </AppSettingsItem>
 
       <AppSettingsItem
@@ -180,7 +198,9 @@ function resetSpeed() {
       <AppSettingsItem
         :title="$t('settings.audio.bassBoost.title')"
         :description="$t('settings.audio.bassBoost.description')">
-        <AppToggle v-model="playerStore.bassBoostEnabled" />
+        <AppToggle
+          :model-value="playerStore.bassBoostEnabled"
+          @update:model-value="onBassBoostToggle" />
       </AppSettingsItem>
 
       <AppSettingsItem
