@@ -25,7 +25,7 @@ const {
   onPlaySong,
   onPlayAlbumSong,
   onScroll
-} = useArtist(props.artistId);
+} = await useArtist(props.artistId);
 
 const { playTrack } = usePlayer();
 const playerStore = usePlayerStore();
@@ -61,6 +61,7 @@ function onNavigateAlbum(album: SearchResult) {
 
 const isEmpty = computed(
   () =>
+    status.value !== 'pending' &&
     allSongs.value.length === 0 &&
     !isLoadingSongs.value &&
     (!artist.value?.topSongs || artist.value.topSongs.length === 0) &&
@@ -117,7 +118,7 @@ function focusSearch() {
       <p>{{ t('search.artist.loadError') }}</p>
     </div>
 
-    <template v-else>
+    <div v-else class="artist-page__content">
       <AppMusicPage
         :is-loading="status === 'pending'"
         :title="artist?.name || ''"
@@ -197,58 +198,61 @@ function focusSearch() {
             </NuxtLink>
           </div>
 
-          <template v-else-if="artist">
-            <div
-              v-if="
-                debouncedSearch &&
-                filteredMappedTopSongs.length === 0 &&
-                filteredMappedAllSongs.length === 0
-              "
-              class="artist-page__empty">
-              <AppIcon name="ph:magnifying-glass" class="artist-page__empty-icon" size="4rem" />
-              <p>{{ t('search.page.noResultsQuery', { query: debouncedSearch }) }}</p>
-            </div>
+          <div
+            v-else-if="
+              debouncedSearch &&
+              filteredMappedTopSongs.length === 0 &&
+              filteredMappedAllSongs.length === 0
+            "
+            class="artist-page__empty">
+            <AppIcon name="ph:magnifying-glass" class="artist-page__empty-icon" size="4rem" />
+            <p>{{ t('search.page.noResultsQuery', { query: debouncedSearch }) }}</p>
+          </div>
 
-            <template v-else>
-              <section v-if="filteredMappedTopSongs.length > 0" class="artist-page__section">
-                <h2 class="artist-page__section-title">{{ t('search.artist.topSongs') }}</h2>
-                <AppTrackList
-                  :tracks="filteredMappedTopSongs"
-                  :columns="['index', 'title', 'plays', 'time']"
-                  :show-thumbnails="true"
-                  @play="(track, index) => onPlayTopSong(track, index)" />
-              </section>
+          <div v-else-if="artist" class="artist-page__sections">
+            <section v-if="filteredMappedTopSongs.length > 0" class="artist-page__section">
+              <h2 class="artist-page__section-title">{{ t('search.artist.topSongs') }}</h2>
+              <AppTrackList
+                :tracks="filteredMappedTopSongs"
+                :columns="['index', 'title', 'plays', 'time']"
+                :show-thumbnails="true"
+                @play="(track, index) => onPlayTopSong(track, index)" />
+            </section>
 
-              <ArtistDiscography
-                v-if="!debouncedSearch && artist.albums.length > 0"
-                :albums="artist.albums"
-                :title="t('search.artist.discography')"
-                class="artist-page__section"
-                @play="onPlayAlbumSong"
-                @navigate="onNavigateAlbum" />
+            <ArtistDiscography
+              v-if="!debouncedSearch && artist.albums.length > 0"
+              :albums="artist.albums"
+              :title="t('search.artist.discography')"
+              class="artist-page__section"
+              @play="onPlayAlbumSong"
+              @navigate="onNavigateAlbum" />
 
-              <section
-                v-if="filteredMappedAllSongs.length > 0 || isLoadingSongs"
-                class="artist-page__section">
-                <h2 class="artist-page__section-title">{{ t('search.artist.allSongs') }}</h2>
-                <AppTrackList
-                  :tracks="filteredMappedAllSongs"
-                  :is-loading="isLoadingSongs"
-                  :columns="['index', 'title', 'plays', 'time']"
-                  :show-thumbnails="true"
-                  @play="onPlaySong" />
-              </section>
-            </template>
-          </template>
+            <section
+              v-if="filteredMappedAllSongs.length > 0 || isLoadingSongs"
+              class="artist-page__section">
+              <h2 class="artist-page__section-title">{{ t('search.artist.allSongs') }}</h2>
+              <AppTrackList
+                :tracks="filteredMappedAllSongs"
+                :is-loading="isLoadingSongs"
+                :columns="['index', 'title', 'plays', 'time']"
+                :show-thumbnails="true"
+                @play="onPlaySong" />
+            </section>
+          </div>
         </template>
       </AppMusicPage>
-    </template>
+    </div>
   </div>
 </template>
 
 <style scoped lang="scss">
 .artist-page {
   height: 100%;
+
+  &__content,
+  &__sections {
+    display: contents;
+  }
 
   &__error {
     display: flex;

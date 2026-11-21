@@ -389,7 +389,7 @@ onClickOutside(moreMenuBtnRef, (e) => {
           </button>
           <button
             class="player-bar__btn"
-            :class="{ 'player-bar__btn--active': player.isKaraoke.value }"
+            :class="{ 'player-bar__btn--active': isHydrated ? player.isKaraoke.value : false }"
             :aria-label="$t('player.karaokeMode')"
             @click="player.toggleKaraoke()">
             <AppIcon name="ph:magic-wand" />

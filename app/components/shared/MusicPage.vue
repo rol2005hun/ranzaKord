@@ -117,7 +117,7 @@ onMounted(() => {
       <h1 class="music-page__error-title">{{ errorText || $t('core.musicDetail.error') }}</h1>
     </div>
 
-    <template v-else>
+    <div v-else class="music-page__body">
       <div
         class="music-page__sticky-bar"
         :class="{ 'music-page__sticky-bar--visible': isScrolled }">
@@ -207,7 +207,7 @@ onMounted(() => {
 
         <slot name="tracks" />
       </div>
-    </template>
+    </div>
     <slot />
   </div>
 </template>
@@ -222,6 +222,10 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+
+  &__body {
+    display: contents;
+  }
 
   &__sr-title {
     position: absolute;

@@ -2,16 +2,15 @@ import type { ArtistDetail, SearchResult, PaginatedSongs } from '../types/search
 import type { Track } from '@/features/player/types/player.types';
 import type { TrackListItem } from '@/components/shared/TrackList.vue';
 
-export function useArtist(id: string) {
+export async function useArtist(id: string) {
   const headers = useRequestHeaders(['cookie']);
   const {
     data: artist,
     status,
     error
-  } = useFetch<ArtistDetail>('/api/artist', {
+  } = await useFetch<ArtistDetail>('/api/artist', {
     headers,
     query: { id },
-    lazy: true,
     getCachedData(key) {
       const nuxtApp = useNuxtApp();
       return nuxtApp.payload.data[key] || nuxtApp.static.data[key];
