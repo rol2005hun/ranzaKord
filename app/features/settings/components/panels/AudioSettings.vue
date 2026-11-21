@@ -119,23 +119,26 @@ function resetSpeed() {
             }"
             :aria-label="$t('settings.audio.speed.title')"
             @input="onSpeedSliderChange" />
-          <AppButton
-            v-if="playerStore.playbackSpeed !== 1.0"
-            variant="secondary"
-            size="sm"
-            class="speed-reset-btn"
-            @click="resetSpeed">
-            <AppIcon name="ph:arrow-counter-clockwise-bold" />
-            1.0x
-          </AppButton>
+          <div class="speed-reset-slot">
+            <AppButton
+              variant="secondary"
+              size="sm"
+              class="speed-reset-btn"
+              :class="{ 'speed-reset-btn--hidden': playerStore.playbackSpeed === 1.0 }"
+              @click="resetSpeed">
+              <AppIcon name="ph:arrow-counter-clockwise-bold" />
+              1.0x
+            </AppButton>
+          </div>
         </div>
       </AppSettingsItem>
 
       <AppSettingsItem
-        v-if="playerStore.playbackSpeed !== 1.0"
         :title="$t('settings.audio.speed.preservePitch')"
-        description="">
-        <AppToggle v-model="playerStore.preservesPitch" />
+        :description="$t('settings.audio.speed.preservePitchDescription')">
+        <AppToggle
+          v-model="playerStore.preservesPitch"
+          :disabled="playerStore.playbackSpeed === 1.0" />
       </AppSettingsItem>
 
       <AppSettingsItem
@@ -408,14 +411,16 @@ function resetSpeed() {
   font-size: var(--text-sm);
   font-weight: var(--font-weight-bold);
   color: var(--color-primary);
-  min-width: 48px;
+  width: 44px;
+  flex-shrink: 0;
   font-variant-numeric: tabular-nums;
 }
 
 .speed-slider {
   -webkit-appearance: none;
   appearance: none;
-  width: 160px;
+  width: 150px;
+  flex-shrink: 0;
   height: 6px;
   border-radius: var(--radius-full);
   background: transparent;
@@ -479,6 +484,13 @@ function resetSpeed() {
   }
 }
 
+.speed-reset-slot {
+  width: 68px;
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
 .speed-reset-btn {
   display: inline-flex;
   align-items: center;
@@ -487,6 +499,14 @@ function resetSpeed() {
   font-size: var(--text-xs);
   font-weight: var(--font-weight-medium);
   border-radius: var(--radius-sm);
+  white-space: nowrap;
+  transition: opacity var(--transition-fast, 0.2s);
+
+  &--hidden {
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+  }
 }
 
 .settings-select {

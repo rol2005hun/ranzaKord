@@ -78,7 +78,8 @@
     "speed": {
       "title": "Playback Speed",
       "description": "Adjust the playback tempo from 0.5x to 2.0x.",
-      "preservePitch": "Preserve original pitch"
+      "preservePitch": "Preserve original pitch",
+      "preservePitchDescription": "Keeps the original vocal and instrument pitch when changing speed."
     },
     "reverb": {
       "title": "Acoustic Environment (Reverb)",

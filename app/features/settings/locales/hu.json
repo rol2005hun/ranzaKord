@@ -78,7 +78,8 @@
     "speed": {
       "title": "Lejátszási sebesség",
       "description": "Állítsd be a zene sebességét 0.5x és 2.0x között.",
-      "preservePitch": "Eredeti hangmagasság megtartása"
+      "preservePitch": "Eredeti hangmagasság megtartása",
+      "preservePitchDescription": "Sebességváltáskor megőrzi az énekhang és a hangszerek eredeti tónusát."
     },
     "reverb": {
       "title": "Virtuális Helyszínek (Visszhang)",
