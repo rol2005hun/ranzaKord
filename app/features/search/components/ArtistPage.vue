@@ -16,6 +16,7 @@ const {
   error,
   allSongs,
   isLoadingSongs,
+  hasLoadedInitialSongs,
   isArtistPlaying,
   isArtistLoading,
   mappedTopSongs,
@@ -62,8 +63,9 @@ function onNavigateAlbum(album: SearchResult) {
 const isEmpty = computed(
   () =>
     status.value !== 'pending' &&
-    allSongs.value.length === 0 &&
+    hasLoadedInitialSongs.value &&
     !isLoadingSongs.value &&
+    allSongs.value.length === 0 &&
     (!artist.value?.topSongs || artist.value.topSongs.length === 0) &&
     (!artist.value?.albums || artist.value.albums.length === 0)
 );
@@ -190,7 +192,23 @@ function focusSearch() {
         </template>
 
         <template #tracks>
-          <div v-if="isEmpty" class="artist-page__empty">
+          <div
+            v-if="
+              !hasLoadedInitialSongs &&
+              allSongs.length === 0 &&
+              (!artist?.topSongs || artist.topSongs.length === 0)
+            "
+            class="artist-page__skeleton-tracks-wrapper">
+            <div class="artist-page__section">
+              <div class="artist-page__skeleton-title" />
+              <AppTrackList
+                :is-loading="true"
+                :columns="['index', 'title', 'plays', 'time']"
+                :show-thumbnails="true" />
+            </div>
+          </div>
+
+          <div v-else-if="isEmpty" class="artist-page__empty">
             <AppIcon name="ph:music-notes-plus" class="artist-page__empty-icon" />
             <p>{{ t('core.musicDetail.empty') }}</p>
             <NuxtLink to="/" class="artist-page__empty-btn">
@@ -250,7 +268,8 @@ function focusSearch() {
   height: 100%;
 
   &__content,
-  &__sections {
+  &__sections,
+  &__skeleton-tracks-wrapper {
     display: contents;
   }
 

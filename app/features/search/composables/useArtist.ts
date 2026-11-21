@@ -23,7 +23,8 @@ export async function useArtist(id: string) {
   const allSongs = ref<SearchResult[]>([]);
 
   const continuation = ref<string | null>(null);
-  const isLoadingSongs = ref(false);
+  const isLoadingSongs = ref(true);
+  const hasLoadedInitialSongs = ref(false);
   const retryCount = ref(0);
 
   const isArtistPlaying = computed(() => {
@@ -87,10 +88,16 @@ export async function useArtist(id: string) {
   );
 
   async function loadSongs() {
-    if (isLoadingSongs.value || (!artist.value?.name && !continuation.value)) return;
+    if (isLoadingSongs.value && hasLoadedInitialSongs.value) return;
+    if (!artist.value?.name && !continuation.value) {
+      isLoadingSongs.value = false;
+      hasLoadedInitialSongs.value = true;
+      return;
+    }
     isLoadingSongs.value = true;
     try {
       const data = await $fetch<PaginatedSongs>('/api/artist/songs', {
+        headers,
         query: {
           q: artist.value?.name,
           continuation: continuation.value || undefined
@@ -123,9 +130,10 @@ export async function useArtist(id: string) {
       }
       continuation.value = data.continuation || null;
     } catch {
-      // silent fail – songs section just won't render
+      void 0;
     } finally {
       isLoadingSongs.value = false;
+      hasLoadedInitialSongs.value = true;
     }
   }
 
@@ -225,6 +233,7 @@ export async function useArtist(id: string) {
     error,
     allSongs,
     isLoadingSongs,
+    hasLoadedInitialSongs,
     isArtistPlaying,
     isArtistLoading,
     mappedTopSongs,

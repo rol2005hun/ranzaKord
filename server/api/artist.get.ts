@@ -47,6 +47,27 @@ export default defineCachedEventHandler(
 
       let thumbnailUrl = '';
 
+      if (header) {
+        const h = header as unknown as {
+          thumbnails?: Array<{ url: string }>;
+          foreground_thumbnails?: Array<{ url: string }>;
+          thumbnail?: { contents?: Array<{ url: string }> };
+        };
+        const hThumb =
+          h.thumbnails?.[0]?.url ||
+          h.foreground_thumbnails?.[0]?.url ||
+          h.thumbnail?.contents?.[0]?.url;
+        if (hThumb) thumbnailUrl = hThumb;
+      }
+
+      if (!thumbnailUrl) {
+        const rawVisuals = (artist as unknown as { visuals?: { avatar?: Array<{ url: string }> } })
+          ?.visuals;
+        if (rawVisuals?.avatar?.[0]?.url) {
+          thumbnailUrl = rawVisuals.avatar[0].url;
+        }
+      }
+
       const topSongs: SearchResult[] = [];
       const albums: SearchResult[] = [];
 
@@ -55,7 +76,14 @@ export default defineCachedEventHandler(
           const section = rawSection as YTSection;
           const title = section.title?.toString()?.toLowerCase() || '';
 
-          if (title.includes('song') || title.includes('dal') || title.includes('top')) {
+          if (
+            title.includes('song') ||
+            title.includes('dal') ||
+            title.includes('top') ||
+            title.includes('szám') ||
+            title.includes('popular') ||
+            title.includes('népszerű')
+          ) {
             if (section.contents) {
               for (const rawItem of section.contents) {
                 const item = rawItem as YTItem;
@@ -110,7 +138,13 @@ export default defineCachedEventHandler(
                 });
               }
             }
-          } else if (title.includes('album') || title.includes('single')) {
+          } else if (
+            title.includes('album') ||
+            title.includes('single') ||
+            title.includes('kiadás') ||
+            title.includes('kislemez') ||
+            title.includes('ep')
+          ) {
             if (section.contents) {
               for (const rawItem of section.contents) {
                 const item = rawItem as YTItem;
