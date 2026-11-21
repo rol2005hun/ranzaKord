@@ -56,6 +56,9 @@ interface CandidateFormat {
   has_video?: boolean;
   has_audio?: boolean;
   height?: number;
+  itag?: number;
+  bitrate?: number;
+  average_bitrate?: number;
   decipher?: (player: unknown) => Promise<string>;
 }
 
@@ -403,8 +406,18 @@ async function resolveCandidate(
     });
     candidateFormats.push(...videoFormats);
   } else {
+    const getAudioScore = (f: CandidateFormat): number => {
+      const itag = f.itag;
+      const bitrate = f.bitrate || f.average_bitrate || 0;
+      if (itag === 140) return 2000000 + bitrate;
+      if (itag === 251) return 1500000 + bitrate;
+      if (itag === 139) return 10;
+      return bitrate;
+    };
     const audioOnly = formats.filter((f) => f.has_audio && !f.has_video && isPlayableFormat(f));
     const audioCombined = formats.filter((f) => f.has_audio && isPlayableFormat(f));
+    audioOnly.sort((a, b) => getAudioScore(b) - getAudioScore(a));
+    audioCombined.sort((a, b) => getAudioScore(b) - getAudioScore(a));
     candidateFormats.push(...audioOnly, ...audioCombined);
   }
 
@@ -435,7 +448,8 @@ async function resolveCandidate(
       continue;
     }
 
-    const testRange: ByteRange = { start: 0, end: 1024 };
+    const testRangeEnd = Math.min(65535, (format.content_length || 65536) - 1);
+    const testRange: ByteRange = { start: 0, end: Math.max(1024, testRangeEnd) };
     const { res: streamRes, statusText } = await fetchYouTubeStream(
       candidateUrl,
       candidate.client,
@@ -717,6 +731,7 @@ export default defineEventHandler(async (event) => {
       return sendRangeNotSatisfiable(event, discovered.contentLength, discovered.mimeType);
     }
 
+    streamCache.delete(cacheKey);
     debugInfo[discovered.client] = `Stream fetch failed: ${statusText || 'unknown error'}`;
   }
 
