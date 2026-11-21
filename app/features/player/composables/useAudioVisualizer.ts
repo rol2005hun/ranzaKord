@@ -313,34 +313,28 @@ export function useAudioVisualizer() {
 
     let duration = 2.5;
     let decay = 2.0;
-    let preDelayMs = 20;
-    let damping = 0.5;
+    let damping = 0.45;
 
     if (preset === 'room') {
-      duration = 1.2;
-      decay = 2.8;
-      preDelayMs = 10;
-      damping = 0.4;
+      duration = 1.0;
+      decay = 3.2;
+      damping = 0.35;
     } else if (preset === 'hall') {
-      duration = 3.0;
-      decay = 1.6;
-      preDelayMs = 30;
-      damping = 0.55;
+      duration = 2.4;
+      decay = 2.0;
+      damping = 0.45;
     } else if (preset === 'cathedral') {
-      duration = 5.0;
-      decay = 1.0;
-      preDelayMs = 45;
-      damping = 0.65;
+      duration = 4.2;
+      decay = 1.2;
+      damping = 0.55;
     } else if (preset === 'shower') {
-      duration = 1.4;
+      duration = 1.2;
       decay = 3.5;
-      preDelayMs = 5;
       damping = 0.15;
     } else if (preset === 'muffled') {
       duration = 2.0;
       decay = 2.0;
-      preDelayMs = 25;
-      damping = 0.7;
+      damping = 0.65;
     }
 
     const sampleRate = ctx.sampleRate;
@@ -349,32 +343,12 @@ export function useAudioVisualizer() {
     const left = buffer.getChannelData(0);
     const right = buffer.getChannelData(1);
 
-    const preDelaySamples = Math.floor((sampleRate * preDelayMs) / 1000);
-
-    const reflectionTaps = [
-      { delay: 0.012, gain: 0.6 },
-      { delay: 0.024, gain: 0.5 },
-      { delay: 0.038, gain: 0.42 },
-      { delay: 0.056, gain: 0.35 }
-    ];
-
-    for (const tap of reflectionTaps) {
-      const tapIdx = Math.floor(sampleRate * tap.delay);
-      if (tapIdx < length) {
-        left[tapIdx] = (left[tapIdx] ?? 0) + tap.gain;
-        const rightIdx = Math.min(length - 1, tapIdx + 32);
-        right[rightIdx] = (right[rightIdx] ?? 0) - tap.gain * 0.85;
-      }
-    }
-
     let lastLeft = 0;
     let lastRight = 0;
-    const tailStart = Math.min(preDelaySamples, length);
-    const tailLength = length - tailStart;
 
-    for (let i = tailStart; i < length; i++) {
-      const progress = (i - tailStart) / tailLength;
-      const env = Math.pow(1 - progress, decay);
+    for (let i = 0; i < length; i++) {
+      const progress = i / length;
+      const env = Math.exp(-progress * decay * 3.5);
 
       const noiseL = (Math.random() * 2 - 1) * env;
       const noiseR = (Math.random() * 2 - 1) * env;
@@ -382,8 +356,8 @@ export function useAudioVisualizer() {
       lastLeft = lastLeft * damping + noiseL * (1 - damping);
       lastRight = lastRight * damping + noiseR * (1 - damping);
 
-      left[i] = (left[i] ?? 0) + lastLeft;
-      right[i] = (right[i] ?? 0) + lastRight;
+      left[i] = lastLeft;
+      right[i] = lastRight;
     }
 
     impulseCache.set(preset, buffer);
@@ -404,6 +378,15 @@ export function useAudioVisualizer() {
     const now = audioCtx.currentTime;
 
     if (preset === 'none') {
+      if (reverbConvolver) {
+        try {
+          reverbConvolver.disconnect();
+        } catch {
+          void 0;
+        }
+      }
+      reverbInputNode.disconnect();
+      reverbInputNode.connect(reverbDryGain);
       reverbDryGain.gain.setTargetAtTime(1.0, now, 0.05);
       reverbWetGain.gain.setTargetAtTime(0.0, now, 0.05);
       muffledFilter.frequency.setTargetAtTime(22050, now, 0.05);
@@ -418,31 +401,34 @@ export function useAudioVisualizer() {
         void 0;
       }
     }
+    reverbInputNode.disconnect();
+    reverbInputNode.connect(reverbDryGain);
+
     reverbConvolver = audioCtx.createConvolver();
-    reverbConvolver.normalize = false;
+    reverbConvolver.normalize = true;
     reverbConvolver.buffer = impulse;
     reverbInputNode.connect(reverbConvolver);
     reverbConvolver.connect(reverbWetGain);
 
-    let dry = 0.75;
-    let wet = 0.55;
+    let dry = 1.0;
+    let wet = 0.28;
     let cutoff = 22050;
 
     if (preset === 'room') {
-      dry = 0.8;
-      wet = 0.5;
+      dry = 1.0;
+      wet = 0.2;
     } else if (preset === 'hall') {
-      dry = 0.65;
-      wet = 0.75;
+      dry = 0.95;
+      wet = 0.3;
     } else if (preset === 'cathedral') {
-      dry = 0.55;
-      wet = 0.9;
+      dry = 0.85;
+      wet = 0.42;
     } else if (preset === 'shower') {
-      dry = 0.7;
-      wet = 0.7;
+      dry = 1.0;
+      wet = 0.3;
     } else if (preset === 'muffled') {
-      dry = 0.6;
-      wet = 0.6;
+      dry = 0.05;
+      wet = 0.5;
       cutoff = 420;
     }
 
