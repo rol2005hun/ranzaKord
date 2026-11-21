@@ -26,7 +26,7 @@ const {
   onPlaySong,
   onPlayAlbumSong,
   onScroll
-} = await useArtist(props.artistId);
+} = useArtist(props.artistId);
 
 const { playTrack } = usePlayer();
 const playerStore = usePlayerStore();
