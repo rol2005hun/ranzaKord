@@ -655,7 +655,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const vid = videoId.trim();
-  const cacheKey = streamType === 'video' ? `${vid}_video_v4` : `${vid}_${streamType}`;
+  const cacheKey = streamType === 'video' ? `${vid}_video` : `${vid}_${streamType}`;
   const cached = streamCache.get(cacheKey);
 
   if (cached && Date.now() < cached.expiresAt) {
