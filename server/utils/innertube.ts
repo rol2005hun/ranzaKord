@@ -93,7 +93,7 @@ interface StoredPoData {
 function isValidPoToken(token?: string): boolean {
   if (!token || typeof token !== 'string') return false;
   const trimmed = token.trim();
-  if (trimmed.length < 20) return false;
+  if (trimmed.length < 8) return false;
   if (trimmed.startsWith('{') || trimmed.endsWith('}')) return false;
   if (trimmed.length % 4 === 1) return false;
   return /^[A-Za-z0-9+/=_-]+$/.test(trimmed);

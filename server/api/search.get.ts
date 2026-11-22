@@ -147,7 +147,6 @@ export default defineEventHandler(
         artistName = item.subtitle.toString();
       }
 
-      // Ensure space after commas in artistName if YouTube returned it without space
       if (artistName) {
         artistName = artistName.replace(/,([^\s])/g, ', $1');
       }
@@ -256,22 +255,25 @@ export default defineEventHandler(
     }
 
     if (type === 'song' || type === 'artist' || type === 'album') {
-      const results = await innertube.music.search(q.trim(), { type });
-      const items: SearchResult[] = [];
-      if (results.contents) {
-        for (const section of results.contents) {
-          if (!('contents' in section) || !Array.isArray(section.contents)) continue;
-          for (const item of section.contents) {
-            const parsed = parseItem(item, type as SearchResultType);
-            if (parsed) items.push(parsed);
-            if (items.length >= 20) break;
+      try {
+        const results = await innertube.music.search(q.trim(), { type });
+        const items: SearchResult[] = [];
+        if (results.contents) {
+          for (const section of results.contents) {
+            if (!('contents' in section) || !Array.isArray(section.contents)) continue;
+            for (const item of section.contents) {
+              const parsed = parseItem(item, type as SearchResultType);
+              if (parsed) items.push(parsed);
+              if (items.length >= 20) break;
+            }
           }
         }
+        return items;
+      } catch {
+        return [];
       }
-      return items;
     }
 
-    const results = await innertube.music.search(q.trim());
     const response: CategorizedSearchResults = {
       songs: [],
       artists: [],
@@ -279,41 +281,46 @@ export default defineEventHandler(
       profiles: []
     };
 
-    if (results.contents) {
-      for (const section of results.contents) {
-        const sectionTitle =
-          (section as unknown as { title?: { toString: () => string } }).title
-            ?.toString()
-            ?.toLowerCase() || '';
-        if (!('contents' in section) || !Array.isArray(section.contents)) continue;
+    try {
+      const results = await innertube.music.search(q.trim());
+      if (results.contents) {
+        for (const section of results.contents) {
+          const sectionTitle =
+            (section as unknown as { title?: { toString: () => string } }).title
+              ?.toString()
+              ?.toLowerCase() || '';
+          if (!('contents' in section) || !Array.isArray(section.contents)) continue;
 
-        for (const item of section.contents) {
-          let forcedType: SearchResultType | undefined;
-          if (sectionTitle.includes('song') || sectionTitle.includes('dalok')) forcedType = 'song';
-          else if (sectionTitle.includes('artist') || sectionTitle.includes('előadó'))
-            forcedType = 'artist';
-          else if (sectionTitle.includes('album') || sectionTitle.includes('albumok'))
-            forcedType = 'album';
-          else if (sectionTitle.includes('playlist') || sectionTitle.includes('lejátszási lista'))
-            forcedType = 'playlist';
+          for (const item of section.contents) {
+            let forcedType: SearchResultType | undefined;
+            if (sectionTitle.includes('song') || sectionTitle.includes('dalok'))
+              forcedType = 'song';
+            else if (sectionTitle.includes('artist') || sectionTitle.includes('előadó'))
+              forcedType = 'artist';
+            else if (sectionTitle.includes('album') || sectionTitle.includes('albumok'))
+              forcedType = 'album';
+            else if (sectionTitle.includes('playlist') || sectionTitle.includes('lejátszási lista'))
+              forcedType = 'playlist';
 
-          const parsed = parseItem(item, forcedType);
-          if (parsed) {
-            if (sectionTitle.includes('top result') || sectionTitle.includes('legjobb találat')) {
-              if (!response.topResult) response.topResult = parsed;
-            } else if (parsed.type === 'song') {
-              response.songs.push(parsed);
-            } else if (parsed.type === 'artist') {
-              response.artists.push(parsed);
-            } else if (parsed.type === 'album') {
-              response.albums.push(parsed);
-            } else if (parsed.type === 'playlist') {
-              // Store playlists in albums for now, since UI doesn't have a dedicated playlist shelf
-              response.albums.push(parsed);
+            const parsed = parseItem(item, forcedType);
+            if (parsed) {
+              if (sectionTitle.includes('top result') || sectionTitle.includes('legjobb találat')) {
+                if (!response.topResult) response.topResult = parsed;
+              } else if (parsed.type === 'song') {
+                response.songs.push(parsed);
+              } else if (parsed.type === 'artist') {
+                response.artists.push(parsed);
+              } else if (parsed.type === 'album') {
+                response.albums.push(parsed);
+              } else if (parsed.type === 'playlist') {
+                response.albums.push(parsed);
+              }
             }
           }
         }
       }
+    } catch {
+      void 0;
     }
 
     const dbUsers = await UserModel.find({
