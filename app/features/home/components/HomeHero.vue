@@ -272,11 +272,7 @@ function onPlayRadio(radio: RecommendedRadio) {
     <section v-if="dailyMixes.length > 0 || discoveryPending" class="home-dashboard__section">
       <div class="home-dashboard__section-header">
         <h2 class="home-dashboard__section-title">
-          {{
-            $t('home.madeForYou', {
-              name: currentUser?.name || $t('home.madeForYouGuest')
-            })
-          }}
+          {{ $t('home.madeForYou') }}
         </h2>
       </div>
 
