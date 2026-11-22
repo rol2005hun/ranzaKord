@@ -1,12 +1,23 @@
 <script setup lang="ts">
 const route = useRoute();
 const { isAuthenticated } = useAuth();
+const { isOffline, initNetworkListener } = useNetworkStatus();
 const playlistsStore = usePlaylistsStore();
 const layoutStore = useLayoutStore();
 
 const showCreateModal = ref(false);
 const showImportModal = ref(false);
 const showMobilePlaylists = ref(false);
+
+watch(
+  isOffline,
+  (offline) => {
+    if (offline && route.path !== '/offline' && !route.path.startsWith('/offline/')) {
+      navigateTo('/offline');
+    }
+  },
+  { immediate: true }
+);
 
 useAsyncData(
   'user-playlists',
@@ -41,6 +52,7 @@ async function onPlaylistImported(id: string): Promise<void> {
 const isHydrated = ref(false);
 onMounted(() => {
   isHydrated.value = true;
+  initNetworkListener();
 });
 </script>
 
@@ -55,25 +67,34 @@ onMounted(() => {
 
       <template #default="{ isExpanded }">
         <div class="music-layout__main-nav">
-          <AppSidebarItem to="/" icon="ph:house-duotone" :label="$t('core.nav.home')" />
+          <AppSidebarItem
+            to="/"
+            icon="ph:house-duotone"
+            :label="$t('core.nav.home')"
+            :disabled="isOffline" />
           <AppSidebarItem
             v-if="useAuthStore().currentUser?.roles?.includes('ranzaKreator')"
             to="/stats"
             icon="ph:chart-bar-duotone"
             :label="$t('stats.title')"
+            :disabled="isOffline"
             is-new />
           <AppSidebarItem
             v-if="useAuthStore().isDeveloper"
             to="/stream-stats"
             icon="ph:chart-line-up"
-            :label="$t('streamStats.navLabel')" />
+            :label="$t('streamStats.navLabel')"
+            :disabled="isOffline" />
           <AppSidebarItem
             to="/offline"
             icon="ph:wifi-slash-duotone"
             :label="$t('offline.navLabel')" />
         </div>
 
-        <div v-if="isAuthenticated" class="music-layout__library">
+        <div
+          v-if="isAuthenticated"
+          class="music-layout__library"
+          :class="{ 'music-layout__library--disabled': isOffline }">
           <div
             class="music-layout__library-header"
             :class="{ 'music-layout__library-header--expanded': isExpanded }">
@@ -211,6 +232,10 @@ onMounted(() => {
 
     <div class="music-layout__content">
       <AppNavbar @open-playlists="showMobilePlaylists = true" />
+      <div v-if="isOffline" class="music-layout__offline-banner">
+        <AppIcon name="ph:wifi-slash-bold" />
+        <span>{{ $t('core.offline.banner') }}</span>
+      </div>
       <main id="main-content" class="music-layout__main" :aria-label="$t('core.mainContent')">
         <slot />
       </main>
@@ -238,7 +263,11 @@ onMounted(() => {
       @update:model-value="showMobilePlaylists = false">
       <div class="mobile-playlists">
         <div class="mobile-playlists__main-nav">
-          <NuxtLink to="/" class="mobile-playlists__nav-item" @click="showMobilePlaylists = false">
+          <NuxtLink
+            to="/"
+            class="mobile-playlists__nav-item"
+            :class="{ 'mobile-playlists__nav-item--disabled': isOffline }"
+            @click="!isOffline && (showMobilePlaylists = false)">
             <AppIcon name="ph:house-duotone" />
             {{ $t('core.nav.home') }}
           </NuxtLink>
@@ -247,7 +276,8 @@ onMounted(() => {
             v-if="useAuthStore().currentUser?.roles?.includes('ranzaKreator')"
             to="/stats"
             class="mobile-playlists__nav-item"
-            @click="showMobilePlaylists = false">
+            :class="{ 'mobile-playlists__nav-item--disabled': isOffline }"
+            @click="!isOffline && (showMobilePlaylists = false)">
             <div style="position: relative; display: inline-flex">
               <AppIcon name="ph:chart-bar-duotone" />
               <span class="app-sidebar-item__new-badge" style="top: -2px; right: -8px">
@@ -261,7 +291,8 @@ onMounted(() => {
             v-if="useAuthStore().isDeveloper"
             to="/stream-stats"
             class="mobile-playlists__nav-item"
-            @click="showMobilePlaylists = false">
+            :class="{ 'mobile-playlists__nav-item--disabled': isOffline }"
+            @click="!isOffline && (showMobilePlaylists = false)">
             <AppIcon name="ph:chart-line-up" />
             {{ $t('streamStats.navLabel') }}
           </NuxtLink>
@@ -276,7 +307,9 @@ onMounted(() => {
 
         <div class="mobile-playlists__divider"></div>
 
-        <div class="mobile-playlists__actions">
+        <div
+          class="mobile-playlists__actions"
+          :class="{ 'mobile-playlists__actions--disabled': isOffline }">
           <button
             class="mobile-playlists__btn"
             @click="
@@ -397,6 +430,20 @@ onMounted(() => {
     height: 100%;
   }
 
+  &__offline-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    background: #f59e0b;
+    color: #000000;
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-medium);
+    flex-shrink: 0;
+    z-index: 50;
+  }
+
   &__main {
     flex: 1;
     min-height: 0;
@@ -414,6 +461,12 @@ onMounted(() => {
 
   &__library {
     padding: var(--space-1) 0;
+
+    &--disabled {
+      opacity: 0.38;
+      pointer-events: none;
+      cursor: not-allowed;
+    }
   }
 
   &__library-header {
@@ -742,6 +795,12 @@ onMounted(() => {
       font-size: 1.25rem;
       color: var(--color-primary);
     }
+
+    &--disabled {
+      opacity: 0.38;
+      pointer-events: none;
+      cursor: not-allowed;
+    }
   }
 
   &__divider {
@@ -754,6 +813,12 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
+
+    &--disabled {
+      opacity: 0.38;
+      pointer-events: none;
+      cursor: not-allowed;
+    }
   }
 
   &__btn {

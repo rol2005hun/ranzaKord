@@ -10,5 +10,18 @@
   "wcSubtitle": "Készülj a bajnokságra a legjobb slágerekkel!",
   "christmasTitle": "Karácsonyi dallamok",
   "christmasSubtitle": "Hangolódj az ünnepekre a legszebb karácsonyi slágerekkel!",
-  "christmasFeatured": "Ünnepi karácsonyi slágerek"
+  "christmasFeatured": "Ünnepi karácsonyi slágerek",
+  "madeForYou": "Neked készítettük",
+  "madeForYouGuest": "Neked készítettük",
+  "dailyMix": "Napi mix {n}",
+  "recommendedRadios": "Ajánlott rádiók",
+  "recommendedRadiosDesc": "Zenék megállás nélkül kedvenc dalaid és előadóid alapján.",
+  "radioBadge": "RÁDIÓ",
+  "listenAgain": "Hallgasd újra",
+  "playMix": "Mix lejátszása",
+  "playRadio": "Rádió indítása",
+  "andMore": "és még mások",
+  "andOthers": "és továbbiak...",
+  "scrollLeft": "Görgetés balra",
+  "scrollRight": "Görgetés jobbra"
 }

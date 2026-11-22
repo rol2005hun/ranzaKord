@@ -1,6 +1,8 @@
+import { useMusicVideo } from '@/features/player/composables/useMusicVideo';
 import { useSponsorBlock } from '@/features/player/composables/useSponsorBlock';
 
 import type { Track, TrackStatPayload } from '@/features/player/types/player.types';
+import type { SearchResult } from '@/features/search/types/search.types';
 
 const {
   registerPauseCallback,
@@ -41,6 +43,7 @@ function stopCrossfadeTimers() {
 
 export function usePlayer() {
   const store = usePlayerStore();
+  const layoutStore = useLayoutStore();
   const nuxtApp = useNuxtApp();
   const t = nuxtApp.$i18n.t;
   const toast = useToast();
@@ -51,6 +54,7 @@ export function usePlayer() {
     shouldSkip,
     segments: sponsorSegments
   } = useSponsorBlock();
+  const { preloadMusicVideo } = useMusicVideo();
 
   function setPlaybackError(message: string): void {
     const now = Date.now();
@@ -100,6 +104,10 @@ export function usePlayer() {
   async function getStreamUrl(videoId: string): Promise<string> {
     const authStore = useAuthStore();
     const finalVideoId = videoId;
+
+    if (!finalVideoId || finalVideoId === 'undefined') {
+      throw new Error('Invalid video ID');
+    }
 
     if (authStore.currentUser?.isDemo) {
       if (import.meta.client) {
@@ -158,6 +166,12 @@ export function usePlayer() {
     if (isPreloading) return;
     isPreloading = true;
     try {
+      if (
+        layoutStore.sidebarBackgroundMode === 'musicvideo' ||
+        layoutStore.fullscreenBackgroundMode === 'musicvideo'
+      ) {
+        preloadMusicVideo(track).catch(() => {});
+      }
       if (store.sponsorBlockEnabled) {
         preloadSegments(track.videoId);
       }
@@ -675,7 +689,7 @@ export function usePlayer() {
       tracksRemaining = Math.max(0, remainingUnplayed);
     }
 
-    if (tracksRemaining > 3) return;
+    if (tracksRemaining > 5) return;
 
     isFetchingMore = true;
 
@@ -712,10 +726,12 @@ export function usePlayer() {
             }
           }
         } else if (store.autoplayEnabled) {
-          await fetchRadioNext(track.videoId);
+          const seed = store.queue[store.queue.length - 1]?.videoId || track.videoId;
+          await fetchRadioNext(seed);
         }
       } else if (store.autoplayEnabled) {
-        await fetchRadioNext(track.videoId);
+        const seed = store.queue[store.queue.length - 1]?.videoId || track.videoId;
+        await fetchRadioNext(seed);
       }
     } catch (e) {
       console.error('Failed to fetch more tracks', e);
@@ -728,18 +744,92 @@ export function usePlayer() {
     const authStore = useAuthStore();
     if (authStore.currentUser?.isDemo) return null;
 
-    const res = await $fetch<Track[]>(useApiUrl(`/api/search/related?videoId=${videoId}`)).catch(
-      () => []
-    );
-    if (res && res.length > 0) {
-      const filtered = res
-        .filter((rt) => !store.queue.some((qt) => qt.videoId === rt.videoId))
-        .map((t) => ({ ...t, isRadio: true }));
-      if (filtered.length > 0) {
-        filtered.slice(0, 10).forEach((t) => store.addToQueue(t));
-        return filtered[0] ?? null;
+    if (!videoId || videoId === 'undefined') {
+      const fallback = store.queue.find((t) => t.videoId && t.videoId !== 'undefined');
+      if (fallback) {
+        videoId = fallback.videoId;
+      } else {
+        return null;
       }
     }
+
+    const requestTracks = async (url: string): Promise<Track[]> => {
+      try {
+        const res = await $fetch<Array<Track | SearchResult>>(useApiUrl(url));
+        if (!Array.isArray(res)) return [];
+        const result: Track[] = [];
+        for (const item of res) {
+          const vidId =
+            'videoId' in item && item.videoId
+              ? item.videoId
+              : 'id' in item && item.id
+                ? item.id
+                : '';
+          if (!vidId || vidId === 'undefined') continue;
+          result.push({
+            videoId: vidId,
+            title: item.title,
+            artist: item.artist,
+            artists: item.artists,
+            artistId: item.artistId,
+            thumbnailUrl:
+              item.thumbnailUrl || (vidId ? `https://i.ytimg.com/vi/${vidId}/hqdefault.jpg` : ''),
+            durationSeconds: item.durationSeconds || 0,
+            isRadio: true
+          });
+        }
+        return result;
+      } catch {
+        return [];
+      }
+    };
+
+    let res = await requestTracks(`/api/search/related?videoId=${videoId}`);
+
+    let candidates = (res || []).filter(
+      (rt) => !store.queue.slice(-20).some((qt) => qt.videoId === rt.videoId)
+    );
+
+    if (candidates.length === 0 && store.queue.length > 0) {
+      const lastTrack = store.queue[store.queue.length - 1];
+      if (
+        lastTrack &&
+        lastTrack.videoId &&
+        lastTrack.videoId !== 'undefined' &&
+        lastTrack.videoId !== videoId
+      ) {
+        res = await requestTracks(`/api/search/related?videoId=${lastTrack.videoId}`);
+        candidates = (res || []).filter(
+          (rt) => !store.queue.slice(-20).some((qt) => qt.videoId === rt.videoId)
+        );
+      }
+    }
+
+    if (candidates.length === 0 && store.currentTrack?.artist) {
+      const searchRes = await requestTracks(
+        `/api/search?q=${encodeURIComponent(store.currentTrack.artist)}&type=song`
+      );
+      candidates = (searchRes || []).filter(
+        (rt) => !store.queue.slice(-20).some((qt) => qt.videoId === rt.videoId)
+      );
+    }
+
+    if (candidates.length === 0) {
+      const featured = await requestTracks('/api/home/featured-tracks');
+      candidates = (featured || []).filter(
+        (rt) => !store.queue.slice(-10).some((qt) => qt.videoId === rt.videoId)
+      );
+      if (candidates.length === 0 && (featured || []).length > 0) {
+        candidates = featured || [];
+      }
+    }
+
+    if (candidates.length > 0) {
+      const toAdd = candidates.slice(0, 10).map((t) => ({ ...t, isRadio: true }));
+      toAdd.forEach((t) => store.addToQueue(t));
+      return toAdd[0] ?? null;
+    }
+
     return null;
   }
 
@@ -749,6 +839,10 @@ export function usePlayer() {
     force = false,
     startTime?: number
   ): Promise<void> {
+    if (!track.videoId || track.videoId === 'undefined') {
+      return;
+    }
+
     if (
       !force &&
       store.currentTrack?.videoId === track.videoId &&
@@ -964,9 +1058,17 @@ export function usePlayer() {
     applyVolumes();
   }
 
-  function playNext() {
+  async function playNext(): Promise<void> {
     const next = store.nextTrack();
-    if (next) playTrack(next);
+    if (next) {
+      playTrack(next);
+    } else if (store.autoplayEnabled && store.currentTrack) {
+      store.isLoading = true;
+      const radioTrack = await fetchRadioNext(store.currentTrack.videoId);
+      if (radioTrack) {
+        playTrack(radioTrack);
+      }
+    }
   }
 
   function playPrev() {
@@ -1006,6 +1108,46 @@ export function usePlayer() {
     if (track) {
       playTrack(track, false, force);
     }
+  }
+
+  function startRadio(seed: Track | SearchResult, radioTitle?: string) {
+    store.autoplayEnabled = true;
+    const seedVideoId = 'videoId' in seed ? seed.videoId : seed.id;
+    const mappedTrack: Track = {
+      videoId: seedVideoId,
+      title: seed.title,
+      artist: seed.artist,
+      thumbnailUrl: seed.thumbnailUrl,
+      durationSeconds: seed.durationSeconds || 0,
+      isRadio: true
+    };
+    store.playbackContext = {
+      type: 'radio',
+      sourceId: seedVideoId,
+      name: radioTitle || `${seed.artist} Rádió`,
+      currentOffset: 0
+    };
+    store.setQueue([mappedTrack]);
+    playTrack(mappedTrack, false, true);
+    fetchRadioNext(mappedTrack.videoId);
+  }
+
+  function startDailyMix(mixTitle: string, tracks: Array<Track | SearchResult>) {
+    store.autoplayEnabled = true;
+    const mappedTracks: Track[] = tracks.map((t) => ({
+      videoId: 'videoId' in t ? t.videoId : t.id,
+      title: t.title,
+      artist: t.artist,
+      thumbnailUrl: t.thumbnailUrl,
+      durationSeconds: t.durationSeconds || 0
+    }));
+    store.playbackContext = {
+      type: 'playlist',
+      sourceId: mixTitle,
+      name: mixTitle,
+      currentOffset: 0
+    };
+    playQueue(mappedTracks, 0, true);
   }
 
   function toggleKaraoke() {
@@ -1063,6 +1205,9 @@ export function usePlayer() {
     toggleRepeat,
     setQueue,
     playQueue,
+    startRadio,
+    startDailyMix,
+    playbackContext: computed(() => store.playbackContext),
     isKaraoke: computed(() => store.isKaraoke),
     toggleKaraoke
   };

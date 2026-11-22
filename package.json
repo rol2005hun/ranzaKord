@@ -6,6 +6,7 @@
   "scripts": {
     "bump": "git add . && pnpm exec bumpp package.json src-tauri/tauri.conf.json --commit \"build: bump version to v%s\" --all --no-tag --no-push",
     "build": "nuxt build",
+    "build:prod": "nuxt build --dotenv .env.prod",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "tauri": "tauri",

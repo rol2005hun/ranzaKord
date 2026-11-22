@@ -809,6 +809,10 @@ onMounted(() => {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+
+    &.text-primary {
+      color: color-mix(in srgb, var(--color-primary) 65%, var(--color-text-primary));
+    }
   }
 
   &__track-artist {

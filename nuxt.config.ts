@@ -79,7 +79,8 @@ export default defineNuxtConfig({
 
   ssr: process.env.NUXT_SSR === 'true',
   nitro: {
-    preset: process.env.NUXT_SSR === 'true' ? 'netlify' : 'static',
+    preset:
+      process.env.NITRO_PRESET || (process.env.NUXT_SSR === 'true' ? 'node-server' : 'static'),
     output: {
       publicDir: process.env.NUXT_SSR === 'true' ? undefined : 'dist'
     },
@@ -131,9 +132,15 @@ export default defineNuxtConfig({
     automaticTwitterTags: false
   },
 
+  unhead: {
+    vite: {
+      validate: false
+    }
+  },
+
   sitemap: {
     exclude: ['/api/**'],
-    zeroRuntime: false
+    zeroRuntime: true
   },
 
   ogImage: {

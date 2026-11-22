@@ -4,9 +4,9 @@ definePageMeta({
 });
 
 const route = useRoute();
-const id = route.params.id as string;
+const id = computed(() => route.params.id as string);
 </script>
 
 <template>
-  <ArtistPage :artist-id="id" />
+  <ArtistPage :key="id" :artist-id="id" />
 </template>

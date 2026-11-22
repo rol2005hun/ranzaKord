@@ -75,5 +75,9 @@
     }
   },
   "demoModeToast": "Changes are not saved in Demo mode.",
-  "demoModeAudioToast": "For legal reasons, only royalty-free (NCS) music is playable in Demo mode."
+  "demoModeAudioToast": "For legal reasons, only royalty-free (NCS) music is playable in Demo mode.",
+  "offline": {
+    "banner": "Offline mode: No connection. Only downloaded tracks are accessible.",
+    "disabled": "Not available offline"
+  }
 }

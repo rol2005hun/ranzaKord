@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const { currentUser, logout, isAuthenticated } = useAuth();
 const { updateInfo, showUpdateModal } = useAppUpdate();
+const { isOffline } = useNetworkStatus();
 const layoutStore = useLayoutStore();
 
 const isDropdownOpen = ref(false);
@@ -41,7 +42,7 @@ function closeDropdown() {
         @click="emit('open-playlists')">
         <AppIcon name="ph:list" />
       </button>
-      <SearchBar />
+      <SearchBar :disabled="isOffline" />
     </div>
 
     <div class="app-navbar__right">

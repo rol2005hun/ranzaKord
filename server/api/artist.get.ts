@@ -46,19 +46,30 @@ export default defineCachedEventHandler(
         try {
           const cleanName = targetBrowseId.replace(/\s*-\s*(topic|téma)$/i, '').trim();
           const searchRes = await innertube.music.search(cleanName, { type: 'artist' });
+          let exactMatchId: string | undefined;
+          let firstMatchId: string | undefined;
+
           if (searchRes.contents) {
             for (const section of searchRes.contents) {
               if (!('contents' in section) || !Array.isArray(section.contents)) continue;
               for (const raw of section.contents) {
                 const it = raw as YTItem;
                 const foundId = it.id || it.endpoint?.payload?.browseId;
-                if (foundId) {
-                  targetBrowseId = foundId;
+                if (!foundId || !foundId.startsWith('UC')) continue;
+                if (!firstMatchId) firstMatchId = foundId;
+                const itemName = (it.name?.toString() || it.title?.toString() || '').trim();
+                if (itemName.toLowerCase() === cleanName.toLowerCase()) {
+                  exactMatchId = foundId;
                   break;
                 }
               }
-              if (targetBrowseId !== id) break;
+              if (exactMatchId) break;
             }
+          }
+          if (exactMatchId) {
+            targetBrowseId = exactMatchId;
+          } else if (firstMatchId) {
+            targetBrowseId = firstMatchId;
           }
         } catch {
           void 0;

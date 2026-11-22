@@ -35,19 +35,6 @@ useHead({
   title: computed(() => artist.value?.name || t('search.artist.titleFallback'))
 });
 
-watch(
-  () => artist.value?.id,
-  (resolvedId) => {
-    if (
-      resolvedId &&
-      props.artistId !== resolvedId &&
-      router.currentRoute.value.params['id'] !== resolvedId
-    ) {
-      router.replace(`/artist/${resolvedId}`);
-    }
-  }
-);
-
 function onShuffleArtist() {
   if (!artist.value) return;
   const sourceSongs =

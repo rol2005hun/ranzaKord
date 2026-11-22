@@ -164,21 +164,71 @@ watch(
   }
 );
 
-watch(isPlaying, (playing) => {
-  if (!musicVideoRef.value) return;
-  if (playing) {
-    musicVideoRef.value.play().catch(() => {});
+function syncVideoWithAudio(force = false) {
+  const video = musicVideoRef.value;
+  if (!video) return;
+
+  const audioTime = currentTime.value;
+  const targetTime =
+    video.duration > 0 && audioTime >= video.duration ? audioTime % video.duration : audioTime;
+
+  const diff = Math.abs(video.currentTime - targetTime);
+  const threshold = force || !isPlaying.value ? 0.05 : 0.3;
+
+  if (diff > threshold) {
+    video.currentTime = targetTime;
+  }
+
+  const rate = player.audioElement.value?.playbackRate || 1;
+  if (video.playbackRate !== rate) {
+    video.playbackRate = rate;
+  }
+}
+
+function onVideoLoadedMetadata() {
+  syncVideoWithAudio(true);
+  if (isPlaying.value) {
+    musicVideoRef.value?.play().catch(() => {});
   } else {
-    musicVideoRef.value.pause();
+    musicVideoRef.value?.pause();
+  }
+}
+
+function onVideoCanPlay() {
+  syncVideoWithAudio(true);
+  if (isPlaying.value && musicVideoRef.value?.paused) {
+    musicVideoRef.value?.play().catch(() => {});
+  }
+}
+
+function onVideoPlaying() {
+  syncVideoWithAudio(false);
+}
+
+watch(isPlaying, (playing) => {
+  const video = musicVideoRef.value;
+  if (!video) return;
+  if (playing) {
+    syncVideoWithAudio(true);
+    video.play().catch(() => {});
+  } else {
+    video.pause();
+    syncVideoWithAudio(true);
   }
 });
 
-watch(currentTime, (time) => {
-  if (!musicVideoRef.value || !isPlaying.value) return;
-  if (Math.abs(musicVideoRef.value.currentTime - time) > 2) {
-    musicVideoRef.value.currentTime = time;
-  }
+watch(currentTime, () => {
+  syncVideoWithAudio();
 });
+
+watch(
+  () => player.audioElement.value?.playbackRate,
+  (rate) => {
+    if (musicVideoRef.value && rate) {
+      musicVideoRef.value.playbackRate = rate;
+    }
+  }
+);
 
 const activeLineIndex = computed(() => getActiveLine(currentTime.value));
 
@@ -373,11 +423,13 @@ const sidebarStyle = computed(() => ({
               ref="musicVideoRef"
               :src="musicVideoUrl"
               class="right-sidebar__music-video"
-              autoplay
               loop
               muted
               playsinline
               preload="auto"
+              @loadedmetadata="onVideoLoadedMetadata"
+              @canplay="onVideoCanPlay"
+              @playing="onVideoPlaying"
               @error="onVideoError" />
             <img
               v-else-if="currentTrack.thumbnailUrl"

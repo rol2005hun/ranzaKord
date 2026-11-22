@@ -202,8 +202,11 @@ onClickOutside(moreMenuBtnRef, (e) => {
           <ClientOnly>
             <div class="player-bar__artwork">
               <img
-                v-if="displayTrack?.thumbnailUrl"
-                :src="displayTrack.thumbnailUrl"
+                v-if="displayTrack?.thumbnailUrl || displayTrack?.videoId"
+                :src="
+                  displayTrack.thumbnailUrl ||
+                  `https://i.ytimg.com/vi/${displayTrack.videoId}/hqdefault.jpg`
+                "
                 :alt="displayTrack?.title"
                 class="player-bar__img" />
               <AppIcon v-else name="ph:music-notes-simple" class="player-bar__img-placeholder" />

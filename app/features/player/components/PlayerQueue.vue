@@ -9,7 +9,6 @@ const orderOptions = computed(() => [
   { label: t('player.orderReverse'), value: 'reverse', icon: 'ph:arrow-u-up-left' }
 ]);
 
-// We need to keep a local copy for the drag and drop to work smoothly without layout thrashing
 const dragIndex = ref<number | null>(null);
 const dragOverIndex = ref<number | null>(null);
 
@@ -17,7 +16,6 @@ function handleDragStart(event: DragEvent, index: number) {
   if (event.dataTransfer) {
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.dropEffect = 'move';
-    // We just need some data to make it draggable in Firefox
     event.dataTransfer.setData('text/plain', index.toString());
   }
   dragIndex.value = index;
@@ -29,7 +27,7 @@ function handleDragEnter(event: DragEvent, index: number) {
 }
 
 function handleDragOver(event: DragEvent, index: number) {
-  event.preventDefault(); // Necessary to allow dropping
+  event.preventDefault();
   if (event.dataTransfer) {
     event.dataTransfer.dropEffect = 'move';
   }
@@ -70,7 +68,7 @@ onMounted(() => {
   <div class="player-queue">
     <div class="player-queue__header">
       <div class="player-queue__header-top">
-        <h3 class="player-queue__title">{{ $t('player.queue') }}</h3>
+        <h2 class="player-queue__title">{{ $t('player.queue') }}</h2>
         <button
           v-if="isHydrated && playerStore.queue.length > 0"
           class="player-queue__clear-btn"
@@ -155,7 +153,7 @@ onMounted(() => {
               "
               class="player-queue__playing-icon">
               <AppSpinner v-if="playerStore.isLoading" size="sm" />
-              <AppPlayingIndicator v-else class="text-primary" />
+              <AppPlayingIndicator v-else class="player-queue__playing-indicator" />
             </span>
             <span v-else class="player-queue__num">
               {{ playerStore.visibleQueueStartIndex + index + 1 }}
@@ -170,8 +168,8 @@ onMounted(() => {
             @click="playQueueTrack(playerStore.visibleQueueStartIndex + index)">
             <div class="player-queue__track-thumb">
               <img
-                v-if="track.thumbnailUrl"
-                :src="track.thumbnailUrl"
+                v-if="track.thumbnailUrl || track.videoId"
+                :src="track.thumbnailUrl || `https://i.ytimg.com/vi/${track.videoId}/hqdefault.jpg`"
                 :alt="track.title"
                 :loading="index < 6 ? 'eager' : 'lazy'"
                 decoding="async" />
@@ -184,7 +182,7 @@ onMounted(() => {
               <span
                 class="player-queue__track-title"
                 :class="{
-                  'text-primary': playerStore.currentTrack?.queueId
+                  'player-queue__track-title--active': playerStore.currentTrack?.queueId
                     ? playerStore.currentTrack.queueId === track.queueId
                     : playerStore.currentTrack?.videoId === track.videoId
                 }">
@@ -330,7 +328,8 @@ onMounted(() => {
 
   &--playing {
     .player-queue__track-title {
-      color: var(--color-primary);
+      color: color-mix(in srgb, var(--color-primary) 65%, var(--color-text-primary));
+      font-weight: var(--font-weight-semibold);
     }
   }
 }
@@ -350,6 +349,10 @@ onMounted(() => {
   color: var(--color-text-secondary);
   font-variant-numeric: tabular-nums;
   transition: opacity var(--transition-fast);
+}
+
+.player-queue__playing-indicator {
+  color: color-mix(in srgb, var(--color-primary) 65%, var(--color-text-primary));
 }
 
 .player-queue__drag-handle {
@@ -432,11 +435,16 @@ onMounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  &--active {
+    color: color-mix(in srgb, var(--color-primary) 65%, var(--color-text-primary));
+    font-weight: var(--font-weight-semibold);
+  }
 }
 
 .player-queue__track-artist {
   font-size: var(--text-xs);
-  color: var(--color-text-secondary);
+  color: color-mix(in srgb, var(--color-text-secondary) 85%, var(--color-text-primary));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -529,7 +537,6 @@ onMounted(() => {
   font-size: var(--text-xs);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-secondary);
-  opacity: 0.6;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   list-style: none;

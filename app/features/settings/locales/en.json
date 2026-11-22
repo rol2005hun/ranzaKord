@@ -5,7 +5,8 @@
     "appearance": "Appearance",
     "player": "Player",
     "audio": "Audio (EQ)",
-    "info": "Information"
+    "info": "Information",
+    "youtube": "YouTube & Server"
   },
   "account": {
     "title": "Account Settings",
@@ -121,6 +122,44 @@
       "playPause": "Play / Pause",
       "next": "Next Track",
       "prev": "Previous Track"
+    }
+  },
+  "youtube": {
+    "title": "YouTube & Server Connection",
+    "description": "Manage YouTube stream access, cookies, and authentication.",
+    "status": {
+      "title": "Connection Status",
+      "cookies": "YouTube Cookies",
+      "poToken": "PO Token",
+      "visitorData": "Visitor Data",
+      "oauth": "Google Account",
+      "active": "Configured",
+      "missing": "Not configured",
+      "refresh": "Refresh status"
+    },
+    "cookie": {
+      "title": "Enter Cookies",
+      "description": "Paste the cookie header or full cURL/request copied from browser:",
+      "placeholder": "cookie: ... or JSON / cURL copy",
+      "save": "Save Cookies",
+      "saving": "Saving...",
+      "success": "YouTube cookies successfully saved to server!",
+      "error": "Failed to save cookies."
+    },
+    "device": {
+      "title": "Google Account Login (Device Code)",
+      "description": "Sign in with a YouTube account using the device authorization code:",
+      "start": "Generate New Code",
+      "reconnect": "Reconnect",
+      "disconnect": "Disconnect Account",
+      "disconnected": "Google account successfully disconnected!",
+      "instruction": "1. Open the link in a browser tab and enter the code below:",
+      "openLink": "Open in browser",
+      "copyCode": "Copy Code",
+      "copied": "Code copied!",
+      "waiting": "Waiting for account authorization in browser...",
+      "success": "Signed in successfully! Tokens saved.",
+      "error": "Authentication error occurred."
     }
   }
 }

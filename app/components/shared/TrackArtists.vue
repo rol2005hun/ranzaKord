@@ -52,9 +52,10 @@ const artists = computed(() => getTrackArtists(props.track || undefined));
     text-decoration: none;
     transition: color var(--transition-fast);
 
-    &:hover {
+    &:hover,
+    &.router-link-active {
       text-decoration: underline;
-      color: var(--color-primary);
+      color: color-mix(in srgb, var(--color-primary) 65%, var(--color-text-primary));
     }
   }
 

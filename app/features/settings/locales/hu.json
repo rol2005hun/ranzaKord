@@ -5,7 +5,8 @@
     "appearance": "Megjelenés",
     "player": "Lejátszó",
     "audio": "Hangzás (EQ)",
-    "info": "Információ"
+    "info": "Információ",
+    "youtube": "YouTube & Szerver"
   },
   "account": {
     "title": "Fiók beállítások",
@@ -121,6 +122,44 @@
       "playPause": "Lejátszás / Szünet",
       "next": "Következő szám",
       "prev": "Előző szám"
+    }
+  },
+  "youtube": {
+    "title": "YouTube & Szerver Kapcsolat",
+    "description": "YouTube stream hozzáférés, cookie-k és bejelentkezés kezelése.",
+    "status": {
+      "title": "Kapcsolati állapot",
+      "cookies": "YouTube Sütik",
+      "poToken": "PO Token",
+      "visitorData": "Visitor Data",
+      "oauth": "Google Fiók",
+      "active": "Beállítva",
+      "missing": "Nincs beállítva",
+      "refresh": "Állapot frissítése"
+    },
+    "cookie": {
+      "title": "Sütik (Cookies) megadása",
+      "description": "Másold be a böngészőből kimásolt cookie fejlécet vagy a teljes kérést / cURL-t:",
+      "placeholder": "cookie: ... vagy JSON / cURL másolat",
+      "save": "Sütik mentése",
+      "saving": "Mentés...",
+      "success": "YouTube sütik sikeresen elmentve a szerverre!",
+      "error": "Nem sikerült a sütik mentése."
+    },
+    "device": {
+      "title": "Google Fiók Bejelentkezés (Device Code)",
+      "description": "Jelentkezz be YouTube fiókkal az okostévé-szerű jóváhagyási kóddal:",
+      "start": "Új kód generálása",
+      "reconnect": "Újrakapcsolódás",
+      "disconnect": "Fiók leválasztása",
+      "disconnected": "Google fiók sikeresen leválasztva!",
+      "instruction": "1. Nyisd meg a linket egy új böngészőlapon, és írd be a megadott kódot:",
+      "openLink": "Megnyitás a böngészőben",
+      "copyCode": "Kód másolása",
+      "copied": "Kód kimásolva!",
+      "waiting": "Várakozás a fiók jóváhagyására a böngészőben...",
+      "success": "Sikeres bejelentkezés! A tokenek elmentve.",
+      "error": "Bejelentkezési hiba történt."
     }
   }
 }

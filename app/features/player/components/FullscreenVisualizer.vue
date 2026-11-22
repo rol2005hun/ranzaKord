@@ -178,6 +178,47 @@ function onVideoError() {
 }
 const musicVideoRef = ref<HTMLVideoElement | null>(null);
 
+function syncVideoWithAudio(force = false) {
+  const video = musicVideoRef.value;
+  if (!video) return;
+
+  const audioTime = player.currentTimeSeconds.value;
+  const targetTime =
+    video.duration > 0 && audioTime >= video.duration ? audioTime % video.duration : audioTime;
+
+  const diff = Math.abs(video.currentTime - targetTime);
+  const threshold = force || !player.isPlaying.value ? 0.05 : 0.3;
+
+  if (diff > threshold) {
+    video.currentTime = targetTime;
+  }
+
+  const rate = player.audioElement.value?.playbackRate || 1;
+  if (video.playbackRate !== rate) {
+    video.playbackRate = rate;
+  }
+}
+
+function onVideoLoadedMetadata() {
+  syncVideoWithAudio(true);
+  if (player.isPlaying.value) {
+    musicVideoRef.value?.play().catch(() => {});
+  } else {
+    musicVideoRef.value?.pause();
+  }
+}
+
+function onVideoCanPlay() {
+  syncVideoWithAudio(true);
+  if (player.isPlaying.value && musicVideoRef.value?.paused) {
+    musicVideoRef.value?.play().catch(() => {});
+  }
+}
+
+function onVideoPlaying() {
+  syncVideoWithAudio(false);
+}
+
 watch(
   () => player.currentTrack.value,
   (track) => {
@@ -204,21 +245,30 @@ watch(
 watch(
   () => player.isPlaying.value,
   (playing) => {
-    if (!musicVideoRef.value) return;
+    const video = musicVideoRef.value;
+    if (!video) return;
     if (playing) {
-      musicVideoRef.value.play().catch(() => {});
+      syncVideoWithAudio(true);
+      video.play().catch(() => {});
     } else {
-      musicVideoRef.value.pause();
+      video.pause();
+      syncVideoWithAudio(true);
     }
   }
 );
 
-watch(currentTime, (time) => {
-  if (!musicVideoRef.value || !player.isPlaying.value) return;
-  if (Math.abs(musicVideoRef.value.currentTime - time) > 2) {
-    musicVideoRef.value.currentTime = time;
-  }
+watch(currentTime, () => {
+  syncVideoWithAudio();
 });
+
+watch(
+  () => player.audioElement.value?.playbackRate,
+  (rate) => {
+    if (musicVideoRef.value && rate) {
+      musicVideoRef.value.playbackRate = rate;
+    }
+  }
+);
 
 const isMusicVideoMode = computed(() => layoutStore.fullscreenBackgroundMode === 'musicvideo');
 
@@ -385,11 +435,13 @@ function getStyleIcon(style: string) {
         ref="musicVideoRef"
         :src="musicVideoUrl"
         class="fullscreen-visualizer__music-video"
-        autoplay
         loop
         muted
         playsinline
         preload="auto"
+        @loadedmetadata="onVideoLoadedMetadata"
+        @canplay="onVideoCanPlay"
+        @playing="onVideoPlaying"
         @error="onVideoError" />
       <canvas
         v-show="!isMusicVideoMode"
@@ -486,9 +538,13 @@ function getStyleIcon(style: string) {
               {{ lyricsData.translatedPlain }}
             </p>
           </div>
-          <div v-else class="fullscreen-visualizer__lyrics-empty">
+          <div v-else-if="!player.currentTrack.value" class="fullscreen-visualizer__lyrics-empty">
             <AppIcon name="ph:music-notes-duotone" />
             <p>{{ $t('player.noTrack') }}</p>
+          </div>
+          <div v-else class="fullscreen-visualizer__lyrics-empty">
+            <AppIcon name="ph:file-x-duotone" />
+            <p>{{ $t('player.lyricsNotFound') }}</p>
           </div>
         </div>
 
