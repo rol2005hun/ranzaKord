@@ -61,7 +61,6 @@ export default defineCachedEventHandler(
 
       const albumArtistId = header?.author?.channel_id || '';
 
-      // Attempt to extract year from subtitle if not provided
       let year = header?.year || '';
       if (!year && header?.subtitle) {
         const sub = header.subtitle.toString();
@@ -93,7 +92,19 @@ export default defineCachedEventHandler(
           const trackArtistId = item.authors?.[0]?.channel_id || albumArtistId;
 
           let duration = 0;
-          if (item.duration?.seconds) duration = item.duration.seconds;
+          if (item.duration?.seconds) {
+            duration = item.duration.seconds;
+          } else if (
+            item.duration &&
+            typeof item.duration === 'object' &&
+            'text' in item.duration &&
+            typeof (item.duration as { text?: string }).text === 'string'
+          ) {
+            const parts = (item.duration as { text: string }).text.split(':').map(Number);
+            if (parts.length === 2) duration = (parts[0] || 0) * 60 + (parts[1] || 0);
+            else if (parts.length === 3)
+              duration = (parts[0] || 0) * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0);
+          }
 
           tracks.push({
             id: videoId,

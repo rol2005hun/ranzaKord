@@ -217,6 +217,34 @@ export default defineEventHandler(
         duration = item.duration.seconds;
       } else if (typeof item.duration === 'number') {
         duration = item.duration;
+      } else if (
+        item.duration &&
+        typeof item.duration === 'object' &&
+        'text' in item.duration &&
+        typeof (item.duration as { text?: string }).text === 'string'
+      ) {
+        const parts = (item.duration as { text: string }).text.split(':').map(Number);
+        if (parts.length === 2) duration = (parts[0] || 0) * 60 + (parts[1] || 0);
+        else if (parts.length === 3)
+          duration = (parts[0] || 0) * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0);
+      } else if (typeof item.duration === 'string') {
+        const parts = (item.duration as string).split(':').map(Number);
+        if (parts.length === 2) duration = (parts[0] || 0) * 60 + (parts[1] || 0);
+        else if (parts.length === 3)
+          duration = (parts[0] || 0) * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0);
+      }
+
+      if (!duration && item.flex_columns) {
+        for (const col of item.flex_columns) {
+          const text = col.title?.runs?.[0]?.text || col.title?.toString() || '';
+          if (text.match(/^\d+:\d+/)) {
+            const parts = text.split(':').map(Number);
+            if (parts.length === 2) duration = (parts[0] || 0) * 60 + (parts[1] || 0);
+            else if (parts.length === 3)
+              duration = (parts[0] || 0) * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0);
+            if (duration > 0) break;
+          }
+        }
       }
 
       return {

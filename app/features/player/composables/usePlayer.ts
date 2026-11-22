@@ -369,8 +369,11 @@ export function usePlayer() {
       el.addEventListener(
         'durationchange',
         () => {
-          if (index === activeAudioIndex.value && isFinite(el.duration)) {
+          if (index === activeAudioIndex.value && isFinite(el.duration) && el.duration > 0) {
             store.durationSeconds = el.duration;
+            if (store.currentTrack && !store.currentTrack.durationSeconds) {
+              store.currentTrack.durationSeconds = el.duration;
+            }
           }
         },
         { signal }
