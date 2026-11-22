@@ -9,7 +9,6 @@ const orderOptions = computed(() => [
   { label: t('player.orderReverse'), value: 'reverse', icon: 'ph:arrow-u-up-left' }
 ]);
 
-// We need to keep a local copy for the drag and drop to work smoothly without layout thrashing
 const dragIndex = ref<number | null>(null);
 const dragOverIndex = ref<number | null>(null);
 
@@ -17,7 +16,6 @@ function handleDragStart(event: DragEvent, index: number) {
   if (event.dataTransfer) {
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.dropEffect = 'move';
-    // We just need some data to make it draggable in Firefox
     event.dataTransfer.setData('text/plain', index.toString());
   }
   dragIndex.value = index;
@@ -29,7 +27,7 @@ function handleDragEnter(event: DragEvent, index: number) {
 }
 
 function handleDragOver(event: DragEvent, index: number) {
-  event.preventDefault(); // Necessary to allow dropping
+  event.preventDefault();
   if (event.dataTransfer) {
     event.dataTransfer.dropEffect = 'move';
   }
