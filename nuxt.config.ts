@@ -80,7 +80,12 @@ export default defineNuxtConfig({
   ssr: process.env.NUXT_SSR === 'true',
   nitro: {
     preset:
-      process.env.NITRO_PRESET || (process.env.NUXT_SSR === 'true' ? 'node-server' : 'static'),
+      process.env.NITRO_PRESET ||
+      (process.env.NETLIFY
+        ? 'netlify'
+        : process.env.NUXT_SSR === 'true'
+          ? 'node-server'
+          : 'static'),
     output: {
       publicDir: process.env.NUXT_SSR === 'true' ? undefined : 'dist'
     },

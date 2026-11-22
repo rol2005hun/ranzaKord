@@ -18,17 +18,31 @@ onMounted(async () => {
     } else {
       sessionStorage.setItem('auth_token', token);
     }
+    const maxAge = remember ? 31536000 : 86400;
+    const isHttps = window.location.protocol === 'https:';
+    document.cookie = `auth_token=${encodeURIComponent(token)}; path=/; max-age=${maxAge}; SameSite=Lax; ${isHttps ? 'Secure;' : ''}`;
   }
 
-  // Force a hard navigation to root so the app re-initializes and fetches the user
-  window.location.href = '/';
+  const { fetchUser } = useAuth();
+  await fetchUser();
+
+  const authStore = useAuthStore();
+  if (authStore.isAuthenticated) {
+    if (authStore.currentUser?.hasAccess) {
+      await navigateTo('/');
+    } else {
+      await navigateTo('/unauthorized');
+    }
+  } else {
+    await navigateTo('/login');
+  }
 });
 </script>
 
 <template>
   <div class="auth-callback">
     <AppSpinner size="lg" />
-    <p>{{ $t('auth.callback.loading') }}</p>
+    <h1 class="auth-callback__title">{{ $t('auth.callback.loading') }}</h1>
   </div>
 </template>
 
@@ -42,5 +56,12 @@ onMounted(async () => {
   gap: var(--space-4);
   color: var(--color-text-secondary);
   background: var(--color-bg);
+
+  &__title {
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0;
+    color: var(--color-text-secondary);
+  }
 }
 </style>

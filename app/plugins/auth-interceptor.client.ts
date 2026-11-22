@@ -17,7 +17,11 @@ export default defineNuxtPlugin({
         if (fetchError?.response?.status === 401 && import.meta.client) {
           const authStore = useAuthStore();
 
-          if (!authStore.currentUser?.isDemo) {
+          if (
+            !authStore.currentUser?.isDemo &&
+            window.location.pathname !== '/login' &&
+            !window.location.pathname.startsWith('/auth/save-token')
+          ) {
             document.cookie.split(';').forEach((c) => {
               document.cookie = c
                 .replace(/^ +/, '')
@@ -29,14 +33,9 @@ export default defineNuxtPlugin({
 
             authStore.clearSession();
 
-            if (
-              window.location.pathname !== '/login' &&
-              !window.location.pathname.startsWith('/auth/save-token')
-            ) {
-              nuxtApp.runWithContext(() => {
-                navigateTo('/login');
-              });
-            }
+            nuxtApp.runWithContext(() => {
+              navigateTo('/login');
+            });
           }
         }
         throw error;

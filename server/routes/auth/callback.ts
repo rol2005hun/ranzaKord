@@ -63,6 +63,12 @@ export default defineEventHandler(async (event) => {
       ? userInfo.roles.split(',').map((r) => r.trim())
       : ['user'];
 
+  const isAdminOrDev = parsedRoles.some((r: string) =>
+    ['admin', 'developer', 'dev', 'ranzakreator'].includes(r.toLowerCase())
+  );
+  const existingUser = await UserModel.findOne({ sub: userInfo.sub });
+  const hasAccess = existingUser ? Boolean(existingUser.hasAccess || isAdminOrDev) : isAdminOrDev;
+
   await UserModel.findOneAndUpdate(
     { sub: userInfo.sub },
     {
@@ -70,7 +76,8 @@ export default defineEventHandler(async (event) => {
       name: userInfo.name,
       email: userInfo.email,
       picture: userInfo.picture ?? '',
-      roles: parsedRoles
+      roles: parsedRoles,
+      hasAccess
     },
     { upsert: true, returnDocument: 'after' }
   );
