@@ -8,9 +8,11 @@ const offlineStore = useOfflineStore();
 const player = usePlayer();
 const showDeleteConfirm = ref(false);
 const isMounted = ref(false);
+const isLoading = ref(true);
 
 onMounted(async () => {
   await offlineStore.init();
+  isLoading.value = false;
   isMounted.value = true;
 });
 
@@ -100,7 +102,17 @@ function formatSize(bytes: number): string {
 
       <template #tracks>
         <div class="offline-content">
-          <div v-if="offlineStore.storageQuotaBytes > 0" class="offline-storage">
+          <div v-if="isLoading" class="offline-storage offline-storage--skeleton">
+            <div class="offline-storage__info">
+              <AppSkeleton width="130px" height="18px" border-radius="var(--radius-sm)" />
+              <AppSkeleton width="90px" height="14px" border-radius="var(--radius-sm)" />
+            </div>
+            <div class="offline-storage__bar">
+              <AppSkeleton width="100%" height="8px" border-radius="var(--radius-full)" />
+            </div>
+          </div>
+
+          <div v-else-if="offlineStore.storageQuotaBytes > 0" class="offline-storage">
             <div class="offline-storage__info">
               <span class="offline-storage__used">
                 {{ t('offline.storageUsed', { size: formatSize(offlineStore.totalSizeBytes) }) }}
@@ -118,14 +130,16 @@ function formatSize(bytes: number): string {
             </div>
           </div>
 
-          <div v-if="offlineStore.downloadedTracks.length === 0" class="offline-empty">
+          <div
+            v-if="!isLoading && offlineStore.downloadedTracks.length === 0"
+            class="offline-empty">
             <AppIcon name="ph:wifi-slash-duotone" class="offline-empty__icon" />
             <p class="offline-empty__title">{{ t('offline.empty') }}</p>
             <p class="offline-empty__hint">{{ t('offline.emptyHint') }}</p>
           </div>
 
           <AppTrackList
-            v-else
+            v-else-if="!isLoading"
             class="offline-track-list"
             :tracks="mappedTracks"
             :columns="['index', 'title', 'date', 'time', 'action']"
