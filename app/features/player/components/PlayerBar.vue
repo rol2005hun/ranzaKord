@@ -238,15 +238,18 @@ onClickOutside(moreMenuBtnRef, (e) => {
 
         <ClientOnly>
           <div class="player-bar__actions">
-            <button
-              ref="playlistBtnRef"
-              class="player-bar__add-btn"
-              :disabled="!displayTrack"
-              :aria-label="$t('playlists.addToPlaylist')"
-              @click="layoutStore.toggleAddToPlaylist()">
-              <AppIcon v-if="isInAnyPlaylist" name="ph:check-circle-fill" class="text-success" />
-              <AppIcon v-else name="ph:plus-circle" />
-            </button>
+            <AppTooltip
+              :text="isInAnyPlaylist ? $t('playlists.inPlaylist') : $t('playlists.addToPlaylist')">
+              <button
+                ref="playlistBtnRef"
+                class="player-bar__add-btn"
+                :disabled="!displayTrack"
+                :aria-label="$t('playlists.addToPlaylist')"
+                @click="layoutStore.toggleAddToPlaylist()">
+                <AppIcon v-if="isInAnyPlaylist" name="ph:check-circle-fill" class="text-success" />
+                <AppIcon v-else name="ph:plus-circle" />
+              </button>
+            </AppTooltip>
             <OfflineDownloadButton
               v-if="displayTrack"
               :track="displayTrack"
@@ -261,37 +264,43 @@ onClickOutside(moreMenuBtnRef, (e) => {
 
       <div class="player-bar__center">
         <div class="player-bar__controls">
-          <button
-            class="player-bar__btn player-bar__btn--secondary"
-            :class="{
-              'player-bar__btn--active': isHydrated
-                ? player.playbackOrder.value === 'random'
-                : false
-            }"
-            :disabled="!displayTrack"
-            :aria-label="$t('player.shuffle')"
-            @click="player.toggleShuffle()">
-            <AppIcon name="ph:shuffle" />
-          </button>
+          <AppTooltip :text="$t('player.shuffle')">
+            <button
+              class="player-bar__btn player-bar__btn--secondary"
+              :class="{
+                'player-bar__btn--active': isHydrated
+                  ? player.playbackOrder.value === 'random'
+                  : false
+              }"
+              :disabled="!displayTrack"
+              :aria-label="$t('player.shuffle')"
+              @click="player.toggleShuffle()">
+              <AppIcon name="ph:shuffle" />
+            </button>
+          </AppTooltip>
 
-          <button
-            class="player-bar__btn player-bar__btn--secondary"
-            :disabled="!displayTrack"
-            :aria-label="$t('player.prev')"
-            @click="player.playPrev()">
-            <AppIcon name="ph:skip-back-fill" />
-          </button>
+          <AppTooltip :text="$t('player.prev')">
+            <button
+              class="player-bar__btn player-bar__btn--secondary"
+              :disabled="!displayTrack"
+              :aria-label="$t('player.prev')"
+              @click="player.playPrev()">
+              <AppIcon name="ph:skip-back-fill" />
+            </button>
+          </AppTooltip>
 
           <ClientOnly>
-            <button
-              class="player-bar__btn player-bar__btn--play"
-              :disabled="!displayTrack"
-              :aria-label="player.isPlaying.value ? $t('player.pause') : $t('player.play')"
-              @click="player.togglePlay()">
-              <AppSpinner v-if="player.isLoading.value" size="sm" />
-              <AppIcon v-else-if="player.isPlaying.value" name="ph:pause-fill" />
-              <AppIcon v-else name="ph:play-fill" />
-            </button>
+            <AppTooltip :text="player.isPlaying.value ? $t('player.pause') : $t('player.play')">
+              <button
+                class="player-bar__btn player-bar__btn--play"
+                :disabled="!displayTrack"
+                :aria-label="player.isPlaying.value ? $t('player.pause') : $t('player.play')"
+                @click="player.togglePlay()">
+                <AppSpinner v-if="player.isLoading.value" size="sm" />
+                <AppIcon v-else-if="player.isPlaying.value" name="ph:pause-fill" />
+                <AppIcon v-else name="ph:play-fill" />
+              </button>
+            </AppTooltip>
             <template #fallback>
               <AppSkeleton
                 width="40px"
@@ -301,28 +310,32 @@ onClickOutside(moreMenuBtnRef, (e) => {
             </template>
           </ClientOnly>
 
-          <button
-            class="player-bar__btn player-bar__btn--secondary"
-            :disabled="isHydrated ? !player.hasNext.value || !player.currentTrack.value : true"
-            :aria-label="$t('player.next')"
-            @click="player.playNext()">
-            <AppIcon name="ph:skip-forward-fill" />
-          </button>
+          <AppTooltip :text="$t('player.next')">
+            <button
+              class="player-bar__btn player-bar__btn--secondary"
+              :disabled="isHydrated ? !player.hasNext.value || !player.currentTrack.value : true"
+              :aria-label="$t('player.next')"
+              @click="player.playNext()">
+              <AppIcon name="ph:skip-forward-fill" />
+            </button>
+          </AppTooltip>
 
-          <button
-            class="player-bar__btn player-bar__btn--secondary"
-            :class="{
-              'player-bar__btn--active': isHydrated ? player.repeatMode.value !== 'off' : false
-            }"
-            :disabled="!displayTrack"
-            :aria-label="$t('player.repeat')"
-            @click="player.toggleRepeat()">
-            <AppIcon
-              data-allow-mismatch
-              :name="
-                isHydrated && player.repeatMode.value === 'one' ? 'ph:repeat-once' : 'ph:repeat'
-              " />
-          </button>
+          <AppTooltip :text="$t('player.repeat')">
+            <button
+              class="player-bar__btn player-bar__btn--secondary"
+              :class="{
+                'player-bar__btn--active': isHydrated ? player.repeatMode.value !== 'off' : false
+              }"
+              :disabled="!displayTrack"
+              :aria-label="$t('player.repeat')"
+              @click="player.toggleRepeat()">
+              <AppIcon
+                data-allow-mismatch
+                :name="
+                  isHydrated && player.repeatMode.value === 'one' ? 'ph:repeat-once' : 'ph:repeat'
+                " />
+            </button>
+          </AppTooltip>
         </div>
 
         <div class="player-bar__progress">
@@ -375,51 +388,61 @@ onClickOutside(moreMenuBtnRef, (e) => {
           ref="extraControlsRef"
           class="player-bar__extra-controls"
           :class="{ 'is-open': isMoreMenuOpen }">
-          <button
-            v-if="isDesktopTauri"
-            class="player-bar__btn"
-            :aria-label="$t('core.miniPlayer')"
-            @click="layoutStore.toggleMiniPlayer()">
-            <AppIcon name="ph:picture-in-picture-fill" />
-          </button>
+          <AppTooltip v-if="isDesktopTauri" :text="$t('core.miniPlayer')">
+            <button
+              class="player-bar__btn"
+              :aria-label="$t('core.miniPlayer')"
+              @click="layoutStore.toggleMiniPlayer()">
+              <AppIcon name="ph:picture-in-picture-fill" />
+            </button>
+          </AppTooltip>
           <SleepTimerButton />
-          <button
-            class="player-bar__btn"
-            :class="{ 'player-bar__btn--active': layoutStore.isFullscreenVisualizer }"
-            :aria-label="$t('player.fullscreenVisualizer')"
-            @click="layoutStore.toggleFullscreenVisualizer()">
-            <AppIcon name="ph:monitor-play-bold" />
-          </button>
-          <button
-            class="player-bar__btn"
-            :class="{ 'player-bar__btn--active': isHydrated ? player.isKaraoke.value : false }"
-            :aria-label="$t('player.karaokeMode')"
-            @click="player.toggleKaraoke()">
-            <AppIcon name="ph:magic-wand" />
-          </button>
-          <button
-            id="player-lyrics-btn"
-            class="player-bar__btn player-bar__btn--lyrics"
-            :class="{ 'player-bar__btn--active': isLyricsActive || layoutStore.isMobileLyricsOpen }"
-            :aria-label="$t('player.lyrics')"
-            @click="toggleLyrics">
-            <AppIcon name="ph:microphone-stage" />
-          </button>
+          <AppTooltip :text="$t('player.fullscreenVisualizer')">
+            <button
+              class="player-bar__btn"
+              :class="{ 'player-bar__btn--active': layoutStore.isFullscreenVisualizer }"
+              :aria-label="$t('player.fullscreenVisualizer')"
+              @click="layoutStore.toggleFullscreenVisualizer()">
+              <AppIcon name="ph:monitor-play-bold" />
+            </button>
+          </AppTooltip>
+          <AppTooltip :text="$t('player.karaokeMode')">
+            <button
+              class="player-bar__btn"
+              :class="{ 'player-bar__btn--active': isHydrated ? player.isKaraoke.value : false }"
+              :aria-label="$t('player.karaokeMode')"
+              @click="player.toggleKaraoke()">
+              <AppIcon name="ph:magic-wand" />
+            </button>
+          </AppTooltip>
+          <AppTooltip :text="$t('player.lyrics')">
+            <button
+              id="player-lyrics-btn"
+              class="player-bar__btn player-bar__btn--lyrics"
+              :class="{
+                'player-bar__btn--active': isLyricsActive || layoutStore.isMobileLyricsOpen
+              }"
+              :aria-label="$t('player.lyrics')"
+              @click="toggleLyrics">
+              <AppIcon name="ph:microphone-stage" />
+            </button>
+          </AppTooltip>
         </div>
 
         <div class="player-bar__volume">
-          <button
-            class="player-bar__btn player-bar__volume-btn"
-            style="width: auto; height: auto"
-            :aria-label="$t('player.mute')"
-            @click="toggleMute">
-            <ClientOnly>
-              <AppIcon :name="volumeIcon" class="player-bar__volume-icon" />
-              <template #fallback>
-                <AppIcon name="ph:speaker-high-fill" class="player-bar__volume-icon" />
-              </template>
-            </ClientOnly>
-          </button>
+          <AppTooltip :text="$t('player.mute')">
+            <button
+              class="player-bar__btn player-bar__volume-btn"
+              :aria-label="$t('player.mute')"
+              @click="toggleMute">
+              <ClientOnly>
+                <AppIcon :name="volumeIcon" class="player-bar__volume-icon" />
+                <template #fallback>
+                  <AppIcon name="ph:speaker-high-fill" class="player-bar__volume-icon" />
+                </template>
+              </ClientOnly>
+            </button>
+          </AppTooltip>
           <input
             v-if="displayTrack"
             id="player-volume"
@@ -439,14 +462,16 @@ onClickOutside(moreMenuBtnRef, (e) => {
           <AppSkeleton v-else height="4px" width="100px" class="player-bar__slider--volume" />
         </div>
 
-        <button
-          ref="moreMenuBtnRef"
-          class="player-bar__btn player-bar__more-btn"
-          :class="{ 'player-bar__btn--active': isMoreMenuOpen }"
-          :aria-label="$t('core.actions.more')"
-          @click="isMoreMenuOpen = !isMoreMenuOpen">
-          <AppIcon name="ph:dots-three-vertical-bold" />
-        </button>
+        <AppTooltip :text="$t('core.actions.more')">
+          <button
+            ref="moreMenuBtnRef"
+            class="player-bar__btn player-bar__more-btn"
+            :class="{ 'player-bar__btn--active': isMoreMenuOpen }"
+            :aria-label="$t('core.actions.more')"
+            @click="isMoreMenuOpen = !isMoreMenuOpen">
+            <AppIcon name="ph:dots-three-vertical-bold" />
+          </button>
+        </AppTooltip>
       </div>
     </aside>
 
@@ -719,11 +744,10 @@ onClickOutside(moreMenuBtnRef, (e) => {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all var(--transition-base);
+    transition: color var(--transition-fast);
 
     &:hover:not(:disabled) {
       color: var(--color-text-primary);
-      transform: scale(1.1);
     }
 
     &:disabled {
@@ -746,11 +770,11 @@ onClickOutside(moreMenuBtnRef, (e) => {
     font-size: var(--text-xl);
     transition:
       color var(--transition-fast),
-      transform var(--transition-fast);
+      background-color var(--transition-fast);
 
     &:hover:not(:disabled) {
       color: var(--color-text-primary);
-      transform: scale(1.05);
+      background-color: var(--color-surface-hover);
     }
 
     &:disabled {
@@ -784,16 +808,19 @@ onClickOutside(moreMenuBtnRef, (e) => {
       --spinner-color: var(--color-bg);
       border-radius: var(--radius-full);
       flex-shrink: 0;
+      transition:
+        background-color var(--transition-fast),
+        filter var(--transition-fast);
 
       :deep(.spinner) {
         color: var(--color-bg);
       }
 
       &:hover:not(:disabled) {
-        background: var(--color-text-secondary);
+        background: var(--color-text-primary);
+        filter: brightness(0.9);
         color: var(--color-bg);
         --spinner-color: var(--color-bg);
-        transform: scale(1.05);
       }
     }
   }

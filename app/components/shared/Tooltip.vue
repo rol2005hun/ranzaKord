@@ -1,17 +1,20 @@
 <script setup lang="ts">
 interface Props {
-  text: string;
+  text?: string;
   position?: 'top' | 'right' | 'bottom' | 'left';
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  text: '',
   position: 'top'
 });
 
 const isVisible = ref<boolean>(false);
 
 function show(): void {
-  isVisible.value = true;
+  if (props.text) {
+    isVisible.value = true;
+  }
 }
 
 function hide(): void {
@@ -23,7 +26,11 @@ function hide(): void {
   <span class="tooltip-wrapper" @mouseenter="show" @mouseleave="hide" @focus="show" @blur="hide">
     <slot />
     <Transition name="tooltip">
-      <span v-if="isVisible" class="tooltip" :class="`tooltip--${props.position}`" role="tooltip">
+      <span
+        v-if="isVisible && props.text"
+        class="tooltip"
+        :class="`tooltip--${props.position}`"
+        role="tooltip">
         {{ props.text }}
       </span>
     </Transition>
@@ -34,41 +41,45 @@ function hide(): void {
 .tooltip-wrapper {
   position: relative;
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .tooltip {
   position: absolute;
-  padding: var(--tooltip-padding-y, var(--space-1)) var(--tooltip-padding-x, var(--space-2));
-  font-size: var(--tooltip-font-size, var(--text-xs));
+  padding: 4px 8px;
+  font-size: var(--text-xs);
   font-weight: var(--font-weight-medium);
-  color: var(--tooltip-color, #ffffff);
-  background-color: var(--tooltip-bg, var(--color-text-primary));
-  border-radius: var(--tooltip-radius, var(--radius-md));
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  border-radius: var(--radius-md);
   white-space: nowrap;
   pointer-events: none;
-  z-index: var(--z-tooltip);
+  z-index: var(--z-modal);
   line-height: var(--leading-normal);
 
   &--top {
-    bottom: calc(100% + var(--tooltip-offset, var(--space-2)));
+    bottom: calc(100% + var(--space-2));
     left: 50%;
     transform: translateX(-50%);
   }
 
   &--bottom {
-    top: calc(100% + var(--tooltip-offset, var(--space-2)));
+    top: calc(100% + var(--space-2));
     left: 50%;
     transform: translateX(-50%);
   }
 
   &--left {
-    right: calc(100% + var(--tooltip-offset, var(--space-2)));
+    right: calc(100% + var(--space-2));
     top: 50%;
     transform: translateY(-50%);
   }
 
   &--right {
-    left: calc(100% + var(--tooltip-offset, var(--space-2)));
+    left: calc(100% + var(--space-2));
     top: 50%;
     transform: translateY(-50%);
   }
@@ -84,5 +95,21 @@ function hide(): void {
 .tooltip-enter-from,
 .tooltip-leave-to {
   opacity: 0;
+
+  &.tooltip--top {
+    transform: translateX(-50%) translateY(4px);
+  }
+
+  &.tooltip--bottom {
+    transform: translateX(-50%) translateY(-4px);
+  }
+
+  &.tooltip--left {
+    transform: translateY(-50%) translateX(4px);
+  }
+
+  &.tooltip--right {
+    transform: translateY(-50%) translateX(-4px);
+  }
 }
 </style>

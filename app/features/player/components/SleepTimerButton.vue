@@ -70,18 +70,19 @@ onClickOutside(containerRef, (event) => {
 
 <template>
   <div ref="containerRef" class="sleep-timer">
-    <button
-      ref="btnRef"
-      class="sleep-timer__btn"
-      :class="{ 'sleep-timer__btn--active': isActive }"
-      :aria-label="t('player.sleepTimer')"
-      :title="statusLabel ?? t('player.sleepTimer')"
-      @click="toggle">
-      <AppIcon name="ph:moon" />
-      <span v-if="isActive && sleepTimerMode === 'timer'" class="sleep-timer__badge">
-        {{ formatRemaining(sleepTimerRemaining) }}
-      </span>
-    </button>
+    <AppTooltip :text="statusLabel ?? t('player.sleepTimer')">
+      <button
+        ref="btnRef"
+        class="sleep-timer__btn"
+        :class="{ 'sleep-timer__btn--active': isActive }"
+        :aria-label="t('player.sleepTimer')"
+        @click="toggle">
+        <AppIcon name="ph:moon" />
+        <span v-if="isActive && sleepTimerMode === 'timer'" class="sleep-timer__badge">
+          {{ formatRemaining(sleepTimerRemaining) }}
+        </span>
+      </button>
+    </AppTooltip>
 
     <Teleport to="body">
       <Transition name="sleep-timer-popup">
@@ -145,7 +146,7 @@ onClickOutside(containerRef, (event) => {
     border-radius: var(--radius-full);
     transition:
       color var(--transition-fast),
-      transform var(--transition-fast);
+      background-color var(--transition-fast);
     font-size: var(--text-xl);
     width: 32px;
     height: 32px;
@@ -153,7 +154,7 @@ onClickOutside(containerRef, (event) => {
 
     &:hover {
       color: var(--color-text-primary);
-      transform: scale(1.05);
+      background-color: var(--color-surface-hover);
     }
 
     &--active {
