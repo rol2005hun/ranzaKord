@@ -15,7 +15,6 @@ export default defineEventHandler((event) => {
         event.node.req.headers.cookie = newCookie;
       }
 
-      // Ensure h3's internal cookie cache is updated if it was already parsed
       if (event.context.cookies) {
         (event.context.cookies as Record<string, string>).h3 = token;
       }
