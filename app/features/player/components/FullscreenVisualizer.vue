@@ -486,9 +486,13 @@ function getStyleIcon(style: string) {
               {{ lyricsData.translatedPlain }}
             </p>
           </div>
-          <div v-else class="fullscreen-visualizer__lyrics-empty">
+          <div v-else-if="!player.currentTrack.value" class="fullscreen-visualizer__lyrics-empty">
             <AppIcon name="ph:music-notes-duotone" />
             <p>{{ $t('player.noTrack') }}</p>
+          </div>
+          <div v-else class="fullscreen-visualizer__lyrics-empty">
+            <AppIcon name="ph:file-x-duotone" />
+            <p>{{ $t('player.lyricsNotFound') }}</p>
           </div>
         </div>
 
