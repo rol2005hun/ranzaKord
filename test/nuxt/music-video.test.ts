@@ -8,8 +8,9 @@ mockNuxtImport('$fetch', () => fetchMock);
 describe('useMusicVideo', () => {
   beforeEach(() => {
     fetchMock.mockReset();
-    const { resetMusicVideo } = useMusicVideo();
+    const { resetMusicVideo, clearVideoCache } = useMusicVideo();
     resetMusicVideo();
+    clearVideoCache();
   });
 
   it('initializes with default values', () => {
@@ -53,5 +54,19 @@ describe('useMusicVideo', () => {
 
     expect(musicVideoUrl.value).toBeNull();
     expect(isNotFound.value).toBe(true);
+  });
+
+  it('preloads music video and uses cache for subsequent fetch', async () => {
+    fetchMock.mockResolvedValue({ results: [{ videoId: 'preloaded_vid_456' }] });
+
+    const { musicVideoUrl, preloadMusicVideo, fetchMusicVideo } = useMusicVideo();
+    await preloadMusicVideo({ title: 'Song', artist: 'Artist' });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    await fetchMusicVideo({ title: 'Song', artist: 'Artist' });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(musicVideoUrl.value).toContain('v=preloaded_vid_456');
   });
 });

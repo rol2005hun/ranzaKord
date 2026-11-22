@@ -1,3 +1,4 @@
+import { useMusicVideo } from '@/features/player/composables/useMusicVideo';
 import { useSponsorBlock } from '@/features/player/composables/useSponsorBlock';
 
 import type { Track, TrackStatPayload } from '@/features/player/types/player.types';
@@ -41,6 +42,7 @@ function stopCrossfadeTimers() {
 
 export function usePlayer() {
   const store = usePlayerStore();
+  const layoutStore = useLayoutStore();
   const nuxtApp = useNuxtApp();
   const t = nuxtApp.$i18n.t;
   const toast = useToast();
@@ -51,6 +53,7 @@ export function usePlayer() {
     shouldSkip,
     segments: sponsorSegments
   } = useSponsorBlock();
+  const { preloadMusicVideo } = useMusicVideo();
 
   function setPlaybackError(message: string): void {
     const now = Date.now();
@@ -158,6 +161,12 @@ export function usePlayer() {
     if (isPreloading) return;
     isPreloading = true;
     try {
+      if (
+        layoutStore.sidebarBackgroundMode === 'musicvideo' ||
+        layoutStore.fullscreenBackgroundMode === 'musicvideo'
+      ) {
+        preloadMusicVideo(track).catch(() => {});
+      }
       if (store.sponsorBlockEnabled) {
         preloadSegments(track.videoId);
       }
