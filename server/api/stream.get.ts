@@ -544,10 +544,13 @@ async function discoverStream(
   const fallbackSpecs: CandidateSpec[] =
     streamType === 'video'
       ? [
+          { client: 'YTMUSIC', useAuth: false },
           { client: 'ANDROID', useAuth: false },
+          { client: 'MWEB', useAuth: false },
           { client: 'WEB', useAuth: false },
           { client: 'TV_SIMPLY' as ClientType, useAuth: false },
-          { client: 'ANDROID_VR', useAuth: false }
+          { client: 'ANDROID_VR', useAuth: false },
+          ...(isTvOAuth ? [{ client: 'TV' as ClientType, useAuth: true }] : [])
         ]
       : [
           { client: 'MWEB', useAuth: false },
