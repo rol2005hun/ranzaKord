@@ -14,6 +14,16 @@ export interface UserSettings {
   eqPreset?: string;
   eqBands?: number[];
   playbackOrder?: 'sequential' | 'random' | 'reverse';
+  isSlowedReverb?: boolean;
+  isNightcore?: boolean;
+  reverbPreset?: 'none' | 'room' | 'hall' | 'cathedral' | 'shower' | 'muffled';
+  isSpatialAudio?: boolean;
+  isStereoWidener?: boolean;
+  bassBoostEnabled?: boolean;
+  playbackSpeed?: number;
+  preservesPitch?: boolean;
+  sponsorBlockEnabled?: boolean;
+  globalShortcutsEnabled?: boolean;
 }
 
 export interface OAuthUser {

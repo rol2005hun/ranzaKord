@@ -61,7 +61,6 @@ describe('settings-sync.client plugin', () => {
     const themeStore = useThemeStore();
     const playerStore = usePlayerStore();
 
-    // Trigger watcher by updating currentUser
     authStore.setUser({
       id: '1',
       username: 'test',
@@ -72,18 +71,22 @@ describe('settings-sync.client plugin', () => {
       settings: {
         theme: 'light',
         crossfadeEnabled: true,
-        eqEnabled: true
+        eqEnabled: true,
+        isSlowedReverb: true,
+        isSpatialAudio: true,
+        bassBoostEnabled: true
       }
     } as unknown as NonNullable<ReturnType<typeof useAuthStore>['currentUser']>);
 
-    // Await watchers
     await nextTick();
 
     expect(themeStore.themeId).toBe('light');
     expect(playerStore.crossfadeEnabled).toBe(true);
     expect(playerStore.eqEnabled).toBe(true);
+    expect(playerStore.isSlowedReverb).toBe(true);
+    expect(playerStore.isSpatialAudio).toBe(true);
+    expect(playerStore.bassBoostEnabled).toBe(true);
 
-    // Should NOT trigger $fetch since it is syncing FROM server
     vi.advanceTimersByTime(2000);
     expect(mockFetch).not.toHaveBeenCalledWith('/api/me/settings', expect.anything());
   });
@@ -95,7 +98,6 @@ describe('settings-sync.client plugin', () => {
     const authStore = useAuthStore();
     const themeStore = useThemeStore();
 
-    // Set authenticated user
     authStore.setUser({
       id: '1',
       username: 'test',
@@ -107,12 +109,12 @@ describe('settings-sync.client plugin', () => {
     } as unknown as NonNullable<ReturnType<typeof useAuthStore>['currentUser']>);
     await nextTick();
 
-    // Change a local setting
+    const playerStore = usePlayerStore();
+    playerStore.$patch({ isSlowedReverb: true });
     themeStore.$patch({ themeId: 'ocean' });
 
     await nextTick();
 
-    // Fast forward debounce timer (1000ms)
     vi.advanceTimersByTime(1500);
 
     vi.useRealTimers();
@@ -123,7 +125,8 @@ describe('settings-sync.client plugin', () => {
       expect.objectContaining({
         method: 'PATCH',
         body: expect.objectContaining({
-          theme: 'ocean'
+          theme: 'ocean',
+          isSlowedReverb: true
         })
       })
     );
