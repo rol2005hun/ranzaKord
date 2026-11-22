@@ -1,7 +1,15 @@
 <script setup lang="ts">
 import type { Ref } from 'vue';
 
+import type {
+  DailyMix,
+  HomeDiscoveryData,
+  RecommendedRadio
+} from '@/features/home/types/home.types';
 import type { SearchResult } from '@/features/search/types/search.types';
+
+import HomeMixCard from './HomeMixCard.vue';
+import HomeRadioCard from './HomeRadioCard.vue';
 
 const { currentUser } = useAuth();
 const themeStore = useThemeStore();
@@ -9,6 +17,15 @@ const themeStore = useThemeStore();
 const isWalker = computed(() => themeStore.themeId === 'walker');
 const isWc2026 = computed(() => false);
 const isChristmas = computed(() => themeStore.themeId === 'christmas');
+
+const {
+  data: discoveryData,
+  pending: discoveryPending,
+  execute: executeDiscovery
+} = useLazyFetch<HomeDiscoveryData>(() => useApiUrl('/api/home/discovery'), {
+  headers: () => getAuthHeaders(),
+  immediate: false
+});
 
 const {
   data: featuredTracksData,
@@ -50,6 +67,7 @@ watch(
   [isWalker, isWc2026, isChristmas],
   ([walker, wc, christmas]) => {
     if (currentUser.value?.isDemo) return;
+    executeDiscovery();
     if (walker) {
       executeTopTracks();
     } else if (wc) {
@@ -113,6 +131,47 @@ const featuredTracks: Ref<SearchResult[] | null> = computed(() => {
   return tracks.map((t) => ({ ...t, type: t.type || 'song' }));
 });
 
+const dailyMixes = computed<DailyMix[]>(() => {
+  if (currentUser.value?.isDemo) {
+    return [
+      {
+        id: 'demo-mix-1',
+        title: 'Napi mix 1',
+        artistsSummary: 'NCS Release, Cover és még mások',
+        thumbnailUrl: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+        color: '#10b981',
+        tracks: featuredTracks.value || []
+      }
+    ];
+  }
+  if (!discoveryData.value || Array.isArray(discoveryData.value)) return [];
+  return discoveryData.value.dailyMixes || [];
+});
+
+const radios = computed<RecommendedRadio[]>(() => {
+  if (currentUser.value?.isDemo) {
+    return [
+      {
+        id: 'demo-radio-1',
+        title: 'NCS Release rádió',
+        artist: 'NCS Release',
+        subtitle: 'Cover és továbbiak...',
+        thumbnailUrl: 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg',
+        color: '#ef4444',
+        seedVideoId: 'dQw4w9WgXcQ',
+        tracks: featuredTracks.value || []
+      }
+    ];
+  }
+  if (!discoveryData.value || Array.isArray(discoveryData.value)) return [];
+  return discoveryData.value.radios || [];
+});
+
+const listenAgainTracks = computed<SearchResult[]>(() => {
+  if (!discoveryData.value || Array.isArray(discoveryData.value)) return [];
+  return discoveryData.value.listenAgain || [];
+});
+
 const pending = computed(() => {
   if (isWalker.value) return topTracksPending.value;
   if (isWc2026.value) return wcPending.value;
@@ -123,7 +182,7 @@ const pending = computed(() => {
 const recommendedTrack = computed(() => featuredTracks.value?.[0]);
 const otherFeaturedTracks = computed(() => featuredTracks.value?.slice(1));
 
-const { playQueue, togglePlay, currentTrack } = usePlayer();
+const { playQueue, togglePlay, currentTrack, startRadio, startDailyMix } = usePlayer();
 
 function onPlayFromList(track: SearchResult) {
   if (!featuredTracks.value) return;
@@ -140,6 +199,24 @@ function onPlayFromList(track: SearchResult) {
   }));
   const index = tracksToPlay.findIndex((t) => t.videoId === track.id);
   playQueue(tracksToPlay, Math.max(0, index));
+}
+
+function onPlayMix(mix: DailyMix) {
+  if (mix.tracks.length > 0) {
+    startDailyMix(mix.title, mix.tracks);
+  }
+}
+
+function onPlayRadio(radio: RecommendedRadio) {
+  const seedTrack = radio.tracks[0] || {
+    id: radio.seedVideoId,
+    type: 'song' as const,
+    title: radio.title,
+    artist: radio.artist,
+    thumbnailUrl: radio.thumbnailUrl,
+    durationSeconds: 0
+  };
+  startRadio(seedTrack, radio.title);
 }
 </script>
 
@@ -189,6 +266,64 @@ function onPlayFromList(track: SearchResult) {
             </div>
           </template>
         </ClientOnly>
+      </div>
+    </section>
+
+    <section v-if="dailyMixes.length > 0 || discoveryPending" class="home-dashboard__section">
+      <div class="home-dashboard__section-header">
+        <h2 class="home-dashboard__section-title">
+          {{
+            $t('home.madeForYou', {
+              name: currentUser?.name || $t('home.madeForYouGuest')
+            })
+          }}
+        </h2>
+      </div>
+
+      <div v-if="discoveryPending" class="home-dashboard__mix-grid">
+        <div v-for="i in 4" :key="`mix-skel-${i}`" class="home-dashboard__mix-skeleton">
+          <div class="skeleton skeleton--thumb" />
+          <div class="home-dashboard__skeleton-info">
+            <div class="skeleton skeleton--title" />
+            <div class="skeleton skeleton--artist" />
+          </div>
+        </div>
+      </div>
+      <div v-else class="home-dashboard__mix-grid">
+        <HomeMixCard v-for="mix in dailyMixes" :key="mix.id" :mix="mix" @play="onPlayMix" />
+      </div>
+    </section>
+
+    <section v-if="radios.length > 0 || discoveryPending" class="home-dashboard__section">
+      <div class="home-dashboard__section-header">
+        <div>
+          <h2 class="home-dashboard__section-title">{{ $t('home.recommendedRadios') }}</h2>
+          <p class="home-dashboard__section-desc">{{ $t('home.recommendedRadiosDesc') }}</p>
+        </div>
+      </div>
+
+      <div v-if="discoveryPending" class="home-dashboard__mix-grid">
+        <div v-for="i in 6" :key="`radio-skel-${i}`" class="home-dashboard__mix-skeleton">
+          <div class="skeleton skeleton--thumb" />
+          <div class="home-dashboard__skeleton-info">
+            <div class="skeleton skeleton--title" />
+            <div class="skeleton skeleton--artist" />
+          </div>
+        </div>
+      </div>
+      <div v-else class="home-dashboard__mix-grid">
+        <HomeRadioCard v-for="radio in radios" :key="radio.id" :radio="radio" @play="onPlayRadio" />
+      </div>
+    </section>
+
+    <section v-if="listenAgainTracks.length > 0" class="home-dashboard__section">
+      <h2 class="home-dashboard__section-title">{{ $t('home.listenAgain') }}</h2>
+      <div class="home-dashboard__grid">
+        <TrackCard
+          v-for="track in listenAgainTracks"
+          :key="`recent-${track.id}`"
+          :track="track"
+          @play="onPlayFromList" />
       </div>
     </section>
 
@@ -344,16 +479,47 @@ function onPlayFromList(track: SearchResult) {
 
   &__skeleton-visual {
     width: 100%;
-    height: 210px; /* matches TopResultCard approx height */
+    height: 210px;
     border-radius: var(--radius-md);
     overflow: hidden;
+  }
+
+  &__section {
+    margin-bottom: var(--space-10);
+  }
+
+  &__section-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: var(--space-4);
   }
 
   &__section-title {
     font-size: var(--text-2xl);
     font-weight: var(--font-weight-bold);
     color: var(--color-text-primary);
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-2);
+  }
+
+  &__section-desc {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+  }
+
+  &__mix-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--space-4);
+  }
+
+  &__mix-skeleton {
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-4);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
   }
 
   &__grid {
@@ -449,6 +615,11 @@ function onPlayFromList(track: SearchResult) {
       width: 100%;
       max-width: 320px;
       margin: 0 auto;
+    }
+
+    &__mix-grid {
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: var(--space-3);
     }
   }
 }

@@ -49,6 +49,7 @@ export type SleepTimerMode = 'off' | 'timer' | 'end-of-track';
 export interface PlaybackContext {
   type: 'playlist' | 'album' | 'artist' | 'radio' | 'none';
   sourceId?: string;
+  name?: string;
   currentOffset: number;
   totalItems?: number;
 }
