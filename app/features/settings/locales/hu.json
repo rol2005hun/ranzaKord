@@ -129,10 +129,10 @@
     "description": "YouTube stream hozzáférés, cookie-k és bejelentkezés kezelése.",
     "status": {
       "title": "Kapcsolati állapot",
-      "cookies": "YouTube Sütik (Cookies)",
+      "cookies": "YouTube Sütik",
       "poToken": "PO Token",
       "visitorData": "Visitor Data",
-      "oauth": "Google / YouTube Fiók",
+      "oauth": "Google Fiók",
       "active": "Beállítva",
       "missing": "Nincs beállítva",
       "refresh": "Állapot frissítése"
@@ -150,6 +150,9 @@
       "title": "Google Fiók Bejelentkezés (Device Code)",
       "description": "Jelentkezz be YouTube fiókkal az okostévé-szerű jóváhagyási kóddal:",
       "start": "Új kód generálása",
+      "reconnect": "Újrakapcsolódás",
+      "disconnect": "Fiók leválasztása",
+      "disconnected": "Google fiók sikeresen leválasztva!",
       "instruction": "1. Nyisd meg a linket egy új böngészőlapon, és írd be a megadott kódot:",
       "openLink": "Megnyitás a böngészőben",
       "copyCode": "Kód másolása",

@@ -1,6 +1,6 @@
 import { SystemConfig } from '../../../models/SystemConfig';
 import { assertDeveloperSession } from '../../../utils/session';
-import { getDeviceAuthStatus } from '../../../utils/youtubeDeviceAuth';
+import { getDeviceAuthStatus, resetDeviceAuth } from '../../../utils/youtubeDeviceAuth';
 
 export default defineEventHandler(async (event) => {
   await assertDeveloperSession(event);
@@ -12,11 +12,17 @@ export default defineEventHandler(async (event) => {
     SystemConfig.findOne({ key: 'youtube_oauth' })
   ]);
 
+  const hasOauth = Boolean(oauthRecord?.value);
+  const deviceAuth = getDeviceAuthStatus();
+  if (!hasOauth && deviceAuth.status === 'success') {
+    resetDeviceAuth();
+  }
+
   return {
     hasCookies: Boolean(cookieRecord?.value),
     hasPoToken: Boolean(poRecord?.value),
     hasVisitorData: Boolean(visitorRecord?.value),
-    hasOauth: Boolean(oauthRecord?.value),
+    hasOauth,
     deviceAuth: getDeviceAuthStatus()
   };
 });

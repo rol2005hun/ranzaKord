@@ -17,7 +17,13 @@ export function getDeviceAuthStatus(): DeviceAuthStatus {
   return activeSession;
 }
 
+export function resetDeviceAuth(): void {
+  activeSession = { status: 'idle' };
+  activeYt = null;
+}
+
 export async function startDeviceAuth(): Promise<DeviceAuthStatus> {
+  resetDeviceAuth();
   activeSession = { status: 'pending', updatedAt: Date.now() };
 
   try {

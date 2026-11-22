@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mountSuspended, mockNuxtImport } from '@nuxt/test-utils/runtime';
+import { flushPromises } from '@vue/test-utils';
 import { createTestingPinia } from '@pinia/testing';
-import { nextTick } from 'vue';
 
 import YouTubeSettings from '@/features/settings/components/panels/YouTubeSettings.vue';
 
@@ -15,8 +15,8 @@ mockNuxtImport('useToast', () => () => ({
   danger: vi.fn()
 }));
 
-const mockFetch = vi.fn();
-vi.stubGlobal('$fetch', mockFetch);
+const mockFetch = vi.hoisted(() => vi.fn());
+mockNuxtImport('$fetch', () => mockFetch);
 
 describe('YouTubeSettings.vue', () => {
   beforeEach(() => {
@@ -51,7 +51,7 @@ describe('YouTubeSettings.vue', () => {
       }
     });
 
-    await nextTick();
+    await flushPromises();
     return wrapper;
   };
 
@@ -85,5 +85,32 @@ describe('YouTubeSettings.vue', () => {
     expect(skeletons.length).toBe(4);
     expect(wrapper.text()).not.toContain('settings.youtube.status.missing');
     expect(wrapper.text()).not.toContain('settings.youtube.status.active');
+  });
+
+  it('renders connected state with reconnect and disconnect buttons when oauth is active', async () => {
+    const wrapper = await mountComponent({
+      hasCookies: true,
+      hasPoToken: true,
+      hasVisitorData: true,
+      hasOauth: true,
+      deviceAuth: { status: 'idle' }
+    });
+
+    expect(wrapper.text()).toContain('settings.youtube.device.success');
+    expect(wrapper.text()).toContain('settings.youtube.device.reconnect');
+    expect(wrapper.text()).toContain('settings.youtube.device.disconnect');
+  });
+
+  it('renders start device auth button when oauth is not active', async () => {
+    const wrapper = await mountComponent({
+      hasCookies: false,
+      hasPoToken: false,
+      hasVisitorData: false,
+      hasOauth: false,
+      deviceAuth: { status: 'idle' }
+    });
+
+    expect(wrapper.text()).toContain('settings.youtube.device.start');
+    expect(wrapper.text()).not.toContain('settings.youtube.device.disconnect');
   });
 });

@@ -132,7 +132,7 @@
       "cookies": "YouTube Cookies",
       "poToken": "PO Token",
       "visitorData": "Visitor Data",
-      "oauth": "Google / YouTube Account",
+      "oauth": "Google Account",
       "active": "Configured",
       "missing": "Not configured",
       "refresh": "Refresh status"
@@ -150,6 +150,9 @@
       "title": "Google Account Login (Device Code)",
       "description": "Sign in with a YouTube account using the device authorization code:",
       "start": "Generate New Code",
+      "reconnect": "Reconnect",
+      "disconnect": "Disconnect Account",
+      "disconnected": "Google account successfully disconnected!",
       "instruction": "1. Open the link in a browser tab and enter the code below:",
       "openLink": "Open in browser",
       "copyCode": "Copy Code",
