@@ -30,6 +30,7 @@ lerna-debug.log*
 .env
 .env.*
 !.env.example
+!.env.vps.example
 
 # Testing
 coverage
