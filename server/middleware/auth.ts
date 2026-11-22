@@ -10,6 +10,7 @@ export default defineEventHandler(async (event) => {
   if (
     path.startsWith('/api/') &&
     !path.startsWith('/api/health') &&
+    !path.startsWith('/api/up') &&
     !path.startsWith('/api/proxy-image') &&
     !path.startsWith('/api/stream') &&
     !path.startsWith('/api/updater') &&
