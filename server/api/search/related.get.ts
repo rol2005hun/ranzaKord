@@ -60,6 +60,9 @@ export default defineCachedEventHandler(
           endpoint?: { payload?: { browseId?: string } };
         }>;
         thumbnails?: Array<{ url: string; width?: number; height?: number }>;
+        thumbnail?:
+          | { contents?: Array<{ url: string; width?: number; height?: number }> }
+          | Array<{ url: string; width?: number; height?: number }>;
         duration?: { text: string; seconds?: number };
       }
 
@@ -80,11 +83,17 @@ export default defineCachedEventHandler(
         const primaryArtist = artists[0]?.name || '';
         const primaryArtistId = artists[0]?.id || '';
 
-        const thumb = Array.isArray(videoItem.thumbnails)
-          ? videoItem.thumbnails.sort(
-              (a: { width?: number }, b: { width?: number }) => (b.width || 0) - (a.width || 0)
-            )[0]?.url
-          : undefined;
+        const rawThumbs =
+          videoItem.thumbnails ||
+          (videoItem.thumbnail as { contents?: Array<{ url: string; width?: number }> })
+            ?.contents ||
+          (Array.isArray(videoItem.thumbnail) ? videoItem.thumbnail : undefined);
+        const thumb =
+          (Array.isArray(rawThumbs) && rawThumbs.length > 0
+            ? rawThumbs.sort(
+                (a: { width?: number }, b: { width?: number }) => (b.width || 0) - (a.width || 0)
+              )[0]?.url
+            : undefined) || `https://i.ytimg.com/vi/${vidId}/hqdefault.jpg`;
 
         let durationSecs = 0;
         if (videoItem.duration && typeof videoItem.duration.seconds === 'number') {

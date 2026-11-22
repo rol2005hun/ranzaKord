@@ -170,8 +170,8 @@ onMounted(() => {
             @click="playQueueTrack(playerStore.visibleQueueStartIndex + index)">
             <div class="player-queue__track-thumb">
               <img
-                v-if="track.thumbnailUrl"
-                :src="track.thumbnailUrl"
+                v-if="track.thumbnailUrl || track.videoId"
+                :src="track.thumbnailUrl || `https://i.ytimg.com/vi/${track.videoId}/hqdefault.jpg`"
                 :alt="track.title"
                 :loading="index < 6 ? 'eager' : 'lazy'"
                 decoding="async" />

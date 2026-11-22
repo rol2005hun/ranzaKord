@@ -772,7 +772,8 @@ export function usePlayer() {
             artist: item.artist,
             artists: item.artists,
             artistId: item.artistId,
-            thumbnailUrl: item.thumbnailUrl,
+            thumbnailUrl:
+              item.thumbnailUrl || (vidId ? `https://i.ytimg.com/vi/${vidId}/hqdefault.jpg` : ''),
             durationSeconds: item.durationSeconds || 0,
             isRadio: true
           });
