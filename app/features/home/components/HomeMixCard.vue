@@ -12,12 +12,12 @@ const emit = defineEmits<{
 }>();
 
 const player = usePlayer();
+const playerStore = usePlayerStore();
 
 const isCurrentMix = computed(() => {
-  return (
-    player.currentTrack.value &&
-    props.mix.tracks.some((t) => t.id === player.currentTrack.value?.videoId)
-  );
+  const ctx = playerStore.playbackContext;
+  if (!ctx || ctx.type !== 'playlist') return false;
+  return ctx.name === props.mix.title;
 });
 
 const isPlayingThisMix = computed(() => {
@@ -25,7 +25,11 @@ const isPlayingThisMix = computed(() => {
 });
 
 function onCardClick() {
-  emit('play', props.mix);
+  if (isCurrentMix.value) {
+    player.togglePlay();
+  } else {
+    emit('play', props.mix);
+  }
 }
 </script>
 

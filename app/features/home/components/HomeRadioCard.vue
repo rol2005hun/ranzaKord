@@ -12,13 +12,12 @@ const emit = defineEmits<{
 }>();
 
 const player = usePlayer();
+const playerStore = usePlayerStore();
 
 const isCurrentRadio = computed(() => {
-  return (
-    player.currentTrack.value &&
-    (player.currentTrack.value.videoId === props.radio.seedVideoId ||
-      props.radio.tracks.some((t) => t.id === player.currentTrack.value?.videoId))
-  );
+  const ctx = playerStore.playbackContext;
+  if (!ctx || ctx.type !== 'radio') return false;
+  return ctx.name === props.radio.title || ctx.sourceId === props.radio.seedVideoId;
 });
 
 const isPlayingThisRadio = computed(() => {
@@ -26,7 +25,11 @@ const isPlayingThisRadio = computed(() => {
 });
 
 function onCardClick() {
-  emit('play', props.radio);
+  if (isCurrentRadio.value) {
+    player.togglePlay();
+  } else {
+    emit('play', props.radio);
+  }
 }
 </script>
 

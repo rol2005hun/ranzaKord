@@ -1079,6 +1079,7 @@ export function usePlayer() {
     };
     store.playbackContext = {
       type: 'radio',
+      sourceId: seedVideoId,
       name: radioTitle || `${seed.artist} Rádió`,
       currentOffset: 0
     };
@@ -1098,6 +1099,7 @@ export function usePlayer() {
     }));
     store.playbackContext = {
       type: 'playlist',
+      sourceId: mixTitle,
       name: mixTitle,
       currentOffset: 0
     };
@@ -1161,6 +1163,7 @@ export function usePlayer() {
     playQueue,
     startRadio,
     startDailyMix,
+    playbackContext: computed(() => store.playbackContext),
     isKaraoke: computed(() => store.isKaraoke),
     toggleKaraoke
   };

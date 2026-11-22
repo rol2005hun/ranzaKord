@@ -185,13 +185,13 @@ const otherFeaturedTracks = computed(() => featuredTracks.value?.slice(1));
 
 const { playQueue, togglePlay, currentTrack, startRadio, startDailyMix } = usePlayer();
 
-function onPlayFromList(track: SearchResult) {
-  if (!featuredTracks.value) return;
+function onPlayFromList(track: SearchResult, list?: SearchResult[]) {
   if (currentTrack.value?.videoId === track.id) {
     togglePlay();
     return;
   }
-  const tracksToPlay = featuredTracks.value.map((t: SearchResult) => ({
+  const sourceList = list && list.length > 0 ? list : featuredTracks.value || [track];
+  const tracksToPlay = sourceList.map((t: SearchResult) => ({
     videoId: t.id,
     title: t.title,
     artist: t.artist,
@@ -199,7 +199,7 @@ function onPlayFromList(track: SearchResult) {
     durationSeconds: t.durationSeconds || 0
   }));
   const index = tracksToPlay.findIndex((t) => t.videoId === track.id);
-  playQueue(tracksToPlay, Math.max(0, index));
+  playQueue(tracksToPlay, index >= 0 ? index : 0);
 }
 
 function onPlayMix(mix: DailyMix) {
@@ -328,7 +328,7 @@ function onPlayRadio(radio: RecommendedRadio) {
           v-for="track in listenAgainTracks"
           :key="`recent-${track.id}`"
           :track="track"
-          @play="onPlayFromList" />
+          @play="(t) => onPlayFromList(t, listenAgainTracks)" />
       </HomeSectionSlider>
     </section>
 
@@ -353,7 +353,7 @@ function onPlayRadio(radio: RecommendedRadio) {
               v-for="track in otherFeaturedTracks"
               :key="track.id"
               :track="track"
-              @play="onPlayFromList" />
+              @play="(t) => onPlayFromList(t, otherFeaturedTracks || undefined)" />
           </template>
         </HomeSectionSlider>
 

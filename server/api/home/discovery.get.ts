@@ -307,7 +307,7 @@ export default defineCachedEventHandler(
       const seedTrack = artistTracks[0];
       const fallbackFeatured =
         featured.find((f) => f.artist.toLowerCase().includes(artist.toLowerCase())) ||
-        featured[i] ||
+        featured[i % featured.length] ||
         featured[0];
       const seedVideoId = seedTrack ? seedTrack.trackId : fallbackFeatured?.id || '';
       const thumb = seedTrack?.thumbnailUrl || fallbackFeatured?.thumbnailUrl || '';
