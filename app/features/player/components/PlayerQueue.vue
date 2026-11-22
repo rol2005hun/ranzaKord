@@ -527,7 +527,6 @@ onMounted(() => {
   font-size: var(--text-xs);
   font-weight: var(--font-weight-medium);
   color: var(--color-text-secondary);
-  opacity: 0.6;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   list-style: none;
