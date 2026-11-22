@@ -42,7 +42,7 @@ onMounted(async () => {
 <template>
   <div class="auth-callback">
     <AppSpinner size="lg" />
-    <p>{{ $t('auth.callback.loading') }}</p>
+    <h1 class="auth-callback__title">{{ $t('auth.callback.loading') }}</h1>
   </div>
 </template>
 
@@ -56,5 +56,12 @@ onMounted(async () => {
   gap: var(--space-4);
   color: var(--color-text-secondary);
   background: var(--color-bg);
+
+  &__title {
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0;
+    color: var(--color-text-secondary);
+  }
 }
 </style>
