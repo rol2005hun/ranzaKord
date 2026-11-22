@@ -370,7 +370,8 @@ export const usePlayerStore = defineStore(
     }
 
     function setQueue(tracks: Track[]) {
-      const q = tracks.slice(0, 5000).map((t) => ({
+      const valid = tracks.filter((t) => t.videoId && t.videoId !== 'undefined');
+      const q = valid.slice(0, 5000).map((t) => ({
         ...t,
         queueId: t.queueId || crypto.randomUUID()
       }));
@@ -384,6 +385,7 @@ export const usePlayerStore = defineStore(
     }
 
     function addToQueue(track: Track) {
+      if (!track.videoId || track.videoId === 'undefined') return;
       const newTrack = {
         ...track,
         queueId: track.queueId || crypto.randomUUID()

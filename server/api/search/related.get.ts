@@ -7,7 +7,7 @@ export default defineCachedEventHandler(
 
     const { t } = useServerTranslation(event);
 
-    if (!videoId) {
+    if (!videoId || videoId === 'undefined') {
       throw createError({ statusCode: 400, message: t('search.errors.missingQuery') });
     }
 

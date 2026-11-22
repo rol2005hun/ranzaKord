@@ -647,7 +647,7 @@ export default defineEventHandler(async (event) => {
   const clientRange = getRequestHeader(event, 'range');
   const parsedRange = parseByteRange(clientRange);
 
-  if (!videoId || videoId.trim().length === 0) {
+  if (!videoId || videoId.trim().length === 0 || videoId === 'undefined') {
     throw createError({ statusCode: 400, message: t('player.errors.missingVideoId') });
   }
 

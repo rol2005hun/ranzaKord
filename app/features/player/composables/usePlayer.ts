@@ -105,6 +105,10 @@ export function usePlayer() {
     const authStore = useAuthStore();
     const finalVideoId = videoId;
 
+    if (!finalVideoId || finalVideoId === 'undefined') {
+      throw new Error('Invalid video ID');
+    }
+
     if (authStore.currentUser?.isDemo) {
       if (import.meta.client) {
         toast.info(t('core.demoModeAudioToast') || 'Demo mode: Playing sample audio');
@@ -740,10 +744,40 @@ export function usePlayer() {
     const authStore = useAuthStore();
     if (authStore.currentUser?.isDemo) return null;
 
+    if (!videoId || videoId === 'undefined') {
+      const fallback = store.queue.find((t) => t.videoId && t.videoId !== 'undefined');
+      if (fallback) {
+        videoId = fallback.videoId;
+      } else {
+        return null;
+      }
+    }
+
     const requestTracks = async (url: string): Promise<Track[]> => {
       try {
-        const res = await $fetch<Track[]>(useApiUrl(url));
-        return Array.isArray(res) ? res : [];
+        const res = await $fetch<Array<Track | SearchResult>>(useApiUrl(url));
+        if (!Array.isArray(res)) return [];
+        const result: Track[] = [];
+        for (const item of res) {
+          const vidId =
+            'videoId' in item && item.videoId
+              ? item.videoId
+              : 'id' in item && item.id
+                ? item.id
+                : '';
+          if (!vidId || vidId === 'undefined') continue;
+          result.push({
+            videoId: vidId,
+            title: item.title,
+            artist: item.artist,
+            artists: item.artists,
+            artistId: item.artistId,
+            thumbnailUrl: item.thumbnailUrl,
+            durationSeconds: item.durationSeconds || 0,
+            isRadio: true
+          });
+        }
+        return result;
       } catch {
         return [];
       }
@@ -757,7 +791,12 @@ export function usePlayer() {
 
     if (candidates.length === 0 && store.queue.length > 0) {
       const lastTrack = store.queue[store.queue.length - 1];
-      if (lastTrack && lastTrack.videoId !== videoId) {
+      if (
+        lastTrack &&
+        lastTrack.videoId &&
+        lastTrack.videoId !== 'undefined' &&
+        lastTrack.videoId !== videoId
+      ) {
         res = await requestTracks(`/api/search/related?videoId=${lastTrack.videoId}`);
         candidates = (res || []).filter(
           (rt) => !store.queue.slice(-20).some((qt) => qt.videoId === rt.videoId)
@@ -799,6 +838,10 @@ export function usePlayer() {
     force = false,
     startTime?: number
   ): Promise<void> {
+    if (!track.videoId || track.videoId === 'undefined') {
+      return;
+    }
+
     if (
       !force &&
       store.currentTrack?.videoId === track.videoId &&
