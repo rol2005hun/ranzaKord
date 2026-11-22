@@ -131,6 +131,12 @@ export default defineNuxtConfig({
     automaticTwitterTags: false
   },
 
+  unhead: {
+    vite: {
+      validate: false
+    }
+  },
+
   sitemap: {
     exclude: ['/api/**'],
     zeroRuntime: false
