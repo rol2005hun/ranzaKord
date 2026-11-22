@@ -294,7 +294,7 @@ export function useLyrics() {
     const lines = lyricsData.value?.synced;
     if (!lines || lines.length === 0) return -1;
 
-    let active = 0;
+    let active = -1;
     for (let i = 0; i < lines.length; i++) {
       if (currentTime >= (lines[i]?.time ?? 0)) {
         active = i;

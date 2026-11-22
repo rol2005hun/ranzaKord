@@ -26,7 +26,6 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, message: 'User not found' });
   }
 
-  // Update privacy settings if they exist in body
   if ('isPublicProfile' in body) {
     user.isPublicProfile = Boolean(body.isPublicProfile);
     delete body.isPublicProfile;
@@ -36,7 +35,6 @@ export default defineEventHandler(async (event) => {
     delete body.showPlaylists;
   }
 
-  // Merge remaining fields as existing settings
   user.settings = {
     ...user.settings,
     ...body

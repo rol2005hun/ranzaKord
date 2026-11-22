@@ -5,15 +5,19 @@ const isLoading = ref<boolean>(false);
 const cache = new Map<string, SkipSegment[]>();
 
 export function useSponsorBlock() {
-  async function fetchSegments(videoId: string): Promise<SkipSegment[]> {
+  async function fetchSegments(videoId: string, setActive = true): Promise<SkipSegment[]> {
     if (!videoId) {
-      currentSegments.value = [];
+      if (setActive) {
+        currentSegments.value = [];
+      }
       return [];
     }
 
     if (cache.has(videoId)) {
       const cached = cache.get(videoId) || [];
-      currentSegments.value = cached;
+      if (setActive) {
+        currentSegments.value = cached;
+      }
       return cached;
     }
 
@@ -24,14 +28,23 @@ export function useSponsorBlock() {
       );
       const segs = data?.segments || [];
       cache.set(videoId, segs);
-      currentSegments.value = segs;
+      if (setActive) {
+        currentSegments.value = segs;
+      }
       return segs;
     } catch {
-      currentSegments.value = [];
+      if (setActive) {
+        currentSegments.value = [];
+      }
       return [];
     } finally {
       isLoading.value = false;
     }
+  }
+
+  function preloadSegments(videoId: string): void {
+    if (!videoId) return;
+    fetchSegments(videoId, false).catch(() => {});
   }
 
   function clearSegments(): void {
@@ -57,6 +70,7 @@ export function useSponsorBlock() {
     segments: currentSegments,
     isLoading,
     fetchSegments,
+    preloadSegments,
     clearSegments,
     shouldSkip,
     resetCache

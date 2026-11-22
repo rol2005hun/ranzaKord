@@ -496,6 +496,7 @@ export const usePlayerStore = defineStore(
     let lastStartTimestamp = 0;
     let lastTrackId = '';
     let lastIsPlaying = false;
+    let lastEndTimestamp: number | null = null;
 
     const doSyncDiscord = async () => {
       if (!import.meta.client) return;
@@ -505,22 +506,27 @@ export const usePlayerStore = defineStore(
           if (isPlaying.value && currentTrack.value) {
             const startTimestamp = Math.round(Date.now() / 1000 - currentTimeSeconds.value) + 1;
 
+            const currentDuration =
+              durationSeconds.value > 0
+                ? durationSeconds.value
+                : currentTrack.value.durationSeconds || 0;
+
+            const endTimestamp =
+              currentDuration > 0 ? Math.round(startTimestamp + currentDuration) : null;
+
             const isSameTrack = lastTrackId === currentTrack.value.videoId;
             const isSamePlaying = lastIsPlaying === isPlaying.value;
+            const isSameEnd = lastEndTimestamp === endTimestamp;
             const drift = Math.abs(startTimestamp - lastStartTimestamp);
 
-            if (isSameTrack && isSamePlaying && drift <= 2) {
+            if (isSameTrack && isSamePlaying && isSameEnd && drift <= 2) {
               return;
             }
 
             lastStartTimestamp = startTimestamp;
             lastTrackId = currentTrack.value.videoId;
             lastIsPlaying = isPlaying.value;
-
-            const endTimestamp =
-              currentTrack.value.durationSeconds > 0
-                ? Math.round(startTimestamp + currentTrack.value.durationSeconds)
-                : null;
+            lastEndTimestamp = endTimestamp;
 
             const config = useRuntimeConfig();
             const rawBaseUrl = (config.public.baseUrl as string) || '';
@@ -541,6 +547,7 @@ export const usePlayerStore = defineStore(
             lastIsPlaying = false;
             lastTrackId = '';
             lastStartTimestamp = 0;
+            lastEndTimestamp = null;
             await invoke('clear_discord_presence');
           }
         }
@@ -552,6 +559,17 @@ export const usePlayerStore = defineStore(
     const syncDiscordPresence = useThrottleFn(doSyncDiscord, 2000, true);
 
     if (import.meta.client) {
+      watch(
+        () => durationSeconds.value,
+        (newDuration) => {
+          if (newDuration > 0 && isPlaying.value) {
+            if (currentTrack.value && !currentTrack.value.durationSeconds) {
+              currentTrack.value.durationSeconds = newDuration;
+            }
+            syncDiscordPresence();
+          }
+        }
+      );
       watch(
         () => isPlaying.value,
         (playing) => {

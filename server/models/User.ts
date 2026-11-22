@@ -30,6 +30,16 @@ export interface IUser extends Document {
     eqPreset?: string;
     eqBands?: number[];
     playbackOrder?: string;
+    isSlowedReverb?: boolean;
+    isNightcore?: boolean;
+    reverbPreset?: string;
+    isSpatialAudio?: boolean;
+    isStereoWidener?: boolean;
+    bassBoostEnabled?: boolean;
+    playbackSpeed?: number;
+    preservesPitch?: boolean;
+    sponsorBlockEnabled?: boolean;
+    globalShortcutsEnabled?: boolean;
   };
   roles?: string[];
   isPublicProfile?: boolean;
@@ -70,7 +80,17 @@ const userSchema = new Schema<IUser>(
       eqEnabled: { type: Boolean },
       eqPreset: { type: String },
       eqBands: { type: [Number] },
-      playbackOrder: { type: String, enum: ['sequential', 'random', 'reverse'] }
+      playbackOrder: { type: String, enum: ['sequential', 'random', 'reverse'] },
+      isSlowedReverb: { type: Boolean },
+      isNightcore: { type: Boolean },
+      reverbPreset: { type: String },
+      isSpatialAudio: { type: Boolean },
+      isStereoWidener: { type: Boolean },
+      bassBoostEnabled: { type: Boolean },
+      playbackSpeed: { type: Number },
+      preservesPitch: { type: Boolean },
+      sponsorBlockEnabled: { type: Boolean },
+      globalShortcutsEnabled: { type: Boolean }
     },
     roles: { type: [String], default: ['user'] },
     isPublicProfile: { type: Boolean, default: true },

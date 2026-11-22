@@ -40,6 +40,9 @@ describe('useLyrics', () => {
       expect.any(Object)
     );
     expect(lyricsData.value?.synced?.length).toBe(2);
+    expect(getActiveLine(0)).toBe(-1);
+    expect(getActiveLine(0.5)).toBe(-1);
+    expect(getActiveLine(1)).toBe(0);
     expect(getActiveLine(3)).toBe(0);
     expect(getActiveLine(6)).toBe(1);
   });
