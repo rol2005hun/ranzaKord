@@ -29,7 +29,8 @@
     "prepare": "husky",
     "sync-boilerplate": "tsx sync-boilerplate.ts",
     "youtube:login": "tsx scripts/youtube-login.ts",
-    "youtube:cookie": "tsx scripts/youtube-cookie.ts"
+    "youtube:cookie": "tsx scripts/youtube-cookie.ts",
+    "deploy:vps": "node scripts/deploy-vps.mjs"
   },
   "dependencies": {
     "@pinia/colada": "1.4.9",

@@ -140,11 +140,20 @@ const isPlaying = computed(() => (isHydrated.value ? player.isPlaying.value : fa
 watch(
   currentTrack,
   (track) => {
+    if (musicVideoRef.value) {
+      musicVideoRef.value.pause();
+      musicVideoRef.value.removeAttribute('src');
+      musicVideoRef.value.load();
+    }
     if (track) {
       fetchLyrics(track);
       if (layoutStore.sidebarBackgroundMode === 'musicvideo') {
         fetchMusicVideo(track);
+      } else {
+        musicVideoUrl.value = null;
       }
+    } else {
+      musicVideoUrl.value = null;
     }
   },
   { immediate: true }
@@ -153,12 +162,7 @@ watch(
 watch(
   () => layoutStore.sidebarBackgroundMode,
   (mode) => {
-    if (
-      mode === 'musicvideo' &&
-      currentTrack.value &&
-      !musicVideoUrl.value &&
-      !isMusicVideoLoading.value
-    ) {
+    if (mode === 'musicvideo' && currentTrack.value) {
       fetchMusicVideo(currentTrack.value);
     }
   }
@@ -429,6 +433,7 @@ const sidebarStyle = computed(() => ({
             <video
               v-if="isMusicVideoMode && musicVideoUrl"
               ref="musicVideoRef"
+              :key="musicVideoUrl"
               :src="musicVideoUrl"
               class="right-sidebar__music-video"
               loop
