@@ -68,7 +68,7 @@ onMounted(() => {
   <div class="player-queue">
     <div class="player-queue__header">
       <div class="player-queue__header-top">
-        <h3 class="player-queue__title">{{ $t('player.queue') }}</h3>
+        <h2 class="player-queue__title">{{ $t('player.queue') }}</h2>
         <button
           v-if="isHydrated && playerStore.queue.length > 0"
           class="player-queue__clear-btn"
@@ -153,7 +153,7 @@ onMounted(() => {
               "
               class="player-queue__playing-icon">
               <AppSpinner v-if="playerStore.isLoading" size="sm" />
-              <AppPlayingIndicator v-else class="text-primary" />
+              <AppPlayingIndicator v-else class="player-queue__playing-indicator" />
             </span>
             <span v-else class="player-queue__num">
               {{ playerStore.visibleQueueStartIndex + index + 1 }}
@@ -182,7 +182,7 @@ onMounted(() => {
               <span
                 class="player-queue__track-title"
                 :class="{
-                  'text-primary': playerStore.currentTrack?.queueId
+                  'player-queue__track-title--active': playerStore.currentTrack?.queueId
                     ? playerStore.currentTrack.queueId === track.queueId
                     : playerStore.currentTrack?.videoId === track.videoId
                 }">
@@ -328,7 +328,8 @@ onMounted(() => {
 
   &--playing {
     .player-queue__track-title {
-      color: var(--color-primary);
+      color: color-mix(in srgb, var(--color-primary) 65%, var(--color-text-primary));
+      font-weight: var(--font-weight-semibold);
     }
   }
 }
@@ -348,6 +349,10 @@ onMounted(() => {
   color: var(--color-text-secondary);
   font-variant-numeric: tabular-nums;
   transition: opacity var(--transition-fast);
+}
+
+.player-queue__playing-indicator {
+  color: color-mix(in srgb, var(--color-primary) 65%, var(--color-text-primary));
 }
 
 .player-queue__drag-handle {
@@ -430,11 +435,16 @@ onMounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  &--active {
+    color: color-mix(in srgb, var(--color-primary) 65%, var(--color-text-primary));
+    font-weight: var(--font-weight-semibold);
+  }
 }
 
 .player-queue__track-artist {
   font-size: var(--text-xs);
-  color: var(--color-text-secondary);
+  color: color-mix(in srgb, var(--color-text-secondary) 85%, var(--color-text-primary));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
