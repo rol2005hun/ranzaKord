@@ -1,16 +1,8 @@
 <script setup lang="ts">
-interface YouTubeStatusResponse {
-  hasCookies: boolean;
-  hasPoToken: boolean;
-  hasVisitorData: boolean;
-  hasOauth: boolean;
-  deviceAuth: {
-    status: 'idle' | 'pending' | 'success' | 'error';
-    userCode?: string;
-    verificationUrl?: string;
-    error?: string;
-  };
-}
+import type {
+  YouTubeDeviceCodeResponse,
+  YouTubeStatusResponse
+} from '@/features/settings/types/settings.types';
 
 const { t } = useI18n();
 const toast = useToast();
@@ -19,7 +11,7 @@ const rawCookie = ref('');
 const isSavingCookie = ref(false);
 
 const statusData = ref<YouTubeStatusResponse | null>(null);
-const isLoadingStatus = ref(false);
+const isLoadingStatus = ref(true);
 
 const isGeneratingCode = ref(false);
 const deviceCode = ref('');
@@ -80,14 +72,12 @@ async function onStartDeviceAuth(): Promise<void> {
   isAuthSuccess.value = false;
 
   try {
-    const res = await $fetch<{
-      status: string;
-      userCode?: string;
-      verificationUrl?: string;
-      error?: string;
-    }>(useApiUrl('/api/admin/youtube/device-code'), {
-      method: 'POST'
-    });
+    const res = await $fetch<YouTubeDeviceCodeResponse>(
+      useApiUrl('/api/admin/youtube/device-code'),
+      {
+        method: 'POST'
+      }
+    );
 
     if (res.userCode && res.verificationUrl) {
       deviceCode.value = res.userCode;
@@ -143,155 +133,205 @@ onBeforeUnmount(() => {
     <div class="settings-panel__content">
       <AppSettingsSection :title="t('settings.youtube.status.title')">
         <div class="status-grid">
-          <div class="status-item">
-            <span class="status-item__label">{{ t('settings.youtube.status.cookies') }}</span>
-            <span
-              class="status-item__badge"
-              :class="
-                statusData?.hasCookies
-                  ? 'status-item__badge--active'
-                  : 'status-item__badge--missing'
-              ">
-              <AppIcon
-                :name="
-                  statusData?.hasCookies ? 'ph:check-circle-bold' : 'ph:warning-circle-bold'
-                " />
-              {{
-                statusData?.hasCookies
-                  ? t('settings.youtube.status.active')
-                  : t('settings.youtube.status.missing')
-              }}
-            </span>
+          <div class="status-card">
+            <div class="status-card__header">
+              <div class="status-card__icon-box">
+                <AppIcon name="ph:cookie-duotone" />
+              </div>
+              <span class="status-card__label">{{ t('settings.youtube.status.cookies') }}</span>
+            </div>
+            <div class="status-card__content">
+              <AppSkeleton
+                v-if="!statusData"
+                width="88px"
+                height="24px"
+                border-radius="var(--radius-full)" />
+              <AppBadge
+                v-else
+                :variant="statusData.hasCookies ? 'success' : 'warning'"
+                size="sm"
+                class="status-card__badge">
+                <AppIcon
+                  :name="
+                    statusData.hasCookies ? 'ph:check-circle-bold' : 'ph:warning-circle-bold'
+                  " />
+                {{
+                  statusData.hasCookies
+                    ? t('settings.youtube.status.active')
+                    : t('settings.youtube.status.missing')
+                }}
+              </AppBadge>
+            </div>
           </div>
 
-          <div class="status-item">
-            <span class="status-item__label">{{ t('settings.youtube.status.poToken') }}</span>
-            <span
-              class="status-item__badge"
-              :class="
-                statusData?.hasPoToken
-                  ? 'status-item__badge--active'
-                  : 'status-item__badge--missing'
-              ">
-              <AppIcon
-                :name="
-                  statusData?.hasPoToken ? 'ph:check-circle-bold' : 'ph:warning-circle-bold'
-                " />
-              {{
-                statusData?.hasPoToken
-                  ? t('settings.youtube.status.active')
-                  : t('settings.youtube.status.missing')
-              }}
-            </span>
+          <div class="status-card">
+            <div class="status-card__header">
+              <div class="status-card__icon-box">
+                <AppIcon name="ph:shield-check-duotone" />
+              </div>
+              <span class="status-card__label">{{ t('settings.youtube.status.poToken') }}</span>
+            </div>
+            <div class="status-card__content">
+              <AppSkeleton
+                v-if="!statusData"
+                width="88px"
+                height="24px"
+                border-radius="var(--radius-full)" />
+              <AppBadge
+                v-else
+                :variant="statusData.hasPoToken ? 'success' : 'warning'"
+                size="sm"
+                class="status-card__badge">
+                <AppIcon
+                  :name="
+                    statusData.hasPoToken ? 'ph:check-circle-bold' : 'ph:warning-circle-bold'
+                  " />
+                {{
+                  statusData.hasPoToken
+                    ? t('settings.youtube.status.active')
+                    : t('settings.youtube.status.missing')
+                }}
+              </AppBadge>
+            </div>
           </div>
 
-          <div class="status-item">
-            <span class="status-item__label">{{ t('settings.youtube.status.visitorData') }}</span>
-            <span
-              class="status-item__badge"
-              :class="
-                statusData?.hasVisitorData
-                  ? 'status-item__badge--active'
-                  : 'status-item__badge--missing'
-              ">
-              <AppIcon
-                :name="
-                  statusData?.hasVisitorData ? 'ph:check-circle-bold' : 'ph:warning-circle-bold'
-                " />
-              {{
-                statusData?.hasVisitorData
-                  ? t('settings.youtube.status.active')
-                  : t('settings.youtube.status.missing')
-              }}
-            </span>
+          <div class="status-card">
+            <div class="status-card__header">
+              <div class="status-card__icon-box">
+                <AppIcon name="ph:identification-card-duotone" />
+              </div>
+              <span class="status-card__label">{{ t('settings.youtube.status.visitorData') }}</span>
+            </div>
+            <div class="status-card__content">
+              <AppSkeleton
+                v-if="!statusData"
+                width="88px"
+                height="24px"
+                border-radius="var(--radius-full)" />
+              <AppBadge
+                v-else
+                :variant="statusData.hasVisitorData ? 'success' : 'warning'"
+                size="sm"
+                class="status-card__badge">
+                <AppIcon
+                  :name="
+                    statusData.hasVisitorData ? 'ph:check-circle-bold' : 'ph:warning-circle-bold'
+                  " />
+                {{
+                  statusData.hasVisitorData
+                    ? t('settings.youtube.status.active')
+                    : t('settings.youtube.status.missing')
+                }}
+              </AppBadge>
+            </div>
           </div>
 
-          <div class="status-item">
-            <span class="status-item__label">{{ t('settings.youtube.status.oauth') }}</span>
-            <span
-              class="status-item__badge"
-              :class="
-                statusData?.hasOauth ? 'status-item__badge--active' : 'status-item__badge--missing'
-              ">
-              <AppIcon
-                :name="statusData?.hasOauth ? 'ph:check-circle-bold' : 'ph:warning-circle-bold'" />
-              {{
-                statusData?.hasOauth
-                  ? t('settings.youtube.status.active')
-                  : t('settings.youtube.status.missing')
-              }}
-            </span>
+          <div class="status-card">
+            <div class="status-card__header">
+              <div class="status-card__icon-box">
+                <AppIcon name="ph:user-circle-gear-duotone" />
+              </div>
+              <span class="status-card__label">{{ t('settings.youtube.status.oauth') }}</span>
+            </div>
+            <div class="status-card__content">
+              <AppSkeleton
+                v-if="!statusData"
+                width="88px"
+                height="24px"
+                border-radius="var(--radius-full)" />
+              <AppBadge
+                v-else
+                :variant="statusData.hasOauth ? 'success' : 'warning'"
+                size="sm"
+                class="status-card__badge">
+                <AppIcon
+                  :name="statusData.hasOauth ? 'ph:check-circle-bold' : 'ph:warning-circle-bold'" />
+                {{
+                  statusData.hasOauth
+                    ? t('settings.youtube.status.active')
+                    : t('settings.youtube.status.missing')
+                }}
+              </AppBadge>
+            </div>
           </div>
         </div>
 
         <div class="status-actions">
-          <button class="status-refresh-btn" :disabled="isLoadingStatus" @click="fetchStatus">
-            <AppIcon
-              name="ph:arrows-clockwise-bold"
-              :class="{ 'status-refresh-btn--spin': isLoadingStatus }" />
+          <AppButton variant="secondary" size="sm" :loading="isLoadingStatus" @click="fetchStatus">
+            <AppIcon name="ph:arrows-clockwise-bold" />
             {{ t('settings.youtube.status.refresh') }}
-          </button>
+          </AppButton>
         </div>
       </AppSettingsSection>
 
       <AppSettingsSection :title="t('settings.youtube.cookie.title')">
-        <p class="cookie-desc">{{ t('settings.youtube.cookie.description') }}</p>
-        <textarea
-          v-model="rawCookie"
-          class="cookie-textarea"
-          rows="5"
-          :placeholder="t('settings.youtube.cookie.placeholder')" />
-        <div class="cookie-actions">
-          <button
-            class="cookie-save-btn"
-            :disabled="isSavingCookie || !rawCookie.trim()"
-            @click="onSaveCookie">
-            <AppSpinner v-if="isSavingCookie" size="sm" />
-            <AppIcon v-else name="ph:floppy-disk-bold" />
-            {{
-              isSavingCookie
-                ? t('settings.youtube.cookie.saving')
-                : t('settings.youtube.cookie.save')
-            }}
-          </button>
+        <p class="section-desc">{{ t('settings.youtube.cookie.description') }}</p>
+        <div class="cookie-panel">
+          <textarea
+            v-model="rawCookie"
+            class="cookie-textarea"
+            rows="5"
+            :placeholder="t('settings.youtube.cookie.placeholder')" />
+          <div class="cookie-footer">
+            <AppButton
+              variant="primary"
+              size="md"
+              :loading="isSavingCookie"
+              :disabled="!rawCookie.trim()"
+              @click="onSaveCookie">
+              <AppIcon name="ph:floppy-disk-bold" />
+              {{
+                isSavingCookie
+                  ? t('settings.youtube.cookie.saving')
+                  : t('settings.youtube.cookie.save')
+              }}
+            </AppButton>
+          </div>
         </div>
       </AppSettingsSection>
 
       <AppSettingsSection :title="t('settings.youtube.device.title')">
-        <p class="device-desc">{{ t('settings.youtube.device.description') }}</p>
+        <p class="section-desc">{{ t('settings.youtube.device.description') }}</p>
 
         <div v-if="!isAuthPending && !isAuthSuccess" class="device-init">
-          <button class="device-start-btn" :disabled="isGeneratingCode" @click="onStartDeviceAuth">
-            <AppSpinner v-if="isGeneratingCode" size="sm" />
-            <AppIcon v-else name="ph:key-bold" />
+          <AppButton
+            variant="secondary"
+            size="md"
+            :loading="isGeneratingCode"
+            @click="onStartDeviceAuth">
+            <AppIcon name="ph:key-bold" />
             {{ t('settings.youtube.device.start') }}
-          </button>
+          </AppButton>
         </div>
 
         <div v-if="isAuthPending" class="device-flow">
           <p class="device-instruction">{{ t('settings.youtube.device.instruction') }}</p>
-          <div class="device-code-display">
-            <span class="device-code-text">{{ deviceCode }}</span>
-            <button class="device-copy-btn" @click="copyCode">
+
+          <div class="device-code-box">
+            <div class="device-code-value">
+              <span class="device-code-text">{{ deviceCode }}</span>
+            </div>
+            <AppButton variant="secondary" size="md" @click="copyCode">
               <AppIcon :name="isCopied ? 'ph:check-bold' : 'ph:copy-bold'" />
               {{
                 isCopied
                   ? t('settings.youtube.device.copied')
                   : t('settings.youtube.device.copyCode')
               }}
-            </button>
+            </AppButton>
           </div>
 
-          <div class="device-links">
-            <a
+          <div class="device-actions">
+            <AppButton
               v-if="verificationUrl"
               :href="verificationUrl"
+              variant="primary"
+              size="md"
               target="_blank"
-              rel="noopener noreferrer"
-              class="device-open-btn">
+              rel="noopener noreferrer">
               <AppIcon name="ph:arrow-square-out-bold" />
-              {{ t('settings.youtube.device.openLink') }} ({{ verificationUrl }})
-            </a>
+              {{ t('settings.youtube.device.openLink') }}
+            </AppButton>
           </div>
 
           <div class="device-waiting">
@@ -300,12 +340,12 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <div v-if="isAuthSuccess" class="device-success">
+        <div v-if="isAuthSuccess" class="device-card device-card--success">
           <AppIcon name="ph:check-circle-fill" />
           <span>{{ t('settings.youtube.device.success') }}</span>
         </div>
 
-        <div v-if="authError" class="device-error">
+        <div v-if="authError" class="device-card device-card--error">
           <AppIcon name="ph:warning-circle-fill" />
           <span>{{ authError }}</span>
         </div>
@@ -321,41 +361,100 @@ onBeforeUnmount(() => {
   gap: var(--space-6);
 }
 
-.status-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--space-3);
-  margin-bottom: var(--space-4);
-}
+.settings-panel {
+  &__header {
+    margin-bottom: var(--space-4);
+  }
 
-.status-item {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-3);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-2);
+  }
 
-  &__label {
-    font-size: var(--text-xs);
+  &__description {
+    font-size: var(--text-sm);
     color: var(--color-text-secondary);
   }
 
-  &__badge {
-    display: inline-flex;
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+
+  @media (min-width: 680px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.status-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition:
+    background-color var(--transition-base),
+    border-color var(--transition-base),
+    transform var(--transition-base);
+
+  &:hover {
+    background: var(--color-surface-hover);
+    border-color: var(--color-border-hover, rgba(255, 255, 255, 0.15));
+  }
+
+  &__header {
+    display: flex;
     align-items: center;
+    gap: var(--space-2);
+  }
+
+  &__icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-md);
+    background: var(--color-surface-raised, rgba(255, 255, 255, 0.05));
+    color: var(--color-primary);
+    font-size: var(--text-base);
+    flex-shrink: 0;
+  }
+
+  &__label {
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__content {
+    display: flex;
+    align-items: center;
+    min-height: 24px;
+  }
+
+  &__badge {
     gap: var(--space-1);
-    font-size: var(--text-sm);
-    font-weight: var(--font-weight-medium);
-
-    &--active {
-      color: #10b981;
-    }
-
-    &--missing {
-      color: #f59e0b;
-    }
   }
 }
 
@@ -364,130 +463,95 @@ onBeforeUnmount(() => {
   justify-content: flex-end;
 }
 
-.status-refresh-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  color: var(--color-text-primary);
-  font-size: var(--text-sm);
-  cursor: pointer;
-
-  &:hover {
-    background: var(--color-surface-hover);
-  }
-
-  &--spin svg {
-    animation: spin 1s linear infinite;
-  }
-}
-
-.cookie-desc,
-.device-desc {
+.section-desc {
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
   margin-bottom: var(--space-3);
 }
 
+.cookie-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
 .cookie-textarea {
   width: 100%;
   padding: var(--space-3);
-  background: var(--color-surface);
+  background: var(--color-background);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   color: var(--color-text-primary);
   font-family: monospace;
   font-size: var(--text-xs);
+  line-height: 1.5;
   resize: vertical;
   box-sizing: border-box;
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
 
   &:focus {
     outline: none;
     border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-primary-glow, rgba(99, 102, 241, 0.25));
   }
 }
 
-.cookie-actions {
+.cookie-footer {
   display: flex;
   justify-content: flex-end;
-  margin-top: var(--space-3);
 }
 
-.cookie-save-btn,
-.device-start-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-4);
-  background: var(--color-primary);
-  color: var(--color-primary-foreground, #ffffff);
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-medium);
-  cursor: pointer;
+.device-init {
+  display: flex;
+}
 
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+.device-flow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
 }
 
 .device-instruction {
   font-size: var(--text-sm);
-  margin-bottom: var(--space-2);
+  color: var(--color-text-primary);
 }
 
-.device-code-display {
+.device-code-box {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  margin-bottom: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.device-code-value {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-5);
+  background: var(--color-background);
+  border: 1.5px dashed var(--color-primary);
+  border-radius: var(--radius-md);
 }
 
 .device-code-text {
+  font-family: monospace;
   font-size: var(--text-2xl);
   font-weight: var(--font-weight-bold);
-  font-family: monospace;
-  letter-spacing: 0.15em;
-  padding: var(--space-2) var(--space-4);
-  background: var(--color-surface-raised, rgba(255, 255, 255, 0.05));
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+  letter-spacing: 0.18em;
   color: var(--color-primary);
 }
 
-.device-copy-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-2) var(--space-3);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  color: var(--color-text-primary);
-  font-size: var(--text-sm);
-  cursor: pointer;
-
-  &:hover {
-    background: var(--color-surface-hover);
-  }
-}
-
-.device-links {
-  margin-bottom: var(--space-3);
-}
-
-.device-open-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--color-primary);
-  text-decoration: underline;
-  font-size: var(--text-sm);
+.device-actions {
+  display: flex;
 }
 
 .device-waiting {
@@ -498,28 +562,25 @@ onBeforeUnmount(() => {
   font-size: var(--text-sm);
 }
 
-.device-success {
+.device-card {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  color: #10b981;
-  font-weight: var(--font-weight-medium);
-}
-
-.device-error {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  color: #ef4444;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
   font-size: var(--text-sm);
-}
+  font-weight: var(--font-weight-medium);
 
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
+  &--success {
+    background: var(--color-success-light);
+    color: var(--color-success);
+    border: 1px solid var(--color-success);
   }
-  to {
-    transform: rotate(360deg);
+
+  &--error {
+    background: var(--color-danger-light);
+    color: var(--color-danger);
+    border: 1px solid var(--color-danger);
   }
 }
 </style>

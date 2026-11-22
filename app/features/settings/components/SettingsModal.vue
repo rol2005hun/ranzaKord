@@ -1,11 +1,5 @@
 <script setup lang="ts">
-type SettingsTabId = 'account' | 'appearance' | 'player' | 'audio' | 'info' | 'youtube';
-
-interface SettingsTab {
-  id: SettingsTabId;
-  label: string;
-  icon: string;
-}
+import type { SettingsTab, SettingsTabId } from '@/features/settings/types/settings.types';
 
 const authStore = useAuthStore();
 const layoutStore = useLayoutStore();
