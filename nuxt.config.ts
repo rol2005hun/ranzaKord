@@ -132,10 +132,6 @@ export default defineNuxtConfig({
     automaticTwitterTags: false
   },
 
-  aiReady: {
-    enabled: false
-  },
-
   unhead: {
     vite: {
       validate: false
