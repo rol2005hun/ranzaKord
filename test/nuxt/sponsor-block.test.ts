@@ -59,4 +59,22 @@ describe('useSponsorBlock', () => {
     expect(segments.value).toEqual([]);
     expect(shouldSkip(10)).toBeNull();
   });
+
+  it('preloadSegments caches segments without mutating current segments', async () => {
+    fetchMock.mockResolvedValueOnce({
+      segments: [[100, 120]]
+    });
+
+    const { preloadSegments, fetchSegments, segments } = useSponsorBlock();
+    preloadSegments('next_vid');
+
+    await new Promise((r) => setTimeout(r, 10));
+
+    expect(segments.value).toEqual([]);
+
+    const cached = await fetchSegments('next_vid');
+    expect(cached).toEqual([[100, 120]]);
+    expect(segments.value).toEqual([[100, 120]]);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
 });

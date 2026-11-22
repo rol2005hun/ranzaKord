@@ -44,7 +44,13 @@ export function usePlayer() {
   const nuxtApp = useNuxtApp();
   const t = nuxtApp.$i18n.t;
   const toast = useToast();
-  const { fetchSegments, clearSegments, shouldSkip, segments: sponsorSegments } = useSponsorBlock();
+  const {
+    fetchSegments,
+    preloadSegments,
+    clearSegments,
+    shouldSkip,
+    segments: sponsorSegments
+  } = useSponsorBlock();
 
   function setPlaybackError(message: string): void {
     const now = Date.now();
@@ -153,7 +159,7 @@ export function usePlayer() {
     isPreloading = true;
     try {
       if (store.sponsorBlockEnabled) {
-        fetchSegments(track.videoId).catch(() => {});
+        preloadSegments(track.videoId);
       }
       const url = await getStreamUrl(track.videoId);
       const inactiveAudio = activeAudioIndex.value === 0 ? audio2Ref.value : audio1Ref.value;
@@ -296,10 +302,15 @@ export function usePlayer() {
               if (skipTo !== null) {
                 if (
                   actualDuration > 0 &&
-                  (skipTo >= actualDuration - 2 || el.currentTime >= effectiveEnd - 1) &&
-                  store.hasNext
+                  (skipTo >= actualDuration - 2 || el.currentTime >= effectiveEnd - 1)
                 ) {
-                  playNext();
+                  if (store.hasNext) {
+                    playNext();
+                    return;
+                  }
+                  el.currentTime = actualDuration;
+                  store.currentTimeSeconds = actualDuration;
+                  pause();
                   return;
                 }
                 el.currentTime = skipTo;
