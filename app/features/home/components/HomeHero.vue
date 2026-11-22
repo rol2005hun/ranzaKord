@@ -10,6 +10,7 @@ import type { SearchResult } from '@/features/search/types/search.types';
 
 import HomeMixCard from './HomeMixCard.vue';
 import HomeRadioCard from './HomeRadioCard.vue';
+import HomeSectionSlider from './HomeSectionSlider.vue';
 
 const { currentUser } = useAuth();
 const themeStore = useThemeStore();
@@ -276,18 +277,20 @@ function onPlayRadio(radio: RecommendedRadio) {
         </h2>
       </div>
 
-      <div v-if="discoveryPending" class="home-dashboard__mix-grid">
-        <div v-for="i in 4" :key="`mix-skel-${i}`" class="home-dashboard__mix-skeleton">
-          <div class="skeleton skeleton--thumb" />
-          <div class="home-dashboard__skeleton-info">
-            <div class="skeleton skeleton--title" />
-            <div class="skeleton skeleton--artist" />
+      <HomeSectionSlider variant="mixes">
+        <template v-if="discoveryPending">
+          <div v-for="i in 6" :key="`mix-skel-${i}`" class="home-dashboard__mix-skeleton">
+            <div class="skeleton skeleton--thumb" />
+            <div class="home-dashboard__skeleton-info">
+              <div class="skeleton skeleton--title" />
+              <div class="skeleton skeleton--artist" />
+            </div>
           </div>
-        </div>
-      </div>
-      <div v-else class="home-dashboard__mix-grid">
-        <HomeMixCard v-for="mix in dailyMixes" :key="mix.id" :mix="mix" @play="onPlayMix" />
-      </div>
+        </template>
+        <template v-else>
+          <HomeMixCard v-for="mix in dailyMixes" :key="mix.id" :mix="mix" @play="onPlayMix" />
+        </template>
+      </HomeSectionSlider>
     </section>
 
     <section v-if="radios.length > 0 || discoveryPending" class="home-dashboard__section">
@@ -298,29 +301,35 @@ function onPlayRadio(radio: RecommendedRadio) {
         </div>
       </div>
 
-      <div v-if="discoveryPending" class="home-dashboard__mix-grid">
-        <div v-for="i in 6" :key="`radio-skel-${i}`" class="home-dashboard__mix-skeleton">
-          <div class="skeleton skeleton--thumb" />
-          <div class="home-dashboard__skeleton-info">
-            <div class="skeleton skeleton--title" />
-            <div class="skeleton skeleton--artist" />
+      <HomeSectionSlider variant="radios">
+        <template v-if="discoveryPending">
+          <div v-for="i in 8" :key="`radio-skel-${i}`" class="home-dashboard__mix-skeleton">
+            <div class="skeleton skeleton--thumb" />
+            <div class="home-dashboard__skeleton-info">
+              <div class="skeleton skeleton--title" />
+              <div class="skeleton skeleton--artist" />
+            </div>
           </div>
-        </div>
-      </div>
-      <div v-else class="home-dashboard__mix-grid">
-        <HomeRadioCard v-for="radio in radios" :key="radio.id" :radio="radio" @play="onPlayRadio" />
-      </div>
+        </template>
+        <template v-else>
+          <HomeRadioCard
+            v-for="radio in radios"
+            :key="radio.id"
+            :radio="radio"
+            @play="onPlayRadio" />
+        </template>
+      </HomeSectionSlider>
     </section>
 
     <section v-if="listenAgainTracks.length > 0" class="home-dashboard__section">
       <h2 class="home-dashboard__section-title">{{ $t('home.listenAgain') }}</h2>
-      <div class="home-dashboard__grid">
+      <HomeSectionSlider variant="tracks">
         <TrackCard
           v-for="track in listenAgainTracks"
           :key="`recent-${track.id}`"
           :track="track"
           @play="onPlayFromList" />
-      </div>
+      </HomeSectionSlider>
     </section>
 
     <section class="home-dashboard__section">
@@ -329,33 +338,35 @@ function onPlayRadio(radio: RecommendedRadio) {
       </h2>
 
       <ClientOnly>
-        <div v-if="pending" class="home-dashboard__grid">
-          <div v-for="i in 18" :key="i" class="home-dashboard__skeleton">
-            <div class="skeleton skeleton--thumb" />
-            <div class="home-dashboard__skeleton-info">
-              <div class="skeleton skeleton--title" />
-              <div class="skeleton skeleton--artist" />
-            </div>
-          </div>
-        </div>
-        <div v-else class="home-dashboard__grid">
-          <TrackCard
-            v-for="track in otherFeaturedTracks"
-            :key="track.id"
-            :track="track"
-            @play="onPlayFromList" />
-        </div>
-
-        <template #fallback>
-          <div class="home-dashboard__grid">
-            <div v-for="i in 18" :key="i" class="home-dashboard__skeleton">
+        <HomeSectionSlider variant="tracks">
+          <template v-if="pending">
+            <div v-for="i in 14" :key="i" class="home-dashboard__skeleton">
               <div class="skeleton skeleton--thumb" />
               <div class="home-dashboard__skeleton-info">
                 <div class="skeleton skeleton--title" />
                 <div class="skeleton skeleton--artist" />
               </div>
             </div>
-          </div>
+          </template>
+          <template v-else>
+            <TrackCard
+              v-for="track in otherFeaturedTracks"
+              :key="track.id"
+              :track="track"
+              @play="onPlayFromList" />
+          </template>
+        </HomeSectionSlider>
+
+        <template #fallback>
+          <HomeSectionSlider variant="tracks">
+            <div v-for="i in 14" :key="i" class="home-dashboard__skeleton">
+              <div class="skeleton skeleton--thumb" />
+              <div class="home-dashboard__skeleton-info">
+                <div class="skeleton skeleton--title" />
+                <div class="skeleton skeleton--artist" />
+              </div>
+            </div>
+          </HomeSectionSlider>
         </template>
       </ClientOnly>
     </section>

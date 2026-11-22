@@ -99,7 +99,7 @@ export default defineCachedEventHandler(
                   )
                 });
               }
-              if (items.length >= 10) break;
+              if (items.length >= 25) break;
             }
           }
         }
@@ -180,7 +180,7 @@ export default defineCachedEventHandler(
               )
             });
           }
-          if (items.length >= 15) break;
+          if (items.length >= 25) break;
         }
       }
       return items;

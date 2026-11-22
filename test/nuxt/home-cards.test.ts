@@ -4,6 +4,7 @@ import { createTestingPinia } from '@pinia/testing';
 
 import HomeMixCard from '@/features/home/components/HomeMixCard.vue';
 import HomeRadioCard from '@/features/home/components/HomeRadioCard.vue';
+import HomeSectionSlider from '@/features/home/components/HomeSectionSlider.vue';
 import type { DailyMix, RecommendedRadio } from '@/features/home/types/home.types';
 
 mockNuxtImport('useI18n', () => () => ({
@@ -121,5 +122,24 @@ describe('HomeRadioCard.vue', () => {
     await wrapper.trigger('click');
     expect(wrapper.emitted('play')).toBeTruthy();
     expect(wrapper.emitted('play')?.[0]?.[0]).toEqual(sampleRadio);
+  });
+});
+
+describe('HomeSectionSlider.vue', () => {
+  it('renders slot content correctly', async () => {
+    const wrapper = await mountSuspended(HomeSectionSlider, {
+      props: { variant: 'tracks' },
+      slots: {
+        default: () => '<div class="test-item">Test Track Item</div>'
+      },
+      global: {
+        stubs: {
+          AppIcon: true
+        }
+      }
+    });
+
+    expect(wrapper.find('.home-slider--tracks').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Test Track Item');
   });
 });

@@ -21,5 +21,7 @@
   "playMix": "Mix lejátszása",
   "playRadio": "Rádió indítása",
   "andMore": "és még mások",
-  "andOthers": "és továbbiak..."
+  "andOthers": "és továbbiak...",
+  "scrollLeft": "Görgetés balra",
+  "scrollRight": "Görgetés jobbra"
 }

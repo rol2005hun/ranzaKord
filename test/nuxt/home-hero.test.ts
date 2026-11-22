@@ -52,6 +52,7 @@ describe('HomeHero', () => {
           },
           TopResultCard: true,
           TrackCard: true,
+          HomeSectionSlider: { template: '<div><slot/></div>' },
           ClientOnly: { template: '<div><slot/></div>' }
         }
       }

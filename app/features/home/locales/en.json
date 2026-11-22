@@ -21,5 +21,7 @@
   "playMix": "Play Mix",
   "playRadio": "Start Radio",
   "andMore": "and more",
-  "andOthers": "and others..."
+  "andOthers": "and others...",
+  "scrollLeft": "Scroll left",
+  "scrollRight": "Scroll right"
 }

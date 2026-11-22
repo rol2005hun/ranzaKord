@@ -132,7 +132,7 @@ export default defineCachedEventHandler(
             .limit(30)
             .lean()
         : [],
-      userId ? TrackStatModel.find({ userId }).sort({ lastPlayedAt: -1 }).limit(10).lean() : [],
+      userId ? TrackStatModel.find({ userId }).sort({ lastPlayedAt: -1 }).limit(30).lean() : [],
       TrackModel.find({ globalPlayCount: { $gt: 0 } })
         .sort({ globalPlayCount: -1 })
         .limit(40)
@@ -165,6 +165,15 @@ export default defineCachedEventHandler(
     const pool: DbTrackItem[] =
       userTopTracks.length >= 3 ? userTopTracks : (globalTracks as unknown as DbTrackItem[]);
 
+    if (listenAgain.length < 15) {
+      for (const track of pool) {
+        if (!listenAgain.some((t) => t.id === track.trackId)) {
+          listenAgain.push(toSearchResult(track));
+        }
+        if (listenAgain.length >= 20) break;
+      }
+    }
+
     const artistMap = new Map<string, DbTrackItem[]>();
     for (const track of pool) {
       const art = track.artist?.trim();
@@ -178,11 +187,11 @@ export default defineCachedEventHandler(
     const detectedArtists = Array.from(artistMap.keys());
     const finalArtists: string[] = [];
     for (const a of detectedArtists) {
-      if (finalArtists.length >= 6) break;
+      if (finalArtists.length >= 8) break;
       if (!finalArtists.includes(a)) finalArtists.push(a);
     }
     for (const fb of FALLBACK_ARTISTS) {
-      if (finalArtists.length >= 6) break;
+      if (finalArtists.length >= 8) break;
       if (!finalArtists.includes(fb)) finalArtists.push(fb);
     }
 
@@ -206,16 +215,16 @@ export default defineCachedEventHandler(
               thumbnailUrl: extractThumbnail(item),
               durationSeconds: extractDuration(item)
             });
-            if (featured.length >= 15) break;
+            if (featured.length >= 25) break;
           }
         }
       }
     } catch {
-      featured = pool.slice(0, 15).map(toSearchResult);
+      featured = pool.slice(0, 25).map(toSearchResult);
     }
 
     if (!featured.length) {
-      featured = pool.slice(0, 15).map(toSearchResult);
+      featured = pool.slice(0, 25).map(toSearchResult);
     }
 
     const dailyMixes: DailyMix[] = [];
@@ -223,7 +232,9 @@ export default defineCachedEventHandler(
       finalArtists.slice(0, 2),
       finalArtists.slice(2, 4),
       finalArtists.slice(4, 6),
-      [finalArtists[0] || 'Dzsúdló', finalArtists[3] || 'Beton.Hofi']
+      [finalArtists[0] || 'Dzsúdló', finalArtists[3] || 'Beton.Hofi'],
+      [finalArtists[1] || 'Azahriah', finalArtists[4] || 'Pogány Induló'],
+      [finalArtists[2] || 'DESH', finalArtists[5] || 'Halott Pénz']
     ];
 
     for (let i = 0; i < mixClusters.length; i++) {
