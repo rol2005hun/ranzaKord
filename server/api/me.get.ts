@@ -53,15 +53,17 @@ export default defineEventHandler(async (event): Promise<MeResponse> => {
     settings: userDoc?.settings ?? {},
     isPublicProfile: userDoc?.isPublicProfile ?? true,
     showPlaylists: userDoc?.showPlaylists ?? true,
-    lastPlayback: userDoc?.lastPlayback
+    lastPlayback: userDoc?.lastPlayback?.videoId
       ? {
           videoId: userDoc.lastPlayback.videoId,
-          currentTime: userDoc.lastPlayback.currentTime,
+          currentTime: userDoc.lastPlayback.currentTime ?? 0,
           title: userDoc.lastPlayback.title,
           artist: userDoc.lastPlayback.artist,
           thumbnailUrl: userDoc.lastPlayback.thumbnailUrl,
           durationSeconds: userDoc.lastPlayback.durationSeconds,
-          updatedAt: userDoc.lastPlayback.updatedAt.toISOString()
+          updatedAt: userDoc.lastPlayback.updatedAt
+            ? new Date(userDoc.lastPlayback.updatedAt).toISOString()
+            : new Date().toISOString()
         }
       : undefined
   };
