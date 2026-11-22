@@ -64,5 +64,9 @@
     }
   },
   "demoModeToast": "Demo módban a módosítások nem kerülnek mentésre.",
-  "demoModeAudioToast": "Jogi okokból Demo módban csak jogtiszta (NCS) zenék hallgathatóak!"
+  "demoModeAudioToast": "Jogi okokból Demo módban csak jogtiszta (NCS) zenék hallgathatóak!",
+  "offline": {
+    "banner": "Offline mód: Nincs internet- vagy szerverkapcsolat. Csak a letöltött zenék érhetők el.",
+    "disabled": "Offline módban nem elérhető"
+  }
 }

@@ -81,6 +81,12 @@ const playerStore = usePlayerStore();
 useGlobalShortcuts();
 useAdaptiveTheme();
 
+const { initNetworkListener } = useNetworkStatus();
+
+onMounted(() => {
+  initNetworkListener();
+});
+
 const isTauriDesktop = ref(
   typeof window !== 'undefined' &&
     isTauriApp() &&

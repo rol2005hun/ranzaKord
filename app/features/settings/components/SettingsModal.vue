@@ -1,14 +1,29 @@
 <script setup lang="ts">
-const layoutStore = useLayoutStore();
-const activeTab = ref<'account' | 'appearance' | 'player' | 'audio' | 'info'>('account');
+type SettingsTabId = 'account' | 'appearance' | 'player' | 'audio' | 'info' | 'youtube';
 
-const tabs = [
-  { id: 'account', label: 'settings.categories.account', icon: 'ph:user' },
-  { id: 'appearance', label: 'settings.categories.appearance', icon: 'ph:palette' },
-  { id: 'player', label: 'settings.categories.player', icon: 'ph:play-circle' },
-  { id: 'audio', label: 'settings.categories.audio', icon: 'ph:sliders-horizontal' },
-  { id: 'info', label: 'settings.categories.info', icon: 'ph:info' }
-] as const;
+interface SettingsTab {
+  id: SettingsTabId;
+  label: string;
+  icon: string;
+}
+
+const authStore = useAuthStore();
+const layoutStore = useLayoutStore();
+const activeTab = ref<SettingsTabId>('account');
+
+const tabs = computed<SettingsTab[]>(() => {
+  const base: SettingsTab[] = [
+    { id: 'account', label: 'settings.categories.account', icon: 'ph:user' },
+    { id: 'appearance', label: 'settings.categories.appearance', icon: 'ph:palette' },
+    { id: 'player', label: 'settings.categories.player', icon: 'ph:play-circle' },
+    { id: 'audio', label: 'settings.categories.audio', icon: 'ph:sliders-horizontal' },
+    { id: 'info', label: 'settings.categories.info', icon: 'ph:info' }
+  ];
+  if (authStore.isDeveloper) {
+    base.push({ id: 'youtube', label: 'settings.categories.youtube', icon: 'ph:youtube-logo' });
+  }
+  return base;
+});
 
 const navRef = ref<HTMLElement | null>(null);
 
@@ -120,6 +135,7 @@ function onNavClick(e: MouseEvent) {
           <PlayerSettings v-else-if="activeTab === 'player'" />
           <AudioSettings v-else-if="activeTab === 'audio'" />
           <InfoSettings v-else-if="activeTab === 'info'" />
+          <YouTubeSettings v-else-if="activeTab === 'youtube'" />
         </div>
       </div>
     </div>

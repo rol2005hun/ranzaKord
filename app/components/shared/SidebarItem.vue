@@ -7,18 +7,27 @@ interface Props {
   label: string;
   active?: boolean;
   isNew?: boolean;
+  disabled?: boolean;
 }
 
-defineProps<Props>();
+withDefaults(defineProps<Props>(), {
+  to: undefined,
+  icon: undefined,
+  active: false,
+  isNew: false,
+  disabled: false
+});
 </script>
 
 <template>
   <component
-    :is="to ? NuxtLink : 'button'"
-    :to="to"
+    :is="to && !disabled ? NuxtLink : 'button'"
+    :to="disabled ? undefined : to"
     :aria-label="label"
+    :aria-disabled="disabled"
+    :disabled="disabled"
     class="app-sidebar-item"
-    :class="{ 'app-sidebar-item--active': active }"
+    :class="{ 'app-sidebar-item--active': active, 'app-sidebar-item--disabled': disabled }"
     exact-active-class="app-sidebar-item--active">
     <div class="app-sidebar-item__icon-wrapper">
       <AppIcon v-if="icon" :name="icon" class="app-sidebar-item__icon" />
@@ -62,6 +71,12 @@ defineProps<Props>();
     background-color: var(--color-primary-subtle);
     color: var(--color-text-primary);
     font-weight: var(--font-weight-bold);
+  }
+
+  &--disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+    pointer-events: none;
   }
 
   &__icon-wrapper {

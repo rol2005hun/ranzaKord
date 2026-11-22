@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import type { SearchResult, CategorizedSearchResults } from '../types/search.types';
 
+interface Props {
+  disabled?: boolean;
+}
+
+withDefaults(defineProps<Props>(), {
+  disabled: false
+});
+
 const route = useRoute();
 const router = useRouter();
 
@@ -104,7 +112,7 @@ function onClear() {
 </script>
 
 <template>
-  <div class="search-bar">
+  <div class="search-bar" :class="{ 'search-bar--disabled': disabled }">
     <AppIcon name="ph:magnifying-glass" class="search-bar__icon" />
     <input
       id="search-input"
@@ -112,8 +120,9 @@ function onClear() {
       class="search-bar__input"
       type="search"
       :value="localQuery"
-      :placeholder="$t('search.placeholder')"
-      :aria-label="$t('search.placeholder')"
+      :disabled="disabled"
+      :placeholder="disabled ? $t('core.offline.disabled') : $t('search.placeholder')"
+      :aria-label="disabled ? $t('core.offline.disabled') : $t('search.placeholder')"
       autocomplete="off"
       @input="onInput"
       @focus="onFocus"
@@ -170,6 +179,15 @@ function onClear() {
   width: 100%;
   max-width: 600px;
   z-index: 101;
+
+  &--disabled {
+    opacity: 0.45;
+    pointer-events: none;
+
+    .search-bar__input {
+      cursor: not-allowed;
+    }
+  }
 
   &__icon {
     position: absolute;
