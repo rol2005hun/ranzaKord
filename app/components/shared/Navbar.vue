@@ -2,6 +2,7 @@
 const { currentUser, logout, isAuthenticated } = useAuth();
 const { updateInfo, showUpdateModal } = useAppUpdate();
 const { isOffline } = useNetworkStatus();
+const { isInstalled } = usePwaInstall();
 const layoutStore = useLayoutStore();
 
 const isDropdownOpen = ref(false);
@@ -57,7 +58,7 @@ function closeDropdown() {
       </button>
 
       <button
-        v-if="!isTauriApp"
+        v-if="!isTauriApp && !isInstalled"
         type="button"
         class="app-navbar__download-btn"
         :aria-label="$t('core.nav.downloadApp')"
