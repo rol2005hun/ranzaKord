@@ -63,7 +63,7 @@ function closeDropdown() {
         :aria-label="$t('core.nav.downloadApp')"
         :title="$t('core.nav.downloadApp')"
         @click="showDownloadModal = true">
-        <AppIcon name="ph:arrow-down-to-bracket-bold" />
+        <AppIcon name="ph:download-simple-bold" />
         <span class="app-navbar__download-text">{{ $t('core.nav.downloadApp') }}</span>
       </button>
 

@@ -9,7 +9,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: boolean];
 }>();
 
-const { isInstallable, isInstalled, promptInstall } = usePwaInstall();
+const { isInstalled, promptInstall } = usePwaInstall();
 const isInstalling = ref(false);
 const showManualInstructions = ref(false);
 
@@ -75,24 +75,6 @@ function handleOpenReleases(): void {
               <span>{{ $t('core.downloadModal.webInstallBtn') }}</span>
             </AppButton>
           </div>
-
-          <button
-            v-if="!isInstalled && !isInstallable"
-            type="button"
-            class="download-card__manual-toggle"
-            @click="showManualInstructions = !showManualInstructions">
-            <AppIcon name="ph:info-bold" />
-            <span>{{ $t('core.downloadModal.webHowToInstall') }}</span>
-          </button>
-
-          <div v-if="showManualInstructions" class="download-card__manual-box">
-            <p class="download-card__manual-item">
-              {{ $t('core.downloadModal.webIosHint') }}
-            </p>
-            <p class="download-card__manual-item">
-              {{ $t('core.downloadModal.webDesktopHint') }}
-            </p>
-          </div>
         </div>
 
         <div class="download-card download-card--native">
@@ -117,6 +99,28 @@ function handleOpenReleases(): void {
               <span>{{ $t('core.downloadModal.nativeDownloadBtn') }}</span>
               <AppIcon name="ph:arrow-square-out-bold" />
             </AppButton>
+          </div>
+        </div>
+      </div>
+
+      <div class="download-modal__help">
+        <button
+          type="button"
+          class="download-modal__help-toggle"
+          @click="showManualInstructions = !showManualInstructions">
+          <AppIcon name="ph:info-bold" />
+          <span>{{ $t('core.downloadModal.webHowToInstall') }}</span>
+          <AppIcon :name="showManualInstructions ? 'ph:caret-up-bold' : 'ph:caret-down-bold'" />
+        </button>
+
+        <div v-if="showManualInstructions" class="download-modal__help-box">
+          <div class="download-modal__help-item">
+            <AppIcon name="ph:device-mobile-camera-bold" />
+            <span>{{ $t('core.downloadModal.webIosHint') }}</span>
+          </div>
+          <div class="download-modal__help-item">
+            <AppIcon name="ph:laptop-bold" />
+            <span>{{ $t('core.downloadModal.webDesktopHint') }}</span>
           </div>
         </div>
       </div>
@@ -145,11 +149,64 @@ function handleOpenReleases(): void {
       grid-template-columns: 1fr 1fr;
     }
   }
+
+  &__help {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-top: var(--space-1);
+  }
+
+  &__help-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) 0;
+    background: transparent;
+    border: none;
+    color: var(--color-text-secondary);
+    font-size: var(--text-xs);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+
+    &:hover {
+      color: var(--color-primary);
+    }
+  }
+
+  &__help-box {
+    width: 100%;
+    margin-top: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  &__help-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+    line-height: var(--leading-normal);
+
+    .app-icon {
+      flex-shrink: 0;
+      margin-top: 2px;
+      font-size: var(--text-sm);
+      color: var(--color-primary);
+    }
+  }
 }
 
 .download-card {
   display: flex;
   flex-direction: column;
+  height: 100%;
   padding: var(--space-5);
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -211,41 +268,6 @@ function handleOpenReleases(): void {
   &__btn {
     width: 100%;
     justify-content: center;
-  }
-
-  &__manual-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    margin-top: var(--space-3);
-    padding: 0;
-    background: transparent;
-    border: none;
-    color: var(--color-primary);
-    font-size: var(--text-xs);
-    cursor: pointer;
-    text-decoration: underline;
-
-    &:hover {
-      color: var(--color-text-primary);
-    }
-  }
-
-  &__manual-box {
-    margin-top: var(--space-2);
-    padding: var(--space-3);
-    background-color: var(--color-surface-raised);
-    border-radius: var(--radius-md);
-    font-size: var(--text-xs);
-    color: var(--color-text-secondary);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-  }
-
-  &__manual-item {
-    margin: 0;
-    line-height: var(--leading-normal);
   }
 }
 </style>
