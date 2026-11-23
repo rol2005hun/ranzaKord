@@ -83,6 +83,7 @@ export default defineNuxtConfig({
     imgurClientId: '',
     public: {
       baseUrl: process.env.NUXT_PUBLIC_BASE_URL || '',
+      siteUrl: process.env.NUXT_SITE_URL || 'https://kord.ranzak.dev',
       appVersion: pkg.version
     }
   },
@@ -138,13 +139,17 @@ export default defineNuxtConfig({
   },
 
   site: {
-    url: 'https://kord.ranzak.dev',
+    url: process.env.NUXT_SITE_URL || 'https://kord.ranzak.dev',
     name: 'ranzaKord',
     description: 'Premium music streaming.'
   },
 
   seo: {
     automaticTwitterTags: false
+  },
+
+  skewProtection: {
+    enabled: false
   },
 
   unhead: {
