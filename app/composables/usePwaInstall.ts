@@ -12,8 +12,16 @@ const isInstalled = ref(false);
 const isListenerAttached = ref(false);
 
 export function usePwaInstall() {
+  const pwaCookie = useCookie<boolean>('pwa_installed', {
+    default: () => false,
+    maxAge: 31536000,
+    sameSite: 'lax'
+  });
+
   function checkInstalled(): boolean {
-    if (!import.meta.client) return false;
+    if (!import.meta.client) {
+      return pwaCookie.value === true;
+    }
     const hasMatchMedia = typeof window !== 'undefined' && typeof window.matchMedia === 'function';
     const isStandalone =
       hasMatchMedia &&
@@ -26,12 +34,20 @@ export function usePwaInstall() {
       (navigator as unknown as { standalone?: boolean }).standalone === true;
     const isAndroidApp =
       typeof document !== 'undefined' && document.referrer.startsWith('android-app://');
-    return isStandalone || isIosStandalone || isAndroidApp;
+    const installed = isStandalone || isIosStandalone || isAndroidApp;
+    if (installed) {
+      pwaCookie.value = true;
+    }
+    return installed;
   }
 
   function init(): void {
     if (!import.meta.client) return;
-    isInstalled.value = checkInstalled();
+    const installed = checkInstalled();
+    isInstalled.value = installed;
+    if (installed) {
+      pwaCookie.value = true;
+    }
 
     if ('getInstalledRelatedApps' in navigator) {
       (navigator as unknown as { getInstalledRelatedApps: () => Promise<unknown[]> })
@@ -39,6 +55,7 @@ export function usePwaInstall() {
         .then((apps) => {
           if (Array.isArray(apps) && apps.length > 0) {
             isInstalled.value = true;
+            pwaCookie.value = true;
           }
         })
         .catch(() => {});
@@ -60,6 +77,7 @@ export function usePwaInstall() {
           mql.addEventListener?.('change', (e) => {
             if (e.matches) {
               isInstalled.value = true;
+              pwaCookie.value = true;
             }
           });
         } catch {
@@ -81,6 +99,7 @@ export function usePwaInstall() {
 
     window.addEventListener('appinstalled', () => {
       isInstalled.value = true;
+      pwaCookie.value = true;
       deferredPrompt.value = null;
       globalWindow.__deferredPrompt = undefined;
     });
@@ -96,12 +115,15 @@ export function usePwaInstall() {
     deferredPrompt.value = null;
     if (choice.outcome === 'accepted') {
       isInstalled.value = true;
+      pwaCookie.value = true;
     }
     return choice.outcome;
   }
 
   if (import.meta.client) {
     init();
+  } else {
+    isInstalled.value = pwaCookie.value === true;
   }
 
   return {

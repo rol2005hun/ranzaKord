@@ -190,6 +190,13 @@ function closeDropdown() {
       border-color: var(--color-primary);
     }
 
+    @media (display-mode: standalone),
+      (display-mode: window-controls-overlay),
+      (display-mode: minimal-ui),
+      (display-mode: fullscreen) {
+      display: none !important;
+    }
+
     @media (max-width: 768px) {
       padding: var(--space-2);
       gap: 0;
