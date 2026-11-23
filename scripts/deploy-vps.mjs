@@ -13,11 +13,21 @@ function parseEnvFile(filePath) {
     const eqIdx = trimmed.indexOf('=');
     if (eqIdx !== -1) {
       const key = trimmed.slice(0, eqIdx).trim();
-      const val = trimmed
-        .slice(eqIdx + 1)
-        .trim()
-        .replace(/^["']|["']$/g, '');
-      env[key] = val;
+      let rawVal = trimmed.slice(eqIdx + 1).trim();
+      if (
+        (rawVal.startsWith('"') && rawVal.includes('"', 1)) ||
+        (rawVal.startsWith("'") && rawVal.includes("'", 1))
+      ) {
+        const quote = rawVal[0];
+        const endQuote = rawVal.indexOf(quote, 1);
+        rawVal = rawVal.slice(1, endQuote);
+      } else {
+        const hashIdx = rawVal.indexOf('#');
+        if (hashIdx !== -1) {
+          rawVal = rawVal.slice(0, hashIdx).trim();
+        }
+      }
+      env[key] = rawVal;
     }
   }
   return env;
@@ -100,13 +110,14 @@ async function main() {
         'set -e',
         `cd "${config.path}"`,
         'echo "==> [1/4] Pulling latest git changes..."',
+        `git checkout "${config.branch}"`,
         `git pull origin "${config.branch}"`,
         'echo "==> [2/4] Installing dependencies..."',
         'pnpm install',
         'echo "==> [3/4] Building production application..."',
         'pnpm run build',
         'echo "==> [4/4] Restarting PM2 process..."',
-        `pm2 restart "${config.service}" || pm2 restart ranzakord || pm2 restart all`,
+        `(pm2 restart "${config.service}" || pm2 restart ranzakord || pm2 restart all)`,
         'echo "==> Deployment finished successfully!"'
       ].join(' && ');
 
