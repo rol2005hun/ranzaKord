@@ -115,7 +115,7 @@ async function main() {
         'echo "==> [2/4] Installing dependencies..."',
         'pnpm install',
         'echo "==> [3/4] Building production application..."',
-        'pnpm run build',
+        'if [ -f .env.prod ]; then pnpm run build --dotenv .env.prod; else NUXT_SSR=true pnpm run build; fi',
         'echo "==> [4/4] Restarting PM2 process..."',
         `(pm2 restart "${config.service}" || pm2 restart ranzakord || pm2 restart all)`,
         'echo "==> Deployment finished successfully!"'
