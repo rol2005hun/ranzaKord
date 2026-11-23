@@ -6,6 +6,7 @@ const layoutStore = useLayoutStore();
 
 const isDropdownOpen = ref(false);
 const isTauriApp = ref(false);
+const showDownloadModal = ref(false);
 
 onMounted(() => {
   isTauriApp.value = '__TAURI_INTERNALS__' in window;
@@ -55,14 +56,16 @@ function closeDropdown() {
         <span class="app-navbar__update-text">{{ $t('updater.updateAvailable') }}</span>
       </button>
 
-      <a
+      <button
         v-if="!isTauriApp"
-        href="https://github.com/rol2005hun/ranzaKord/releases/latest"
-        target="_blank"
-        class="app-navbar__download-btn">
-        <AppIcon name="ph:desktop" />
-        <span>{{ $t('core.nav.downloadApp') }}</span>
-      </a>
+        type="button"
+        class="app-navbar__download-btn"
+        :aria-label="$t('core.nav.downloadApp')"
+        :title="$t('core.nav.downloadApp')"
+        @click="showDownloadModal = true">
+        <AppIcon name="ph:arrow-down-to-bracket-bold" />
+        <span class="app-navbar__download-text">{{ $t('core.nav.downloadApp') }}</span>
+      </button>
 
       <div v-if="isAuthenticated && currentUser" class="app-navbar__user">
         <div class="app-navbar__avatar-wrapper">
@@ -133,6 +136,7 @@ function closeDropdown() {
     </div>
   </header>
   <SettingsModal />
+  <AppDownloadModal v-model="showDownloadModal" />
 </template>
 
 <style lang="scss" scoped>
@@ -165,7 +169,7 @@ function closeDropdown() {
   }
 
   &__download-btn {
-    display: none;
+    display: flex;
     align-items: center;
     gap: var(--space-2);
     padding: var(--space-2) var(--space-4);
@@ -175,6 +179,7 @@ function closeDropdown() {
     border-radius: var(--radius-full);
     font-size: var(--text-sm);
     font-weight: var(--font-weight-medium);
+    cursor: pointer;
     text-decoration: none;
     transition: all var(--transition-fast);
 
@@ -184,8 +189,13 @@ function closeDropdown() {
       border-color: var(--color-primary);
     }
 
-    @media (min-width: 769px) {
-      display: flex;
+    @media (max-width: 768px) {
+      padding: var(--space-2);
+      gap: 0;
+
+      .app-navbar__download-text {
+        display: none;
+      }
     }
   }
 

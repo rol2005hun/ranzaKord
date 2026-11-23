@@ -10,7 +10,16 @@ export default defineNuxtConfig({
     head: {
       titleTemplate: '%s | ranzaKord',
       viewport: 'width=device-width, initial-scale=1, viewport-fit=cover',
-      link: [{ rel: 'icon', type: 'image/webp', href: '/logo.webp' }],
+      meta: [
+        { name: 'theme-color', content: '#0d0e12' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' }
+      ],
+      link: [
+        { rel: 'icon', type: 'image/webp', href: '/logo.webp' },
+        { rel: 'manifest', href: '/manifest.json' },
+        { rel: 'apple-touch-icon', href: '/pwa-192x192.png' }
+      ],
       script: [
         {
           innerHTML: `
