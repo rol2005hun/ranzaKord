@@ -14,15 +14,59 @@ const isListenerAttached = ref(false);
 export function usePwaInstall() {
   function checkInstalled(): boolean {
     if (!import.meta.client) return false;
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    const isIosStandalone = (navigator as unknown as { standalone?: boolean }).standalone === true;
-    return isStandalone || isIosStandalone;
+    const hasMatchMedia = typeof window !== 'undefined' && typeof window.matchMedia === 'function';
+    const isStandalone =
+      hasMatchMedia &&
+      (window.matchMedia('(display-mode: standalone)').matches ||
+        window.matchMedia('(display-mode: window-controls-overlay)').matches ||
+        window.matchMedia('(display-mode: fullscreen)').matches ||
+        window.matchMedia('(display-mode: minimal-ui)').matches);
+    const isIosStandalone =
+      typeof navigator !== 'undefined' &&
+      (navigator as unknown as { standalone?: boolean }).standalone === true;
+    const isAndroidApp =
+      typeof document !== 'undefined' && document.referrer.startsWith('android-app://');
+    return isStandalone || isIosStandalone || isAndroidApp;
   }
 
   function init(): void {
-    if (!import.meta.client || isListenerAttached.value) return;
-    isListenerAttached.value = true;
+    if (!import.meta.client) return;
     isInstalled.value = checkInstalled();
+
+    if ('getInstalledRelatedApps' in navigator) {
+      (navigator as unknown as { getInstalledRelatedApps: () => Promise<unknown[]> })
+        .getInstalledRelatedApps()
+        .then((apps) => {
+          if (Array.isArray(apps) && apps.length > 0) {
+            isInstalled.value = true;
+          }
+        })
+        .catch(() => {});
+    }
+
+    if (isListenerAttached.value) return;
+    isListenerAttached.value = true;
+
+    const hasMatchMedia = typeof window !== 'undefined' && typeof window.matchMedia === 'function';
+    if (hasMatchMedia) {
+      const displayModes = [
+        '(display-mode: standalone)',
+        '(display-mode: window-controls-overlay)',
+        '(display-mode: minimal-ui)'
+      ];
+      displayModes.forEach((query) => {
+        try {
+          const mql = window.matchMedia(query);
+          mql.addEventListener?.('change', (e) => {
+            if (e.matches) {
+              isInstalled.value = true;
+            }
+          });
+        } catch {
+          void 0;
+        }
+      });
+    }
 
     const globalWindow = window as unknown as { __deferredPrompt?: BeforeInstallPromptEvent };
     if (globalWindow.__deferredPrompt) {
