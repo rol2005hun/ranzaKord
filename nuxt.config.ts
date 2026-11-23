@@ -21,6 +21,21 @@ export default defineNuxtConfig({
         { rel: 'manifest', href: '/manifest.json' },
         { rel: 'apple-touch-icon', href: '/pwa-192x192.png' }
       ],
+      style: [
+        {
+          innerHTML: `
+            @media (display-mode: standalone), (display-mode: window-controls-overlay), (display-mode: minimal-ui) {
+              .app-navbar__download-btn {
+                display: none !important;
+              }
+            }
+            html.is-pwa .app-navbar__download-btn,
+            html.is-tauri .app-navbar__download-btn {
+              display: none !important;
+            }
+          `
+        }
+      ],
       script: [
         {
           innerHTML: `
@@ -32,6 +47,15 @@ export default defineNuxtConfig({
                   if (!/android|ios|iphone|ipad/i.test(navigator.userAgent)) {
                     document.documentElement.classList.add('is-tauri');
                   }
+                }
+                var isPwa = (window.matchMedia && (
+                  window.matchMedia('(display-mode: standalone)').matches ||
+                  window.matchMedia('(display-mode: window-controls-overlay)').matches ||
+                  window.matchMedia('(display-mode: minimal-ui)').matches
+                )) || Boolean(navigator.standalone);
+                if (isPwa) {
+                  window.isPwa = true;
+                  document.documentElement.classList.add('is-pwa');
                 }
                 var theme = document.cookie.match(/theme-id=([^;]+)/)?.[1] || 'dark';
                 document.documentElement.setAttribute('data-theme', theme);

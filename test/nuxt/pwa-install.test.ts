@@ -5,9 +5,10 @@ import DownloadModal from '@/components/shared/DownloadModal.vue';
 
 describe('usePwaInstall', () => {
   it('initializes with default values', () => {
-    const { isInstallable, isInstalled } = usePwaInstall();
+    const { isInstallable, isInstalled, isStandalone } = usePwaInstall();
     expect(isInstallable.value).toBe(false);
     expect(isInstalled.value).toBe(false);
+    expect(isStandalone.value).toBe(false);
   });
 
   it('handles beforeinstallprompt and promptInstall', async () => {

@@ -2,15 +2,15 @@
 const { currentUser, logout, isAuthenticated } = useAuth();
 const { updateInfo, showUpdateModal } = useAppUpdate();
 const { isOffline } = useNetworkStatus();
-const { isInstalled } = usePwaInstall();
+const { isStandalone, isInstalled } = usePwaInstall();
 const layoutStore = useLayoutStore();
 
 const isDropdownOpen = ref(false);
-const isTauriApp = ref(false);
+const isTauri = ref(false);
 const showDownloadModal = ref(false);
 
 onMounted(() => {
-  isTauriApp.value = '__TAURI_INTERNALS__' in window;
+  isTauri.value = isTauriApp();
 });
 
 watch(
@@ -58,7 +58,7 @@ function closeDropdown() {
       </button>
 
       <button
-        v-if="!isTauriApp && !isInstalled"
+        v-if="!isTauri && !isStandalone && !isInstalled"
         type="button"
         class="app-navbar__download-btn"
         :aria-label="$t('core.nav.downloadApp')"

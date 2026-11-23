@@ -22,6 +22,21 @@
   }
 }
 
+@media (display-mode: standalone),
+  (display-mode: window-controls-overlay),
+  (display-mode: minimal-ui) {
+  .app-navbar__download-btn {
+    display: none !important;
+  }
+}
+
+html.is-pwa,
+html.is-tauri {
+  .app-navbar__download-btn {
+    display: none !important;
+  }
+}
+
 body.has-open-modal {
   overflow: hidden;
 
