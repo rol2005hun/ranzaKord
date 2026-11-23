@@ -24,7 +24,10 @@ const {
   resetMusicVideo
 } = useMusicVideo();
 
+const isVideoReady = ref(false);
+
 function onVideoError() {
+  isVideoReady.value = false;
   resetMusicVideo();
 }
 
@@ -140,6 +143,7 @@ const isPlaying = computed(() => (isHydrated.value ? player.isPlaying.value : fa
 watch(
   currentTrack,
   (track) => {
+    isVideoReady.value = false;
     if (musicVideoRef.value) {
       musicVideoRef.value.pause();
       musicVideoRef.value.removeAttribute('src');
@@ -159,10 +163,15 @@ watch(
   { immediate: true }
 );
 
+watch(musicVideoUrl, () => {
+  isVideoReady.value = false;
+});
+
 watch(
   () => layoutStore.sidebarBackgroundMode,
   (mode) => {
     if (mode === 'musicvideo' && currentTrack.value) {
+      isVideoReady.value = false;
       fetchMusicVideo(currentTrack.value);
     }
   }
@@ -199,6 +208,7 @@ function onVideoLoadedMetadata() {
 }
 
 function onVideoCanPlay() {
+  isVideoReady.value = true;
   syncVideoWithAudio(true);
   if (isPlaying.value && musicVideoRef.value?.paused) {
     musicVideoRef.value?.play().catch(() => {});
@@ -206,6 +216,7 @@ function onVideoCanPlay() {
 }
 
 function onVideoPlaying() {
+  isVideoReady.value = true;
   syncVideoWithAudio(false);
 }
 
@@ -436,6 +447,7 @@ const sidebarStyle = computed(() => ({
               :key="musicVideoUrl"
               :src="musicVideoUrl"
               class="right-sidebar__music-video"
+              :class="{ 'right-sidebar__music-video--ready': isVideoReady }"
               loop
               muted
               playsinline
@@ -445,7 +457,7 @@ const sidebarStyle = computed(() => ({
               @playing="onVideoPlaying"
               @error="onVideoError" />
             <img
-              v-else-if="currentTrack.thumbnailUrl"
+              v-if="currentTrack.thumbnailUrl"
               :src="currentTrack.thumbnailUrl"
               :alt="currentTrack.title"
               class="right-sidebar__artwork-bg" />
@@ -454,7 +466,7 @@ const sidebarStyle = computed(() => ({
             </div>
 
             <div
-              v-if="isMusicVideoMode && isMusicVideoLoading"
+              v-if="isMusicVideoMode && (isMusicVideoLoading || (musicVideoUrl && !isVideoReady))"
               class="right-sidebar__music-video-loading">
               <AppSpinner size="md" />
             </div>
@@ -513,7 +525,7 @@ const sidebarStyle = computed(() => ({
             </div>
 
             <div
-              v-if="!isMusicVideoMode || !musicVideoUrl"
+              v-if="!isMusicVideoMode || !isVideoReady"
               class="right-sidebar__artwork-center"
               :class="{ 'right-sidebar__artwork-center--spinning': isPlaying }">
               <img
@@ -816,6 +828,12 @@ const sidebarStyle = computed(() => ({
     object-fit: cover;
     z-index: 1;
     pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+
+    &--ready {
+      opacity: 1;
+    }
   }
 
   &__music-video-loading {

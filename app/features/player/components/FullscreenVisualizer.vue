@@ -166,9 +166,17 @@ const containerRef = ref<HTMLElement | null>(null);
 const playlistBtnRef = ref<HTMLElement | null>(null);
 const mobilePlaylistBtnRef = ref<HTMLElement | null>(null);
 
-const { musicVideoUrl, fetchMusicVideo, resetMusicVideo } = useMusicVideo();
+const {
+  musicVideoUrl,
+  isLoading: isMusicVideoLoading,
+  fetchMusicVideo,
+  resetMusicVideo
+} = useMusicVideo();
+
+const isVideoReady = ref(false);
 
 function onVideoError() {
+  isVideoReady.value = false;
   resetMusicVideo();
 }
 const musicVideoRef = ref<HTMLVideoElement | null>(null);
@@ -204,6 +212,7 @@ function onVideoLoadedMetadata() {
 }
 
 function onVideoCanPlay() {
+  isVideoReady.value = true;
   syncVideoWithAudio(true);
   if (player.isPlaying.value && musicVideoRef.value?.paused) {
     musicVideoRef.value?.play().catch(() => {});
@@ -211,12 +220,14 @@ function onVideoCanPlay() {
 }
 
 function onVideoPlaying() {
+  isVideoReady.value = true;
   syncVideoWithAudio(false);
 }
 
 watch(
   () => player.currentTrack.value,
   (track) => {
+    isVideoReady.value = false;
     if (musicVideoRef.value) {
       musicVideoRef.value.pause();
       musicVideoRef.value.removeAttribute('src');
@@ -234,10 +245,15 @@ watch(
   }
 );
 
+watch(musicVideoUrl, () => {
+  isVideoReady.value = false;
+});
+
 watch(
   () => layoutStore.fullscreenBackgroundMode,
   (mode) => {
     if (mode === 'musicvideo' && player.currentTrack.value) {
+      isVideoReady.value = false;
       fetchMusicVideo(player.currentTrack.value);
     }
   }
@@ -437,6 +453,7 @@ function getStyleIcon(style: string) {
         :key="musicVideoUrl"
         :src="musicVideoUrl"
         class="fullscreen-visualizer__music-video"
+        :class="{ 'fullscreen-visualizer__music-video--ready': isVideoReady }"
         loop
         muted
         playsinline
@@ -445,6 +462,11 @@ function getStyleIcon(style: string) {
         @canplay="onVideoCanPlay"
         @playing="onVideoPlaying"
         @error="onVideoError" />
+      <div
+        v-if="isMusicVideoMode && (isMusicVideoLoading || (musicVideoUrl && !isVideoReady))"
+        class="fullscreen-visualizer__music-video-loading">
+        <AppSpinner size="lg" />
+      </div>
       <canvas
         v-show="!isMusicVideoMode"
         ref="canvasRef"
@@ -1416,6 +1438,24 @@ function getStyleIcon(style: string) {
     height: 100%;
     object-fit: cover;
     z-index: 1;
+    opacity: 0;
+    transition: opacity var(--transition-normal);
+
+    &--ready {
+      opacity: 1;
+    }
+  }
+
+  &__music-video-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 2;
+    backdrop-filter: blur(4px);
+    pointer-events: none;
   }
 }
 
