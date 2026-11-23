@@ -77,4 +77,24 @@ describe('useSponsorBlock', () => {
     expect(segments.value).toEqual([[100, 120]]);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
+
+  it('getCachedSegments and getIntroSkip work correctly', async () => {
+    fetchMock.mockResolvedValueOnce({
+      segments: [
+        [0, 15.2],
+        [180, 200]
+      ]
+    });
+
+    const { fetchSegments, getCachedSegments, getIntroSkip } = useSponsorBlock();
+    expect(getCachedSegments('sample')).toBeNull();
+    expect(getIntroSkip('sample')).toBe(0);
+
+    await fetchSegments('sample');
+    expect(getCachedSegments('sample')).toEqual([
+      [0, 15.2],
+      [180, 200]
+    ]);
+    expect(getIntroSkip('sample')).toBeCloseTo(15.25, 2);
+  });
 });
