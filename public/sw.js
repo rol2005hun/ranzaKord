@@ -1,5 +1,11 @@
 const CACHE_NAME = 'ranzakord-shell-v1';
-const ASSETS_TO_PRECACHE = ['/', '/logo.webp', '/favicon.ico'];
+const ASSETS_TO_PRECACHE = [
+  '/',
+  '/logo.webp',
+  '/manifest.json',
+  '/pwa-192x192.png',
+  '/pwa-512x512.png'
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

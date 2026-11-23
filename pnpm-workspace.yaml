@@ -30,7 +30,9 @@ minimumReleaseAgeExclude:
 
 allowBuilds:
   '@parcel/watcher': true
+  cpu-features: false
   esbuild: true
   sharp: true
+  ssh2: false
   unrs-resolver: true
   vue-demi: true

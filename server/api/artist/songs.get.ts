@@ -253,8 +253,8 @@ export default defineCachedEventHandler(
     }
   },
   {
-    maxAge: 60 * 60 * 12, // Cache for 12 hours
-    name: 'artist-songs-v2',
+    maxAge: 60 * 60 * 12,
+    name: 'artist-songs',
     getKey: (event) => {
       const query = getQuery(event);
       return `${query['q'] || 'none'}-${query['continuation'] || 'none'}`;

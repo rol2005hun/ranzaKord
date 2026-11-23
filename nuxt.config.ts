@@ -10,7 +10,17 @@ export default defineNuxtConfig({
     head: {
       titleTemplate: '%s | ranzaKord',
       viewport: 'width=device-width, initial-scale=1, viewport-fit=cover',
-      link: [{ rel: 'icon', type: 'image/webp', href: '/logo.webp' }],
+      meta: [
+        { name: 'theme-color', content: '#0d0e12' },
+        { name: 'mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' }
+      ],
+      link: [
+        { rel: 'icon', type: 'image/webp', href: '/logo.webp' },
+        { rel: 'manifest', href: '/manifest.json' },
+        { rel: 'apple-touch-icon', href: '/pwa-192x192.png' }
+      ],
       script: [
         {
           innerHTML: `
@@ -73,6 +83,7 @@ export default defineNuxtConfig({
     imgurClientId: '',
     public: {
       baseUrl: process.env.NUXT_PUBLIC_BASE_URL || '',
+      siteUrl: process.env.NUXT_SITE_URL || 'https://kord.ranzak.dev',
       appVersion: pkg.version
     }
   },
@@ -128,13 +139,17 @@ export default defineNuxtConfig({
   },
 
   site: {
-    url: 'https://kord.ranzak.dev',
+    url: process.env.NUXT_SITE_URL || 'https://kord.ranzak.dev',
     name: 'ranzaKord',
     description: 'Premium music streaming.'
   },
 
   seo: {
     automaticTwitterTags: false
+  },
+
+  skewProtection: {
+    enabled: false
   },
 
   unhead: {

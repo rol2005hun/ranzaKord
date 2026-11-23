@@ -166,12 +166,7 @@ const containerRef = ref<HTMLElement | null>(null);
 const playlistBtnRef = ref<HTMLElement | null>(null);
 const mobilePlaylistBtnRef = ref<HTMLElement | null>(null);
 
-const {
-  musicVideoUrl,
-  isLoading: isMusicVideoLoading,
-  fetchMusicVideo,
-  resetMusicVideo
-} = useMusicVideo();
+const { musicVideoUrl, fetchMusicVideo, resetMusicVideo } = useMusicVideo();
 
 function onVideoError() {
   resetMusicVideo();
@@ -222,8 +217,19 @@ function onVideoPlaying() {
 watch(
   () => player.currentTrack.value,
   (track) => {
-    if (track && layoutStore.fullscreenBackgroundMode === 'musicvideo') {
-      fetchMusicVideo(track);
+    if (musicVideoRef.value) {
+      musicVideoRef.value.pause();
+      musicVideoRef.value.removeAttribute('src');
+      musicVideoRef.value.load();
+    }
+    if (track) {
+      if (layoutStore.fullscreenBackgroundMode === 'musicvideo') {
+        fetchMusicVideo(track);
+      } else {
+        musicVideoUrl.value = null;
+      }
+    } else {
+      musicVideoUrl.value = null;
     }
   }
 );
@@ -231,12 +237,7 @@ watch(
 watch(
   () => layoutStore.fullscreenBackgroundMode,
   (mode) => {
-    if (
-      mode === 'musicvideo' &&
-      player.currentTrack.value &&
-      !musicVideoUrl.value &&
-      !isMusicVideoLoading.value
-    ) {
+    if (mode === 'musicvideo' && player.currentTrack.value) {
       fetchMusicVideo(player.currentTrack.value);
     }
   }
@@ -433,6 +434,7 @@ function getStyleIcon(style: string) {
       <video
         v-if="isMusicVideoMode && musicVideoUrl"
         ref="musicVideoRef"
+        :key="musicVideoUrl"
         :src="musicVideoUrl"
         class="fullscreen-visualizer__music-video"
         loop

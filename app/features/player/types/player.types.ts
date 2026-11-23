@@ -63,6 +63,7 @@ export interface MusicVideoSearchResponse {
 }
 
 export interface MusicVideoTrackInput {
+  videoId?: string;
   title: string;
   artist?: string;
   artists?: TrackArtist[] | null;

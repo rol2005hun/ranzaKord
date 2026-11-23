@@ -420,8 +420,11 @@ async function resolveCandidate(
     const getAudioScore = (f: CandidateFormat): number => {
       const itag = f.itag;
       const bitrate = f.bitrate || f.average_bitrate || 0;
+      if (itag === 141) return 4000000 + bitrate;
+      if (itag === 251) return 3000000 + bitrate;
       if (itag === 140) return 2000000 + bitrate;
-      if (itag === 251) return 1500000 + bitrate;
+      if (itag === 250) return 1000000 + bitrate;
+      if (itag === 249) return 500000 + bitrate;
       if (itag === 139) return 10;
       return bitrate;
     };
@@ -652,7 +655,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const vid = videoId.trim();
-  const cacheKey = streamType === 'video' ? `${vid}_video_v4` : `${vid}_${streamType}`;
+  const cacheKey = streamType === 'video' ? `${vid}_video` : `${vid}_${streamType}`;
   const cached = streamCache.get(cacheKey);
 
   if (cached && Date.now() < cached.expiresAt) {

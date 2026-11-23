@@ -343,7 +343,7 @@ export default defineCachedEventHandler(
   },
   {
     maxAge: 60 * 60 * 12,
-    name: 'artist-details-v3',
+    name: 'artist-details',
     getKey: (event) => {
       const query = getQuery(event);
       return String(query['id'] || 'none');

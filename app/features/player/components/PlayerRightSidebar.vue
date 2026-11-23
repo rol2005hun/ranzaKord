@@ -140,11 +140,20 @@ const isPlaying = computed(() => (isHydrated.value ? player.isPlaying.value : fa
 watch(
   currentTrack,
   (track) => {
+    if (musicVideoRef.value) {
+      musicVideoRef.value.pause();
+      musicVideoRef.value.removeAttribute('src');
+      musicVideoRef.value.load();
+    }
     if (track) {
       fetchLyrics(track);
       if (layoutStore.sidebarBackgroundMode === 'musicvideo') {
         fetchMusicVideo(track);
+      } else {
+        musicVideoUrl.value = null;
       }
+    } else {
+      musicVideoUrl.value = null;
     }
   },
   { immediate: true }
@@ -153,12 +162,7 @@ watch(
 watch(
   () => layoutStore.sidebarBackgroundMode,
   (mode) => {
-    if (
-      mode === 'musicvideo' &&
-      currentTrack.value &&
-      !musicVideoUrl.value &&
-      !isMusicVideoLoading.value
-    ) {
+    if (mode === 'musicvideo' && currentTrack.value) {
       fetchMusicVideo(currentTrack.value);
     }
   }
@@ -364,44 +368,52 @@ const sidebarStyle = computed(() => ({
 
     <div class="right-sidebar__header">
       <div class="right-sidebar__tabs">
-        <button
-          id="sidebar-tab-info"
-          class="right-sidebar__tab"
-          :class="{
-            'right-sidebar__tab--active': layoutStore.rightSidebarMode === 'info'
-          }"
-          :title="$t('player.nowPlaying')"
-          @click="layoutStore.setRightSidebarMode('info')">
-          <AppIcon name="ph:music-note" />
-        </button>
-        <button
-          id="sidebar-tab-lyrics"
-          class="right-sidebar__tab"
-          :class="{
-            'right-sidebar__tab--active': layoutStore.rightSidebarMode === 'lyrics'
-          }"
-          :title="$t('player.lyrics')"
-          @click="layoutStore.setRightSidebarMode('lyrics')">
-          <AppIcon name="ph:microphone-stage" />
-        </button>
-        <button
-          id="sidebar-tab-queue"
-          class="right-sidebar__tab"
-          :class="{
-            'right-sidebar__tab--active': layoutStore.rightSidebarMode === 'queue'
-          }"
-          :title="$t('player.queue')"
-          @click="layoutStore.setRightSidebarMode('queue')">
-          <AppIcon name="ph:list-dashes" />
-        </button>
+        <AppTooltip :text="$t('player.nowPlaying')" position="bottom">
+          <button
+            id="sidebar-tab-info"
+            class="right-sidebar__tab"
+            :class="{
+              'right-sidebar__tab--active': layoutStore.rightSidebarMode === 'info'
+            }"
+            :aria-label="$t('player.nowPlaying')"
+            @click="layoutStore.setRightSidebarMode('info')">
+            <AppIcon name="ph:music-note" />
+          </button>
+        </AppTooltip>
+        <AppTooltip :text="$t('player.lyrics')" position="bottom">
+          <button
+            id="sidebar-tab-lyrics"
+            class="right-sidebar__tab"
+            :class="{
+              'right-sidebar__tab--active': layoutStore.rightSidebarMode === 'lyrics'
+            }"
+            :aria-label="$t('player.lyrics')"
+            @click="layoutStore.setRightSidebarMode('lyrics')">
+            <AppIcon name="ph:microphone-stage" />
+          </button>
+        </AppTooltip>
+        <AppTooltip :text="$t('player.queue')" position="bottom">
+          <button
+            id="sidebar-tab-queue"
+            class="right-sidebar__tab"
+            :class="{
+              'right-sidebar__tab--active': layoutStore.rightSidebarMode === 'queue'
+            }"
+            :aria-label="$t('player.queue')"
+            @click="layoutStore.setRightSidebarMode('queue')">
+            <AppIcon name="ph:list-dashes" />
+          </button>
+        </AppTooltip>
       </div>
-      <button
-        id="sidebar-close-btn"
-        class="right-sidebar__close"
-        :aria-label="$t('player.closeInfoPanel')"
-        @click="layoutStore.closeRightSidebar()">
-        <AppIcon name="ph:x-bold" />
-      </button>
+      <AppTooltip :text="$t('player.closeInfoPanel')" position="bottom">
+        <button
+          id="sidebar-close-btn"
+          class="right-sidebar__close"
+          :aria-label="$t('player.closeInfoPanel')"
+          @click="layoutStore.closeRightSidebar()">
+          <AppIcon name="ph:x-bold" />
+        </button>
+      </AppTooltip>
     </div>
 
     <div class="right-sidebar__body">
@@ -421,6 +433,7 @@ const sidebarStyle = computed(() => ({
             <video
               v-if="isMusicVideoMode && musicVideoUrl"
               ref="musicVideoRef"
+              :key="musicVideoUrl"
               :src="musicVideoUrl"
               class="right-sidebar__music-video"
               loop
@@ -449,45 +462,53 @@ const sidebarStyle = computed(() => ({
             <canvas v-show="!isMusicVideoMode" ref="canvasRef" class="right-sidebar__canvas" />
 
             <div class="right-sidebar__visualizer-selector">
-              <button
-                class="right-sidebar__style-btn"
-                :class="{
-                  'right-sidebar__style-btn--active': !isMusicVideoMode
-                }"
-                :title="$t('player.backgroundModeVisualizer')"
-                @click="layoutStore.setSidebarBackgroundMode('visualizer')">
-                <AppIcon name="ph:waveform-bold" />
-              </button>
-              <button
-                class="right-sidebar__style-btn"
-                :class="{
-                  'right-sidebar__style-btn--active': isMusicVideoMode
-                }"
-                :title="$t('player.backgroundModeMusicVideo')"
-                @click="layoutStore.setSidebarBackgroundMode('musicvideo')">
-                <AppIcon name="ph:film-slate-bold" />
-              </button>
-              <template v-if="!isMusicVideoMode">
+              <AppTooltip :text="$t('player.backgroundModeVisualizer')" position="bottom">
                 <button
-                  v-for="style in ['circle', 'bars', 'wave', 'particles'] as const"
-                  :key="style"
                   class="right-sidebar__style-btn"
                   :class="{
-                    'right-sidebar__style-btn--active': layoutStore.visualizerStyle === style
+                    'right-sidebar__style-btn--active': !isMusicVideoMode
                   }"
-                  :title="$t(`player.visualizerStyles.${style}`)"
-                  @click="layoutStore.setVisualizerStyle(style)">
-                  <AppIcon
-                    :name="
-                      style === 'circle'
-                        ? 'ph:circle-bold'
-                        : style === 'bars'
-                          ? 'ph:chart-bar-bold'
-                          : style === 'wave'
-                            ? 'ph:wave-sine-bold'
-                            : 'ph:sparkle-bold'
-                    " />
+                  :aria-label="$t('player.backgroundModeVisualizer')"
+                  @click="layoutStore.setSidebarBackgroundMode('visualizer')">
+                  <AppIcon name="ph:waveform-bold" />
                 </button>
+              </AppTooltip>
+              <AppTooltip :text="$t('player.backgroundModeMusicVideo')" position="bottom">
+                <button
+                  class="right-sidebar__style-btn"
+                  :class="{
+                    'right-sidebar__style-btn--active': isMusicVideoMode
+                  }"
+                  :aria-label="$t('player.backgroundModeMusicVideo')"
+                  @click="layoutStore.setSidebarBackgroundMode('musicvideo')">
+                  <AppIcon name="ph:film-slate-bold" />
+                </button>
+              </AppTooltip>
+              <template v-if="!isMusicVideoMode">
+                <AppTooltip
+                  v-for="style in ['circle', 'bars', 'wave', 'particles'] as const"
+                  :key="style"
+                  :text="$t(`player.visualizerStyles.${style}`)"
+                  position="bottom">
+                  <button
+                    class="right-sidebar__style-btn"
+                    :class="{
+                      'right-sidebar__style-btn--active': layoutStore.visualizerStyle === style
+                    }"
+                    :aria-label="$t(`player.visualizerStyles.${style}`)"
+                    @click="layoutStore.setVisualizerStyle(style)">
+                    <AppIcon
+                      :name="
+                        style === 'circle'
+                          ? 'ph:circle-bold'
+                          : style === 'bars'
+                            ? 'ph:chart-bar-bold'
+                            : style === 'wave'
+                              ? 'ph:wave-sine-bold'
+                              : 'ph:sparkle-bold'
+                      " />
+                  </button>
+                </AppTooltip>
               </template>
             </div>
 

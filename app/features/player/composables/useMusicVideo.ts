@@ -11,8 +11,11 @@ const videoCache = new Map<string, string>();
 const pendingPreloads = new Map<string, Promise<string | null>>();
 
 function getTrackKey(track: MusicVideoTrackInput): string {
+  if (track.videoId) {
+    return track.videoId;
+  }
   const artistName = track.artist || track.artists?.[0]?.name || '';
-  return `${track.title}__${artistName}`;
+  return `${track.title.toLowerCase().trim()}__${artistName.toLowerCase().trim()}`;
 }
 
 async function requestVideoUrl(track: MusicVideoTrackInput): Promise<string | null> {
@@ -71,21 +74,20 @@ export function useMusicVideo() {
     }
 
     lastTrackKey.value = key;
+    musicVideoUrl.value = null;
+    isNotFound.value = false;
 
     const cachedUrl = videoCache.get(key);
     if (cachedUrl) {
       musicVideoUrl.value = cachedUrl;
-      isNotFound.value = false;
       isLoading.value = false;
       return;
     }
 
-    musicVideoUrl.value = null;
-    isNotFound.value = false;
     isLoading.value = true;
 
     try {
-      if (!track.title && !artistName) {
+      if (!track.title && !artistName && !track.videoId) {
         isNotFound.value = true;
         return;
       }

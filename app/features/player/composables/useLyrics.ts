@@ -137,12 +137,7 @@ const MAX_CACHE_SIZE = 50;
 export function useLyrics() {
   if (!lyricsCache) {
     if (import.meta.client) {
-      try {
-        localStorage.removeItem('ranzakord_lyrics_cache');
-      } catch {
-        void 0;
-      }
-      lyricsCache = useLocalStorage<Record<string, LyricsData>>('ranzakord_lyrics_cache_v2', {});
+      lyricsCache = useLocalStorage<Record<string, LyricsData>>('ranzakord_lyrics_cache', {});
     } else {
       lyricsCache = ref<Record<string, LyricsData>>({});
     }

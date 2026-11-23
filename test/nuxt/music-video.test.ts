@@ -69,4 +69,18 @@ describe('useMusicVideo', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(musicVideoUrl.value).toContain('v=preloaded_vid_456');
   });
+
+  it('uses videoId as cache key when provided', async () => {
+    fetchMock.mockResolvedValue({ results: [{ videoId: 'custom_vid_789' }] });
+
+    const { musicVideoUrl, fetchMusicVideo } = useMusicVideo();
+    await fetchMusicVideo({ videoId: 'track_123', title: 'Song', artist: 'Artist' });
+
+    expect(musicVideoUrl.value).toContain('v=custom_vid_789');
+
+    fetchMock.mockResolvedValue({ results: [{ videoId: 'custom_vid_999' }] });
+    await fetchMusicVideo({ videoId: 'track_456', title: 'Song', artist: 'Artist' });
+
+    expect(musicVideoUrl.value).toContain('v=custom_vid_999');
+  });
 });
