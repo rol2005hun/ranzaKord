@@ -15,6 +15,7 @@
   "discover": "Fedezz fel dalokat",
   "emptyPlaylist": "Ez a lejátszási lista üres",
   "addToPlaylist": "Hozzáadás lejátszási listához",
+  "inPlaylist": "Lejátszási listában",
   "removeFromPlaylist": "Eltávolítás a listából",
   "playPlaylist": "Lejátszási lista indítása",
   "noPlaylists": "Nincsenek lejátszási listák",
@@ -59,5 +60,14 @@
   "collaborators": "Kollaborátorok",
   "collaboratorAdded": "Kollaborátor hozzáadva",
   "collaboratorRemoved": "Kollaborátor eltávolítva",
-  "confirmRemove": "Biztosan eltávolítod ezt a kollaborátort?"
+  "confirmRemove": "Biztosan eltávolítod ezt a kollaborátort?",
+  "sort": {
+    "default": "Alapértelmezett sorrend",
+    "titleAsc": "Cím (A-Z)",
+    "titleDesc": "Cím (Z-A)",
+    "durationAsc": "Hossz (legrövidebb elöl)",
+    "durationDesc": "Hossz (leghosszabb elöl)",
+    "dateDesc": "Hozzáadás dátuma (legújabb elöl)",
+    "dateAsc": "Hozzáadás dátuma (legrégebbi elöl)"
+  }
 }
