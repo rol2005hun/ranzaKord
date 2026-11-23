@@ -1,3 +1,5 @@
+import { isPwaApp } from '@/utils/pwa';
+
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
   readonly userChoice: Promise<{
