@@ -24,14 +24,21 @@ export function usePwaInstall() {
     isListenerAttached.value = true;
     isInstalled.value = checkInstalled();
 
+    const globalWindow = window as unknown as { __deferredPrompt?: BeforeInstallPromptEvent };
+    if (globalWindow.__deferredPrompt) {
+      deferredPrompt.value = globalWindow.__deferredPrompt;
+    }
+
     window.addEventListener('beforeinstallprompt', (e: Event) => {
       e.preventDefault();
       deferredPrompt.value = e as BeforeInstallPromptEvent;
+      globalWindow.__deferredPrompt = e as BeforeInstallPromptEvent;
     });
 
     window.addEventListener('appinstalled', () => {
       isInstalled.value = true;
       deferredPrompt.value = null;
+      globalWindow.__deferredPrompt = undefined;
     });
   }
 

@@ -1,4 +1,5 @@
 {
+  "id": "/",
   "name": "ranzaKord",
   "short_name": "ranzaKord",
   "description": "Modern music streaming experience",
@@ -7,6 +8,7 @@
   "display": "standalone",
   "background_color": "#0d0e12",
   "theme_color": "#0d0e12",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/pwa-192x192.png",

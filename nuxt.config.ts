@@ -45,6 +45,11 @@ export default defineNuxtConfig({
                     });
                   };
                 }
+
+                window.addEventListener('beforeinstallprompt', function(e) {
+                  e.preventDefault();
+                  window.__deferredPrompt = e;
+                });
               } catch (e) {}
             })();
           `

@@ -51,6 +51,21 @@ export function useSponsorBlock() {
     currentSegments.value = [];
   }
 
+  function getCachedSegments(videoId: string): SkipSegment[] | null {
+    return cache.get(videoId) ?? null;
+  }
+
+  function getIntroSkip(videoId: string): number {
+    const segs = cache.get(videoId);
+    if (!segs || segs.length === 0) return 0;
+    for (const [start, end] of segs) {
+      if (start <= 1.5 && end > start) {
+        return end + 0.05;
+      }
+    }
+    return 0;
+  }
+
   function shouldSkip(currentTime: number): number | null {
     for (const [start, end] of currentSegments.value) {
       if (currentTime >= start && currentTime < end - 0.25) {
@@ -72,6 +87,8 @@ export function useSponsorBlock() {
     fetchSegments,
     preloadSegments,
     clearSegments,
+    getCachedSegments,
+    getIntroSkip,
     shouldSkip,
     resetCache
   };

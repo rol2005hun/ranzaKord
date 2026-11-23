@@ -29,6 +29,7 @@ let currentPlayRequestId = 0;
 let preloadedTrackId: string | null = null;
 let isPreloading = false;
 let lastErrorToastTime = 0;
+let lastPrevClickTime = 0;
 
 function stopCrossfadeTimers() {
   if (crossfadeRafId !== null) {
@@ -49,10 +50,11 @@ export function usePlayer() {
   const toast = useToast();
   const {
     fetchSegments,
-    preloadSegments,
     clearSegments,
     shouldSkip,
-    segments: sponsorSegments
+    segments: sponsorSegments,
+    getCachedSegments,
+    getIntroSkip
   } = useSponsorBlock();
   const { preloadMusicVideo } = useMusicVideo();
 
@@ -127,16 +129,38 @@ export function usePlayer() {
     return getApiUrl(`/api/stream?v=${finalVideoId}`);
   }
 
-  function getEffectiveTrackEnd(actualDuration: number): number {
-    if (!store.sponsorBlockEnabled || sponsorSegments.value.length === 0) {
-      return actualDuration;
-    }
-    for (const [start, end] of sponsorSegments.value) {
-      if (end >= actualDuration - 3 && start < actualDuration) {
-        return start;
+  function getEffectiveTrackStart(): number {
+    if (!store.sponsorBlockEnabled) return 0;
+    const segs =
+      sponsorSegments.value.length > 0
+        ? sponsorSegments.value
+        : store.currentTrack?.videoId
+          ? (getCachedSegments(store.currentTrack.videoId) ?? [])
+          : [];
+    for (const [start, end] of segs) {
+      if (start <= 1.5 && end > start) {
+        return end + 0.05;
       }
     }
-    return actualDuration;
+    return 0;
+  }
+
+  function getEffectiveTrackEnd(actualDuration: number): number {
+    if (!store.sponsorBlockEnabled || sponsorSegments.value.length === 0 || actualDuration <= 0) {
+      return actualDuration;
+    }
+    let earliestOutroStart = actualDuration;
+    for (const [start, end] of sponsorSegments.value) {
+      if (
+        start >= actualDuration * 0.6 &&
+        (end >= actualDuration - 20 || end >= actualDuration * 0.92)
+      ) {
+        if (start < earliestOutroStart) {
+          earliestOutroStart = start;
+        }
+      }
+    }
+    return earliestOutroStart;
   }
 
   function getEffectiveTimeLeft(currentTime: number, actualDuration: number): number {
@@ -173,7 +197,7 @@ export function usePlayer() {
         preloadMusicVideo(track).catch(() => {});
       }
       if (store.sponsorBlockEnabled) {
-        preloadSegments(track.videoId);
+        await fetchSegments(track.videoId, false);
       }
       const url = await getStreamUrl(track.videoId);
       const inactiveAudio = activeAudioIndex.value === 0 ? audio2Ref.value : audio1Ref.value;
@@ -182,6 +206,23 @@ export function usePlayer() {
           inactiveAudio.src = url;
           inactiveAudio.preload = 'auto';
           inactiveAudio.load();
+        }
+        const intro = getIntroSkip(track.videoId);
+        if (intro > 0) {
+          const seekInactive = () => {
+            try {
+              if (Math.abs(inactiveAudio.currentTime - intro) > 0.5) {
+                inactiveAudio.currentTime = intro;
+              }
+            } catch {
+              void 0;
+            }
+          };
+          if (inactiveAudio.readyState >= 1) {
+            seekInactive();
+          } else {
+            inactiveAudio.addEventListener('loadedmetadata', seekInactive, { once: true });
+          }
         }
       } else {
         fetch(url, {
@@ -316,7 +357,9 @@ export function usePlayer() {
               if (skipTo !== null) {
                 if (
                   actualDuration > 0 &&
-                  (skipTo >= actualDuration - 2 || el.currentTime >= effectiveEnd - 1)
+                  (skipTo >= effectiveEnd ||
+                    skipTo >= actualDuration - 20 ||
+                    el.currentTime >= effectiveEnd - 1)
                 ) {
                   if (store.hasNext) {
                     playNext();
@@ -564,20 +607,53 @@ export function usePlayer() {
 
     isCrossfading = true;
 
-    clearSegments();
+    const introStartTime = store.sponsorBlockEnabled ? getIntroSkip(nextTrack.videoId) : 0;
+
     if (store.sponsorBlockEnabled) {
-      fetchSegments(nextTrack.videoId).catch(() => {});
+      fetchSegments(nextTrack.videoId, true)
+        .then((segs) => {
+          const intro = segs.find(([start]) => start <= 1.5);
+          if (intro && inAudio && isCrossfading && inAudio.currentTime < intro[1]) {
+            try {
+              inAudio.currentTime = intro[1] + 0.05;
+              store.currentTimeSeconds = intro[1] + 0.05;
+            } catch {
+              void 0;
+            }
+          }
+        })
+        .catch(() => {});
     }
 
     getStreamUrl(nextTrack.videoId).then((url) => {
-      if (inAudio.src !== url) {
+      const isNewSrc = inAudio.src !== url;
+      if (isNewSrc) {
         inAudio.src = url;
         inAudio.load();
       }
+
+      const applyIntroStart = () => {
+        if (introStartTime > 0 && inAudio.currentTime < introStartTime) {
+          try {
+            inAudio.currentTime = introStartTime;
+            store.currentTimeSeconds = introStartTime;
+          } catch {
+            void 0;
+          }
+        }
+      };
+
+      if (inAudio.readyState >= 1) {
+        applyIntroStart();
+      } else {
+        inAudio.addEventListener('loadedmetadata', applyIntroStart, { once: true });
+      }
+
       inAudio.play().catch(() => {});
     });
 
     store.setTrack(nextTrack);
+    store.currentTimeSeconds = introStartTime;
     store.isPlaying = true;
     updateMediaSession(nextTrack);
 
@@ -874,8 +950,12 @@ export function usePlayer() {
       recordTrackStat(store.currentTrack, Math.floor(store.currentTimeSeconds), skipped);
     }
 
+    const introStartTime =
+      startTime ?? (store.sponsorBlockEnabled ? getIntroSkip(track.videoId) : 0);
+    const effectiveStartTime = introStartTime > 0 ? introStartTime : (startTime ?? 0);
+
     store.setTrack(track, fromHistory);
-    store.currentTimeSeconds = startTime ?? 0;
+    store.currentTimeSeconds = effectiveStartTime;
     store.isLoading = true;
     store.isPlaying = false;
     store.error = null;
@@ -914,10 +994,10 @@ export function usePlayer() {
       el.src = streamUrl;
       el.load();
 
-      if (startTime && startTime > 0) {
+      if (effectiveStartTime > 0) {
         isRestoring = true;
         try {
-          el.currentTime = startTime;
+          el.currentTime = effectiveStartTime;
         } catch {
           void 0;
         }
@@ -933,9 +1013,9 @@ export function usePlayer() {
       await el.play();
       if (requestId !== currentPlayRequestId) return;
 
-      if (startTime && startTime > 0) {
+      if (effectiveStartTime > 0) {
         try {
-          el.currentTime = startTime;
+          el.currentTime = effectiveStartTime;
         } catch {
           void 0;
         }
@@ -1072,12 +1152,23 @@ export function usePlayer() {
   }
 
   function playPrev() {
-    if (store.currentTimeSeconds > 3) {
-      seek(0);
+    const now = Date.now();
+    const isDoubleClicked = now - lastPrevClickTime < 2500;
+    lastPrevClickTime = now;
+
+    const effectiveStart = getEffectiveTrackStart();
+
+    if (!isDoubleClicked && store.currentTimeSeconds > effectiveStart + 3) {
+      seek(effectiveStart);
       return;
     }
+
     const prev = store.prevTrack();
-    if (prev) playTrack(prev, true);
+    if (prev) {
+      playTrack(prev, true);
+    } else {
+      seek(effectiveStart);
+    }
   }
 
   function toggleShuffle() {
