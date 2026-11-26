@@ -8,6 +8,16 @@ import {
 import type { OfflineTrack, DownloadStatus } from '../types/offline.types';
 import type { Track } from '@/features/player/types/player.types';
 
+const DOWNLOAD_CHUNK_SIZE = 2 * 1024 * 1024;
+
+function parseContentRangeTotal(header: string | null): number {
+  if (!header) return 0;
+  const match = /\/(\d+)$/.exec(header.trim());
+  if (!match?.[1]) return 0;
+  const total = Number.parseInt(match[1], 10);
+  return Number.isNaN(total) ? 0 : total;
+}
+
 export const useOfflineStore = defineStore('offline', () => {
   const downloadedTracks = ref<OfflineTrack[]>([]);
   const downloadedIds = ref<Set<string>>(new Set());
@@ -72,38 +82,84 @@ export const useOfflineStore = defineStore('offline', () => {
 
     try {
       const streamUrl = useApiUrl(`/api/stream?v=${track.videoId}`);
-
-      const response = await fetch(streamUrl);
-      if (!response.ok) throw new Error('Stream fetch failed');
-
-      const contentLength = response.headers.get('content-length');
-      let total = contentLength ? parseInt(contentLength, 10) : 0;
-      if (total <= 0 && track.durationSeconds > 0) {
-        total = Math.round(track.durationSeconds * 16_000);
-      }
-
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error('No readable stream');
-
       const chunks: Uint8Array[] = [];
       let received = 0;
+      let offset = 0;
+      let totalBytes = 0;
+      let mimeType = 'audio/webm';
+      const estimatedTotal =
+        track.durationSeconds > 0 ? Math.round(track.durationSeconds * 16_000) : 0;
 
       while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        if (value) {
-          chunks.push(value);
-          received += value.length;
-          if (total > 0) {
-            downloadProgress.value[track.videoId] = Math.min(
-              95,
-              Math.round((received / total) * 100)
-            );
+        const rangeEnd = offset + DOWNLOAD_CHUNK_SIZE - 1;
+        const response = await fetch(streamUrl, {
+          headers: {
+            Range: `bytes=${offset}-${rangeEnd}`
           }
+        });
+
+        if (response.status === 416 && offset > 0) {
+          break;
+        }
+        if (!response.ok) throw new Error('Stream fetch failed');
+
+        if (offset === 0) {
+          const responseType = response.headers.get('content-type');
+          if (responseType) {
+            mimeType = responseType.split(';')[0]?.trim() || 'audio/webm';
+          }
+        }
+
+        const contentRange = response.headers.get('content-range');
+        const parsedTotal = parseContentRangeTotal(contentRange);
+        if (parsedTotal > 0) {
+          totalBytes = parsedTotal;
+        } else if (totalBytes <= 0 && response.status !== 206) {
+          const contentLength = response.headers.get('content-length');
+          const parsedLength = contentLength ? Number.parseInt(contentLength, 10) : 0;
+          if (!Number.isNaN(parsedLength) && parsedLength > 0) {
+            totalBytes = parsedLength;
+          }
+        }
+
+        const progressTotal = totalBytes > 0 ? totalBytes : estimatedTotal;
+
+        const reader = response.body?.getReader();
+        if (!reader) throw new Error('No readable stream');
+
+        let chunkReceived = 0;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (value) {
+            chunks.push(value);
+            received += value.length;
+            chunkReceived += value.length;
+            if (progressTotal > 0) {
+              downloadProgress.value[track.videoId] = Math.min(
+                95,
+                Math.round((received / progressTotal) * 100)
+              );
+            }
+          }
+        }
+
+        if (chunkReceived === 0) {
+          break;
+        }
+
+        offset += chunkReceived;
+
+        if (response.status !== 206 && !contentRange) {
+          break;
+        }
+
+        if (totalBytes > 0 && offset >= totalBytes) {
+          break;
         }
       }
 
-      const blob = new Blob(chunks as BlobPart[], { type: 'audio/webm' });
+      const blob = new Blob(chunks as BlobPart[], { type: mimeType });
 
       const meta: OfflineTrack = {
         videoId: track.videoId,

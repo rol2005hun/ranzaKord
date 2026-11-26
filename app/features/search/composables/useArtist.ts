@@ -1,3 +1,5 @@
+import { isTrackByArtist } from '@/utils/artist';
+
 import type { ArtistDetail, SearchResult, PaginatedSongs } from '../types/search.types';
 import type { Track } from '@/features/player/types/player.types';
 import type { TrackListItem } from '@/components/shared/TrackList.vue';
@@ -106,15 +108,7 @@ export function useArtist(id: string) {
       if (data.items) {
         const newItems = data.items.filter((item) => {
           if (allSongs.value.some((existing) => existing.id === item.id)) return false;
-          if (item.artistId === id || item.artists?.some((a) => a.id === id)) return true;
-          if (
-            item.artist &&
-            artist.value?.name &&
-            item.artist.toLowerCase().includes(artist.value.name.toLowerCase())
-          ) {
-            return true;
-          }
-          return false;
+          return isTrackByArtist(item, id, artist.value?.name);
         });
         allSongs.value.push(...newItems);
 

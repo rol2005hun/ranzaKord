@@ -35,3 +35,41 @@ export function getTrackArtists(track?: {
 
   return [];
 }
+
+export function isTrackByArtist(
+  item: {
+    artist?: string;
+    artists?: TrackArtist[];
+    artistId?: string;
+  },
+  targetArtistId: string,
+  targetArtistName?: string
+): boolean {
+  if (item.artistId === targetArtistId || item.artists?.some((a) => a.id === targetArtistId)) {
+    return true;
+  }
+
+  const hasResolvedIds =
+    Boolean(item.artistId) || Boolean(item.artists?.some((a) => Boolean(a.id)));
+  if (hasResolvedIds) {
+    return false;
+  }
+
+  if (!targetArtistName) return false;
+  const normalizedTarget = targetArtistName.trim().toLowerCase();
+  if (!normalizedTarget) return false;
+
+  if (item.artists && item.artists.length > 0) {
+    return item.artists.some((a) => a.name.trim().toLowerCase() === normalizedTarget);
+  }
+
+  if (item.artist) {
+    const parts = item.artist
+      .split(/\s*(?:,|&|\bfeat\.?(?=\s|$)|\bft\.?(?=\s|$)|\bx\b)\s*/i)
+      .map((part) => part.trim().toLowerCase())
+      .filter(Boolean);
+    return parts.includes(normalizedTarget);
+  }
+
+  return false;
+}

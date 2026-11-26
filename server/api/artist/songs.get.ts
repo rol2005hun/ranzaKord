@@ -90,8 +90,6 @@ export default defineCachedEventHandler(
         authorObj.toString() !== '[object Object]'
       ) {
         artistName = authorObj.toString();
-      } else if (q) {
-        artistName = q;
       }
 
       let artistId: string | undefined = undefined;

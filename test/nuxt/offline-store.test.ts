@@ -102,6 +102,77 @@ describe('useOfflineStore', () => {
     expect(store.isTrackDownloaded('2')).toBe(true);
   });
 
+  it('downloads full track across multiple 206 range responses', async () => {
+    const store = useOfflineStore();
+
+    global.fetch = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 206,
+        headers: new Headers({
+          'content-type': 'audio/mp4',
+          'content-range': 'bytes 0-3/8',
+          'content-length': '4'
+        }),
+        body: {
+          getReader: () => {
+            let doneOnce = false;
+            return {
+              read: vi.fn().mockImplementation(() => {
+                if (!doneOnce) {
+                  doneOnce = true;
+                  return Promise.resolve({ done: false, value: new Uint8Array([1, 2, 3, 4]) });
+                }
+                return Promise.resolve({ done: true });
+              })
+            };
+          }
+        }
+      } as unknown as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 206,
+        headers: new Headers({
+          'content-type': 'audio/mp4',
+          'content-range': 'bytes 4-7/8',
+          'content-length': '4'
+        }),
+        body: {
+          getReader: () => {
+            let doneOnce = false;
+            return {
+              read: vi.fn().mockImplementation(() => {
+                if (!doneOnce) {
+                  doneOnce = true;
+                  return Promise.resolve({ done: false, value: new Uint8Array([5, 6, 7, 8]) });
+                }
+                return Promise.resolve({ done: true });
+              })
+            };
+          }
+        }
+      } as unknown as Response);
+
+    const track = {
+      videoId: 'chunked-1',
+      title: 'Chunked Track',
+      artist: 'Artist',
+      thumbnailUrl: '',
+      durationSeconds: 173
+    };
+    await store.downloadTrack(track);
+
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+    expect(store.getStatus('chunked-1')).toBe('done');
+    expect(store.getProgress('chunked-1')).toBe(100);
+    expect(mockSaveTrack).toHaveBeenCalledTimes(1);
+    const savedMeta = mockSaveTrack.mock.calls[0]?.[0];
+    const savedBlob = mockSaveTrack.mock.calls[0]?.[1];
+    expect(savedMeta?.sizeBytes).toBe(8);
+    expect(savedBlob?.type).toBe('audio/mp4');
+  });
+
   it('removes a downloaded track', async () => {
     const store = useOfflineStore();
 
